@@ -142,21 +142,21 @@ winHandleIconMessage (HWND hwnd, UINT message,
 	/* Check for MultiWindow mode */
 	if (pScreenInfo->fMultiWindow)
 	  {
-	    /* Check if root window is shown or hidden */
+	    MENUITEMINFO		mii = {0};
+	    
+	    /* Root is shown, remove the check box */
+	    
+	    /* Setup menu item info structure */
+	    mii.cbSize = sizeof (MENUITEMINFO);
+	    mii.fMask = MIIM_STATE;
+	    mii.fState = MFS_CHECKED;
+	    
+	    /* Unheck box if root is shown */
 	    if (pScreenPriv->fRootWindowShown)
-	      {
-		/* Remove Show Root Window button */
-		RemoveMenu (hmenuTray,
-			    ID_APP_SHOW_ROOT,
-			    MF_BYCOMMAND);
-	      }
-	    else
-	      {
-		/* Remove Hide Root Window button */
-		RemoveMenu (hmenuTray,
-			    ID_APP_HIDE_ROOT,
-			    MF_BYCOMMAND);
-	      }
+	      mii.fState = MFS_UNCHECKED;
+
+	    /* Set menu state */
+	    SetMenuItemInfo (hmenuTray, ID_APP_HIDE_ROOT, FALSE, &mii);
 	  }
 	else
 #endif

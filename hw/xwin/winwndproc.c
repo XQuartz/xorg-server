@@ -1099,13 +1099,11 @@ winWindowProc (HWND hwnd, UINT message,
 
 #ifdef XWIN_MULTIWINDOW
 	case ID_APP_HIDE_ROOT:
-	  ShowWindow (s_pScreenPriv->hwndScreen, SW_HIDE);
-	  s_pScreenPriv->fRootWindowShown = FALSE;
-	  return 0;
-
-	case ID_APP_SHOW_ROOT:
-	  ShowWindow (s_pScreenPriv->hwndScreen, SW_SHOW);
-	  s_pScreenPriv->fRootWindowShown = TRUE;
+	  if (s_pScreenPriv->fRootWindowShown)
+	    ShowWindow (s_pScreenPriv->hwndScreen, SW_HIDE);
+	  else
+	    ShowWindow (s_pScreenPriv->hwndScreen, SW_SHOW);
+	  s_pScreenPriv->fRootWindowShown = !s_pScreenPriv->fRootWindowShown;
 	  return 0;
 #endif
 

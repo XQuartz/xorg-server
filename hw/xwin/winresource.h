@@ -45,7 +45,6 @@
 #define IDM_TRAYICON_MENU	103
 #define ID_APP_EXIT		104
 #define ID_APP_HIDE_ROOT	105
-#define ID_APP_SHOW_ROOT	106
-#define ID_APP_ALWAYS_ON_TOP	107
+#define ID_APP_ALWAYS_ON_TOP	106
 
 #endif

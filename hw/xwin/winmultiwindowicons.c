@@ -84,12 +84,22 @@ winScaleXBitmapToWindows (int iconSize,
 
   /* Need 32-bit aligned rows */
   stride = ((iconSize * effBPP + 31) & (~31)) / 8;
-  xStride  = ((pixmap->drawable.width * effXBPP + 31) & (~31)) / 8;
-  
+  xStride = ((pixmap->drawable.width * effXBPP + 31) & (~31)) / 8;
+  if (stride == 0 || xStride == 0)
+    {
+      ErrorF ("winScaleXBitmapToWindows - stride or xStride is zero.  "
+	      "Bailing.\n");
+      return;
+    }
+
+  /* Allocate memory for icon data */
   iconData = malloc (xStride * pixmap->drawable.height);
-  miGetImage ((DrawablePtr) &(pixmap->drawable), 0, 0,
-	      pixmap->drawable.width, pixmap->drawable.height,
-	      ZPixmap, 0xffffffff, iconData);
+  if (!iconData)
+    {
+      ErrorF ("winScaleXBitmapToWindows - malloc failed for iconData.  "
+	      "Bailing.\n");
+      return;
+    }
   
   /* Keep aspect ratio */
   factX = ((float)pixmap->drawable.width) / ((float)iconSize);

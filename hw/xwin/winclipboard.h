@@ -112,7 +112,7 @@ winClipboardUNIXtoDOS (unsigned char **ppszData, int iLength);
  */
 
 void *
-winClipboardProc (void  *);
+winClipboardProc (void *);
 
 void
 winDeinitClipboard (void);

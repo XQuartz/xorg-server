@@ -413,6 +413,16 @@ winProcSetSelectionOwner (ClientPtr client)
     goto winProcSetSelectionOwner_Done;
 
   /*
+   * At this point, if one of the selections is still owned by the 
+   * clipboard manager then it should be marked as unowned since
+   * we will be taking ownership of the Win32 clipboard.
+   */
+  if (g_iClipboardWindow == s_iOwners[CLIP_OWN_PRIMARY])
+    s_iOwners[CLIP_OWN_PRIMARY] = None;
+  if (g_iClipboardWindow == s_iOwners[CLIP_OWN_CLIPBOARD])
+    s_iOwners[CLIP_OWN_CLIPBOARD] = None;
+
+  /*
    * Handle case when selection is being disowned,
    * WM_DRAWCLIPBOARD did not do the disowning,
    * both monitored selections are no longer owned,

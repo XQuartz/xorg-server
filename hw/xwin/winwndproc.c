@@ -277,6 +277,14 @@ winWindowProc (HWND hwnd, UINT message,
 	  ErrorF ("winWindowProc - WM_DISPLAYCHANGE - Recreated "
 		  "primary surface\n");
 #endif
+
+#if 0
+	  /* Multi-Window mode uses RandR for resizes */
+	  if (s_pScreenInfo->fMultiWindow)
+	    {
+	      RRSetScreenConfig ();
+	    }
+#endif
 	}
       else
 	{
@@ -285,6 +293,8 @@ winWindowProc (HWND hwnd, UINT message,
 		  "change\n");
 #endif
 	}
+
+
 
       /* Store the new display dimensions and depth */
       if (s_pScreenInfo->fMultipleMonitors)

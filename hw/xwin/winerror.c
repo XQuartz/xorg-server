@@ -32,6 +32,10 @@
 #include "win.h"
 
 #ifdef DDXOSVERRORF
+/* Prototype */
+void
+OsVendorVErrorF (const char *pszFormat, va_list va_args);
+
 void
 OsVendorVErrorF (const char *pszFormat, va_list va_args)
 {

@@ -33,6 +33,8 @@
 #include "Xv.h"
 #include "Xvproto.h"
 
+void
+winInitVideo (ScreenPtr pScreen);
 
 /*
  * winInitVideo - Initialize support for the X Video (Xv) Extension.

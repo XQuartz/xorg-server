@@ -476,7 +476,7 @@ winSetEngineFunctionsNativeGDI (ScreenPtr pScreen)
   pScreenPriv->pwinStoreColors = winStoreColorsNativeGDI;
   pScreenPriv->pwinCreateColormap = winCreateColormapNativeGDI;
   pScreenPriv->pwinDestroyColormap = winDestroyColormapNativeGDI;
-  pScreenPriv->pwinHotKeyAltTab = (winHotKeyAltTabProcPtr) (void (*)())NoopDDA;
+  pScreenPriv->pwinHotKeyAltTab = (winHotKeyAltTabProcPtr) (void (*)(void))NoopDDA;
 
   return TRUE;
 }

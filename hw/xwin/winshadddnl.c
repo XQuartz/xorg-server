@@ -453,6 +453,53 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
 
 
 /*
+ * Create a DirectDraw surface for the new multi-window window
+ */
+
+static
+Bool
+winFinishCreateWindowsWindowDDNL (WindowPtr pWin)
+{
+  winWindowPriv(pWin);
+  winPrivScreenPtr	pScreenPriv = pWinPriv->pScreenPriv;
+  HRESULT		ddrval = DD_OK;
+  DDSURFACEDESC2	ddsd;
+  int			iWidth, iHeight;
+  int			iX, iY;
+
+  ErrorF ("\nwinFinishCreateWindowsWindowDDNL!\n\n");
+
+  iX = pWin->drawable.x + GetSystemMetrics (SM_XVIRTUALSCREEN);
+  iY = pWin->drawable.y + GetSystemMetrics (SM_YVIRTUALSCREEN);
+  
+  iWidth = pWin->drawable.width;
+  iHeight = pWin->drawable.height;
+
+  /* Describe the primary surface */
+  ZeroMemory (&ddsd, sizeof (ddsd));
+  ddsd.dwSize = sizeof (ddsd);
+  ddsd.dwFlags = DDSD_CAPS | DDSD_WIDTH | DDSD_HEIGHT;
+  ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+  ddsd.dwHeight = iHeight;
+  ddsd.dwWidth = iWidth;
+
+  /* Create the primary surface */
+  ddrval = IDirectDraw4_CreateSurface (pScreenPriv->pdd4,
+				       &ddsd,
+				       &pWinPriv->pddsPrimary4,
+				       NULL);
+  if (FAILED (ddrval))
+    {
+      ErrorF ("winFinishCreateWindowsWindowDDNL - Could not create primary "
+	      "surface: %08x\n",
+	      (unsigned int)ddrval);
+      return FALSE;
+    }
+  return TRUE;
+}
+
+
+/*
  * Transfer the damaged regions of the shadow framebuffer to the display.
  */
 
@@ -1307,11 +1354,11 @@ winSetEngineFunctionsShadowDDNL (ScreenPtr pScreen)
   pScreenPriv->pwinStoreColors = winStoreColorsShadowDDNL;
   pScreenPriv->pwinCreateColormap = winCreateColormapShadowDDNL;
   pScreenPriv->pwinDestroyColormap = winDestroyColormapShadowDDNL;
-  pScreenPriv->pwinHotKeyAltTab = (winHotKeyAltTabProcPtr) (void (*)())NoopDDA;
+  pScreenPriv->pwinHotKeyAltTab = (winHotKeyAltTabProcPtr) (void (*)(void))NoopDDA;
   pScreenPriv->pwinCreatePrimarySurface = winCreatePrimarySurfaceShadowDDNL;
   pScreenPriv->pwinReleasePrimarySurface = winReleasePrimarySurfaceShadowDDNL;
+  pScreenPriv->pwinFinishCreateWindowsWindow
+    = winFinishCreateWindowsWindowDDNL;
 
   return TRUE;
 }
-
-

@@ -36,6 +36,7 @@
  */
 
 extern Bool g_fCalledSetLocale;
+extern Bool g_fUnicodeClipboard;
 
 
 /*
@@ -105,10 +106,10 @@ winClipboardProc (void *pArg)
   ErrorF ("winClipboardProc - pthread_mutex_lock () returned.\n");
 
   /* Do we have Unicode support? */
-  fUnicodeSupport = winClipboardDetectUnicodeSupport ();
+  fUnicodeSupport = g_fUnicodeClipboard && winClipboardDetectUnicodeSupport ();
 
   /* Set the current locale?  What does this do? */
-  if (fUnicodeSupport && !g_fCalledSetLocale)
+  if (!g_fCalledSetLocale)
     {
       ErrorF ("winClipboardProc - Calling setlocale ()\n");
       if (!setlocale (LC_ALL, ""))
@@ -477,7 +478,7 @@ winClipboardIOErrorHandler (Display *pDisplay)
  */
 
 void
-winDeinitClipboard ()
+winDeinitClipboard (void)
 {
   ErrorF ("winDeinitClipboard - Noting shutdown in progress\n");
   g_shutdown = TRUE;

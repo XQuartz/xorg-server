@@ -31,6 +31,8 @@
 
 #include "win.h"
 
+Bool
+winClipboardDetectUnicodeSupport (void);
 
 /*
  * Determine whether we suport Unicode or not.
@@ -38,7 +40,7 @@
  */
 
 Bool
-winClipboardDetectUnicodeSupport ()
+winClipboardDetectUnicodeSupport (void)
 {
   Bool			fReturn = FALSE;
   OSVERSIONINFO		osvi;

@@ -599,6 +599,13 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       SendMessage (hwndScreen, message, wParam, lParam);
       return 0;
 
+    case WM_SETFOCUS:
+      if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
+	break;
+
+      winRestoreModeKeyStates ();
+      return 0;
+      
     case WM_KILLFOCUS:
       /* Pop any pressed keys since we are losing keyboard focus */
       winKeybdReleaseKeys ();
@@ -878,8 +885,10 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 		pwindPos->hwndInsertAfter);
 #endif
 	
+#if 0
 	/* Pass the message to the root window */
 	SendMessage (hwndScreen, message, wParam, lParam);
+#endif
 	
 	if (s_pScreenPriv != NULL)
 	  s_pScreenPriv->fWindowOrderChanged = TRUE;

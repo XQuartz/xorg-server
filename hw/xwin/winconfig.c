@@ -227,7 +227,7 @@ WinKBLayoutRec winKBLayouts[] = {
     {  0x40c, -1, "pc105", "fr",      NULL, NULL, "French (Standard)"},
     {  0x80c, -1, "pc105", "be",      NULL, NULL, "French (Belgian)"},
     {  0x410, -1, "pc105", "it",      NULL, NULL, "Italian"},
-    {  0x411, -1, "jp",    "jp",      NULL, NULL, "Japanese"},
+    {  0x411,  7, "jp",    "jp",      NULL, NULL, "Japanese"},
     {  0x414, -1, "pc105", "no",      NULL, NULL, "Norwegian"},
     {  0x416, -1, "pc105", "pt",      NULL, NULL, "Portuguese (Brazil, ABNT)"},
     {0x10416, -1, "abnt2", "br",      NULL, NULL, "Portuguese (Brazil, ABNT2)"},
@@ -265,6 +265,32 @@ winConfigKeyboard (DeviceIntPtr pDevice)
   g_winInfo.xkb.options = NULL;
 # endif	/* PC98 */
 
+#ifdef XKB
+  /*
+   * Query the windows autorepeat settings and change the xserver defaults.   
+   * If XKB is disabled then windows handles the autorepeat and the special 
+   * treatment is not needed
+   */
+  {
+    int kbd_delay;
+    DWORD kbd_speed;  
+    if (SystemParametersInfo(SPI_GETKEYBOARDDELAY, 0, &kbd_delay, 0) &&
+        SystemParametersInfo(SPI_GETKEYBOARDSPEED, 0, &kbd_speed, 0))
+      {
+        switch (kbd_delay) 
+          {
+            case 0:  g_winInfo.keyboard.delay = 250; break;
+            case 1:  g_winInfo.keyboard.delay = 500; break;
+            case 2:  g_winInfo.keyboard.delay = 750; break;
+            default:         
+            case 3:  g_winInfo.keyboard.delay = 1000; break;
+          }
+        g_winInfo.keyboard.rate = max(1,kbd_speed);
+        winMsgVerb(X_PROBED, 1, "Setting autorepeat to delay=%d, rate=%d\n",
+                g_winInfo.keyboard.delay, g_winInfo.keyboard.rate);
+      }
+  }       
+#endif  
   
 
   keyboardType = GetKeyboardType (0);
@@ -280,7 +306,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	  too */
         layoutNum = (layoutNum & 0xffff);
     }
-    winMsg (X_DEFAULT, "winConfigKeyboard - Layout: \"%s\" (%08x) \n", 
+    winMsg (X_PROBED, "winConfigKeyboard - Layout: \"%s\" (%08x) \n", 
             layoutName, layoutNum);
 
     for (pLayout = winKBLayouts; pLayout->winlayout != -1; pLayout++)
@@ -290,9 +316,9 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	if (pLayout->winkbtype > 0 && pLayout->winkbtype != keyboardType)
 	  continue;
 	
-	winMsg (X_DEFAULT,
-		"Using preset keyboard for \"%s\" (%s), type \"%d\"\n",
-		pLayout->layoutname, layoutName, keyboardType);
+	winMsg (X_PROBED,
+		"Using preset keyboard for \"%s\" (%x), type \"%d\"\n",
+		pLayout->layoutname, pLayout->winlayout, keyboardType);
 	
 	g_winInfo.xkb.model = pLayout->xkbmodel;
 	g_winInfo.xkb.layout = pLayout->xkblayout;
@@ -300,6 +326,18 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	g_winInfo.xkb.options = pLayout->xkboptions; 
 	break;
       }
+
+    if ((layoutNum == 0x411) && keyboardType == 7)
+      {
+	/* Japanese layouts have problems with key event messages
+	   such as the lack of WM_KEYUP for Caps Lock key.
+	   Loading US layout fixes this problem. */
+	if (LoadKeyboardLayout("00000409", KLF_ACTIVATE) != NULL)
+	  winMsg (X_INFO, "Loading US keyboard layout.\n");
+	else
+	  winMsg (X_ERROR, "LoadKeyboardLaout failed.\n");
+      }
+	   
   }  
   
   g_winInfo.xkb.initialMap = NULL;
@@ -339,10 +377,29 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 
   if (kbd != NULL)
     {
+      char *s;
+
       if (kbd->inp_identifier)
 	winMsg (kbdfrom, "Using keyboard \"%s\" as primary keyboard\n",
 		kbd->inp_identifier);
 
+      if ((s = winSetStrOption(kbd->inp_option_lst, "AutoRepeat", NULL)))
+        {
+          if ((sscanf(s, "%ld %ld", &g_winInfo.keyboard.delay, 
+                      &g_winInfo.keyboard.rate) != 2) ||
+                  (g_winInfo.keyboard.delay < 1) || 
+                  (g_winInfo.keyboard.rate == 0) || 
+                  (1000 / g_winInfo.keyboard.rate) < 1) 
+            {
+              winErrorFVerb (2, "\"%s\" is not a valid AutoRepeat value", s);
+              xfree(s);
+              return FALSE;
+            }
+          xfree(s);
+          winMsg (X_CONFIG, "AutoRepeat: %ld %ld\n", 
+                  g_winInfo.keyboard.delay, g_winInfo.keyboard.rate);
+        }
+      
 #ifdef XKB
       from = X_DEFAULT;
       if (g_cmdline.noXkbExtension)
@@ -365,8 +422,6 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	}
       else
 	{
-	  char *s;
-
 	  if ((s = winSetStrOption (kbd->inp_option_lst, "XkbRules", NULL)))
 	    {
 	      g_winInfo.xkb.rules = NULL_IF_EMPTY (s);
@@ -456,6 +511,13 @@ winConfigKeyboard (DeviceIntPtr pDevice)
     {
       winMsg (X_ERROR, "No primary keyboard configured\n");
       winMsg (X_DEFAULT, "Using compiletime defaults for keyboard\n");
+#ifdef XKB
+      if (g_cmdline.noXkbExtension)
+        {
+          g_winInfo.xkb.disable = TRUE;
+          winMsg (X_CMDLINE, "XkbExtension disabled\n");
+        }
+#endif
     }
 
   return TRUE;

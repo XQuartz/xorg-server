@@ -57,6 +57,7 @@ int		g_iLogVerbose = 4;
 char *		g_pszLogFile = WIN_LOG_FNAME;
 Bool		g_fLogInited = FALSE;
 const char *	g_pszQueryHost = NULL;
+Bool		g_fUnicodeClipboard = TRUE;
 
 
 /*
@@ -69,7 +70,7 @@ FARPROC		g_fpDirectDrawCreate = NULL;
 FARPROC		g_fpDirectDrawCreateClipper = NULL;
 
 HMODULE		g_hmodCommonControls = NULL;
-FARPROC		g_fpTrackMouseEvent = (FARPROC) (void (*)())NoopDDA;
+FARPROC		g_fpTrackMouseEvent = (FARPROC) (void (*)(void))NoopDDA;
 
 
 /* Function prototypes */
@@ -77,6 +78,7 @@ FARPROC		g_fpTrackMouseEvent = (FARPROC) (void (*)())NoopDDA;
 #ifdef DDXOSVERRORF
 void OsVendorVErrorF (const char *pszFormat, va_list va_args);
 #endif
+void winInitializeDefaultScreens (void);
 
 
 /*
@@ -105,7 +107,6 @@ static PixmapFormatRec g_PixmapFormats[] = {
 };
 
 const int NUMFORMATS = sizeof (g_PixmapFormats) / sizeof (g_PixmapFormats[0]);
-
 
 void
 winInitializeDefaultScreens (void)
@@ -221,7 +222,7 @@ ddxGiveUp()
     {
       FreeLibrary (g_hmodCommonControls);
       g_hmodCommonControls = NULL;
-      g_fpTrackMouseEvent = (FARPROC) (void (*)())NoopDDA;
+      g_fpTrackMouseEvent = (FARPROC) (void (*)(void))NoopDDA;
     }
   
   /* Tell Windows that we want to end the app */
@@ -367,6 +368,9 @@ ddxUseMsg (void)
 
   ErrorF ("-keyboard\n"
 	  "\tSpecify a keyboard device from the configuration file.\n");
+
+  ErrorF ("-nounicodeclipboard\n"
+	  "\tDo not use Unicode clipboard even if NT-based platform.\n");
 }
 
 
@@ -1241,6 +1245,27 @@ ddxProcessArgument (int argc, char *argv[], int i)
       return 2;
     }
 
+  /*
+   * Look for the '-nounicodeclipboard' argument
+   */
+  if (IS_OPTION ("-nounicodeclipboard"))
+    {
+      g_fUnicodeClipboard = FALSE;
+      /* Indicate that we have processed the argument */
+      return 1;
+    }
+
+#ifdef XKB
+  /*
+   * Look for the '-kb' argument
+   */
+  if (IS_OPTION ("-kb"))
+    {
+      g_cmdline.noXkbExtension = TRUE;  
+      return 0; /* Let DIX parse this again */
+    }
+#endif
+
   return 0;
 }
 
@@ -1312,7 +1337,7 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
       g_hmodCommonControls = NULL;
 
       /* Set function pointer to point to no operation function */
-      g_fpTrackMouseEvent = (FARPROC) (void (*)())NoopDDA;
+      g_fpTrackMouseEvent = (FARPROC) (void (*)(void))NoopDDA;
     }
 
   /*

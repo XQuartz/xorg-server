@@ -458,6 +458,7 @@ winCreateWindowsWindow (WindowPtr pWin)
   char                  pszClass[CLASS_NAME_LENGTH], pszWindowID[12];
   char                  *res_name, *res_class, *res_role;
   static int		s_iWindowID = 0;
+  winPrivScreenPtr	pScreenPriv = pWinPriv->pScreenPriv;
 
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winCreateWindowsWindow - pWin: %08x\n", pWin);
@@ -560,6 +561,9 @@ winCreateWindowsWindow (WindowPtr pWin)
 
   /* Flag that this Windows window handles its own activation */
   SetProp (pWinPriv->hWnd, WIN_NEEDMANAGE_PROP, (HANDLE) 0);
+
+  /* Call engine-specific create window procedure */
+  (*pScreenPriv->pwinFinishCreateWindowsWindow) (pWin);
 }
 
 

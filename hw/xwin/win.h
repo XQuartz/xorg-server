@@ -158,7 +158,6 @@
 #include "windowstr.h"
 #include "mi.h"
 #include "micmap.h"
-#include "migc.h"
 #include "mifillarc.h"
 #include "mifpoly.h"
 #include "mibstore.h"
@@ -299,6 +298,8 @@ typedef Bool (*winHotKeyAltTabProcPtr)(ScreenPtr);
 typedef Bool (*winCreatePrimarySurfaceProcPtr)(ScreenPtr);
 
 typedef Bool (*winReleasePrimarySurfaceProcPtr)(ScreenPtr);
+
+typedef Bool (*winFinishCreateWindowsWindowProcPtr)(WindowPtr pWin);
 
 
 /*
@@ -541,6 +542,9 @@ typedef struct _winPrivScreenRec
   winCreatePrimarySurfaceProcPtr	pwinCreatePrimarySurface;
   winReleasePrimarySurfaceProcPtr	pwinReleasePrimarySurface;
 
+  /* Window Procedures for MultiWindow mode */
+  winFinishCreateWindowsWindowProcPtr	pwinFinishCreateWindowsWindow;
+
   /* Window Procedures for Rootless mode */
   CreateWindowProcPtr			CreateWindow;
   DestroyWindowProcPtr			DestroyWindow;
@@ -767,7 +771,7 @@ winInitClipboard (pthread_t *ptClipboardProc,
  */
 
 void
-winDeinitClipboard ();
+winDeinitClipboard (void);
 
 
 /*
@@ -854,13 +858,13 @@ winDisplayDepthChangeDialog (winPrivScreenPtr pScreenPriv);
  */
 
 void
-winDetectSupportedEngines ();
+winDetectSupportedEngines (void);
 
 Bool
 winSetEngine (ScreenPtr pScreen);
 
 Bool
-winGetDDProcAddresses ();
+winGetDDProcAddresses (void);
 
 
 /*
@@ -971,16 +975,13 @@ void
 winInitializeModeKeyStates (void);
 
 void
-winStoreModeKeyStates (ScreenPtr pScreen);
-
-void
-winRestoreModeKeyStates (ScreenPtr pScreen);
+winRestoreModeKeyStates (void);
 
 Bool
 winIsFakeCtrl_L (UINT message, WPARAM wParam, LPARAM lParam);
 
 void
-winKeybdReleaseKeys ();
+winKeybdReleaseKeys (void);
 
 void
 winSendKeyEvent (DWORD dwKey, Bool fDown);
@@ -1461,10 +1462,6 @@ winSetShapePRootless (WindowPtr pWindow);
 HICON
 winXIconToHICON (WindowPtr pWin);
 
-void
-winUpdateIcon (Window id);
-
-
 /*
  * winmultiwindowshape.c
  */
@@ -1659,7 +1656,7 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
  */
 
 void
-winWindowsWMExtensionInit ();
+winWindowsWMExtensionInit (void);
 
 
 /*

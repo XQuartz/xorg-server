@@ -98,7 +98,7 @@ winInitClipboard (pthread_t *ptClipboardProc,
 		  DWORD dwScreen);
 
 HWND
-winClipboardCreateMessagingWindow ();
+winClipboardCreateMessagingWindow (void);
 
 
 /*
@@ -120,14 +120,14 @@ void *
 winClipboardProc (void *pArg);
 
 void
-winDeinitClipboard ();
+winDeinitClipboard (void);
 
 /*
  * winclipboardunicode.c
  */
 
 Bool
-winClipboardDetectUnicodeSupport ();
+winClipboardDetectUnicodeSupport (void);
 
 
 /*

@@ -48,9 +48,11 @@ winClipboardFlushXEvents (HWND hwnd,
 			  Display *pDisplay,
 			  Bool fUnicodeSupport)
 {
+#if 0
   Atom			atomReturnType;
   int			iReturnFormat;
   unsigned long		ulReturnItems;
+#endif
   XTextProperty		xtpText;
   XEvent		event;
   XSelectionEvent	eventSelection;
@@ -61,13 +63,15 @@ winClipboardFlushXEvents (HWND hwnd,
   HGLOBAL		hGlobal;
   Bool			fReturn = TRUE;
   XICCEncodingStyle	xiccesStyle;
-  int			iUTF8;
-  char			*pszUTF8 = NULL;
+  int			iConvertDataLen = 0;
+  char			*pszConvertData = NULL;
   char			*pszTextList[2];
   int			iCount;
   char			**ppszTextList = NULL;
   wchar_t		*pwszUnicodeStr = NULL;
   int			iUnicodeLen = 0;
+  int			iReturnDataLen = 0;
+  int			i;
 
   /* Process all pending events */
   while (XPending (pDisplay))
@@ -251,7 +255,7 @@ winClipboardFlushXEvents (HWND hwnd,
 	  /* Convert the Unicode string to UTF8 (MBCS) */
 	  if (fUnicodeSupport)
 	    {
-	      iUTF8 = WideCharToMultiByte (CP_UTF8,
+	      iConvertDataLen = WideCharToMultiByte (CP_UTF8,
 					   0,
 					   (LPCWSTR)pszGlobalData,
 					   -1,
@@ -259,57 +263,62 @@ winClipboardFlushXEvents (HWND hwnd,
 					   0,
 					   NULL,
 					   NULL);
-	      pszUTF8 = (char *) malloc (iUTF8); /* Don't need +1 */
+	      /* NOTE: iConvertDataLen includes space for null terminator */
+	      pszConvertData = (char *) malloc (iConvertDataLen);
 	      WideCharToMultiByte (CP_UTF8,
 				   0,
 				   (LPCWSTR)pszGlobalData,
 				   -1,
-				   pszUTF8,
-				   iUTF8,
+				   pszConvertData,
+				   iConvertDataLen,
 				   NULL,
 				   NULL);
 	    }
+	  else
+	    {
+	      pszConvertData = strdup (pszGlobalData);
+	      iConvertDataLen = strlen (pszConvertData) + 1;
+	    }
 
 	  /* Convert DOS string to UNIX string */
-	  if (fUnicodeSupport)
-	    {
-	      winClipboardDOStoUNIX (pszUTF8, strlen (pszUTF8));
+	  winClipboardDOStoUNIX (pszConvertData, strlen (pszConvertData));
 
 	      /* Setup our text list */
-	      pszTextList[0] = pszUTF8;
+	  pszTextList[0] = pszConvertData;
 	      pszTextList[1] = NULL;
 	      
 	      /* Initialize the text property */
 	      xtpText.value = NULL;
 	      
 	      /* Create the text property from the text list */
+	  if (fUnicodeSupport)
+	    {
 	      iReturn = Xutf8TextListToTextProperty (pDisplay,
 						     pszTextList,
 						     1,
 						     xiccesStyle,
 						     &xtpText);
+	    }
+	  else
+	    {
+	      iReturn = XmbTextListToTextProperty (pDisplay,
+						   pszTextList,
+						   1,
+						   xiccesStyle,
+						   &xtpText);
+	    }
 	      if (iReturn == XNoMemory || iReturn == XLocaleNotSupported)
 		{
 		  ErrorF ("winClipboardFlushXEvents - SelectionRequest - "
-			  "Xutf8TextListToTextProperty failed: %d\n",
+		      "X*TextListToTextProperty failed: %d\n",
 			  iReturn);
 		  exit(1);
 		}
 	      
-	      /* Free the UTF8 string */
-	      free (pszUTF8);
-	    }
-	  else
-	    winClipboardDOStoUNIX (pszGlobalData, strlen (pszGlobalData));
-
-	  /*
-	   * FIXME: Pass pszGlobalData and strlen (pszGlobalData(
-	   * on 1 byte, pass xtpText.value and xtpText.nitems
-	   * on 2 byte.
-	   */
+	  /* Free the converted string */
+	  free (pszConvertData);
 
 	  /* Copy the clipboard text to the requesting window */
-	  if (fUnicodeSupport)
 	    iReturn = XChangeProperty (pDisplay,
 				       event.xselectionrequest.requestor,
 				       event.xselectionrequest.property,
@@ -318,15 +327,6 @@ winClipboardFlushXEvents (HWND hwnd,
 				       PropModeReplace,
 				       xtpText.value,
 				       xtpText.nitems);
-	  else
-	    iReturn = XChangeProperty (pDisplay,
-				       event.xselectionrequest.requestor,
-				       event.xselectionrequest.property,
-				       event.xselectionrequest.target,
-				       8,
-				       PropModeReplace,
-				       pszGlobalData,
-				       strlen (pszGlobalData));
 	  if (iReturn == BadAlloc || iReturn == BadAtom
 	      || iReturn == BadMatch || iReturn == BadValue
 	      || iReturn == BadWindow)
@@ -342,12 +342,9 @@ winClipboardFlushXEvents (HWND hwnd,
 	  pszGlobalData = NULL;
 	  CloseClipboard ();
 
-	  /* FIXME: Don't clean up on 1 byte. */
-	  if (fUnicodeSupport)
-	    {
+	  /* Clean up */
 	      XFree (xtpText.value);
 	      xtpText.value = NULL;
-	    }
 
 	  /* Setup selection notify event */
 	  eventSelection.type = SelectionNotify;
@@ -408,8 +405,6 @@ winClipboardFlushXEvents (HWND hwnd,
 	   * What are we doing here?
 	   *
 	   */
-	  if (fUnicodeSupport)
-	    {
 	      if (event.xselection.property == None)
 		{
 		  if(event.xselection.target == XA_STRING)
@@ -462,10 +457,8 @@ winClipboardFlushXEvents (HWND hwnd,
 		      return fReturn;
 		    }
 		}
-	    }
 
 	  /* Retrieve the size of the stored data */
-	  if (fUnicodeSupport)
 	    iReturn = XGetWindowProperty (pDisplay,
 					  iWindow,
 					  atomLocalProperty,
@@ -478,19 +471,6 @@ winClipboardFlushXEvents (HWND hwnd,
 					  &xtpText.nitems,
 					  &ulReturnBytesLeft,
 					  &xtpText.value);
-	  else
-	    iReturn = XGetWindowProperty (pDisplay,
-					  iWindow,
-					  atomLocalProperty,
-					  0,
-					  0, /* Don't get data, just size */
-					  False,
-					  AnyPropertyType,
-					  &atomReturnType,
-					  &iReturnFormat,
-					  &ulReturnItems,
-					  &ulReturnBytesLeft,
-					  &pszReturnData);
 	  if (iReturn != Success)
 	    {
 	      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
@@ -499,16 +479,11 @@ winClipboardFlushXEvents (HWND hwnd,
 	    }
 
 #if 0
-	  if (fUnicodeSupport)
 	    ErrorF ("SelectionNotify - returned data %d left %d\n",
 		    xtpText.nitems, ulReturnBytesLeft);
-	  else
-	    ErrorF ("SelectionNotify - returned data %d left %d\n",
-		    ulReturnItems, ulReturnBytesLeft);
 #endif
 
 	  /* Request the selection data */
-	  if (fUnicodeSupport)
 	    iReturn = XGetWindowProperty (pDisplay,
 					  iWindow,
 					  atomLocalProperty,
@@ -521,19 +496,6 @@ winClipboardFlushXEvents (HWND hwnd,
 					  &xtpText.nitems,
 					  &ulReturnBytesLeft,
 					  &xtpText.value);
-	  else
-	    iReturn = XGetWindowProperty (pDisplay,
-					  iWindow,
-					  atomLocalProperty,
-					  0,
-					  ulReturnBytesLeft,
-					  False,
-					  AnyPropertyType,
-					  &atomReturnType,
-					  &iReturnFormat,
-					  &ulReturnItems,
-					  &ulReturnBytesLeft,
-					  &pszReturnData);
 	  if (iReturn != Success)
 	    {
 	      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
@@ -541,40 +503,80 @@ winClipboardFlushXEvents (HWND hwnd,
 	      pthread_exit (NULL);
 	    }
 
-	  if (fUnicodeSupport)
-	    {
 #if 0
+	    {
 	      char		*pszAtomName = NULL;
 
 	      ErrorF ("SelectionNotify - returned data %d left %d\n",
-		      prop.nitems, ulReturnBytesLeft);
+		      xtpText.nitems, ulReturnBytesLeft);
 	      
-	      pszAtomName = XGetAtomName(pDisplay, prop.encoding);
+	      pszAtomName = XGetAtomName(pDisplay, xtpText.encoding);
 	      ErrorF ("Notify atom name %s\n", pszAtomName);
 	      XFree (pszAtomName);
 	      pszAtomName = NULL;
+	    }
 #endif
 	      
+	  if (fUnicodeSupport)
+	    {
 	      /* Convert the text property to a text list */
-	      Xutf8TextPropertyToTextList (pDisplay,
+	      iReturn = Xutf8TextPropertyToTextList (pDisplay,
+						     &xtpText,
+						     &ppszTextList,
+						     &iCount);
+	    }
+	  else
+	    {
+	      iReturn = XmbTextPropertyToTextList (pDisplay,
 					   &xtpText,
 					   &ppszTextList,
 					   &iCount);
-	      if (iCount > 0)
+	    }
+	  if (iReturn == Success || iReturn > 0)
+	    {
+	      /* Conversion succeeded or some unconvertible characters */
+	      if (ppszTextList != NULL)
 		{
-		  pszReturnData = malloc (strlen (ppszTextList[0]) + 1);
-		  strcpy (pszReturnData, ppszTextList[0]);
+		  for (i = 0; i < iCount; i++)
+		    {
+		      iReturnDataLen += strlen(ppszTextList[i]);
+		    }
+		  pszReturnData = malloc (iReturnDataLen + 1);
+		  pszReturnData[0] = '\0';
+		  for (i = 0; i < iCount; i++)
+		{
+		      strcat (pszReturnData, ppszTextList[i]);
+		    }
 		}
 	      else
 		{
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
+			  "X*TextPropertyToTextList list_return is NULL\n");
 		  pszReturnData = malloc (1);
-		  pszReturnData[0] = 0;
+		  pszReturnData[0] = '\0';
+		}
+	    }
+	  else
+	    {
+	      switch (iReturn)
+		{
+		case XNoMemory:
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - XNoMemory\n");
+		  break;
+		case XConverterNotFound:
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - XConverterNotFound\n");
+		  break;
+		default:
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - Unknown Error\n");
+		  break;
+		}
+	      pszReturnData = malloc (1);
+	      pszReturnData[0] = '\0';
 		}
 	      
 	      /* Free the data returned from XGetWindowProperty */
 	      XFreeStringList (ppszTextList);
 	      XFree (xtpText.value);
-	    }
 	      
 	  /* Convert the X clipboard string to DOS format */
 	  winClipboardUNIXtoDOS (&pszReturnData, strlen (pszReturnData));
@@ -601,6 +603,11 @@ winClipboardFlushXEvents (HWND hwnd,
 				   pwszUnicodeStr,
 				   iUnicodeLen);
 	    }
+	  else
+	    {
+	      pszConvertData = strdup (pszReturnData);
+	      iConvertDataLen = strlen (pszConvertData) + 1;
+	    }
 
 	  /* Access the Windows clipboard */
 	  if (!OpenClipboard (hwnd))
@@ -623,7 +630,7 @@ winClipboardFlushXEvents (HWND hwnd,
 	    hGlobal = GlobalAlloc (GMEM_MOVEABLE,
 				   sizeof (wchar_t) * (iUnicodeLen + 1));
 	  else
-	    hGlobal = GlobalAlloc (GMEM_MOVEABLE, strlen (pszReturnData) + 1);
+	    hGlobal = GlobalAlloc (GMEM_MOVEABLE, iConvertDataLen);
 
 	  /* Obtain a pointer to the global memory */
 	  pszGlobalData = GlobalLock (hGlobal);
@@ -640,7 +647,7 @@ winClipboardFlushXEvents (HWND hwnd,
 		    pwszUnicodeStr,
 		    sizeof (wchar_t) * (iUnicodeLen + 1));
 	  else
-	    strcpy (pszGlobalData, pszReturnData);
+	    strcpy (pszGlobalData, pszConvertData);
 
 	  /* Free the data returned from XGetWindowProperty */
 	  if (fUnicodeSupport)
@@ -650,8 +657,8 @@ winClipboardFlushXEvents (HWND hwnd,
 	    }
 	  else
 	    {
-	      XFree (pszReturnData);
-	      pszReturnData = NULL;
+	      free (pszConvertData);
+	      pszConvertData = NULL;
 	    }
 
 	  /* Release the pointer to the global memory */

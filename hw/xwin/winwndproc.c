@@ -36,6 +36,7 @@
 #include "win.h"
 #include <commctrl.h>
 #include "winprefs.h"
+#include "winconfig.h"
 
 /*
  * Global variables
@@ -117,9 +118,6 @@ winWindowProc (HWND hwnd, UINT message,
       s_pScreen = s_pScreenInfo->pScreen;
       s_hwndLastPrivates = hwnd;
       SetProp (hwnd, WIN_SCR_PROP, s_pScreenPriv);
-
-      /* Store the mode key states so restore doesn't try to restore them */
-      winStoreModeKeyStates (s_pScreen);
 
       /* Setup tray icon */
       if (!s_pScreenInfo->fNoTrayIcon)
@@ -837,15 +835,12 @@ winWindowProc (HWND hwnd, UINT message,
 	break;
 
       /* Restore the state of all mode keys */
-      winRestoreModeKeyStates (s_pScreen);
+      winRestoreModeKeyStates ();
       return 0;
 
     case WM_KILLFOCUS:
       if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
 	break;
-
-      /* Store the state of all mode keys */
-      winStoreModeKeyStates (s_pScreen);
 
       /* Release any pressed keys */
       winKeybdReleaseKeys ();
@@ -911,12 +906,30 @@ winWindowProc (HWND hwnd, UINT message,
       if (wParam == VK_LWIN || wParam == VK_RWIN)
 	break;
 
+#ifdef XKB
+      /* 
+       * Discard presses generated from Windows auto-repeat
+       * ago: Only discard them if XKB is not disabled 
+       */
+      if (!g_winInfo.xkb.disable) 
+        {  
+          if (lParam & (1<<30))
+	    return 0;
+        } 
+#endif 
+      
       /* Discard fake Ctrl_L presses that precede AltGR on non-US keyboards */
       if (winIsFakeCtrl_L (message, wParam, lParam))
 	return 0;
       
-      /* Send the key event(s) */
+      /* Translate Windows key code to X scan code */
       winTranslateKey (wParam, lParam, &iScanCode);
+
+      /* Ignore repeats for CapsLock */
+      if (wParam == VK_CAPITAL)
+	lParam = 1;
+
+      /* Send the key event(s) */
       for (i = 0; i < LOWORD(lParam); ++i)
 	winSendKeyEvent (iScanCode, TRUE);
       return 0;
@@ -1055,6 +1068,7 @@ winWindowProc (HWND hwnd, UINT message,
 	}
       break;
 
+    case WM_ENDSESSION:
     case WM_GIVEUP:
        /* Tell X that we are giving up */
       winDeinitClipboard ();

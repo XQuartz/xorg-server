@@ -37,6 +37,8 @@
 
 BOOL CALLBACK
 winRedrawAllProcShadowGDI (HWND hwnd, LPARAM lParam);
+Bool
+winBltExposedRegionsShadowGDI (ScreenPtr pScreen);
 
 
 /*
@@ -1170,11 +1172,11 @@ winSetEngineFunctionsShadowGDI (ScreenPtr pScreen)
   pScreenPriv->pwinStoreColors = winStoreColorsShadowGDI;
   pScreenPriv->pwinCreateColormap = winCreateColormapShadowGDI;
   pScreenPriv->pwinDestroyColormap = winDestroyColormapShadowGDI;
-  pScreenPriv->pwinHotKeyAltTab = (winHotKeyAltTabProcPtr) (void (*)())NoopDDA;
+  pScreenPriv->pwinHotKeyAltTab = (winHotKeyAltTabProcPtr) (void (*)(void))NoopDDA;
   pScreenPriv->pwinCreatePrimarySurface
-    = (winCreatePrimarySurfaceProcPtr) (void (*)())NoopDDA;
+    = (winCreatePrimarySurfaceProcPtr) (void (*)(void))NoopDDA;
   pScreenPriv->pwinReleasePrimarySurface
-    = (winReleasePrimarySurfaceProcPtr) (void (*)())NoopDDA;
+    = (winReleasePrimarySurfaceProcPtr) (void (*)(void))NoopDDA;
 
   return TRUE;
 }

@@ -31,6 +31,9 @@
 
 #include "win.h"
 
+/* Prototypes */
+DWORD
+winGetRegistryDWORD (HKEY hkey, char *pszRegistryKey);
 
 DWORD
 winGetRegistryDWORD (HKEY hkey, char *pszRegistryKey)

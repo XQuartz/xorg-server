@@ -636,7 +636,7 @@ winSetEngineFunctionsPrimaryDD (ScreenPtr pScreen)
   /* Set our pointers */
   pScreenPriv->pwinAllocateFB = winAllocateFBPrimaryDD;
   pScreenPriv->pwinShadowUpdate
-    = (winShadowUpdateProcPtr) (void (*)())NoopDDA;
+    = (winShadowUpdateProcPtr) (void (*)(void))NoopDDA;
   pScreenPriv->pwinCloseScreen = winCloseScreenPrimaryDD;
   pScreenPriv->pwinInitVisuals = winInitVisualsPrimaryDD;
   pScreenPriv->pwinAdjustVideoMode = winAdjustVideoModePrimaryDD;
@@ -646,9 +646,11 @@ winSetEngineFunctionsPrimaryDD (ScreenPtr pScreen)
     pScreenPriv->pwinCreateBoundingWindow = winCreateBoundingWindowWindowed;
   pScreenPriv->pwinFinishScreenInit = winFinishScreenInitFB;
   pScreenPriv->pwinBltExposedRegions
-    = (winBltExposedRegionsProcPtr) (void (*)())NoopDDA;
+    = (winBltExposedRegionsProcPtr) (void (*)(void))NoopDDA;
   pScreenPriv->pwinActivateApp = winActivateAppPrimaryDD;
   pScreenPriv->pwinHotKeyAltTab = winHotKeyAltTabPrimaryDD;
+  pScreenPriv->pwinFinishCreateWindowsWindow =
+    (winFinishCreateWindowsWindowProcPtr) (void (*)(void))NoopDDA;
 
   return TRUE;
 }

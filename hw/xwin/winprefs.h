@@ -120,7 +120,7 @@ typedef struct WINMULTIWINDOWPREFS
 
 /* Functions */
 void
-LoadPreferences();
+LoadPreferences(void);
 
 void
 SetupRootMenu (unsigned long hmenuRoot);
@@ -143,5 +143,5 @@ unsigned long
 winOverrideIcon (unsigned long longpWin);
 
 unsigned long
-winOverrideDefaultIcon();
+winOverrideDefaultIcon(void);
 

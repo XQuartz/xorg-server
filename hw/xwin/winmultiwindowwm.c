@@ -51,8 +51,13 @@
 #include <windows.h>
 
 /* Local headers */
+#include "obj_base.h"
+#include "ddraw.h"
 #include "winwindow.h"
 
+#ifndef CYGDEBUG 
+#define CYGDEBUG NO
+#endif
 
 /*
  * Constant defines
@@ -399,10 +404,10 @@ GetWindowName (Display *pDisplay, Window iWin, char **ppName)
       /* */
       if (nNum && ppList && *ppList)
 	{
-	  XFree (xtpName.value);
 	  *ppName = strdup (*ppList);
 	  XFreeStringList (ppList);
 	}
+      XFree (xtpName.value);
 
 #if CYGMULTIWINDOW_DEBUG
       ErrorF ("GetWindowName - %s %s\n",
@@ -974,16 +979,12 @@ winInitWM (void **ppWMInfo,
  * winInitMultiWindowWM - 
  */
 
-Bool
-winClipboardDetectUnicodeSupport ();
-
 static void
 winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
 {
   int                   iRetries = 0;
   char			pszDisplay[512];
   int			iReturn;
-  Bool			fUnicodeSupport;
 
   ErrorF ("winInitMultiWindowWM - Hello\n");
 
@@ -1007,11 +1008,8 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
 
   ErrorF ("winInitMultiWindowWM - pthread_mutex_lock () returned.\n");
 
-  /* Do we have Unicode support? */
-  fUnicodeSupport = winClipboardDetectUnicodeSupport ();
-
   /* Set the current locale?  What does this do? */
-  if (fUnicodeSupport && !g_fCalledSetLocale)
+  if (!g_fCalledSetLocale)
     {
       ErrorF ("winInitMultiWindowWM - Calling setlocale ()\n");
       if (!setlocale (LC_ALL, ""))

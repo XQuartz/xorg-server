@@ -201,7 +201,7 @@ ReloadEnumWindowsProc (HWND hwnd, LPARAM lParam)
  * Set custom icons and menus again.
  */
 static void
-ReloadPrefs ()
+ReloadPrefs (void)
 {
   int i;
 

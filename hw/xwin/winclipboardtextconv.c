@@ -33,6 +33,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void
+winClipboardDOStoUNIX (char *pszSrc, int iLength);
+void
+winClipboardUNIXtoDOS (unsigned char **ppszData, int iLength);
 
 /*
  * Convert \r\n to \n

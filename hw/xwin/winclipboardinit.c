@@ -74,7 +74,7 @@ winInitClipboard (pthread_t *ptClipboardProc,
  */
 
 HWND
-winClipboardCreateMessagingWindow ()
+winClipboardCreateMessagingWindow (void)
 {
   WNDCLASS		wc;
   HWND			hwnd;

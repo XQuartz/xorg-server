@@ -41,9 +41,12 @@
 #define XKB_IN_SERVER
 #include "XKBsrv.h"
 #endif
+#include "../../Xext/xf86miscproc.h"
 
 static Bool g_winKeyState[NUM_KEYCODES];
 
+/* Stored to get internal mode key states.  Must be read-only.  */
+static unsigned short const *g_winInternalModeKeyStatesPtr = NULL;
 
 #if WIN_NEW_KEYBOARD_SUPPORT
 
@@ -353,6 +356,8 @@ winKeybdProc (DeviceIntPtr pDeviceInt, int iState)
   DevicePtr		pDevice = (DevicePtr) pDeviceInt;
 #ifdef XKB
   XkbComponentNamesRec names;
+  XkbSrvInfoPtr       xkbi;
+  XkbControlsPtr      ctrl;
 #endif
 
   switch (iState)
@@ -415,7 +420,29 @@ winKeybdProc (DeviceIntPtr pDeviceInt, int iState)
 				       modMap, winKeybdBell, winKeybdCtrl);
 	}
 #endif
+
+#ifdef XKB
+      if (!g_winInfo.xkb.disable)
+        {  
+          xkbi = pDeviceInt->key->xkbInfo;
+          if (xkbi != NULL)
+            {  
+              ctrl = xkbi->desc->ctrls;
+              ctrl->repeat_delay = g_winInfo.keyboard.delay;
+              ctrl->repeat_interval = 1000/g_winInfo.keyboard.rate;
+            }
+          else
+            {  
+              ErrorF ("winKeybdProc - Error initializing keyboard AutoRepeat (No XKB)\n");
+            }
+        }
+#endif
+
+      
+
+      g_winInternalModeKeyStatesPtr = &(pDeviceInt->key->state);
       break;
+      
     case DEVICE_ON: 
       pDevice->on = TRUE;
       break;
@@ -473,46 +500,27 @@ winInitializeModeKeyStates (void)
 
 
 /*
- * We have to store the last state of each mode
- * key before we lose the keyboard focus.
- */
-
-void
-winStoreModeKeyStates (ScreenPtr pScreen)
-{
-#if !WIN_NEW_KEYBOARD_SUPPORT
-  winScreenPriv(pScreen);
-
-  /* Initialize all mode key states to off */
-  pScreenPriv->dwModeKeyStates = 0x0L;
-
-  pScreenPriv->dwModeKeyStates |= 
-    (GetKeyState (VK_NUMLOCK) & 0x0001) << NumLockMapIndex;
-
-  pScreenPriv->dwModeKeyStates |=
-    (GetKeyState (VK_SCROLL) & 0x0001) << ScrollLockMapIndex;
-
-  pScreenPriv->dwModeKeyStates |=
-    (GetKeyState (VK_CAPITAL) & 0x0001) << LockMapIndex;
-
-  pScreenPriv->dwModeKeyStates |=
-    (GetKeyState (VK_KANA) & 0x0001) << KanaMapIndex;
-#endif
-}
-
-
-/*
  * Upon regaining the keyboard focus we must
  * resynchronize our internal mode key states
  * with the actual state of the keys.
  */
 
 void
-winRestoreModeKeyStates (ScreenPtr pScreen)
+winRestoreModeKeyStates ()
 {
 #if !WIN_NEW_KEYBOARD_SUPPORT
-  winScreenPriv(pScreen);
   DWORD			dwKeyState;
+  unsigned short internalKeyStates;
+
+  /* X server is being initialized */
+  if (!g_winInternalModeKeyStatesPtr)
+    return;
+
+  /* Force to process all pending events in the mi event queue */
+  mieqProcessInputEvents ();
+  
+  /* Read the mode key states of our X server */
+  internalKeyStates = *g_winInternalModeKeyStatesPtr;
 
   /* 
    * NOTE: The C XOR operator, ^, will not work here because it is
@@ -522,7 +530,7 @@ winRestoreModeKeyStates (ScreenPtr pScreen)
 
   /* Has the key state changed? */
   dwKeyState = GetKeyState (VK_NUMLOCK) & 0x0001;
-  if (WIN_XOR (pScreenPriv->dwModeKeyStates & NumLockMask, dwKeyState))
+  if (WIN_XOR (internalKeyStates & NumLockMask, dwKeyState))
     {
       winSendKeyEvent (KEY_NumLock, TRUE);
       winSendKeyEvent (KEY_NumLock, FALSE);
@@ -530,7 +538,7 @@ winRestoreModeKeyStates (ScreenPtr pScreen)
 
   /* Has the key state changed? */
   dwKeyState = GetKeyState (VK_CAPITAL) & 0x0001;
-  if (WIN_XOR (pScreenPriv->dwModeKeyStates & LockMask, dwKeyState))
+  if (WIN_XOR (internalKeyStates & LockMask, dwKeyState))
     {
       winSendKeyEvent (KEY_CapsLock, TRUE);
       winSendKeyEvent (KEY_CapsLock, FALSE);
@@ -538,7 +546,7 @@ winRestoreModeKeyStates (ScreenPtr pScreen)
 
   /* Has the key state changed? */
   dwKeyState = GetKeyState (VK_SCROLL) & 0x0001;
-  if (WIN_XOR (pScreenPriv->dwModeKeyStates & ScrollLockMask, dwKeyState))
+  if (WIN_XOR (internalKeyStates & ScrollLockMask, dwKeyState))
     {
       winSendKeyEvent (KEY_ScrollLock, TRUE);
       winSendKeyEvent (KEY_ScrollLock, FALSE);
@@ -546,7 +554,7 @@ winRestoreModeKeyStates (ScreenPtr pScreen)
 
   /* Has the key state changed? */
   dwKeyState = GetKeyState (VK_KANA) & 0x0001;
-  if (WIN_XOR (pScreenPriv->dwModeKeyStates & KanaMask, dwKeyState))
+  if (WIN_XOR (internalKeyStates & KanaMask, dwKeyState))
     {
       winSendKeyEvent (KEY_HKTG, TRUE);
       winSendKeyEvent (KEY_HKTG, FALSE);

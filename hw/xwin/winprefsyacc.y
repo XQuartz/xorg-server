@@ -54,15 +54,15 @@ static void SetDefaultSysMenu (char *menu, int pos);
 
 static void OpenMenu(char *menuname);
 static void AddMenuLine(char *name, MENUCOMMANDTYPE cmd, char *param);
-static void CloseMenu();
+static void CloseMenu(void);
 
-static void OpenIcons();
+static void OpenIcons(void);
 static void AddIconLine(char *matchstr, char *iconfile);
-static void CloseIcons();
+static void CloseIcons(void);
 
-static void OpenSysMenu();
+static void OpenSysMenu(void);
 static void AddSysMenuLine(char *matchstr, char *menuname, int pos);
-static void CloseSysMenu();
+static void CloseSysMenu(void);
 
 static int yyerror (char *s);
 

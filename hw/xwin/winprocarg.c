@@ -29,6 +29,7 @@ from The Open Group.
 #include "win.h"
 #include "winconfig.h"
 #include "winprefs.h"
+#include "winmsg.h"
 
 
 /*
@@ -39,9 +40,10 @@ extern int			g_iNumScreens;
 extern winScreenInfo		g_ScreenInfo[];
 extern int			g_iLastScreen;
 extern Bool			g_fInitializedDefaultScreens;
-extern FILE			*g_pfLog;
 extern Bool			g_fUnicodeClipboard;
 extern Bool			g_fXdmcpEnabled;
+extern int			g_iLogVerbose;
+extern char *			g_pszLogFile;
 
 
 /*
@@ -64,7 +66,6 @@ winInitializeDefaultScreens (void)
   DWORD			dwWidth, dwHeight;
 
   /* Bail out early if default screens have already been initialized */
-
   if (g_fInitializedDefaultScreens)
     return;
 
@@ -79,7 +80,8 @@ winInitializeDefaultScreens (void)
   dwWidth = GetSystemMetrics (SM_CXSCREEN);
   dwHeight = GetSystemMetrics (SM_CYSCREEN);
 
-  ErrorF ("winInitializeDefaultScreens - w %ld h %ld\n", dwWidth, dwHeight);
+  winErrorFVerb (2, "winInitializeDefaultScreens - w %d h %d\n",
+	  (int) dwWidth, (int) dwHeight);
 
   /* Set a default DPI, if no parameter was passed */
   if (monitorResolution == 0)
@@ -102,6 +104,7 @@ winInitializeDefaultScreens (void)
       g_ScreenInfo[i].fFullScreen = FALSE;
       g_ScreenInfo[i].fDecoration = TRUE;
       g_ScreenInfo[i].fRootless = FALSE;
+      g_ScreenInfo[i].fPseudoRootless = FALSE;
       g_ScreenInfo[i].fMultiWindow = FALSE;
       g_ScreenInfo[i].fMultipleMonitors = FALSE;
       g_ScreenInfo[i].fClipboard = FALSE;
@@ -122,9 +125,8 @@ winInitializeDefaultScreens (void)
   /* Signal that the default screens have been initialized */
   g_fInitializedDefaultScreens = TRUE;
 
-  ErrorF ("winInitializeDefaultScreens - Returning\n");
+  winErrorFVerb (2, "winInitializeDefaultScreens - Returning\n");
 }
-
 
 /* See Porting Layer Definition - p. 57 */
 /*
@@ -165,10 +167,6 @@ ddxProcessArgument (int argc, char *argv[], int i)
        * that are generated before OsInit () is called.
        */
       OsVendorVErrorFProc = OsVendorVErrorF;
-
-      /* Open log file if not yet open */
-      if (g_pfLog == NULL)
-	g_pfLog = fopen (WIN_LOG_FNAME, "w");
 #endif
 
       s_fBeenHere = TRUE;
@@ -178,25 +176,25 @@ ddxProcessArgument (int argc, char *argv[], int i)
        * OsVendorInit () gets called, otherwise we will overwrite
        * settings changed by parameters such as -fullscreen, etc.
        */
-      ErrorF ("ddxProcessArgument - Initializing default screens\n");
+      winErrorFVerb (2, "ddxProcessArgument - Initializing default screens\n");
       winInitializeDefaultScreens ();
     }
 
 #if CYGDEBUG
-  ErrorF ("ddxProcessArgument - arg: %s\n", argv[i]);
+  winErrorFVerb (2, "ddxProcessArgument - arg: %s\n", argv[i]);
 #endif
   
   /*
    * Look for the '-screen scr_num [width height]' argument
    */
-  if (strcmp (argv[i], "-screen") == 0)
+  if (IS_OPTION ("-screen"))
     {
       int		iArgsProcessed = 1;
       int		nScreenNum;
       int		iWidth, iHeight;
 
 #if CYGDEBUG
-      ErrorF ("ddxProcessArgument - screen - argc: %d i: %d\n",
+      winErrorFVerb (2, "ddxProcessArgument - screen - argc: %d i: %d\n",
 	      argc, i);
 #endif
 
@@ -224,7 +222,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
 			  (int *) &iWidth,
 			  (int *) &iHeight))
 	{
-	  ErrorF ("ddxProcessArgument - screen - Found ``WxD'' arg\n");
+	  winErrorFVerb (2, "ddxProcessArgument - screen - Found ``WxD'' arg\n");
 	  iArgsProcessed = 3;
 	  g_ScreenInfo[nScreenNum].fUserGaveHeightAndWidth = TRUE;
 	  g_ScreenInfo[nScreenNum].dwWidth = iWidth;
@@ -238,7 +236,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	       && 1 == sscanf (argv[i + 3], "%d",
 			       (int *) &iHeight))
 	{
-	  ErrorF ("ddxProcessArgument - screen - Found ``W D'' arg\n");
+	  winErrorFVerb (2, "ddxProcessArgument - screen - Found ``W D'' arg\n");
 	  iArgsProcessed = 4;
 	  g_ScreenInfo[nScreenNum].fUserGaveHeightAndWidth = TRUE;
 	  g_ScreenInfo[nScreenNum].dwWidth = iWidth;
@@ -248,10 +246,10 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	}
       else
 	{
-	  ErrorF ("ddxProcessArgument - screen - Did not find size arg. "
-		  "dwWidth: %ld dwHeight: %ld\n",
-		  g_ScreenInfo[nScreenNum].dwWidth,
-		  g_ScreenInfo[nScreenNum].dwHeight);
+	  winErrorFVerb (2, "ddxProcessArgument - screen - Did not find size arg. "
+		  "dwWidth: %d dwHeight: %d\n",
+		  (int) g_ScreenInfo[nScreenNum].dwWidth,
+		  (int) g_ScreenInfo[nScreenNum].dwHeight);
 	  iArgsProcessed = 2;
 	  g_ScreenInfo[nScreenNum].fUserGaveHeightAndWidth = FALSE;
 	}
@@ -286,7 +284,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-engine n' argument
    */
-  if (strcmp (argv[i], "-engine") == 0)
+  if (IS_OPTION ("-engine"))
     {
       DWORD		dwEngine = 0;
       CARD8		c8OnBits = 0;
@@ -335,7 +333,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-fullscreen' argument
    */
-  if (strcmp (argv[i], "-fullscreen") == 0)
+  if (IS_OPTION ("-fullscreen"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -373,7 +371,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-lesspointer' argument
    */
-  if (strcmp (argv[i], "-lesspointer") == 0)
+  if (IS_OPTION ("-lesspointer"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -399,7 +397,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-nodecoration' argument
    */
-  if (strcmp (argv[i], "-nodecoration") == 0)
+  if (IS_OPTION ("-nodecoration"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -425,7 +423,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-rootless' argument
    */
-  if (strcmp (argv[i], "-rootless") == 0)
+  if (IS_OPTION ("-rootless"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -449,9 +447,35 @@ ddxProcessArgument (int argc, char *argv[], int i)
     }
 
   /*
+   * Look for the '-pseudorootless' argument
+   */
+  if (IS_OPTION ("-pseudorootless"))
+    {
+      /* Is this parameter attached to a screen or is it global? */
+      if (-1 == g_iLastScreen)
+	{
+	  int			j;
+
+	  /* Parameter is for all screens */
+	  for (j = 0; j < MAXSCREENS; j++)
+	    {
+	      g_ScreenInfo[j].fPseudoRootless = TRUE;
+	    }
+	}
+      else
+	{
+	  /* Parameter is for a single screen */
+	  g_ScreenInfo[g_iLastScreen].fPseudoRootless = TRUE;
+	}
+
+      /* Indicate that we have processed this argument */
+      return 1;
+    }
+
+  /*
    * Look for the '-multiwindow' argument
    */
-  if (strcmp (argv[i], "-multiwindow") == 0)
+  if (IS_OPTION ("-multiwindow"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -477,8 +501,8 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-multiplemonitors' argument
    */
-  if (strcmp (argv[i], "-multiplemonitors") == 0
-      || strcmp (argv[i], "-multimonitors") == 0)
+  if (IS_OPTION ("-multiplemonitors")
+      || IS_OPTION ("-multimonitors"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -504,7 +528,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-scrollbars' argument
    */
-  if (strcmp (argv[i], "-scrollbars") == 0)
+  if (IS_OPTION ("-scrollbars"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -538,7 +562,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-clipboard' argument
    */
-  if (strcmp (argv[i], "-clipboard") == 0)
+  if (IS_OPTION ("-clipboard"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -564,7 +588,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-ignoreinput' argument
    */
-  if (strcmp (argv[i], "-ignoreinput") == 0)
+  if (IS_OPTION ("-ignoreinput"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -590,7 +614,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-emulate3buttons' argument
    */
-  if (strcmp (argv[i], "-emulate3buttons") == 0)
+  if (IS_OPTION ("-emulate3buttons"))
     {
       int	iArgsProcessed = 1;
       int	iE3BTimeout = WIN_DEFAULT_E3B_TIME;
@@ -638,7 +662,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-depth n' argument
    */
-  if (strcmp (argv[i], "-depth") == 0)
+  if (IS_OPTION ("-depth"))
     {
       DWORD		dwBPP = 0;
       
@@ -676,7 +700,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-refresh n' argument
    */
-  if (strcmp (argv[i], "-refresh") == 0)
+  if (IS_OPTION ("-refresh"))
     {
       DWORD		dwRefreshRate = 0;
       
@@ -714,7 +738,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-clipupdates num_boxes' argument
    */
-  if (strcmp (argv[i], "-clipupdates") == 0)
+  if (IS_OPTION ("-clipupdates"))
     {
       DWORD		dwNumBoxes = 0;
       
@@ -752,7 +776,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-emulatepseudo' argument
    */
-  if (strcmp (argv[i], "-emulatepseudo") == 0)
+  if (IS_OPTION ("-emulatepseudo"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -778,7 +802,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-nowinkill' argument
    */
-  if (strcmp (argv[i], "-nowinkill") == 0)
+  if (IS_OPTION ("-nowinkill"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -804,7 +828,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-winkill' argument
    */
-  if (strcmp (argv[i], "-winkill") == 0)
+  if (IS_OPTION ("-winkill"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -830,7 +854,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-nounixkill' argument
    */
-  if (strcmp (argv[i], "-nounixkill") == 0)
+  if (IS_OPTION ("-nounixkill"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -856,7 +880,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-unixkill' argument
    */
-  if (strcmp (argv[i], "-unixkill") == 0)
+  if (IS_OPTION ("-unixkill"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -882,7 +906,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-notrayicon' argument
    */
-  if (strcmp (argv[i], "-notrayicon") == 0)
+  if (IS_OPTION ("-notrayicon"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -908,7 +932,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-trayicon' argument
    */
-  if (strcmp (argv[i], "-trayicon") == 0)
+  if (IS_OPTION ("-trayicon"))
     {
       /* Is this parameter attached to a screen or is it global? */
       if (-1 == g_iLastScreen)
@@ -989,6 +1013,26 @@ ddxProcessArgument (int argc, char *argv[], int i)
     {
       CHECK_ARGS (1);
       g_cmdline.keyboard = argv[++i];
+      return 2;
+    }
+
+  /*
+   * Look for the '-logfile' argument
+   */
+  if (IS_OPTION ("-logfile"))
+    {
+      CHECK_ARGS (1);
+      g_pszLogFile = argv[++i];
+      return 2;
+    }
+
+  /*
+   * Look for the '-logverbose' argument
+   */
+  if (IS_OPTION ("-logverbose"))
+    {
+      CHECK_ARGS (1);
+      g_iLogVerbose = atoi(argv[++i]);
       return 2;
     }
 

@@ -463,8 +463,6 @@ vesaScreenInitialize (KdScreenInfo *screen, VesaScreenPrivPtr pscr)
     pscr->randr = screen->randr;
     pscr->shadow = vesa_shadow;
     pscr->origDepth = screen->fb[0].depth;
-    pscr->layerKind = LAYER_FB;
-
     /*
      * Compute visual support for the selected depth
      */
@@ -683,7 +681,7 @@ void
 vesaUpdateMono (ScreenPtr	pScreen,
 		shadowBufPtr	pBuf)
 {
-    RegionPtr	damage = &pBuf->damage;
+    RegionPtr	damage = shadowDamage(pBuf);
     PixmapPtr	pShadow = pBuf->pPixmap;
     int		nbox = REGION_NUM_RECTS (damage);
     BoxPtr	pbox = REGION_RECTS (damage);
@@ -831,16 +829,15 @@ vesaConfigureScreen (ScreenPtr pScreen)
     KdSetMouseMatrix (&m);
 }
 
-LayerPtr
-vesaLayerCreate (ScreenPtr pScreen)
+PixmapPtr
+vesaGetPixmap (ScreenPtr pScreen)
 {
     KdScreenPriv(pScreen);
     KdScreenInfo	*screen = pScreenPriv->screen;
     VesaScreenPrivPtr	pscr = pScreenPriv->screen->driver;
     ShadowUpdateProc	update;
     ShadowWindowProc	window = 0;
-    PixmapPtr		pPixmap;
-    int			kind;
+    PixmapPtr		pShadow, pPixmap;
 
     if (pscr->shadow)
     {
@@ -872,23 +869,35 @@ vesaLayerCreate (ScreenPtr pScreen)
 	    break;
 	}
 	
-	kind = LAYER_SHADOW;
-	pPixmap = 0;
+	pPixmap = (*pScreen->CreatePixmap) (pScreen,
+					    pScreen->width,
+					    pScreen->height,
+					    screen->fb[0].depth);
+	if (!pPixmap)
+	    return NullPixmap;
+	if (!shadowSet (pScreen, pPixmap, update, 
+			window, pscr->randr, 0))
+	{
+	    (*pScreen->DestroyPixmap) (pPixmap);
+	    return NullPixmap;
+	}
+	pShadow = pPixmap;
     }
     else
     {
-	kind = pscr->layerKind;
-	pPixmap = LAYER_SCREEN_PIXMAP;
-	update = 0;
-	window = 0;
+	pPixmap = (*pScreen->GetScreenPixmap) (pScreen);
+	pShadow = 0;
+	shadowUnset (pScreen);
     }
+    
+    if (pscr->pShadow)
+        (*pScreen->DestroyPixmap) (pscr->pShadow);
+    pscr->pShadow = pShadow;
 
     if (vesa_verbose)
 	ErrorF ("Mode selected %dx%dx%d\n",
 		pScreen->width, pScreen->height, screen->fb[0].depth);
-
-    return LayerCreate (pScreen, kind, screen->fb[0].depth, 
-			pPixmap, update, window, pscr->randr, 0);
+    return pPixmap;
 }
 
 Bool
@@ -1013,7 +1022,11 @@ vesaMapFramebuffer (KdScreenInfo    *screen)
 	pscr->fb = NULL;
 	break;
     }
+    screen->memory_base = pscr->fb;
+    screen->memory_size = pscr->fb_size;
     screen->fb[0].frameBuffer = (CARD8 *)(pscr->fb);
+    screen->off_screen_base = screen->fb[0].byteStride * screen->height;
+    
     return TRUE;
 }
 
@@ -1109,25 +1122,13 @@ vesaRandRGetInfo (ScreenPtr pScreen, Rotation *rotations)
 }
 
 int
-vesaLayerAdd (WindowPtr pWin, pointer value)
+vesaPixmapSet (WindowPtr pWin, pointer value)
 {
     ScreenPtr	    pScreen = pWin->drawable.pScreen;
-    LayerPtr	    pLayer = (LayerPtr) value;
+    PixmapPtr	    pPixmap = value;
 
-    if (!LayerWindowAdd (pScreen, pLayer, pWin))
-	return WT_STOPWALKING;
-
-    return WT_WALKCHILDREN;
-}
-
-int
-vesaLayerRemove (WindowPtr pWin, pointer value)
-{
-    ScreenPtr	    pScreen = pWin->drawable.pScreen;
-    LayerPtr	    pLayer = (LayerPtr) value;
-
-    LayerWindowRemove (pScreen, pLayer, pWin);
-
+    pWin->drawable.serialNumber = NEXT_SERIAL_NUMBER;
+    (*pScreen->SetWindowPixmap) (pWin, pPixmap);
     return WT_WALKCHILDREN;
 }
 
@@ -1150,8 +1151,8 @@ vesaRandRSetConfig (ScreenPtr		pScreen,
     int			oldheight;
     int			oldmmwidth;
     int			oldmmheight;
-    LayerPtr		pNewLayer;
     int			newwidth, newheight;
+    PixmapPtr		pPixmap;
 
     if (screen->randr & (RR_Rotate_0|RR_Rotate_180))
     {
@@ -1225,13 +1226,15 @@ vesaRandRSetConfig (ScreenPtr		pScreen,
 	break;
     }
 
+    KdOffscreenSwapOut (screen->pScreen);
+    
     vesaUnmapFramebuffer (screen);
     if (!vesaMapFramebuffer (screen))
 	goto bail3;
     
 #if 0
     /*
-     * XXX can't switch depths yet
+     * XXX can't switch depths
      */
     screen->fb[0].depth = depth;
     screen->fb[0].bitsPerPixel = bpp;
@@ -1259,20 +1262,14 @@ vesaRandRSetConfig (ScreenPtr		pScreen,
     }
 	
     /*
-     * Create the layer
+     * Get the pixmap that windows live in
      */
-    pNewLayer = vesaLayerCreate (pScreen);
-    if (!pNewLayer)
+    pPixmap = vesaGetPixmap (pScreen);
+    if (!pPixmap)
 	goto bail4;
     
-    if (WalkTree (pScreen, vesaLayerAdd, (pointer) pNewLayer) == WT_STOPWALKING)
-	goto bail5;
+    WalkTree (pScreen, vesaPixmapSet, (pointer) pPixmap);
     
-    WalkTree (pScreen, vesaLayerRemove, (pointer) pscr->pLayer);
-    LayerDestroy (pScreen, pscr->pLayer);
-
-    pscr->pLayer = pNewLayer;
-
     /* set the subpixel order */
     KdSetSubpixelOrder (pScreen, pscr->randr);
 
@@ -1281,9 +1278,6 @@ vesaRandRSetConfig (ScreenPtr		pScreen,
 
     return TRUE;
 
-bail5:
-    WalkTree (pScreen, vesaLayerRemove, (pointer) pNewLayer);
-    LayerDestroy (pScreen, pNewLayer);
 bail4:
     vesaUnmapFramebuffer (screen);
     *pscr = oldscr;
@@ -1340,27 +1334,18 @@ vesaRandRInit (ScreenPtr pScreen)
 Bool
 vesaInitScreen(ScreenPtr pScreen)
 {
-    if (!LayerStartInit (pScreen))
-	return FALSE;
-    
-    return TRUE;
+    return shadowSetup (pScreen);
 }
 
 Bool
 vesaFinishInitScreen (ScreenPtr pScreen)
 {
-    KdScreenPriv(pScreen);
-    VesaScreenPrivPtr	pscr = pScreenPriv->screen->driver;
+    PixmapPtr		pPixmap;
     
-    pscr->layerKind = LayerNewKind (pScreen);
-
-    if (!LayerFinishInit (pScreen))
-	return FALSE;
-
     vesaConfigureScreen (pScreen);
 
-    pscr->pLayer = vesaLayerCreate (pScreen);
-    if (!pscr->pLayer)
+    pPixmap = vesaGetPixmap (pScreen);
+    if (!pPixmap)
 	return FALSE;
     
 #ifdef RANDR
@@ -1668,6 +1653,11 @@ vesaScreenFini(KdScreenInfo *screen)
 {
     VesaScreenPrivPtr	pscr = screen->driver;
     
+    if (pscr->pShadow)
+    {
+	(*screen->pScreen->DestroyPixmap) (pscr->pShadow);
+	pscr->pShadow = 0;
+    }
     vesaUnmapFramebuffer (screen);
     screen->fb[0].depth = pscr->origDepth;
 }

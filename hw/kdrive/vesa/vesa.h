@@ -25,7 +25,7 @@ THE SOFTWARE.
 #define _VESA_H_
 
 #include "kdrive.h"
-#include "layer.h"
+#include "shadow.h"
 #include "vm86.h"
 #ifdef RANDR
 #include "randrstr.h"
@@ -98,11 +98,10 @@ typedef struct _VesaScreenPriv {
     Rotation	randr;
     int		mapping;
     int		origDepth;
-    int		layerKind;
     void	*fb;
     int		fb_size;
     CARD32	fb_phys;
-    LayerPtr	pLayer;
+    PixmapPtr	pShadow;
 } VesaScreenPrivRec, *VesaScreenPrivPtr;
 
 extern int vesa_video_mode;
@@ -145,8 +144,8 @@ vesaScreenInitialize (KdScreenInfo *screen, VesaScreenPrivPtr pscr);
 Bool
 vesaScreenInit(KdScreenInfo *screen);    
 
-LayerPtr
-vesaLayerCreate (ScreenPtr pScreen);
+PixmapPtr
+vesaGetPixmap (ScreenPtr pScreen);
 
 Bool
 vesaMapFramebuffer (KdScreenInfo    *screen);

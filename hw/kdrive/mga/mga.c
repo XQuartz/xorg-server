@@ -55,7 +55,6 @@ Bool
 mgaScreenInit (KdScreenInfo *screen)
 {
     MgaScreenInfo *mgas;
-    int screen_size, memory;
 
     mgas = (MgaScreenInfo *) xalloc (sizeof (MgaScreenInfo));
     if (!mgas)
@@ -75,22 +74,6 @@ mgaScreenInit (KdScreenInfo *screen)
 
     fprintf (stderr, "vesa mapping is %d\n", mgas->vesa.mapping);
 #endif
-    screen->memory_base = mgas->vesa.fb;
-
-    memory = mgas->vesa.fb_size;
-    screen_size = screen->fb[0].byteStride * screen->height;
-
-    memory -= screen_size;
-    if (memory > screen->fb[0].byteStride)
-    {
-	screen->off_screen_base = screen_size;
-	screen->off_screen_size = memory;
-    }
-    else
-    {
-	screen->off_screen_base = 0;
-	screen->off_screen_size = 0;
-    }
     screen->driver = mgas;
     return TRUE;
 }

@@ -111,13 +111,12 @@ nvidiaInitScreen (ScreenPtr pScreen)
 }
 
 #ifdef RANDR
+Bool
 nvidiaRandRSetConfig (ScreenPtr		pScreen,
 		      Rotation		rotation,
 		      int		rate,
 		      RRScreenSizePtr	pSize)
 {
-    KdScreenPriv(pScreen);
-    
     KdCheckSync (pScreen);
 
     if (!vesaRandRSetConfig (pScreen, rotation, rate, pSize))
@@ -149,8 +148,6 @@ nvidiaFinishInitScreen (ScreenPtr pScreen)
 void
 nvidiaPreserve (KdCardInfo *card)
 {
-    NvidiaCardInfo	*nvidiac = card->driver;
-
     vesaPreserve(card);
 }
 
@@ -276,7 +273,6 @@ nvidiaEnable (ScreenPtr pScreen)
 	return FALSE;
     
     nvidiaSetMMIO (pScreenPriv->card, nvidiac);
-    nvidiaDPMS (pScreen, KD_DPMS_NORMAL);
 #ifdef XV
     KdXVEnable (pScreen);
 #endif

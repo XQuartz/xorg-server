@@ -190,7 +190,6 @@ fbdevScreenInitialize (KdScreenInfo *screen, FbdevScrPriv *scrpriv)
     }
     screen->rate = 72;
     scrpriv->randr = screen->randr;
-    scrpriv->layerKind = LAYER_FB;
     
 #ifdef FAKE24_ON_16
     if (screen->fb[0].depth == 24 && screen->fb[0].bitsPerPixel == 24 &&
@@ -380,16 +379,15 @@ fbdevConfigureScreen (ScreenPtr pScreen)
     KdSetMouseMatrix (&m);
 }
 
-LayerPtr
-fbdevLayerCreate (ScreenPtr pScreen)
+PixmapPtr
+fbdevGetPixmap (ScreenPtr pScreen)
 {
     KdScreenPriv(pScreen);
     KdScreenInfo	*screen = pScreenPriv->screen;
     FbdevScrPriv	*scrpriv = screen->driver;
     ShadowUpdateProc	update;
     ShadowWindowProc	window;
-    PixmapPtr		pPixmap;
-    int			kind;
+    PixmapPtr		pShadow, pPixmap;
 
     if (scrpriv->shadow)
     {
@@ -408,21 +406,26 @@ fbdevLayerCreate (ScreenPtr pScreen)
 	    else
 		update = shadowUpdatePacked;
 	}
-	if (!update)
-	    abort ();
-	kind = LAYER_SHADOW;
-	pPixmap = 0;
+	pPixmap = (*pScreen->CreatePixmap) (pScreen,
+					    pScreen->width,
+					    pScreen->height,
+					    screen->fb[0].depth);
+	if (!pPixmap)
+	    return FALSE;
+	shadowSet (pScreen, pPixmap, update, window, scrpriv->randr, 0);
+	pShadow = pPixmap;
     }
     else
     {
-	kind = scrpriv->layerKind;
-	pPixmap = LAYER_SCREEN_PIXMAP;
-	update = 0;
-	window = 0;
+	pPixmap = (*pScreen->GetScreenPixmap) (pScreen);
+	pShadow = 0;
     }
     
-    return LayerCreate (pScreen, kind, screen->fb[0].depth, 
-			pPixmap, update, window, scrpriv->randr, 0);
+    if (scrpriv->pShadow)
+        (*pScreen->DestroyPixmap) (scrpriv->pShadow);
+    scrpriv->pShadow = pShadow;
+
+    return pPixmap;
 }
 
 
@@ -459,25 +462,12 @@ fbdevRandRGetInfo (ScreenPtr pScreen, Rotation *rotations)
 }
 
 int
-fbdevLayerAdd (WindowPtr pWin, pointer value)
+fbdevPixmapSet (WindowPtr pWin, pointer value)
 {
     ScreenPtr	    pScreen = pWin->drawable.pScreen;
-    LayerPtr	    pLayer = (LayerPtr) value;
+    PixmapPtr	    pPixmap = value;
 
-    if (!LayerWindowAdd (pScreen, pLayer, pWin))
-	return WT_STOPWALKING;
-
-    return WT_WALKCHILDREN;
-}
-
-int
-fbdevLayerRemove (WindowPtr pWin, pointer value)
-{
-    ScreenPtr	    pScreen = pWin->drawable.pScreen;
-    LayerPtr	    pLayer = (LayerPtr) value;
-
-    LayerWindowRemove (pScreen, pLayer, pWin);
-
+    (*pScreen->SetWindowPixmap) (pWin, pPixmap);
     return WT_WALKCHILDREN;
 }
 
@@ -496,8 +486,8 @@ fbdevRandRSetConfig (ScreenPtr		pScreen,
     int			oldheight;
     int			oldmmwidth;
     int			oldmmheight;
-    LayerPtr		pNewLayer;
     int			newwidth, newheight;
+    PixmapPtr		pPixmap;
 
     if (screen->randr & (RR_Rotate_0|RR_Rotate_180))
     {
@@ -528,26 +518,21 @@ fbdevRandRSetConfig (ScreenPtr		pScreen,
 
     fbdevConfigureScreen (pScreen);
 
-    pNewLayer = fbdevLayerCreate (pScreen);
-    if (!pNewLayer)
+    /*
+     * Get the pixmap that windows live in
+     */
+    pPixmap = fbdevGetPixmap (pScreen);
+    if (!pPixmap)
 	goto bail4;
-    if (WalkTree (pScreen, fbdevLayerAdd, (pointer) pNewLayer) == WT_STOPWALKING)
-	goto bail5;
 
-    WalkTree (pScreen, fbdevLayerRemove, (pointer) scrpriv->pLayer);
-    LayerDestroy (pScreen, scrpriv->pLayer);
-
-    scrpriv->pLayer = pNewLayer;
-
+    WalkTree (pScreen, fbdevPixmapSet, (pointer) pPixmap);
+    
     KdSetSubpixelOrder (pScreen, scrpriv->randr);
     if (wasEnabled)
 	KdEnableScreen (pScreen);
 
     return TRUE;
 
-bail5:
-    WalkTree (pScreen, fbdevLayerRemove, (pointer) pNewLayer);
-    LayerDestroy (pScreen, pNewLayer);
 bail4:
     pScreen->width = oldwidth;
     pScreen->height = oldheight;
@@ -616,27 +601,20 @@ fbdevInitScreen (ScreenPtr pScreen)
 #endif
 
     pScreen->CreateColormap = fbdevCreateColormap;
-
-    if (!LayerStartInit (pScreen))
-	return FALSE;
-    return TRUE;
+    return shadowSetup (pScreen);
 }
 
 Bool
 fbdevFinishInitScreen (ScreenPtr pScreen)
 {
-    KdScreenPriv(pScreen);
-    FbdevScrPriv	*scrpriv = pScreenPriv->screen->driver;
-    
-    scrpriv->layerKind = LayerNewKind (pScreen);
+    PixmapPtr	pPixmap;
 
-    if (!LayerFinishInit (pScreen))
+    fbdevConfigureScreen (pScreen);
+
+    pPixmap = fbdevGetPixmap (pScreen);
+    if (!pPixmap)
 	return FALSE;
 
-    scrpriv->pLayer = fbdevLayerCreate (pScreen);
-    if (!scrpriv->pLayer)
-	return FALSE;
-    
 #ifdef RANDR
     if (!fbdevRandRInit (pScreen))
 	return FALSE;

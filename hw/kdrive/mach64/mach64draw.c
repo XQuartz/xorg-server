@@ -449,6 +449,7 @@ mach64DrawDisable (ScreenPtr pScreen)
 void
 mach64DrawFini (ScreenPtr pScreen)
 {
+    kaaDrawFini (pScreen);
 }
 
 void

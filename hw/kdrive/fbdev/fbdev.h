@@ -30,7 +30,6 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include "kdrive.h"
-#include "layer.h"
 
 #ifdef RANDR
 #include "randrstr.h"
@@ -50,8 +49,7 @@ typedef struct _fbdevPriv {
 typedef struct _fbdevScrPriv {
     Rotation			randr;
     Bool			shadow;
-    int				layerKind;
-    LayerPtr			pLayer;
+    PixmapPtr			pShadow;
 } FbdevScrPriv;
 
 extern KdCardFuncs  fbdevFuncs;

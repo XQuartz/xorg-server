@@ -119,8 +119,8 @@ typedef struct _KdScreenInfo {
     DDXPointRec	origin;
     KdFrameBuffer   fb[KD_MAX_FB];
     CARD8	*memory_base;
-    int         off_screen_base;
-    int         off_screen_size;
+    unsigned long   memory_size;
+    unsigned long   off_screen_base;
     struct _RealOffscreenArea	*off_screen_areas;
 } KdScreenInfo;
 
@@ -350,6 +350,9 @@ extern KdOsFuncs	*kdOsFuncs;
 Bool
 kaaDrawInit (ScreenPtr	        pScreen,
 	     KaaScreenInfoPtr   pScreenInfo);
+
+void
+kaaDrawFini (ScreenPtr	        pScreen);
 
 void
 kaaWrapGC (GCPtr pGC);

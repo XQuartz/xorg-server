@@ -844,7 +844,7 @@ KdCloseScreen (int index, ScreenPtr pScreen)
     pScreen->CloseScreen = pScreenPriv->CloseScreen;
     ret = (*pScreen->CloseScreen) (index, pScreen);
     
-    if (screen->off_screen_size > 0)
+    if (screen->off_screen_base < screen->memory_size)
 	KdOffscreenFini (pScreen);
     
     if (pScreenPriv->dpmsState != KD_DPMS_NORMAL)
@@ -1130,7 +1130,7 @@ KdScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
 	if (!(*card->cfuncs->initAccel) (pScreen))
 	    screen->dumb = TRUE;
 
-    if (screen->off_screen_size > 0)
+    if (screen->off_screen_base < screen->memory_size)
 	KdOffscreenInit (pScreen);
     
 #ifdef PSEUDO8

@@ -70,7 +70,6 @@ mach64ScreenInit (KdScreenInfo *screen)
 	screen->dumb = TRUE;
     if (mach64s->vesa.mapping != VESA_LINEAR)
 	screen->dumb = TRUE;
-    screen->memory_base = mach64s->vesa.fb;
     switch (screen->fb[0].depth) {
     case 8:
 	mach64s->colorKey = 0xff;
@@ -86,12 +85,6 @@ mach64ScreenInit (KdScreenInfo *screen)
 	mach64s->colorKey = 1;
 	break;
     }
-    memory = mach64s->vesa.fb_size;
-    screen_size = screen->fb[0].byteStride * screen->height;
-    memory -= screen_size;
-    screen->softCursor = TRUE;
-    screen->off_screen_base = screen_size;
-    screen->off_screen_size = memory;
     screen->driver = mach64s;
     return TRUE;
 }
@@ -100,10 +93,7 @@ Bool
 mach64InitScreen (ScreenPtr pScreen)
 {
 #ifdef XV
-    KdScreenPriv(pScreen);
-    Mach64CardInfo	*mach64c = pScreenPriv->screen->card->driver;
-    if (mach64c->media_reg && mach64c->reg)
-	mach64InitVideo(pScreen);
+    mach64InitVideo(pScreen);
 #endif
     return vesaInitScreen (pScreen);
 }
@@ -385,7 +375,9 @@ void
 mach64ScreenFini (KdScreenInfo *screen)
 {
     Mach64ScreenInfo	*mach64s = (Mach64ScreenInfo *) screen->driver;
-
+#ifdef XV
+    mach64FiniVideo(screen->pScreen);
+#endif
     vesaScreenFini (screen);
     xfree (mach64s);
     screen->driver = 0;
@@ -398,6 +390,7 @@ mach64CardFini (KdCardInfo *card)
 
     mach64UnmapReg (card, mach64c);
     vesaCardFini (card);
+    xfree (mach64c);
 }
 
 #define mach64CursorInit 0       /* initCursor */

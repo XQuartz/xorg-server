@@ -1,4 +1,4 @@
-2004-05-24  Alexander Gottwald  <ago@freedesktop.org>
+2004-06-24  Alexander Gottwald  <ago@freedesktop.org>
 
 	* InitOutput.c: Check for textmode mounted /tmp and print a warning
 

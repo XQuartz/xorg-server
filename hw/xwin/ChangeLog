@@ -1,3 +1,12 @@
+2004-12-04  Earle Philhower
+
+	* InitOutput.c:
+	* win.h:
+	* wincreatewnd.c:
+	* winprocarg.c:
+	Optional position -screen parameter (-screen n WxH+X+Y or 
+	-screen n W H X Y)
+	
 2004-11-24  Alexander Gottwald  <ago at freedesktop dot org>
 
 	* winmultiwindowwm.c:

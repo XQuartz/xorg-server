@@ -798,6 +798,8 @@ winReorderWindowsMultiWindow (ScreenPtr pScreen)
   HWND hwnd = NULL;
   WindowPtr pWin = NULL;
   WindowPtr pWinSib = NULL;
+  DWORD dwCurrentProcessID = GetCurrentProcessId ();
+  DWORD dwWindowProcessID = 0;
 
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winOrderWindowsMultiWindow\n");
@@ -814,7 +816,10 @@ winReorderWindowsMultiWindow (ScreenPtr pScreen)
 
       while (hwnd)
 	{
-	  if (GetProp (hwnd, WIN_WINDOW_PROP))
+	  GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
+
+	  if ((dwWindowProcessID == dwCurrentProcessID)
+	      && GetProp (hwnd, WIN_WINDOW_PROP))
 	    {
 	      pWinSib = pWin;
 	      pWin = GetProp (hwnd, WIN_WINDOW_PROP);

@@ -52,6 +52,8 @@ winWin32RootlessReorderWindows (ScreenPtr pScreen)
   HWND hwnd = NULL;
   win32RootlessWindowPtr pRLWin = NULL;
   win32RootlessWindowPtr pRLWinSib = NULL;
+  DWORD dwCurrentProcessID = GetCurrentProcessId ();
+  DWORD dwWindowProcessID = 0;
 
 #if CYGMULTIWINDOW_DEBUG && FALSE
   ErrorF ("winWin32RootlessReorderWindows\n");
@@ -68,7 +70,10 @@ winWin32RootlessReorderWindows (ScreenPtr pScreen)
 
       while (hwnd)
 	{
-	  if (GetProp (hwnd, WIN_WINDOW_PROP))
+	  GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
+
+	  if ((dwWindowProcessID == dwCurrentProcessID)
+	      && GetProp (hwnd, WIN_WINDOW_PROP))
 	    {
 	      pRLWinSib = pRLWin;
 	      pRLWin = (win32RootlessWindowPtr)GetProp (hwnd, WIN_WINDOW_PROP);

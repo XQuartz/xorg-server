@@ -44,6 +44,8 @@
  */
 
 #define MOUSE_POLLING_INTERVAL		500
+#define MOUSE_ACTIVATE_DEFAULT		TRUE
+#define RAISE_ON_CLICK_DEFAULT		FALSE
 
 
 
@@ -298,8 +300,9 @@ IsRaiseOnClick (WindowPtr pWin)
 
   if (!pWin)
     {
-      ErrorF ("IsRaiseOnClick - pWin was NULL\n");
-      return 0;
+      ErrorF ("IsRaiseOnClick - no prop use default value:%d\n",
+	      RAISE_ON_CLICK_DEFAULT);
+      return RAISE_ON_CLICK_DEFAULT;
     } 
 
   pwin = (struct _Window*) pWin;
@@ -323,11 +326,15 @@ IsRaiseOnClick (WindowPtr pWin)
 
   if (pWin != pRoot)
     {
-      IsRaiseOnClick (pRoot);
+      return IsRaiseOnClick (pRoot);
     }
   else
     {
-      return 0;
+#if CYGMULTIWINDOW_DEBUG
+      ErrorF ("IsRaiseOnClick - no prop use default value:%d\n",
+	      RAISE_ON_CLICK_DEFAULT);
+#endif
+      return RAISE_ON_CLICK_DEFAULT;
     }
 }
 
@@ -346,8 +353,9 @@ IsMouseActive (WindowPtr pWin)
 
   if (!pWin)
     {
-      ErrorF ("IsMouseActive - pWin was NULL\n");
-      return 0;
+      ErrorF ("IsMouseActive - pWin was NULL use default value:%d\n",
+	      MOUSE_ACTIVATE_DEFAULT);
+      return MOUSE_ACTIVATE_DEFAULT;
     } 
 
   pwin = (struct _Window*) pWin;
@@ -371,14 +379,16 @@ IsMouseActive (WindowPtr pWin)
 
   if (pWin != pRoot)
     {
-      IsMouseActive (pRoot);
+      return IsMouseActive (pRoot);
     }
   else
     {
-      return 0;
+#if CYGMULTIWINDOW_DEBUG
+      ErrorF ("IsMouseActive - no prop use default value:%d\n",
+	      MOUSE_ACTIVATE_DEFAULT);
+#endif
+      return MOUSE_ACTIVATE_DEFAULT;
     }
-  
-  return 0;
 }
 
 

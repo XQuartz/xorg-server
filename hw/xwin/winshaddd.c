@@ -1012,7 +1012,7 @@ winBltExposedRegionsShadowDD (ScreenPtr pScreen)
 	  ErrorF ("winBltExposedRegionsShadowDDNL - "
 		  "IDirectDrawSurface2_Restore returned: ");
 	  if (ddrval == DD_OK)
-	    continue;
+	    ErrorF ("DD_OK\n");
 	  else if (ddrval == DDERR_WRONGMODE)
 	    ErrorF ("DDERR_WRONGMODE\n");
 	  else if (ddrval == DDERR_INCOMPATIBLEPRIMARY)

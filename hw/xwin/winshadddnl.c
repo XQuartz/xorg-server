@@ -577,7 +577,7 @@ winShadowUpdateDDNL (ScreenPtr pScreen,
 		    {
 		      ErrorF ("winShadowUpdateDDNL - IDirectDrawSurface4_Blt "
 			      "failure message maximum (%d) reached.  No "
-			      "more failure messages will be printed.",
+			      "more failure messages will be printed.\n",
 			      FAIL_MSG_MAX_BLT);
 		    }
 		}
@@ -1045,7 +1045,7 @@ winBltExposedRegionsShadowDDNL (ScreenPtr pScreen)
 	  ErrorF ("winBltExposedRegionsShadowDDNL - "
 		  "IDirectDrawSurface4_Restore returned: ");
 	  if (ddrval == DD_OK)
-	    continue;
+	    ErrorF ("DD_OK\n");
 	  else if (ddrval == DDERR_WRONGMODE)
 	    ErrorF ("DDERR_WRONGMODE\n");
 	  else if (ddrval == DDERR_INCOMPATIBLEPRIMARY)

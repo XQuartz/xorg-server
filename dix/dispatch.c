@@ -467,7 +467,7 @@ Dispatch(void)
 	dispatchException &= ~DE_PRIORITYCHANGE;
     }
 #if defined(DDXBEFORERESET)
-    BeforeReset ();
+    ddxBeforeReset ();
 #endif
     KillAllClients();
     DEALLOCATE_LOCAL(clientReady);

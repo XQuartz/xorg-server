@@ -425,6 +425,9 @@ typedef struct
 #ifdef XWIN_MULTIWINDOW
   Bool			fMultiWindow;
 #endif
+#if defined(XWIN_MULTIWINDOW) || defined(XWIN_MULTIWINDOWEXTWM)
+  Bool			fMultiMonitorOverride;
+#endif
   Bool                  fMultipleMonitors;
   Bool			fLessPointer;
   Bool			fScrollbars;

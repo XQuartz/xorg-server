@@ -38,18 +38,20 @@
 #include "winprefs.h"
 #include "winconfig.h"
 
+
 /*
  * Global variables
  */
 
-Bool			g_fCursor = TRUE;
+Bool				g_fCursor = TRUE;
 
 
 /*
  * References to external symbols
  */
 
-extern Bool		g_fClipboard;
+extern Bool			g_fClipboard;
+extern HWND			g_hDlgDepthChange;
 
 
 /*
@@ -1106,6 +1108,11 @@ winWindowProc (HWND hwnd, UINT message,
 	  s_pScreenPriv->fRootWindowShown = !s_pScreenPriv->fRootWindowShown;
 	  return 0;
 #endif
+
+	case ID_APP_ABOUT:
+	  /* Display the About box */
+	  winDisplayAboutDialog (s_pScreenPriv);
+	  return 0;
 
 	default:
 	  /* It's probably one of the custom menus... */

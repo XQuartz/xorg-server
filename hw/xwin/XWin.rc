@@ -36,7 +36,24 @@
  * Dialogs
  */
 
-/* Depth_Change */
+/* About */
+ABOUT_BOX DIALOG DISCARDABLE  32, 32, 240, 105
+STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE | WS_TABSTOP | DS_CENTER
+CAPTION "Cygwin/X - About"
+FONT 8, "MS Sans Serif"
+BEGIN
+  PUSHBUTTON		"Cygwin/X Website", ID_ABOUT_WEBSITE, 30, 45, 75, 15
+  PUSHBUTTON		"Change Log", ID_ABOUT_CHANGELOG, 135, 45, 75, 15
+  PUSHBUTTON		"User's Guide", ID_ABOUT_UG, 30, 65, 75, 15
+  PUSHBUTTON		"FAQ", ID_ABOUT_FAQ, 135, 65, 75, 15
+
+  DEFPUSHBUTTON		"Dismiss", IDOK, 95, 85, 50, 15
+
+  CTEXT			"Welcome to the preliminary About box for the Cygwin/X X Server.  This dialog was created on 2004/03/25 and will eventually be filled with more useful information.  For now, use the links below to learn more about the Cygwin/X project.", IDC_STATIC, 5, 5, 230, 35
+END
+
+
+/* Depth change */
 
 DEPTH_CHANGE_BOX DIALOG DISCARDABLE	32, 32, 180, 100
 STYLE WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_VISIBLE | DS_CENTER
@@ -75,6 +92,7 @@ BEGIN
 		MENUITEM "&Hide Root Window", ID_APP_HIDE_ROOT
 		MENUITEM SEPARATOR
 		MENUITEM "E&xit", ID_APP_EXIT
+		MENUITEM "&About...", ID_APP_ABOUT
 	END
 END
 

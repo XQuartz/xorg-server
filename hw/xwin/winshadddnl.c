@@ -34,6 +34,8 @@
 
 #include "win.h"
 
+extern HWND			g_hDlgExit;
+
 /*
  * FIXME: Headers are broken, DEFINE_GUID doesn't work correctly,
  * so we have to redefine it here.

@@ -35,8 +35,10 @@
  * External global variables
  */
 #ifdef XWIN_MULTIWINDOW
-extern DWORD		g_dwCurrentThreadID;
+extern DWORD			g_dwCurrentThreadID;
 #endif
+extern HWND			g_hDlgExit;
+
 
 /*
  * Local function prototypes

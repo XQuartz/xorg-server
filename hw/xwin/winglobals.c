@@ -50,6 +50,7 @@ DWORD		g_dwEnginesSupported = 0;
 HINSTANCE	g_hInstance = 0;
 HWND		g_hDlgDepthChange = NULL;
 HWND		g_hDlgExit = NULL;
+HWND		g_hDlgAbout = NULL;
 const char *	g_pszQueryHost = NULL;
 Bool		g_fXdmcpEnabled = FALSE;
 HICON		g_hiconX = NULL;

@@ -618,8 +618,6 @@ extern unsigned long		g_ulServerGeneration;
 extern CARD32			g_c32LastInputEventTime;
 extern DWORD			g_dwEnginesSupported;
 extern HINSTANCE		g_hInstance;
-extern HWND			g_hDlgDepthChange;
-extern HWND			g_hDlgExit;
 extern int                      g_copyROP[];
 extern int                      g_patternROP[];
 extern const char *		g_pszQueryHost;
@@ -819,9 +817,11 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen);
 void
 winDisplayExitDialog (winPrivScreenPtr pScreenPriv);
 
-
 void
 winDisplayDepthChangeDialog (winPrivScreenPtr pScreenPriv);
+
+void
+winDisplayAboutDialog (winPrivScreenPtr pScreenPriv);
 
 
 /*

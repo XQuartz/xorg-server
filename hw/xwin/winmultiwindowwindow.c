@@ -41,7 +41,8 @@
  * External global variables
  */
 
-extern HICON		g_hiconX;
+extern HICON			g_hiconX;
+extern HWND			g_hDlgDepthChange;
 
 
 /*

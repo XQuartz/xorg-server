@@ -38,7 +38,6 @@
  * Local defines
  */
 
-#define IDM_APP_ABOUT		40001
 #define IDC_STATIC		-1
 #define IDI_XWIN		101
 #define IDI_XWIN_BOXED		102
@@ -46,5 +45,11 @@
 #define ID_APP_EXIT		104
 #define ID_APP_HIDE_ROOT	105
 #define ID_APP_ALWAYS_ON_TOP	106
+#define ID_APP_ABOUT		107
+
+#define ID_ABOUT_UG		300
+#define ID_ABOUT_FAQ		301
+#define ID_ABOUT_CHANGELOG	302
+#define ID_ABOUT_WEBSITE	303
 
 #endif

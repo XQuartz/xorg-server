@@ -29,8 +29,10 @@
 #define PCI_E8870_H 1
 
 #include <X11/Xdefs.h>
+#include <Pci.h>
 
-Bool xf86PreScanE8870(void);
+Bool xorgProbeE8870(scanpciWrapperOpt flags);
+void xf86PreScanE8870(void);
 void xf86PostScanE8870(void);
 
 #endif

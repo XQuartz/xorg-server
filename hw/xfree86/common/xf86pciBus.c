@@ -104,9 +104,6 @@ static PciBusPtr xf86PciBus = NULL;
 
 #define PCI_MEM32_LENGTH_MAX 0xFFFFFFFF
 
-#undef MIN
-#define MIN(x,y) ((x<y)?x:y)
-
 #define B2M(tag,base) pciBusAddrToHostAddr(tag,PCI_MEM,base)
 #define B2I(tag,base) (base)
 #define B2H(tag,base,type) (((type & ResPhysMask) == ResMem) ? \
@@ -307,7 +304,7 @@ FindPCIVideoInfo(void)
 			mem64 = TRUE;
 #if defined(LONG64) || defined(WORD64)
 			  info->memBase[0] |= 
-			    (memType)PCIGETMEMORY64HIGH(pcrp->pci_base1) << 32;
+			    (memType)PCIGETMEMORY64HIGH(pcrp->pci_base0) << 32;
 #else
 			if (pcrp->pci_base1)
 			    info->memBase[0] = 0;
@@ -327,7 +324,7 @@ FindPCIVideoInfo(void)
 			mem64 = TRUE;
 #if defined(LONG64) || defined(WORD64)
 			  info->memBase[1] |= 
-			    (memType)PCIGETMEMORY64HIGH(pcrp->pci_base2) << 32;
+			    (memType)PCIGETMEMORY64HIGH(pcrp->pci_base1) << 32;
 #else
 			if (pcrp->pci_base2)
 			  info->memBase[1] = 0;
@@ -348,7 +345,7 @@ FindPCIVideoInfo(void)
 			mem64 = TRUE;
 #if defined(LONG64) || defined(WORD64)
 			info->memBase[2] |= 
-			    (memType)PCIGETMEMORY64HIGH(pcrp->pci_base3) << 32;
+			    (memType)PCIGETMEMORY64HIGH(pcrp->pci_base2) << 32;
 #else
 			if (pcrp->pci_base3)
 			  info->memBase[2] = 0;
@@ -369,7 +366,7 @@ FindPCIVideoInfo(void)
 			mem64 = TRUE;
 #if defined(LONG64) || defined(WORD64)
 			  info->memBase[3] |= 
-			    (memType)PCIGETMEMORY64HIGH(pcrp->pci_base4) << 32;
+			    (memType)PCIGETMEMORY64HIGH(pcrp->pci_base3) << 32;
 #else
 			if (pcrp->pci_base4)
 			  info->memBase[3] = 0;
@@ -390,7 +387,7 @@ FindPCIVideoInfo(void)
 			mem64 = TRUE;
 #if defined(LONG64) || defined(WORD64)
 			  info->memBase[4] |= 
-			    (memType)PCIGETMEMORY64HIGH(pcrp->pci_base5) << 32;
+			    (memType)PCIGETMEMORY64HIGH(pcrp->pci_base4) << 32;
 #else
 			if (pcrp->pci_base5)
 			  info->memBase[4] = 0;
@@ -1649,7 +1646,7 @@ getValidBIOSBase(PCITAG tag, int num)
 	    m = xf86JoinResLists(m,tmp);
 	    tmp = m;
 	    while (tmp) {
-		tmp->block_end = MIN(tmp->block_end,PCI_MEM32_LENGTH_MAX);
+		tmp->block_end = min(tmp->block_end,PCI_MEM32_LENGTH_MAX);
 		tmp = tmp->next;
 	    }
 	} else if ((pbp->primary == pvp->bus) &&

@@ -438,12 +438,22 @@ DefineSelf (int fd)
 		continue;
 
 	    /*
- 	     * ignore 'localhost' entries as they're not useful
-	     * on the other end of the wire
+ 	     * Ignore 'localhost' entries as they're not useful
+	     * on the other end of the wire.
 	     */
 	    if (len == 4 &&
 		addr[0] == 127 && addr[1] == 0 &&
 		addr[2] == 0 && addr[3] == 1)
+		continue;
+
+	    /*
+	     * Ignore '0.0.0.0' entries as they are
+	     * returned by some OSes for unconfigured NICs but they are
+	     * not useful on the other end of the wire.
+	     */
+	    if (len == 4 &&
+		addr[0] == 0 && addr[1] == 0 &&
+		addr[2] == 0 && addr[3] == 0)
 		continue;
 
 	    XdmcpRegisterConnection (family, (char *)addr, len);
@@ -570,11 +580,15 @@ DefineSelf (int fd)
 #ifdef XDMCP
 		/*
 		 *  If this is an Internet Address, but not the localhost
-		 *  address (127.0.0.1), register it.
+		 *  address (127.0.0.1), nor the bogus address (0.0.0.0),
+		 *  register it.
 		 */
 		if (family == FamilyInternet &&
-		    !(len == 4 && addr[0] == 127 && addr[1] == 0 &&
-		      addr[2] == 0 && addr[3] == 1)
+		    !(len == 4 &&
+		      ((addr[0] == 127 && addr[1] == 0 &&
+			addr[2] == 0 && addr[3] == 1) ||
+		       (addr[0] == 0 && addr[1] == 0 &&
+			addr[2] == 0 && addr[3] == 0))
 		   )
 		{
 		    XdmcpRegisterConnection (family, (char *)addr, len);
@@ -821,6 +835,16 @@ DefineSelf (int fd)
 		continue;
 #endif
 
+	    /*
+	     * Ignore '0.0.0.0' entries as they are
+	     * returned by some OSes for unconfigured NICs but they are
+	     * not useful on the other end of the wire.
+	     */
+	    if (len == 4 &&
+		addr[0] == 0 && addr[1] == 0 &&
+		addr[2] == 0 && addr[3] == 0)
+		continue;
+
 	    XdmcpRegisterConnection (family, (char *)addr, len);
 
 #if defined(IPv6) && defined(AF_INET6)
@@ -925,14 +949,26 @@ DefineSelf (int fd)
 	     */
 	    if (family != FamilyInternet) 
 		continue;
+
 	    /* 
-	     * ignore 'localhost' entries as they're not usefule
-	     * on the other end of the wire
+	     * Ignore 'localhost' entries as they're not usefule
+	     * on the other end of the wire.
 	     */
 	    if (len == 4 && 
 		addr[0] == 127 && addr[1] == 0 &&
-		addr[2] == 0 && addr[2] == 1) 
+		addr[2] == 0 && addr[3] == 1) 
 		continue;
+
+	    /*
+	     * Ignore '0.0.0.0' entries as they are
+	     * returned by some OSes for unconfigured NICs but they are
+	     * not useful on the other end of the wire.
+	     */
+	    if (len == 4 &&
+		addr[0] == 0 && addr[1] == 0 &&
+		addr[2] == 0 && addr[3] == 0)
+		continue;
+
 	    XdmcpRegisterConnection(family, (char *)addr, len);
 	    if ((ifr->ifa_flags & IFF_BROADCAST) &&
 		(ifr->ifa_flags & IFF_UP))

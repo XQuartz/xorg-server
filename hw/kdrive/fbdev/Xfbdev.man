@@ -1,8 +1,8 @@
-.\" $XFree86$
+.\" $XFree86: xc/programs/Xserver/hw/kdrive/fbdev/Xfbdev.man,v 1.2 2000/12/04 21:01:00 dawes Exp $
 .\"
 .TH Xfbdev 1
 .SH NAME
-Xvesa \- Linux framebuffer device tiny X server
+Xfbdev \- Linux framebuffer device tiny X server
 .SH SYNOPSIS
 .B Xfbdev
 .RI [ :display ] 

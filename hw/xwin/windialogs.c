@@ -670,7 +670,7 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 	case ID_ABOUT_CHANGELOG:
 	  {
 	    const char *	pszCygPath = "/usr/X11R6/share/doc/"
-	      "XFree86-xserv/changelog.html";
+	      "xorg-x11-xwin/changelog.html";
 	    char		pszWinPath[MAX_PATH + 1];
 	    int			iReturn;
 

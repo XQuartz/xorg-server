@@ -18,6 +18,8 @@ extern void winGetWindowInfo(WindowPtr pWin, winWindowInfoPtr pWinInfo)
         ScreenPtr pScreen = pWin->drawable.pScreen;
         winPrivScreenPtr pWinScreen = winGetScreenPriv(pScreen);
 
+        ErrorF("winGetWindowInfo: returning a window\n");
+        
         pWinInfo->hwnd = NULL;
         pWinInfo->hrgn = NULL;
         pWinInfo->rect = rect;
@@ -33,8 +35,10 @@ extern void winGetWindowInfo(WindowPtr pWin, winWindowInfoPtr pWinInfo)
             win32RootlessWindowPtr pRLWinPriv
                 = (win32RootlessWindowPtr) RootlessFrameForWindow (pWin, FALSE);
             
-            if (pRLWinPriv == NULL)
+            if (pRLWinPriv == NULL) {
+                ErrorF("winGetWindowInfo: window is not rootless\n");
                 return;
+            }
             
             RECT rect = {
                 0,
@@ -46,13 +50,15 @@ extern void winGetWindowInfo(WindowPtr pWin, winWindowInfoPtr pWinInfo)
             pWinInfo->hwnd = pRLWinPriv->hWnd;
             pWinInfo->hrgn = NULL;
             pWinInfo->rect = rect;
+            
+            ErrorF("winGetWindowInfo: window is rootless\n");
+            
             return;
         }
 #endif
     } 
     else 
     {
-
         RECT rect = {0, 0, 0, 0};
         ScreenPtr pScreen = g_ScreenInfo[0].pScreen;
         winPrivScreenPtr pWinScreen = winGetScreenPriv(pScreen);
@@ -63,6 +69,8 @@ extern void winGetWindowInfo(WindowPtr pWin, winWindowInfoPtr pWinInfo)
         
         if (pWinScreen == NULL)
             return;
+
+        ErrorF("winGetWindowInfo: returning root window\n");
 
         pWinInfo->hwnd = pWinScreen->hwndScreen;
     }

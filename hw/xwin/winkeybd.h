@@ -34,15 +34,15 @@
 /*
  * We need symbols for the scan codes of keys.
  */
-#include "../xfree86/common/atKeynames.h"
+#include "winkeynames.h"
 
 
 /*
- * Include the standard XFree86 ASCII keymap.
+ * Include the standard ASCII keymap.
  *
  * This header declares a static KeySym array called 'map'.
  */
-#include "../xfree86/common/xf86Keymap.h"
+#include "winkeymap.h"
 
 #define		WIN_KEYMAP_COLS		3
 

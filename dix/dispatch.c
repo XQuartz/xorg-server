@@ -362,7 +362,7 @@ Dispatch(void)
     register int	nready;
     register HWEventQueuePtr* icheck = checkForInput;
 #ifdef SMART_SCHEDULE
-    long			start_tick;
+    int			start_tick;
 #endif
 
     nextFreeClientID = 1;

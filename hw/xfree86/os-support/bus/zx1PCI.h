@@ -30,7 +30,7 @@
 
 #include <X11/Xdefs.h>
 
-void xf86PreScanZX1(void);
+Bool xf86PreScanZX1(void);
 void xf86PostScanZX1(void);
 
 #endif

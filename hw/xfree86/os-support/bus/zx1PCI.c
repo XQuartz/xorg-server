@@ -465,7 +465,13 @@ static pciBusInfo_t zx1FakeBus = {
     NULL,		/* bridge -- dynamically set */
 };
 
-void
+/*
+ * This checks for, and validates, the presence of the ZX1 chipset, and sets
+ * pZX1mio to a non-NULL pointer accordingly.  This function is called before
+ * the server's PCI bus scan and returns TRUE if the chipset scan is to be
+ * stopped, or FALSE if the scan is to move on to the next chipset.
+ */
+Bool
 xf86PreScanZX1(void)
 {
     resRange range;
@@ -485,7 +491,7 @@ xf86PreScanZX1(void)
 	mapSize = MIO_SIZE;
 
     if (!(pZX1mio = xf86MapVidMem(-1, VIDMEM_MMIO, MIO_BASE, mapSize)))
-	return;
+	return FALSE;
 
     /* Look for ZX1's SBA and IOC */	/* XXX What about Dino? */
     if ((MIO_LONG(MIO_FUNCTION0 + PCI_ID_REG) !=
@@ -494,7 +500,7 @@ xf86PreScanZX1(void)
 	 DEVID(VENDOR_HP, CHIP_ZX1_IOC))) {
 	xf86UnMapVidMem(-1, pZX1mio, mapSize);
 	pZX1mio = NULL;
-	return;
+	return FALSE;
     }
 
     /* Map rope configuration space */
@@ -504,7 +510,7 @@ xf86PreScanZX1(void)
 	!(pZX1ioa = xf86MapVidMem(-1, VIDMEM_MMIO, ioaaddr, IOA_SIZE))) {
 	xf86UnMapVidMem(-1, pZX1mio, mapSize);
 	pZX1mio = NULL;
-	return;
+	return TRUE;
     }
 
     for (i = 0;  i < 8;  i++) {
@@ -918,7 +924,7 @@ xf86PreScanZX1(void)
 
     nRange = 0;
 
-    return;
+    return TRUE;
 }
 
 /* This is called to finalise the results of a PCI bus scan */

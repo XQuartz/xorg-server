@@ -201,46 +201,32 @@ Get460GXBridgeResources(int bus,
  * the chipset scan is to be stopped, or FALSE if the scan is to move on to the
  * next chipset.
  */
-
 Bool
-xorgProbe460GX(scanpciWrapperOpt flags)
-{
-    pciBusInfo_t *pBusInfo;
-    PCITAG tag;
-
-    /* Bus zero should already be set up */
-    if (!(pBusInfo = pciBusInfo[0])) {
-	cbn_460gx = -1;
-	return FALSE;
-    }
-    /* First look for a 460GX's primary host bridge */
-    tag = PCI_MAKE_TAG(0, 0x10, 0);
-    if (pciReadLong(tag, PCI_ID_REG) == DEVID(VENDOR_INTEL, CHIP_460GX_SAC)) {
-	return TRUE;
-    }
-
-    cbn_460gx = -1;
-    
-    return FALSE;
-}
-
-void
 xf86PreScan460GX(void)
 {
     pciBusInfo_t *pBusInfo;
     PCITAG tag;
     CARD32 tmp;
     int i, devno;
-    
-    if (!(pBusInfo = pciBusInfo[0]))
-	return;
+
+    /* Bus zero should already be set up */
+    if (!(pBusInfo = pciBusInfo[0])) {
+	cbn_460gx = -1;
+	return FALSE;
+    }
+
+    /* First look for a 460GX's primary host bridge */
+    tag = PCI_MAKE_TAG(0, 0x10, 0);
+    if (pciReadLong(tag, PCI_ID_REG) != DEVID(VENDOR_INTEL, CHIP_460GX_SAC)) {
+	cbn_460gx = -1;
+	return FALSE;
+    }
 
     /* Get CBN (Chipset bus number) */
-    tag = PCI_MAKE_TAG(0, 0x10, 0);
     if (!(cbn_460gx = (unsigned int)pciReadByte(tag, CBN))) {
 	/* Sanity check failed */
 	cbn_460gx = -1;
-	return;
+	return TRUE;
     }
 
     if (pciNumBuses <= cbn_460gx)
@@ -256,7 +242,7 @@ xf86PreScan460GX(void)
     if (pciReadLong(tag, PCI_ID_REG) != DEVID(VENDOR_INTEL, CHIP_460GX_SAC)) {
 	/* Sanity check failed */
 	cbn_460gx = -1;
-	return;
+	return TRUE;
     }
 
     /*
@@ -271,7 +257,7 @@ xf86PreScan460GX(void)
 	    DEVID(VENDOR_INTEL, CHIP_460GX_SAC)) {
 	    /* Sanity check failed */
 	    cbn_460gx = -1;
-	    return;
+	    return TRUE;
 	}
 
 	if (devno == 0x10)
@@ -292,7 +278,7 @@ xf86PreScan460GX(void)
 	    if (cbdevs_460gx & (1 << devno)) {
 		/* Sanity check failed */
 		cbn_460gx = -1;
-		return;
+		return TRUE;
 	    }
 
 	    /*
@@ -308,7 +294,7 @@ xf86PreScan460GX(void)
 	    if (cbdevs_460gx & (1 << devno)) {
 		/* Sanity check failed */
 		cbn_460gx = -1;
-		return;
+		return TRUE;
 	    }
 
 	    /*
@@ -324,7 +310,7 @@ xf86PreScan460GX(void)
 		break;
 	    /* Sanity check failed */
 	    cbn_460gx = -1;
-	    return;
+	    return TRUE;
 	}
     }
 
@@ -351,7 +337,7 @@ xf86PreScan460GX(void)
 	break;
     }
 
-    return;
+    return TRUE;
 }
 
 /* This does some 460GX-related processing after the PCI bus scan */

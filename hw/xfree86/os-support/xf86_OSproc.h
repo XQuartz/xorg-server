@@ -125,6 +125,7 @@ extern void xf86WrapperInit(void);
 #define xf86FatalError(a, b) \
 	if (dispatchException & DE_TERMINATE) { \
 		ErrorF(a, b); \
+		ErrorF("\n"); \
 		return; \
 	} else FatalError(a, b)
 

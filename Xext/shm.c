@@ -1,5 +1,5 @@
-/* $XdotOrg: xc/programs/Xserver/Xext/shm.c,v 1.1.4.5 2004/02/25 21:46:33 kaleb Exp $ */
-/* $XFree86: xc/programs/Xserver/Xext/shm.c,v 3.42 2003/12/18 10:15:24 alanh Exp $ *
+: /* $XdotOrg: xc/programs/Xserver/Xext/shm.c,v 1.1.4.5 2004/02/25 21:46:33 kaleb Exp $ */
+/* $XFree86: xc/programs/Xserver/Xext/shm.c,v 3.41 2003/12/17 23:28:56 alanh Exp $ */
 /************************************************************
 
 Copyright 1989, 1998  The Open Group

@@ -1,5 +1,5 @@
-/* $XdotOrg: xc/programs/Xserver/include/cursor.h,v 1.1.4.4 2003/12/18 19:29:15 kaleb Exp $ */
-/* $XFree86: xc/programs/Xserver/include/cursor.h,v 1.7 2003/04/27 21:31:04 herrb Exp $ */
+: /* $XdotOrg: xc/programs/Xserver/include/cursor.h,v 1.1.4.4 2003/12/18 19:29:15 kaleb Exp $ */
+/* $XFree86: xc/programs/Xserver/include/cursor.h,v 1.6 2002/09/17 01:15:14 dawes Exp $ */
 /***********************************************************
 
 Copyright 1987, 1998  The Open Group

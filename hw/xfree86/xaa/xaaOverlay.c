@@ -1,5 +1,5 @@
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/xaa/xaaOverlay.c,v 1.1.4.3 2004/02/25 21:46:55 kaleb Exp $ */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/xaa/xaaOverlay.c,v 1.15 2003/11/10 18:22:41 tsi Exp $ */
+: /* $XdotOrg: xc/programs/Xserver/hw/xfree86/xaa/xaaOverlay.c,v 1.1.4.3 2004/02/25 21:46:55 kaleb Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/xaa/xaaOverlay.c,v 1.14tsi Exp $ */
 
 #include "misc.h"
 #include "xf86.h"

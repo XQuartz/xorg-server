@@ -742,6 +742,16 @@ configureDDCMonitorSection (int screennum)
 	    case DS_ASCII_STR:
 	    case DS_SERIAL:
 	    case DS_RANGES:
+		ptr->mon_hsync[ptr->mon_n_hsync].lo =
+		    ConfiguredMonitor->det_mon[i].section.ranges.min_h;
+		ptr->mon_hsync[ptr->mon_n_hsync].hi =
+		    ConfiguredMonitor->det_mon[i].section.ranges.max_h;
+		ptr->mon_n_vrefresh = 1;
+		ptr->mon_vrefresh[ptr->mon_n_hsync].lo =
+		    ConfiguredMonitor->det_mon[i].section.ranges.min_v;
+		ptr->mon_vrefresh[ptr->mon_n_hsync].hi =
+		ptr->mon_n_hsync++;
+		ConfiguredMonitor->det_mon[i].section.ranges.max_v;
 	    default:
 		break;
 	}

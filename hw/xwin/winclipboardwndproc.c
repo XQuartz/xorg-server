@@ -184,18 +184,17 @@ winClipboardWindowProc (HWND hwnd, UINT message,
     case WM_WM_REINIT:
       {
         /* Ensure that we're in the clipboard chain.  Some apps,
-           WinXP's remote desktop for one, don't play nice with
-           the chain.  This message is called whenever we receive
-           a WM_ACTIVATEAPP message to ensure that we continue to
-           receive clipboard messages.
-     
-           It might be possible to detect if we're still in the
-           chain by calling
-              SendMessage (GetClipboardViewer(), WM_DRAWCLIPBOARD, 0, 0);
-           and then seeing if we get the WM_DRAWCLIPBOARD message.
-           That, however, might be more expensive than just putting
-           ourselves back into the chain.
-        */
+         * WinXP's remote desktop for one, don't play nice with the
+         * chain.  This message is called whenever we receive a
+         * WM_ACTIVATEAPP message to ensure that we continue to
+         * receive clipboard messages.
+	 *
+	 * It might be possible to detect if we're still in the chain
+	 * by calling SendMessage (GetClipboardViewer(),
+	 * WM_DRAWCLIPBOARD, 0, 0); and then seeing if we get the
+	 * WM_DRAWCLIPBOARD message.  That, however, might be more
+	 * expensive than just putting ourselves back into the chain.
+	 */
 
         s_fCBCInitialized = FALSE;
         ChangeClipboardChain (hwnd, s_hwndNextViewer);
@@ -219,8 +218,8 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	/* Bail on first message */
 	if (!s_fCBCInitialized)
 	  {
-	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
-		    "Initializing - Returning.\n");
+	    winErrorFVerb (3, "winClipboardWindowProc - WM_DRAWCLIPBOARD -"
+			   "Initializing - Returning.\n");
 	    s_fCBCInitialized = TRUE;
 	    return 0;
 	  }

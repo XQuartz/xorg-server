@@ -369,7 +369,7 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
 	  hCursor = (HCURSOR) CreateIconIndirect( &ii );
 
 	  if (hCursor == NULL)
-	    winW32Error(2, GetLastError(), "winLoadCursor - CreateIconIndirect failed: %s\n");
+	    winW32Error(2, "winLoadCursor - CreateIconIndirect failed:");
 	  else 
 	    {
 	      if (GetIconInfo(hCursor, &ii))
@@ -386,7 +386,7 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
 		      hCursor = (HCURSOR) CreateIconIndirect( &ii );
 		      
 		      if (hCursor == NULL)
-			winW32Error(2, GetLastError(), "winLoadCursor - CreateIconIndirect failed: %s\n");
+			winW32Error(2, "winLoadCursor - CreateIconIndirect failed:");
 		    }
 		  /* GetIconInfo creates new bitmaps. Destroy them again */
 		  if (ii.hbmMask)
@@ -412,7 +412,7 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
 			      pScreenPriv->cursor.sm_cx, pScreenPriv->cursor.sm_cy,
 			      pAnd, pXor);
       if (hCursor == NULL)
-	winW32Error(2, GetLastError(), "winLoadCursor - CreateCursor failed: %s\n");
+	winW32Error(2, "winLoadCursor - CreateCursor failed:");
     }
   free (pAnd);
   free (pXor);

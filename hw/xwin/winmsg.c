@@ -103,7 +103,13 @@ winDebug (const char *format, ...)
 }
 
 void
-winW32Error(int verb, DWORD errorcode, const char *format)
+winW32Error(int verb, const char *msg)
+{
+    winW32ErrorEx(verb, msg, GetLastError());
+}
+
+void
+winW32ErrorEx(int verb, const char *msg, DWORD errorcode)
 {
     LPVOID buffer;
     if (!FormatMessage( 
@@ -121,7 +127,7 @@ winW32Error(int verb, DWORD errorcode, const char *format)
     }
     else
     {
-        winErrorFVerb(verb, format, (char *)buffer); 
+        winErrorFVerb(verb, "%s %s", msg, (char *)buffer); 
         LocalFree(buffer);
     }
 }

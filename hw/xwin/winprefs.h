@@ -1,3 +1,5 @@
+#if !defined(WINPREFS_H)
+#define WINPREFS_H
 /*
  * Copyright (C) 1994-2000 The XFree86 Project, Inc. All Rights Reserved.
  *
@@ -147,3 +149,4 @@ winOverrideIcon (unsigned long longpWin);
 
 unsigned long
 winOverrideDefaultIcon(void);
+#endif

@@ -39,9 +39,7 @@
 #include <windows.h>
 
 #include "winprefs.h"
-#ifdef XWIN_MULTIWINDOW
 #include "winmultiwindowclass.h"
-#endif
 
 /* Where will the custom menu commands start counting from? */
 #define STARTMENUID WM_USER
@@ -494,7 +492,6 @@ winOverrideDefaultIcon()
 }
 
 
-#ifdef XWIN_MULTIWINDOW
 /*
  * Check for a match of the window class to one specified in the
  * ICONS{} section in the prefs file, and load the icon from a file
@@ -560,7 +557,6 @@ winOverrideIcon (unsigned long longWin)
 
   return 0;
 }
-#endif
 
 
 /*

@@ -48,6 +48,7 @@ extern int			g_iLogVerbose;
 extern char *			g_pszLogFile;
 extern Bool			g_fXdmcpEnabled;
 extern char *			g_pszCommandLine;
+extern Bool			g_fKeyboardHookLL;
 
 
 /*
@@ -1107,6 +1108,18 @@ ddxProcessArgument (int argc, char *argv[], int i)
     }
 #endif
 
+  if (IS_OPTION ("-keyhook"))
+    {
+      g_fKeyboardHookLL = TRUE;
+      return 1;
+    }
+  
+  if (IS_OPTION ("-nokeyhook"))
+    {
+      g_fKeyboardHookLL = FALSE;
+      return 1;
+    }
+  
   return 0;
 }
 

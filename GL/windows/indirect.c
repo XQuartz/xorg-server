@@ -46,6 +46,14 @@
 
 #include "../../hw/xwin/winpriv.h"
 
+#define GLWIN_DEBUG_HWND(hwnd)  \
+    if (glWinDebugSettings.dumpHWND) { \
+        char buffer[1024]; \
+        if (GetWindowText(hwnd, buffer, sizeof(buffer))==0) *buffer=0; \
+        GLWIN_DEBUG_MSG("Got HWND %s (%p)\n", buffer, hwnd); \
+    }
+
+
 /* ggs: needed to call back to glx with visual configs */
 extern void GlxSetVisualConfigs(int nconfigs, __GLXvisualConfig *configs, void **configprivs);
 
@@ -235,22 +243,21 @@ typedef struct {
 struct __GLcontextRec {
   struct __GLinterfaceRec interface; /* required to be first */
 
-  HDC dc;
-  HGLRC ctx;
-  PIXELFORMATDESCRIPTOR pfd;
-  winWindowInfoRec winInfo;
-  int pixelFormat;
+  HGLRC ctx;                         /* Windows GL Context */
+  
+  HDC dc;                            /* Windows Device Context */
+  winWindowInfoRec winInfo;          /* Window info from XWin */
+  
+  PIXELFORMATDESCRIPTOR pfd;         /* Pixelformat flags */
+  int pixelFormat;                   /* Pixelformat index */
 
-  /* set when attached */
-  /* xp_surface_id sid; */
-
-  unsigned isAttached :1;
+  unsigned isAttached :1;            /* Flag to track if context is attached */
 };
 
 static HDC glWinMakeDC(__GLcontext *gc)
 {
     HDC dc;
-    if (gc->winInfo.hrgn == NULL) 
+    /*if (gc->winInfo.hrgn == NULL) 
     {
         GLWIN_DEBUG_MSG("Creating region from RECT(%ld,%ld,%ld,%ld):",
                 gc->winInfo.rect.left,
@@ -258,13 +265,12 @@ static HDC glWinMakeDC(__GLcontext *gc)
                 gc->winInfo.rect.right,
                 gc->winInfo.rect.bottom);
         gc->winInfo.hrgn = CreateRectRgnIndirect(&gc->winInfo.rect);
-        GLWIN_DEBUG_MSG("%p\n", gc->winInfo.hrgn);
-    }
-    /*dc = GetDC(GetActiveWindow()); */
+        GLWIN_DEBUG_MSG2("%p\n", gc->winInfo.hrgn);
+    }*/
+
     dc = GetDC(gc->winInfo.hwnd); 
     /*dc = GetDCEx(gc->winInfo.hwnd, gc->winInfo.hrgn, 
             DCX_WINDOW | DCX_NORESETATTRS ); */
-    /*dc = GetWindowDC(gc->winInfo.hwnd);*/
 
     if (dc == NULL)
         ErrorF("GetDC error: %s\n", glWinErrorMessage());
@@ -273,7 +279,6 @@ static HDC glWinMakeDC(__GLcontext *gc)
 
 static void unattach(__GLcontext *gc)
 {
-#if 0
     BOOL ret;
     GLWIN_DEBUG_MSG("unattach (ctx %p)\n", gc->ctx);
     if (!gc->isAttached) 
@@ -297,18 +302,64 @@ static void unattach(__GLcontext *gc)
             ErrorF("DeleteObject error: %s\n", glWinErrorMessage());
         gc->winInfo.hrgn = NULL;
     }
-#endif
 
     gc->isAttached = 0;
 }
 
-static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
+static BOOL glWinCreateContextReal(__GLcontext *gc, WindowPtr pWin)
 {
     HDC dc;
-#if 0
-    HGLRC old_ctx;
-#endif
     BOOL ret;
+
+    if (pWin == NULL)
+    {
+        GLWIN_DEBUG_MSG("Deferring until window is created\n");
+        return FALSE;
+    }
+
+    winGetWindowInfo(pWin, &gc->winInfo);
+    
+    GLWIN_DEBUG_HWND(gc->winInfo.hwnd);
+    if (gc->winInfo.hwnd == NULL)
+    {
+        GLWIN_DEBUG_MSG("Deferring until window is created\n");
+        return FALSE;
+    }
+
+    
+    dc = glWinMakeDC(gc);
+    
+    if (glWinDebugSettings.dumpDC)
+        GLWIN_DEBUG_MSG("Got HDC %p\n", dc);
+    
+    gc->pixelFormat = ChoosePixelFormat(dc, &gc->pfd);
+    if (gc->pixelFormat == 0)
+    {
+        ErrorF("ChoosePixelFormat error: %s\n", glWinErrorMessage());
+        ReleaseDC(gc->winInfo.hwnd, dc);
+        return FALSE;  
+    }
+    
+    ret = SetPixelFormat(dc, gc->pixelFormat, &gc->pfd);
+    if (!ret) {
+        ErrorF("SetPixelFormat error: %s\n", glWinErrorMessage());
+        ReleaseDC(gc->winInfo.hwnd, dc);
+        return FALSE;
+    }
+    
+    gc->ctx = wglCreateContext(dc);
+    if (gc->ctx == NULL) {
+        ErrorF("wglCreateContext error: %s\n", glWinErrorMessage());
+        ReleaseDC(gc->winInfo.hwnd, dc);
+        return FALSE;
+    }
+    ReleaseDC(gc->winInfo.hwnd, dc);
+
+    return TRUE;
+}
+
+static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
+{
     __GLXdrawablePrivate *glxPriv = (__GLXdrawablePrivate *)glPriv->other;
 
     GLWIN_DEBUG_MSG("attach (ctx %p)\n", gc->ctx);
@@ -322,51 +373,18 @@ static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
     if (glxPriv->type == DRAWABLE_WINDOW)
     {
         WindowPtr pWin = (WindowPtr) glxPriv->pDraw;
-        winGetWindowInfo(pWin, &gc->winInfo);
+        if (pWin == NULL)
+        {
+            GLWIN_DEBUG_MSG("Deferring ChoosePixelFormat until window is created\n");
+        } else
+        {
+            if (glWinCreateContextReal(gc, pWin))
+            {
+                gc->isAttached = TRUE;
+                GLWIN_DEBUG_MSG("attached\n");
+            }
+        }
     }
-    
-    if (glWinDebugSettings.dumpHWND)
-        GLWIN_DEBUG_MSG("Got HWND %p\n", gc->winInfo.hwnd);
-
-    dc = glWinMakeDC(gc);
-
-    gc->pixelFormat = ChoosePixelFormat(dc, &gc->pfd);
-    if (gc->pixelFormat == 0)
-    {
-        ErrorF("ChoosePixelFormat error: %s\n", glWinErrorMessage());
-        return;  
-    }
-
-    ret = SetPixelFormat(dc, gc->pixelFormat, &gc->pfd);
-    if (!ret) {
-        ErrorF("SetPixelFormat error: %s\n", glWinErrorMessage());
-    }
-
-#if 0
-    old_ctx = gc->ctx;
-    gc->ctx = wglCreateContext(dc);
-    
-    if (gc->ctx == NULL) {
-        ErrorF("wglCreateContext error: %s\n", glWinErrorMessage());
-        ReleaseDC(gc->winInfo.hwnd, dc);
-        return;
-    }
-
-    if (old_ctx != NULL) 
-    {
-        GLWIN_DEBUG_MSG("Copying context\n");
-        /* copy all rendering states to the new context */
-        ret = wglCopyContext(old_ctx, gc->ctx, GL_ALL_ATTRIB_BITS);
-        if (!ret)
-            ErrorF("wglCopyContext error: %s\n", glWinErrorMessage());
-        ret = wglDeleteContext(old_ctx);
-        if (!ret)
-            ErrorF("wglDeleteContext error: %s\n", glWinErrorMessage());
-    }
-#endif
-    
-    ReleaseDC(gc->winInfo.hwnd, dc);
-    gc->isAttached = 1;
 }
 
 static GLboolean glWinLoseCurrent(__GLcontext *gc)
@@ -401,14 +419,15 @@ static GLboolean glWinMakeCurrent(__GLcontext *gc)
     BOOL ret;
     HDC dc;
 
-    /*GLWIN_DEBUG_MSG("glWinMakeCurrent (ctx %p)\n", gc->ctx);*/
-
     if (!gc->isAttached)
         attach(gc, glPriv);
 
+    if (gc->ctx == NULL) {
+        ErrorF("Context is NULL\n");
+        return GL_FALSE;
+    }
+
     dc = glWinMakeDC(gc);
-    /*if (glWinDebugSettings.dumpDC)*/
-    /*    GLWIN_DEBUG_MSG("Got HDC %p\n", dc);*/
     ret = wglMakeCurrent(dc, gc->ctx);
     if (!ret)
         ErrorF("glMakeCurrent error: %s\n", glWinErrorMessage());
@@ -645,8 +664,6 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
 					  __GLinterface *shareGC)
 {
     __GLcontext *result;
-    BOOL ret;
-    HDC dc;
 
     GLWIN_DEBUG_MSG("glWinCreateContext\n");
 
@@ -657,69 +674,15 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
     result->interface.imports = *imports;
     result->interface.exports = glWinExports;
 
-    winGetWindowInfo(NULL, &result->winInfo);
-    if (glWinDebugSettings.dumpHWND)
-        GLWIN_DEBUG_MSG("Got HWND %p\n", result->winInfo.hwnd);
-   
-#if 1 
-    /* get DC of XWin main window */
-    dc = GetDC(result->winInfo.hwnd);
-    result->dc = NULL;
-#else
-    /* create a new DC */
-    dc = CreateDC("DISPLAY",NULL,NULL,NULL);
-    if (dc == NULL)
-    {
-        ErrorF("CreateDC error: %s\n", glWinErrorMessage());
-        free(result);
-        return NULL;
-    }
-    result->dc = dc; 
-#endif
-    if (glWinDebugSettings.dumpDC)
-        GLWIN_DEBUG_MSG("Got HDC %p\n", dc);
-
     if (makeFormat(mode, &result->pfd))
     {
         ErrorF("makeFormat failed\n");
-        ReleaseDC(result->winInfo.hwnd, dc);
         free(result);
         return NULL;
     }
 
     if (glWinDebugSettings.dumpPFD)
         pfdOut(&result->pfd);
-
-    result->pixelFormat = ChoosePixelFormat(dc, &result->pfd);
-    if (result->pixelFormat == 0)
-    {
-        ErrorF("ChoosePixelFormat error: %s\n", glWinErrorMessage());
-        ReleaseDC(result->winInfo.hwnd, dc);
-        free(result);
-        return NULL;
-    }
-
-    GLWIN_DEBUG_MSG("ChoosePixelFormat done (%d)\n", result->pixelFormat);
-
-    ret = SetPixelFormat(dc, result->pixelFormat, &result->pfd);
-    if (!ret) {
-        ErrorF("SetPixelFormat error: %s\n", glWinErrorMessage());
-        ReleaseDC(result->winInfo.hwnd, dc);
-        free(result);
-        return NULL;
-    }
-    
-    result->ctx = wglCreateContext(dc);
-    result->isAttached = 0;
-
-    if (result->ctx == NULL) {
-        ErrorF("wglCreateContext error: %s\n", glWinErrorMessage());
-        ReleaseDC(result->winInfo.hwnd, dc);
-        free(result);
-        return NULL;
-    }
-
-    ReleaseDC(result->winInfo.hwnd, dc);
 
     GLWIN_DEBUG_MSG("glWinCreateContext done\n");
     return (__GLinterface *)result;

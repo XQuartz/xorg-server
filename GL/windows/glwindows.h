@@ -50,8 +50,10 @@ extern glWinScreenRec glWinScreens[MAXSCREENS];
 #define glWinScreenPriv(pScreen) glWinScreenRec *pScreenPriv = glWinGetScreenPriv(pScreen);
 
 #if 1
-#define GLWIN_DEBUG_MSG if (glWinDebugSettings.enableDebug) ErrorF
+#define GLWIN_DEBUG_MSG(msg, args...) if (glWinDebugSettings.enableDebug) ErrorF("%s:%d: " msg, __FUNCTION__, __LINE__, ##args )
+#define GLWIN_DEBUG_MSG2(msg, args...) if (glWinDebugSettings.enableDebug) ErrorF(msg, ##args )
 #else
 #define GLWIN_DEBUG_MSG(a, ...)
+#define GLWIN_DEBUG_MSG2(a, ...)
 #endif
 

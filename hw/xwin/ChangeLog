@@ -1,3 +1,10 @@
+2004-09-22  Kensuke Matsuzaki
+
+	* winclipboardthread.c (winClipboardErrorHandler):
+	* winclipboardwndproc.c (winClipboardWindowProc):
+	* winclipboardxevents.c (winClipboardFlushXEvents):
+	Fix clipboard bug with unicode applications.
+	
 2004-09-16  Alexander Gottwald <ago at freedesktop dot org>
 
 	* wincreatewnd.c (winCreateBoundingWindowWindowed):

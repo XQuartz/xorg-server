@@ -331,8 +331,8 @@ IsRaiseOnClick (WindowPtr pWin)
   else
     {
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("IsRaiseOnClick - no prop use default value:%d\n",
-	      RAISE_ON_CLICK_DEFAULT);
+      winDebug ("IsRaiseOnClick - no prop use default value:%d\n",
+		RAISE_ON_CLICK_DEFAULT);
 #endif
       return RAISE_ON_CLICK_DEFAULT;
     }
@@ -384,8 +384,8 @@ IsMouseActive (WindowPtr pWin)
   else
     {
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("IsMouseActive - no prop use default value:%d\n",
-	      MOUSE_ACTIVATE_DEFAULT);
+      winDebug ("IsMouseActive - no prop use default value:%d\n",
+		MOUSE_ACTIVATE_DEFAULT);
 #endif
       return MOUSE_ACTIVATE_DEFAULT;
     }
@@ -423,11 +423,11 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
       if (pScreenPriv) pScreenInfo	= pScreenPriv->pScreenInfo;
       if (pScreenPriv) hwndScreen	= pScreenPriv->hwndScreen;
 #if 0
-      ErrorF ("hWnd %08X\n", hwnd);
-      ErrorF ("pScreenPriv %08X\n", pScreenPriv);
-      ErrorF ("pScreenInfo %08X\n", pScreenInfo);
-      ErrorF ("hwndScreen %08X\n", hwndScreen);
-      ErrorF ("winMWExtWMWindowProc (%08x) %08x %08x %08x\n",
+      winDebug ("hWnd %08X\n", hwnd);
+      winDebug ("pScreenPriv %08X\n", pScreenPriv);
+      winDebug ("pScreenInfo %08X\n", pScreenInfo);
+      winDebug ("hwndScreen %08X\n", hwndScreen);
+      winDebug ("winMWExtWMWindowProc (%08x) %08x %08x %08x\n",
 	      pRLWinPriv, message, wParam, lParam);
 #endif
     }
@@ -436,7 +436,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
     {
     case WM_CREATE:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_CREATE\n");
+      winDebug ("winMWExtWMWindowProc - WM_CREATE\n");
 #endif
       /* */
       SetProp (hwnd,
@@ -446,7 +446,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_CLOSE:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_CLOSE %d\n", pRLWinPriv->fClose);
+      winDebug ("winMWExtWMWindowProc - WM_CLOSE %d\n", pRLWinPriv->fClose);
 #endif
       /* Tell window-manager to close window */
       if (pRLWinPriv->fClose)
@@ -466,7 +466,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_DESTROY:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_DESTROY\n");
+      winDebug ("winMWExtWMWindowProc - WM_DESTROY\n");
 #endif
       /* Free the shaodw DC; which allows the bitmap to be freed */
       DeleteDC (pRLWinPriv->hdcShadow);
@@ -492,7 +492,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_MOUSEMOVE:
 #if CYGMULTIWINDOW_DEBUG && 0
-      ErrorF ("winMWExtWMWindowProc - WM_MOUSEMOVE\n");
+      winDebug ("winMWExtWMWindowProc - WM_MOUSEMOVE\n");
 #endif
       /* Unpack the client area mouse coordinates */
       ptMouse.x = GET_X_LPARAM(lParam);
@@ -549,7 +549,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
       
     case WM_NCMOUSEMOVE:
 #if CYGMULTIWINDOW_DEBUG && 0
-      ErrorF ("winMWExtWMWindowProc - WM_NCMOUSEMOVE\n");
+      winDebug ("winMWExtWMWindowProc - WM_NCMOUSEMOVE\n");
 #endif
       /*
        * We break instead of returning 0 since we need to call
@@ -577,7 +577,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_MOUSELEAVE:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_MOUSELEAVE\n");
+      winDebug ("winMWExtWMWindowProc - WM_MOUSELEAVE\n");
 #endif
       /* Mouse has left our client area */
 
@@ -598,7 +598,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
     case WM_LBUTTONDBLCLK:
     case WM_LBUTTONDOWN:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_LBUTTONDBLCLK\n");
+      winDebug ("winMWExtWMWindowProc - WM_LBUTTONDBLCLK\n");
 #endif
       if (pScreenPriv == NULL || pScreenInfo->fIgnoreInput)
 	break;
@@ -607,7 +607,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
       
     case WM_LBUTTONUP:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_LBUTTONUP\n");
+      winDebug ("winMWExtWMWindowProc - WM_LBUTTONUP\n");
 #endif
       if (pScreenPriv == NULL || pScreenInfo->fIgnoreInput)
 	break;
@@ -617,7 +617,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
     case WM_MBUTTONDBLCLK:
     case WM_MBUTTONDOWN:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_MBUTTONDBLCLK\n");
+      winDebug ("winMWExtWMWindowProc - WM_MBUTTONDBLCLK\n");
 #endif
       if (pScreenPriv == NULL || pScreenInfo->fIgnoreInput)
 	break;
@@ -626,7 +626,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
       
     case WM_MBUTTONUP:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_MBUTTONUP\n");
+      winDebug ("winMWExtWMWindowProc - WM_MBUTTONUP\n");
 #endif
       if (pScreenPriv == NULL || pScreenInfo->fIgnoreInput)
 	break;
@@ -636,7 +636,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
     case WM_RBUTTONDBLCLK:
     case WM_RBUTTONDOWN:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_RBUTTONDBLCLK\n");
+      winDebug ("winMWExtWMWindowProc - WM_RBUTTONDBLCLK\n");
 #endif
       if (pScreenPriv == NULL || pScreenInfo->fIgnoreInput)
 	break;
@@ -645,7 +645,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
       
     case WM_RBUTTONUP:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_RBUTTONUP\n");
+      winDebug ("winMWExtWMWindowProc - WM_RBUTTONUP\n");
 #endif
       if (pScreenPriv == NULL || pScreenInfo->fIgnoreInput)
 	break;
@@ -654,7 +654,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_MOUSEWHEEL:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_MOUSEWHEEL\n");
+      winDebug ("winMWExtWMWindowProc - WM_MOUSEWHEEL\n");
 #endif
       
       /* Pass the message to the root window */
@@ -663,15 +663,15 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_MOUSEACTIVATE:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_MOUSEACTIVATE\n");
+      winDebug ("winMWExtWMWindowProc - WM_MOUSEACTIVATE\n");
 #endif
 #if 0
       /* Check if this window needs to be made active when clicked */
       if (pWin->overrideRedirect)
 	{
 #if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("winMWExtWMWindowProc - WM_MOUSEACTIVATE - "
-		  "MA_NOACTIVATE\n");
+	  winDebug ("winMWExtWMWindowProc - WM_MOUSEACTIVATE - "
+		    "MA_NOACTIVATE\n");
 #endif
 
 	  /* */
@@ -698,7 +698,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_*KEYDOWN\n");
+      winDebug ("winMWExtWMWindowProc - WM_*KEYDOWN\n");
 #endif
 
       /*
@@ -726,7 +726,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
     case WM_KEYUP:
 
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_*KEYUP\n");
+      winDebug ("winMWExtWMWindowProc - WM_*KEYUP\n");
 #endif
 
       /* Pass the message to the root window */
@@ -735,7 +735,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_HOTKEY:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_HOTKEY\n");
+      winDebug ("winMWExtWMWindowProc - WM_HOTKEY\n");
 #endif
 
       /* Pass the message to the root window */
@@ -779,7 +779,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_ACTIVATE:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_ACTIVATE\n");
+      winDebug ("winMWExtWMWindowProc - WM_ACTIVATE\n");
 #endif
       if (LOWORD(wParam) != WA_INACTIVE)
 	{
@@ -801,7 +801,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 	  if (pRLWinPriv->fRestackingNow)
 	    {
 #if CYGMULTIWINDOW_DEBUG
-	      ErrorF ("Win %08x is now restacking.\n", (unsigned int)pRLWinPriv);
+	      winDebug ("Win %08x is now restacking.\n", (unsigned int)pRLWinPriv);
 #endif
 	      break;
 	    }
@@ -809,14 +809,14 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 	  if (IsRaiseOnClick (pWin))
 	    {
 #if CYGMULTIWINDOW_DEBUG
-	      ErrorF ("Win %08x has WINDOWSWM_RAISE_ON_CLICK.\n", (unsigned int)pRLWinPriv);
+	      winDebug ("Win %08x has WINDOWSWM_RAISE_ON_CLICK.\n", (unsigned int)pRLWinPriv);
 #endif
 	      break;
 	    }
 
 #if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("Win %08x forbid to change z order (%08x).\n",
-		  (unsigned int)pRLWinPriv, (unsigned int)pWinPos->hwndInsertAfter);
+	  winDebug ("Win %08x forbid to change z order (%08x).\n",
+		    (unsigned int)pRLWinPriv, (unsigned int)pWinPos->hwndInsertAfter);
 #endif
 	  pWinPos->flags |= SWP_NOZORDER;
 	}
@@ -825,8 +825,8 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_MOVE:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_MOVE - %d ms\n",
-	      (unsigned int)GetTickCount ());
+      winDebug ("winMWExtWMWindowProc - WM_MOVE - %d ms\n",
+		(unsigned int)GetTickCount ());
 #endif
       if (g_fNoConfigureWindow) break;
 #if 0
@@ -851,7 +851,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 #endif
 
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("\t(%d, %d)\n", (short) LOWORD(lParam), (short) HIWORD(lParam));
+      winDebug ("\t(%d, %d)\n", (short) LOWORD(lParam), (short) HIWORD(lParam));
 #endif
       if (!pRLWinPriv->fMovingOrSizing)
 	{
@@ -865,8 +865,8 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_SHOWWINDOW:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_SHOWWINDOW - %d ms\n",
-	      (unsigned int)GetTickCount ());
+      winDebug ("winMWExtWMWindowProc - WM_SHOWWINDOW - %d ms\n",
+		(unsigned int)GetTickCount ());
 #endif
       break;
 
@@ -877,25 +877,25 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_WINDOWPOSCHANGED:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_WINDOWPOSCHANGED\n");
+      winDebug ("winMWExtWMWindowProc - WM_WINDOWPOSCHANGED\n");
 #endif
       {
 	pWinPos = (LPWINDOWPOS) lParam;
 #if CYGMULTIWINDOW_DEBUG
-	ErrorF("flags: ");
-	if (pWinPos->flags & SWP_DRAWFRAME) ErrorF("SWP_DRAWFRAME ");
-	if (pWinPos->flags & SWP_FRAMECHANGED) ErrorF("SWP_FRAMECHANGED ");
-	if (pWinPos->flags & SWP_HIDEWINDOW) ErrorF("SWP_HIDEWINDOW ");
-	if (pWinPos->flags & SWP_NOACTIVATE) ErrorF("SWP_NOACTIVATE ");
-	if (pWinPos->flags & SWP_NOCOPYBITS) ErrorF("SWP_NOCOPYBITS ");
-	if (pWinPos->flags & SWP_NOMOVE) ErrorF("SWP_NOMOVE ");
-	if (pWinPos->flags & SWP_NOOWNERZORDER) ErrorF("SWP_NOOWNERZORDER ");
-	if (pWinPos->flags & SWP_NOSIZE) ErrorF("SWP_NOSIZE ");
-	if (pWinPos->flags & SWP_NOREDRAW) ErrorF("SWP_NOREDRAW ");
-	if (pWinPos->flags & SWP_NOSENDCHANGING) ErrorF("SWP_NOSENDCHANGING ");
-	if (pWinPos->flags & SWP_NOZORDER) ErrorF("SWP_NOZORDER ");
-	if (pWinPos->flags & SWP_SHOWWINDOW) ErrorF("SWP_SHOWWINDOW ");
-	ErrorF("\n");
+	winDebug("flags: ");
+	if (pWinPos->flags & SWP_DRAWFRAME) winDebug("SWP_DRAWFRAME ");
+	if (pWinPos->flags & SWP_FRAMECHANGED) winDebug("SWP_FRAMECHANGED ");
+	if (pWinPos->flags & SWP_HIDEWINDOW) winDebug("SWP_HIDEWINDOW ");
+	if (pWinPos->flags & SWP_NOACTIVATE) winDebug("SWP_NOACTIVATE ");
+	if (pWinPos->flags & SWP_NOCOPYBITS) winDebug("SWP_NOCOPYBITS ");
+	if (pWinPos->flags & SWP_NOMOVE) winDebug("SWP_NOMOVE ");
+	if (pWinPos->flags & SWP_NOOWNERZORDER) winDebug("SWP_NOOWNERZORDER ");
+	if (pWinPos->flags & SWP_NOSIZE) winDebug("SWP_NOSIZE ");
+	if (pWinPos->flags & SWP_NOREDRAW) winDebug("SWP_NOREDRAW ");
+	if (pWinPos->flags & SWP_NOSENDCHANGING) winDebug("SWP_NOSENDCHANGING ");
+	if (pWinPos->flags & SWP_NOZORDER) winDebug("SWP_NOZORDER ");
+	if (pWinPos->flags & SWP_SHOWWINDOW) winDebug("SWP_SHOWWINDOW ");
+	winDebug("\n");
 #endif
 	if (pWinPos->flags & SWP_HIDEWINDOW) break;
 
@@ -950,7 +950,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 	if (!(pWinPos->flags & SWP_NOSIZE)) {
 	  if (IsIconic(hwnd)){
 #if CYGMULTIWINDOW_DEBUG
-	    ErrorF ("\tIconic -> MINIMIZED\n");
+	    winDebug ("\tIconic -> MINIMIZED\n");
 #endif
 	    winWindowsWMSendEvent(WindowsWMControllerNotify,
 				  WindowsWMControllerNotifyMask,
@@ -960,7 +960,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 				  0, 0, 0, 0);
 	  } else if (IsZoomed(hwnd)){
 #if CYGMULTIWINDOW_DEBUG
-	    ErrorF ("\tZoomed -> MAXIMIZED\n");
+	    winDebug ("\tZoomed -> MAXIMIZED\n");
 #endif
 	    winWindowsWMSendEvent(WindowsWMControllerNotify,
 				  WindowsWMControllerNotifyMask,
@@ -970,7 +970,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 				  0, 0, 0, 0);
 	  } else {
 #if CYGMULTIWINDOW_DEBUG
-	    ErrorF ("\tnone -> RESTORED\n");
+	    winDebug ("\tnone -> RESTORED\n");
 #endif
 	    winWindowsWMSendEvent(WindowsWMControllerNotify,
 				  WindowsWMControllerNotifyMask,
@@ -990,7 +990,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 	    if (!(pWinPos->flags & SWP_NOMOVE)
 		&&!(pWinPos->flags & SWP_NOSIZE)) {
 #if CYGMULTIWINDOW_DEBUG
-	      ErrorF ("\tmove & resize\n");
+	      winDebug ("\tmove & resize\n");
 #endif
 	      winMWExtWMMoveResizeXWindow (pWin,
 						 rcClient.left - wBorderWidth (pWin)
@@ -1003,7 +1003,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 						 - wBorderWidth (pWin)*2);
 	    } else if (!(pWinPos->flags & SWP_NOMOVE)) {
 #if CYGMULTIWINDOW_DEBUG
-	      ErrorF ("\tmove\n");
+	      winDebug ("\tmove\n");
 #endif
 	      winMWExtWMMoveXWindow (pWin,
 					   rcClient.left - wBorderWidth (pWin)
@@ -1012,7 +1012,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 					   - GetSystemMetrics (SM_YVIRTUALSCREEN));
 	    } else if (!(pWinPos->flags & SWP_NOSIZE)) {
 #if CYGMULTIWINDOW_DEBUG
-	      ErrorF ("\tresize\n");
+	      winDebug ("\tresize\n");
 #endif
 	      winMWExtWMResizeXWindow (pWin,
 					     rcClient.right - rcClient.left
@@ -1024,7 +1024,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 	}
       }
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_WINDOWPOSCHANGED - done.\n");
+      winDebug ("winMWExtWMWindowProc - WM_WINDOWPOSCHANGED - done.\n");
 #endif
       return 0;
 
@@ -1032,11 +1032,11 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
       /* see dix/window.c */
       /* FIXME: Maximize/Restore? */
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_SIZE - %d ms\n",
-	      (unsigned int)GetTickCount ());
+      winDebug ("winMWExtWMWindowProc - WM_SIZE - %d ms\n",
+		(unsigned int)GetTickCount ());
 #endif
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("\t(%d, %d) %d\n", (short) LOWORD(lParam), (short) HIWORD(lParam), g_fNoConfigureWindow);
+      winDebug ("\t(%d, %d) %d\n", (short) LOWORD(lParam), (short) HIWORD(lParam), g_fNoConfigureWindow);
 #endif
       if (g_fNoConfigureWindow) break;
 
@@ -1045,7 +1045,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 	{
 	case SIZE_MINIMIZED:
 #if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("\tSIZE_MINIMIZED\n");
+	  winDebug ("\tSIZE_MINIMIZED\n");
 #endif
 	  winWindowsWMSendEvent(WindowsWMControllerNotify,
 				WindowsWMControllerNotifyMask,
@@ -1058,7 +1058,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
 	case SIZE_RESTORED:
 #if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("\tSIZE_RESTORED\n");
+	  winDebug ("\tSIZE_RESTORED\n");
 #endif
 	  winWindowsWMSendEvent(WindowsWMControllerNotify,
 				WindowsWMControllerNotifyMask,
@@ -1071,7 +1071,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
 	case SIZE_MAXIMIZED:
 #if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("\tSIZE_MAXIMIZED\n");
+	  winDebug ("\tSIZE_MAXIMIZED\n");
 #endif
 	  winWindowsWMSendEvent(WindowsWMControllerNotify,
 				WindowsWMControllerNotifyMask,
@@ -1127,16 +1127,16 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
     case WM_ENTERSIZEMOVE:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_ENTERSIZEMOVE - %d ms\n",
-	      (unsigned int)GetTickCount ());
+      winDebug ("winMWExtWMWindowProc - WM_ENTERSIZEMOVE - %d ms\n",
+		(unsigned int)GetTickCount ());
 #endif
       pRLWinPriv->fMovingOrSizing = TRUE;
       break;
 
     case WM_EXITSIZEMOVE:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMWindowProc - WM_EXITSIZEMOVE - %d ms\n",
-	      (unsigned int)GetTickCount ());
+      winDebug ("winMWExtWMWindowProc - WM_EXITSIZEMOVE - %d ms\n",
+		(unsigned int)GetTickCount ());
 #endif
       pRLWinPriv->fMovingOrSizing = FALSE;
 

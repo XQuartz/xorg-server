@@ -114,7 +114,7 @@ winMWExtWMQueryDIBFormat (win32RootlessWindowPtr pRLWinPriv, BITMAPINFOHEADER *p
   /* Get a pointer to bitfields */
   pdw = (DWORD*) ((CARD8*)pbmih + sizeof (BITMAPINFOHEADER));
 
-  ErrorF ("winMWExtWMQueryDIBFormat - First call masks: %08x %08x %08x\n",
+  winDebug ("winMWExtWMQueryDIBFormat - First call masks: %08x %08x %08x\n",
 	  (unsigned int)pdw[0], (unsigned int)pdw[1], (unsigned int)pdw[2]);
 #endif
 
@@ -227,7 +227,7 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
   static int			s_iWindowID = 0;
  
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMCreateFrame %d %d - %d %d\n",
+  winDebug ("winMWExtWMCreateFrame %d %d - %d %d\n",
 	  newX, newY, pFrame->width, pFrame->height);
 #endif
 
@@ -247,7 +247,7 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
   // Store the implementation private frame ID
   pFrame->wid = (RootlessFrameID) pRLWinPriv;
 
-  winSelectIcons(pWin, &hIcon, &hIconSmall); 
+  winSelectIcons(pFrame->win, &hIcon, &hIconSmall); 
   
   /* Set standard class name prefix so we can identify window easily */
   strncpy (pszClass, WINDOW_CLASS_X, sizeof(pszClass));
@@ -280,7 +280,7 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
   strcat (pszClass, pszWindowID);
 
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winCreateWindowsWindow - Creating class: %s\n", pszClass);
+  winDebug ("winCreateWindowsWindow - Creating class: %s\n", pszClass);
 #endif
 
   /* Setup our window class */
@@ -320,7 +320,7 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
     }
 
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMCreateFrame - ShowWindow\n");
+  winDebug ("winMWExtWMCreateFrame - ShowWindow\n");
 #endif
 
   //ShowWindow (pRLWinPriv->hWnd, SW_SHOWNOACTIVATE);
@@ -332,7 +332,7 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
     }
 
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMCreateFrame - (%08x) %08x\n",
+  winDebug ("winMWExtWMCreateFrame - (%08x) %08x\n",
 	  (int) pFrame->wid, (int) pRLWinPriv->hWnd);
 #if 0
   {
@@ -344,11 +344,11 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
      {
        pRLWinPriv2 = (win32RootlessWindowPtr) RootlessFrameForWindow (pWin2, FALSE);
      }
-   ErrorF ("winMWExtWMCreateFrame2 (%08x) %08x\n",
+   winDebug ("winMWExtWMCreateFrame2 (%08x) %08x\n",
 	   pRLWinPriv2, pRLWinPriv2->hWnd);
    if (pRLWinPriv != pRLWinPriv2 || pRLWinPriv->hWnd != pRLWinPriv2->hWnd)
      {
-       ErrorF ("Error param missmatch\n");
+       winDebug ("Error param missmatch\n");
      }
  }
 #endif
@@ -370,7 +370,7 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
   char			pszClass[CLASS_NAME_LENGTH];
 
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMDestroyFrame (%08x) %08x\n",
+  winDebug ("winMWExtWMDestroyFrame (%08x) %08x\n",
 	  (int) pRLWinPriv, (int) pRLWinPriv->hWnd);
 #if 0
  {
@@ -382,11 +382,11 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
      {
        pRLWinPriv2 = (win32RootlessWindowPtr) RootlessFrameForWindow (pWin2, FALSE);
      }
-   ErrorF ("winMWExtWMDestroyFrame2 (%08x) %08x\n",
+   winDebug ("winMWExtWMDestroyFrame2 (%08x) %08x\n",
 	   pRLWinPriv2, pRLWinPriv2->hWnd);
    if (pRLWinPriv != pRLWinPriv2 || pRLWinPriv->hWnd != pRLWinPriv2->hWnd)
      {
-       ErrorF ("Error param missmatch\n");
+       winDebug ("Error param missmatch\n");
        *(int*)0 = 1;//raise exseption
      }
  }
@@ -409,12 +409,12 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
   if (iReturn)
     { 
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMDestroyFrame - Unregistering %s: ", pszClass);
+      winDebug ("winMWExtWMDestroyFrame - Unregistering %s: ", pszClass);
 #endif
       iReturn = UnregisterClass (pszClass, hInstance);
       
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMDestroyFramew - %d Deleting Icon: ", iReturn);
+      winDebug ("winMWExtWMDestroyFramew - %d Deleting Icon: ", iReturn);
 #endif
       
       winDestroyIcon(hiconClass);
@@ -422,7 +422,7 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
     }
 
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMDestroyFrame - done\n");
+  winDebug ("winMWExtWMDestroyFrame - done\n");
 #endif
 }
 
@@ -436,7 +436,7 @@ winMWExtWMMoveFrame (RootlessFrameID wid, ScreenPtr pScreen, int iNewX, int iNew
   int iX, iY, iWidth, iHeight;
 
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMMoveFrame (%08x) (%d %d)\n", (int) pRLWinPriv, iNewX, iNewY);
+  winDebug ("winMWExtWMMoveFrame (%08x) (%d %d)\n", (int) pRLWinPriv, iNewX, iNewY);
 #endif
 
   /* Get the Windows window style and extended style */
@@ -480,7 +480,7 @@ winMWExtWMResizeFrame (RootlessFrameID wid, ScreenPtr pScreen,
   int iX, iY;
   
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMResizeFrame (%08x) (%d %d)-(%d %d)\n",
+  winDebug ("winMWExtWMResizeFrame (%08x) (%d %d)-(%d %d)\n",
 	  (int) pRLWinPriv, iNewX, iNewY, uiNewWidth, uiNewHeight);
 #endif
 
@@ -531,7 +531,7 @@ winMWExtWMRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid)
   Bool fFirst = TRUE;
   Bool fNeedRestack = TRUE;
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMRestackFrame (%08x)\n", (int) pRLWinPriv);
+  winDebug ("winMWExtWMRestackFrame (%08x)\n", (int) pRLWinPriv);
 #endif
 
   if (pScreenPriv->fRestacking) return;
@@ -545,7 +545,7 @@ winMWExtWMRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid)
   if (pRLNextWinPriv == NULL)
     {
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("Win %08x is top\n", pRLWinPriv);
+      winDebug ("Win %08x is top\n", pRLWinPriv);
 #endif
       pScreenPriv->widTop = wid;
       SetWindowPos (pRLWinPriv->hWnd, HWND_TOP,
@@ -554,7 +554,7 @@ winMWExtWMRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid)
   else
     {
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("Win %08x is not top\n", pRLWinPriv);
+      winDebug ("Win %08x is not top\n", pRLWinPriv);
 #endif
       for (hWnd = GetNextWindow (pRLWinPriv->hWnd, GW_HWNDPREV);
 	   fNeedRestack && hWnd != NULL;
@@ -571,7 +571,7 @@ winMWExtWMRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid)
 		  if (!fFirst)
 		    {
 #if CYGMULTIWINDOW_DEBUG
-		      ErrorF ("raise: Insert after Win %08x\n", pRLNextWinPriv);
+		      winDebug ("raise: Insert after Win %08x\n", pRLNextWinPriv);
 #endif
 		      SetWindowPos (pRLWinPriv->hWnd, pRLNextWinPriv->hWnd,
 				    0, 0, 0, 0,
@@ -580,7 +580,7 @@ winMWExtWMRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid)
 		  else
 		    {
 #if CYGMULTIWINDOW_DEBUG
-		      ErrorF ("No change\n");
+		      winDebug ("No change\n");
 #endif
 		    }
 		  fNeedRestack = FALSE;
@@ -602,7 +602,7 @@ winMWExtWMRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid)
 	      if (hWnd == pRLNextWinPriv->hWnd)
 		{
 #if CYGMULTIWINDOW_DEBUG
-		  ErrorF ("lower: Insert after Win %08x\n", pRLNextWinPriv);
+		  winDebug ("lower: Insert after Win %08x\n", pRLNextWinPriv);
 #endif
 		  SetWindowPos (pRLWinPriv->hWnd, pRLNextWinPriv->hWnd,
 				0, 0, 0, 0,
@@ -623,9 +623,8 @@ winMWExtWMReshapeFrame (RootlessFrameID wid, RegionPtr pShape)
   win32RootlessWindowPtr pRLWinPriv = (win32RootlessWindowPtr) wid;
   HRGN hRgn, hRgnWindow, hRgnClient;
   RECT rcWindow, rcClient;
-  POINT ptOffset;
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMReshapeFrame (%08x)\n", (int) pRLWinPriv);
+  winDebug ("winMWExtWMReshapeFrame (%08x)\n", (int) pRLWinPriv);
 #endif
 
   hRgn = winMWExtWMCreateRgnFromRegion (pShape);
@@ -654,7 +653,7 @@ winMWExtWMUnmapFrame (RootlessFrameID wid)
 {
   win32RootlessWindowPtr pRLWinPriv = (win32RootlessWindowPtr) wid;
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMUnmapFrame (%08x)\n", (int) pRLWinPriv);
+  winDebug ("winMWExtWMUnmapFrame (%08x)\n", (int) pRLWinPriv);
 #endif
 
   g_fNoConfigureWindow = TRUE;
@@ -678,7 +677,7 @@ winMWExtWMStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow)
   HDC			hdcNew;
   HBITMAP		hbmpNew;
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMStartDrawing (%08x) %08x\n", (int) pRLWinPriv, pRLWinPriv->fDestroyed);
+  winDebug ("winMWExtWMStartDrawing (%08x) %08x\n", (int) pRLWinPriv, pRLWinPriv->fDestroyed);
 #endif
 
   if (!pRLWinPriv->fDestroyed)
@@ -688,8 +687,8 @@ winMWExtWMStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow)
       if (pScreenPriv) pScreenInfo = pScreenPriv->pScreenInfo;
       
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("pScreenPriv %08X\n", (int) pScreenPriv);
-      ErrorF ("pScreenInfo %08X\n", (int) pScreenInfo);
+      winDebug ("pScreenPriv %08X\n", (int) pScreenPriv);
+      winDebug ("pScreenInfo %08X\n", (int) pScreenInfo);
 #endif
       if (pRLWinPriv->hdcScreen == NULL)
 	{
@@ -718,7 +717,7 @@ winMWExtWMStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow)
 	  else
 	    {
 #if CYGMULTIWINDOW_DEBUG
-	      ErrorF ("winMWExtWMStartDrawing - Shadow buffer allocated\n");
+	      winDebug ("winMWExtWMStartDrawing - Shadow buffer allocated\n");
 #endif
 	    }
 	  
@@ -727,19 +726,19 @@ winMWExtWMStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow)
 	  
 #if CYGMULTIWINDOW_DEBUG
 	  /* Print information about bitmap allocated */
-	  ErrorF ("winMWExtWMStartDrawing - Dibsection width: %d height: %d "
-		  "depth: %d size image: %d\n",
-		  (unsigned int)dibsection.dsBmih.biWidth,
-		  (unsigned int)dibsection.dsBmih.biHeight,
-		  (unsigned int)dibsection.dsBmih.biBitCount,
-		  (unsigned int)dibsection.dsBmih.biSizeImage);
+	  winDebug ("winMWExtWMStartDrawing - Dibsection width: %d height: %d "
+		    "depth: %d size image: %d\n",
+		    (unsigned int)dibsection.dsBmih.biWidth,
+		    (unsigned int)dibsection.dsBmih.biHeight,
+		    (unsigned int)dibsection.dsBmih.biBitCount,
+		    (unsigned int)dibsection.dsBmih.biSizeImage);
 #endif
 	  
 	  /* Select the shadow bitmap into the shadow DC */
 	  SelectObject (hdcNew, hbmpNew);
 	  
 #if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("winMWExtWMStartDrawing - Attempting a shadow blit\n");
+	  winDebug ("winMWExtWMStartDrawing - Attempting a shadow blit\n");
 #endif
 	  
 	  /* Blit from the old shadow to the new shadow */
@@ -752,7 +751,7 @@ winMWExtWMStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow)
 	  if (fReturn)
 	    {
 #if CYGMULTIWINDOW_DEBUG
-	      ErrorF ("winMWExtWMStartDrawing - Shadow blit success\n");
+	      winDebug ("winMWExtWMStartDrawing - Shadow blit success\n");
 #endif
 	    }
 	  else
@@ -774,8 +773,8 @@ winMWExtWMStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow)
 	  pRLWinPriv->dwWidthBytes = dibsection.dsBm.bmWidthBytes;
 	  
 #if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("winMWExtWMStartDrawing - bytesPerRow: %d\n",
-		  (unsigned int)dibsection.dsBm.bmWidthBytes);
+	  winDebug ("winMWExtWMStartDrawing - bytesPerRow: %d\n",
+		    (unsigned int)dibsection.dsBm.bmWidthBytes);
 #endif
 	  
 	  /* Free the old shadow bitmap */
@@ -788,8 +787,8 @@ winMWExtWMStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow)
 	  pRLWinPriv->fResized = FALSE;
 	}
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winMWExtWMStartDrawing - 0x%08x %d\n",
-	      (unsigned int)pRLWinPriv->pfb, (unsigned int)dibsection.dsBm.bmWidthBytes);
+      winDebug ("winMWExtWMStartDrawing - 0x%08x %d\n",
+		(unsigned int)pRLWinPriv->pfb, (unsigned int)dibsection.dsBm.bmWidthBytes);
 #endif
     }
   else
@@ -797,9 +796,9 @@ winMWExtWMStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow)
       ErrorF ("winMWExtWMStartDrawing - Already window was destroyed \n"); 
     }
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMStartDrawing - done (0x08x) 0x%08x %d\n",
-	  (int) pRLWinPriv,
-	  (unsigned int)pRLWinPriv->pfb, (unsigned int)pRLWinPriv->dwWidthBytes);
+  winDebug ("winMWExtWMStartDrawing - done (0x08x) 0x%08x %d\n",
+	    (int) pRLWinPriv,
+	    (unsigned int)pRLWinPriv->pfb, (unsigned int)pRLWinPriv->dwWidthBytes);
 #endif
   *pixelData = pRLWinPriv->pfb;
   *bytesPerRow = pRLWinPriv->dwWidthBytes;
@@ -814,7 +813,7 @@ winMWExtWMStopDrawing (RootlessFrameID wid, Bool fFlush)
   SIZE szWin;
   POINT ptSrc;
 #if CYGMULTIWINDOW_DEBUG || TRUE
-  ErrorF ("winMWExtWMStopDrawing (%08x)\n", pRLWinPriv);
+  winDebug ("winMWExtWMStopDrawing (%08x)\n", pRLWinPriv);
 #endif
   szWin.cx = pRLWinPriv->dwWidth;
   szWin.cy = pRLWinPriv->dwHeight;
@@ -845,7 +844,7 @@ winMWExtWMUpdateRegion (RootlessFrameID wid, RegionPtr pDamage)
   POINT ptSrc;
 #endif
 #if CYGMULTIWINDOW_DEBUG && 0
-  ErrorF ("winMWExtWMUpdateRegion (%08x)\n", pRLWinPriv);
+  winDebug ("winMWExtWMUpdateRegion (%08x)\n", pRLWinPriv);
 #endif
 #if 0
   szWin.cx = pRLWinPriv->dwWidth;
@@ -889,8 +888,8 @@ winMWExtWMDamageRects (RootlessFrameID wid, int nCount, const BoxRec *pRects,
   win32RootlessWindowPtr pRLWinPriv = (win32RootlessWindowPtr) wid;
   const BoxRec *pEnd;
 #if CYGMULTIWINDOW_DEBUG && 0
-  ErrorF ("winMWExtWMDamageRects (%08x, %d, %08x, %d, %d)\n",
-	  pRLWinPriv, nCount, pRects, shift_x, shift_y);
+  winDebug ("winMWExtWMDamageRects (%08x, %d, %08x, %d, %d)\n",
+	    pRLWinPriv, nCount, pRects, shift_x, shift_y);
 #endif
 
   for (pEnd = pRects + nCount; pRects < pEnd; pRects++) {
@@ -909,8 +908,8 @@ winMWExtWMRootlessSwitchWindow (RootlessWindowPtr pFrame, WindowPtr oldWin)
 {
   win32RootlessWindowPtr pRLWinPriv = (win32RootlessWindowPtr) pFrame->wid;
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMRootlessSwitchWindow (%08x) %08x\n",
-	  (int) pRLWinPriv, (int) pRLWinPriv->hWnd);
+  winDebug ("winMWExtWMRootlessSwitchWindow (%08x) %08x\n",
+	    (int) pRLWinPriv, (int) pRLWinPriv->hWnd);
 #endif
   pRLWinPriv->pFrame = pFrame;
   pRLWinPriv->fResized = TRUE;
@@ -928,11 +927,11 @@ winMWExtWMRootlessSwitchWindow (RootlessWindowPtr pFrame, WindowPtr oldWin)
      {
        pRLWinPriv2 = (win32RootlessWindowPtr) RootlessFrameForWindow (pWin2, FALSE);
      }
-   ErrorF ("winMWExtWMSwitchFrame2 (%08x) %08x\n",
+   winDebug ("winMWExtWMSwitchFrame2 (%08x) %08x\n",
 	   pRLWinPriv2, pRLWinPriv2->hWnd);
    if (pRLWinPriv != pRLWinPriv2 || pRLWinPriv->hWnd != pRLWinPriv2->hWnd)
      {
-       ErrorF ("Error param missmatch\n");
+       winDebug ("Error param missmatch\n");
      }
  }
 #endif
@@ -945,7 +944,7 @@ winMWExtWMCopyBytes (unsigned int width, unsigned int height,
 			   void *dst, unsigned int dstRowBytes)
 {
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMCopyBytes - Not implemented\n");
+  winDebug ("winMWExtWMCopyBytes - Not implemented\n");
 #endif
 }
 
@@ -954,7 +953,7 @@ winMWExtWMFillBytes (unsigned int width, unsigned int height, unsigned int value
 			   void *dst, unsigned int dstRowBytes)
 {
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMFillBytes - Not implemented\n");
+  winDebug ("winMWExtWMFillBytes - Not implemented\n");
 #endif
 }
 
@@ -965,7 +964,7 @@ winMWExtWMCompositePixels (unsigned int width, unsigned int height, unsigned int
 				 void *dst[2], unsigned int dstRowBytes[2])
 {
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMCompositePixels - Not implemented\n");
+  winDebug ("winMWExtWMCompositePixels - Not implemented\n");
 #endif
   return 0;
 }
@@ -979,14 +978,14 @@ winMWExtWMCopyWindow (RootlessFrameID wid, int nDstRects, const BoxRec *pDstRect
   const BoxRec *pEnd;
   RECT rcDmg;
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMCopyWindow (%08x, %d, %08x, %d, %d)\n",
+  winDebug ("winMWExtWMCopyWindow (%08x, %d, %08x, %d, %d)\n",
 	  (int) pRLWinPriv, nDstRects, (int) pDstRects, nDx, nDy);
 #endif
 
   for (pEnd = pDstRects + nDstRects; pDstRects < pEnd; pDstRects++)
     {
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("BitBlt (%d, %d, %d, %d) (%d, %d)\n",
+      winDebug ("BitBlt (%d, %d, %d, %d) (%d, %d)\n",
 	      pDstRects->x1, pDstRects->y1,
 	      pDstRects->x2 - pDstRects->x1,
 	      pDstRects->y2 - pDstRects->y1,
@@ -1013,7 +1012,7 @@ winMWExtWMCopyWindow (RootlessFrameID wid, int nDstRects, const BoxRec *pDstRect
       InvalidateRect (pRLWinPriv->hWnd, &rcDmg, FALSE);
     }
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winMWExtWMCopyWindow - done\n");
+  winDebug ("winMWExtWMCopyWindow - done\n");
 #endif
 }
 

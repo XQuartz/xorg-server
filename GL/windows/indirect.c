@@ -1338,8 +1338,6 @@ static Bool glWinScreenProbe(int screen)
     screenPriv->CopyWindow = pScreen->CopyWindow;
     pScreen->CopyWindow = glWinCopyWindow;
 
-    glWinInitCursor(pScreen);
-
     return TRUE;
 }
 

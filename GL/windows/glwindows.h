@@ -5,7 +5,6 @@
 #include <glxext.h>
 
 #include <mipointrst.h>
-#include <cursorstr.h>
 #include <miscstruct.h>
 #include <windowstr.h>
 #include <resource.h>
@@ -35,22 +34,9 @@ typedef struct {
 extern glWinDebugSettingsRec glWinDebugSettings;
 
 typedef struct {
-    /* from GetSystemMetrics */
-    int sm_cx;
-    int sm_cy;
-
-    BOOL visible;
-    HCURSOR handle;
-    QueryBestSizeProcPtr QueryBestSize;
-    miPointerSpriteFuncPtr spriteFuncs;
-} glWinCursorRec;
-
-typedef struct {
     int num_vis;
     __GLXvisualConfig *glx_vis;
     void **priv;
-
-    glWinCursorRec cursor;
 
     /* wrapped screen functions */
     RealizeWindowProcPtr RealizeWindow;
@@ -68,6 +54,4 @@ extern glWinScreenRec glWinScreens[MAXSCREENS];
 #else
 #define GLWIN_DEBUG_MSG(a, ...)
 #endif
-
-extern Bool glWinInitCursor (ScreenPtr pScreen);
 

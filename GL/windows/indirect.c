@@ -354,13 +354,42 @@ static void glWinEndDispatchOverride(__GLcontext *gc)
     GLWIN_DEBUG_MSG("unimplemented glWinEndDispatchOverride");
 }
 
+#define DUMP_PFD_FLAG(flag) \
+    if (pfd->dwFlags & flag) { \
+        ErrorF("%s%s", pipesym, #flag); \
+        pipesym = " | "; \
+    }
+        
 static void pfdOut(const PIXELFORMATDESCRIPTOR *pfd)
 {
+    const char *pipesym = ""; /* will be set after first flag dump */
     ErrorF("PIXELFORMATDESCRIPTOR:\n");
     ErrorF("nSize = %u\n", pfd->nSize);
     ErrorF("nVersion = %u\n", pfd->nVersion);
-    ErrorF("dwFlags = %lu\n", pfd->dwFlags);
-    ErrorF("iPixelType = %hhu\n", pfd->iPixelType);
+    ErrorF("dwFlags = %lu = {", pfd->dwFlags);
+	DUMP_PFD_FLAG(PFD_MAIN_PLANE);
+	DUMP_PFD_FLAG(PFD_OVERLAY_PLANE);
+	DUMP_PFD_FLAG(PFD_UNDERLAY_PLANE);
+	DUMP_PFD_FLAG(PFD_DOUBLEBUFFER);
+	DUMP_PFD_FLAG(PFD_STEREO);
+	DUMP_PFD_FLAG(PFD_DRAW_TO_WINDOW);
+	DUMP_PFD_FLAG(PFD_DRAW_TO_BITMAP);
+	DUMP_PFD_FLAG(PFD_SUPPORT_GDI);
+	DUMP_PFD_FLAG(PFD_SUPPORT_OPENGL);
+	DUMP_PFD_FLAG(PFD_GENERIC_FORMAT);
+	DUMP_PFD_FLAG(PFD_NEED_PALETTE);
+	DUMP_PFD_FLAG(PFD_NEED_SYSTEM_PALETTE);
+	DUMP_PFD_FLAG(PFD_SWAP_EXCHANGE);
+	DUMP_PFD_FLAG(PFD_SWAP_COPY);
+	DUMP_PFD_FLAG(PFD_SWAP_LAYER_BUFFERS);
+	DUMP_PFD_FLAG(PFD_GENERIC_ACCELERATED);
+	DUMP_PFD_FLAG(PFD_DEPTH_DONTCARE);
+	DUMP_PFD_FLAG(PFD_DOUBLEBUFFER_DONTCARE);
+	DUMP_PFD_FLAG(PFD_STEREO_DONTCARE);
+    ErrorF("}\n");
+    
+    ErrorF("iPixelType = %hhu = %s\n", pfd->iPixelType, 
+            (pfd->iPixelType == PFD_TYPE_RGBA ? "PFD_TYPE_RGBA" : "PFD_TYPE_COLORINDEX"));
     ErrorF("cColorBits = %hhu\n", pfd->cColorBits);
     ErrorF("cRedBits = %hhu\n", pfd->cRedBits);
     ErrorF("cRedShift = %hhu\n", pfd->cRedShift);
@@ -392,8 +421,7 @@ static int makeFormat(__GLcontextModes *mode, __GLcontext *gc)
       sizeof(PIXELFORMATDESCRIPTOR),   /* size of this pfd */
       1,                     /* version number */
       PFD_DRAW_TO_WINDOW |   /* support window */
-      PFD_SUPPORT_OPENGL |   /* support OpenGL */
-      PFD_DOUBLEBUFFER,      /* double buffered */
+      PFD_SUPPORT_OPENGL,    /* support OpenGL */
       PFD_TYPE_RGBA,         /* RGBA type */
       24,                    /* 24-bit color depth */
       0, 0, 0, 0, 0, 0,      /* color bits ignored */
@@ -415,10 +443,8 @@ static int makeFormat(__GLcontextModes *mode, __GLcontext *gc)
 
     /* disable anything but rgba. must get rgba to work first */
     if (!mode->rgbMode)
-	return 0; 
+        return 0; 
     
-    result->dwFlags = 0;
-
     if (mode->stereoMode) {
         result->dwFlags |= PFD_STEREO;
     }

@@ -435,9 +435,9 @@ winUseMsg (void)
 	  "\tSpecify an optional refresh rate to use in fullscreen mode\n"
 	  "\twith a DirectDraw engine.\n");
 
-  ErrorF ("-screen scr_num [width height]\n"
+  ErrorF ("-screen scr_num [width height [x y]]\n"
 	  "\tEnable screen scr_num and optionally specify a width and\n"
-	  "\theight for that screen.\n");
+	  "\theight and initial position for that screen.\n");
 
   ErrorF ("-lesspointer\n"
 	  "\tHide the windows mouse pointer when it is over an inactive\n"

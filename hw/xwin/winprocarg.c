@@ -112,6 +112,7 @@ winInitializeDefaultScreens (void)
       g_ScreenInfo[i].dwUserHeight = dwHeight;
       g_ScreenInfo[i].fUserGaveHeightAndWidth
 	=  WIN_DEFAULT_USER_GAVE_HEIGHT_AND_WIDTH;
+      g_ScreenInfo[i].fUserGavePosition = FALSE;
       g_ScreenInfo[i].dwBPP = WIN_DEFAULT_BPP;
       g_ScreenInfo[i].dwClipUpdatesNBoxes = WIN_DEFAULT_CLIP_UPDATES_NBOXES;
 #ifdef XWIN_EMULATEPSEUDO
@@ -250,7 +251,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
     {
       int		iArgsProcessed = 1;
       int		nScreenNum;
-      int		iWidth, iHeight;
+      int		iWidth, iHeight, iX, iY;
 
 #if CYGDEBUG
       winDebug ("ddxProcessArgument - screen - argc: %d i: %d\n",
@@ -288,6 +289,16 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  g_ScreenInfo[nScreenNum].dwHeight = iHeight;
 	  g_ScreenInfo[nScreenNum].dwUserWidth = iWidth;
 	  g_ScreenInfo[nScreenNum].dwUserHeight = iHeight;
+	  /* Look for WxD+X+Y */
+	  if (2 == sscanf (argv[i + 2], "%*dx%*d+%d+%d",
+			   (int *) &iX,
+			   (int *) &iY))
+	  {
+	    winErrorFVerb (2, "ddxProcessArgument - screen - Found ``X+Y'' arg\n");
+	    g_ScreenInfo[nScreenNum].fUserGavePosition = TRUE;
+	    g_ScreenInfo[nScreenNum].dwInitialX = iX;
+	    g_ScreenInfo[nScreenNum].dwInitialY = iY;
+	  }
 	}
       else if (i + 3 < argc
 	       && 1 == sscanf (argv[i + 2], "%d",
@@ -302,6 +313,18 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  g_ScreenInfo[nScreenNum].dwHeight = iHeight;
 	  g_ScreenInfo[nScreenNum].dwUserWidth = iWidth;
 	  g_ScreenInfo[nScreenNum].dwUserHeight = iHeight;
+	  if (i + 5 < argc
+	      && 1 == sscanf (argv[i + 4], "%d",
+			      (int *) &iX)
+	      && 1 == sscanf (argv[i + 5], "%d",
+			      (int *) &iY))
+	  {
+	    winErrorFVerb (2, "ddxProcessArgument - screen - Found ``X Y'' arg\n");
+	    iArgsProcessed = 6;
+	    g_ScreenInfo[nScreenNum].fUserGavePosition = TRUE;
+	    g_ScreenInfo[nScreenNum].dwInitialX = iX;
+	    g_ScreenInfo[nScreenNum].dwInitialY = iY;
+	  }
 	}
       else
 	{

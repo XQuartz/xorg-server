@@ -23,6 +23,8 @@
 #include <glxscreens.h>
 #include <GL/internal/glcore.h>
 
+#include "../../hw/xwin/winpriv.h"
+
 /* ggs: needed to call back to glx with visual configs */
 extern void GlxSetVisualConfigs(int nconfigs, __GLXvisualConfig *configs, void **configprivs);
 
@@ -204,7 +206,7 @@ struct __GLcontextRec {
   struct __GLinterfaceRec interface; /* required to be first */
 
   HGLRC ctx;
-  HWND wnd;
+  winWindowInfoRec winInfo;
   int pixelFormat;
 
   /* set when attached */
@@ -223,6 +225,8 @@ static GLboolean glWinDestroyContext(__GLcontext *gc)
     {
         if (gc->ctx != NULL) 
 	    wglDeleteContext(gc->ctx);
+        if (gc->winInfo.hrgn)
+            DeleteObject(gc->winInfo.hrgn);
 
         free(gc);
     }
@@ -230,17 +234,26 @@ static GLboolean glWinDestroyContext(__GLcontext *gc)
     return GL_TRUE;
 }
 
+static HDC glWinMakeDC(__GLcontext *gc)
+{
+    if (gc->winInfo.hrgn == NULL) 
+    {
+        gc->winInfo.hrgn = CreateRectRgnIndirect(&gc->winInfo.rect);
+    }
+    return GetDCEx(gc->winInfo.hwnd, gc->winInfo.hrgn, DCX_PARENTCLIP);
+}
+
 static GLboolean glWinLoseCurrent(__GLcontext *gc)
 {
     BOOL ret;
-    HDC dc = GetDC(gc->wnd);
+    HDC dc = glWinMakeDC(gc);
 
     GLWIN_DEBUG_MSG("glWinLoseCurrent (ctx %p)\n", gc->ctx);
 
     ret = wglMakeCurrent(dc, NULL);
     if (!ret)
 	ErrorF("wglMakeCurrent: %s\n", winErrorMessage());
-    ReleaseDC(gc->wnd, dc);
+    ReleaseDC(gc->winInfo.hwnd, dc);
 
     __glXLastContext = NULL; /* Mesa does this; why? */
 
@@ -250,6 +263,7 @@ static GLboolean glWinLoseCurrent(__GLcontext *gc)
 static void unattach(__GLcontext *gc)
 {
     GLWIN_DEBUG_MSG("unattach %p\n", gc);
+    gc->isAttached = 0;
 }
 
 static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
@@ -259,28 +273,29 @@ static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
     PIXELFORMATDESCRIPTOR pfd;
     BOOL ret;
 
-    ret = wglDeleteContext(gc->ctx);
-    if (!ret) {
-        ErrorF("wglDeleteContext error: %s\n", winErrorMessage());
+    if (gc->ctx) 
+    {
+        ret = wglDeleteContext(gc->ctx);
+        if (!ret) {
+            ErrorF("wglDeleteContext error: %s\n", winErrorMessage());
+        }
     }
     
-    /* get the correct window handle */
-    gc->wnd = GetActiveWindow(); /* FIXME */
-
-    dc = GetDC(gc->wnd);
+    
+    dc = glWinMakeDC(gc);
     DescribePixelFormat(dc, gc->pixelFormat, 
             sizeof(pfd), &pfd);
-    pfdOut(&pfd);
     ret = SetPixelFormat(dc, gc->pixelFormat, &pfd);
-
+    
     gc->ctx = wglCreateContext(dc);
-
+    
     if (gc->ctx == NULL) {
-	ErrorF("wglCreateContext error: %s\n", winErrorMessage());
-        ReleaseDC(gc->wnd, dc);
+        ErrorF("wglCreateContext error: %s\n", winErrorMessage());
+        ReleaseDC(gc->winInfo.hwnd, dc);
         return;
     }
-    ReleaseDC(gc->wnd, dc);
+    ReleaseDC(gc->winInfo.hwnd, dc);
+    gc->isAttached = 1;
 }
 
 static GLboolean glWinMakeCurrent(__GLcontext *gc)
@@ -293,11 +308,11 @@ static GLboolean glWinMakeCurrent(__GLcontext *gc)
 
     attach(gc, glPriv);
 
-    dc = GetDC(gc->wnd);
+    dc = glWinMakeDC(gc);
     ret = wglMakeCurrent(dc, gc->ctx);
     if (!ret)
 	ErrorF("glMakeCurrent error: %s\n", winErrorMessage());
-    ReleaseDC(gc->wnd, dc);
+    ReleaseDC(gc->winInfo.hwnd, dc);
 
     return ret;
 }
@@ -339,11 +354,11 @@ static GLboolean glWinForceCurrent(__GLcontext *gc)
 
     GLWIN_DEBUG_MSG("glWinForceCurrent (ctx %p)\n", gc->ctx);
 
-    dc = GetDC(gc->wnd);
+    dc = glWinMakeDC(gc);
     ret = wglMakeCurrent(dc, gc->ctx);
     if (!ret)
 	ErrorF("wglSetCurrent error: %s\n", winErrorMessage());
-    ReleaseDC(gc->wnd, dc);
+    ReleaseDC(gc->winInfo.hwnd, dc);
 
     return ret;
 }
@@ -524,13 +539,13 @@ static int makeFormat(__GLcontextModes *mode, __GLcontext *gc)
     GLWIN_DEBUG_MSG("makeFormat almost done\n");
 
     result = NULL;
-    dc = GetDC(gc->wnd);
+    dc = GetDC(gc->winInfo.hwnd);
 
-    pfdOut(&pfd);
+    /*pfdOut(&pfd);*/
     iPixelFormat = ChoosePixelFormat(dc, &pfd);
     if (iPixelFormat == 0)
 	ErrorF("ChoosePixelFormat error: %s\n", winErrorMessage());
-    ReleaseDC(gc->wnd, dc);
+    ReleaseDC(gc->winInfo.hwnd, dc);
 
     GLWIN_DEBUG_MSG("makeFormat done (%d)\n", iPixelFormat);
 
@@ -553,7 +568,8 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
 
     result->interface.imports = *imports;
     result->interface.exports = glWinExports;
-    result->wnd = GetActiveWindow(); /* FIXME */
+
+    winGetWindowInfo(NULL, &result->winInfo);
 
     result->pixelFormat = makeFormat(mode, result);
     if (result->pixelFormat == 0) {
@@ -563,13 +579,14 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
 
     result->ctx = NULL;
 
-    dc = GetDC(result->wnd);
+    dc = GetDC(result->winInfo.hwnd);
     DescribePixelFormat(dc, result->pixelFormat, 
             sizeof(pfd), &pfd);
-    pfdOut(&pfd);
+    /*pfdOut(&pfd);*/
     ret = SetPixelFormat(dc, result->pixelFormat, &pfd);
 
     if (!ret) {
+        ErrorF("SetPixelFormat error: %s\n", winErrorMessage());
         free(result);
         return NULL;
     }
@@ -577,12 +594,12 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
     result->ctx = wglCreateContext(dc);
 
     if (result->ctx == NULL) {
-	ErrorF("wglCreateContext error: %s\n", winErrorMessage());
-        ReleaseDC(result->wnd, dc);
+        ErrorF("wglCreateContext error: %s\n", winErrorMessage());
+        ReleaseDC(result->winInfo.hwnd, dc);
         free(result);
         return NULL;
     }
-    ReleaseDC(result->wnd, dc);
+    ReleaseDC(result->winInfo.hwnd, dc);
 
     GLWIN_DEBUG_MSG("glWinCreateContext done\n");
     return (__GLinterface *)result;
@@ -619,6 +636,10 @@ glWinRealizeWindow(WindowPtr pWin)
         /* GL contexts bound to this window for drawing */
         for (gx = glxPriv->drawGlxc; gx != NULL; gx = gx->next) {
             gc = (__GLcontext *)gx->gc;
+            
+            /* get the correct window handle */
+            winGetWindowInfo(pWin, &gc->winInfo);
+
             attach(gc, glPriv);
         }
 
@@ -1178,13 +1199,13 @@ static GLboolean glWinSwapBuffers(__GLXdrawablePrivate *glxPriv)
 
     if (gc != NULL && gc->ctx != NULL)
     {
-        dc = GetDC(gc->wnd);
+        dc = glWinMakeDC(gc);
 
         ret = SwapBuffers(dc);
         if (!ret)
             ErrorF("SwapBuffers failed: %s\n", winErrorMessage());
         
-        ReleaseDC(gc->wnd, dc);
+        ReleaseDC(gc->winInfo.hwnd, dc);
         if (!ret)
             return GL_FALSE;
     }

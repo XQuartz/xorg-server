@@ -2,6 +2,11 @@
 
 	* InitOutput.c: Check for textmode mounted /tmp and print a warning
 
+2004-06-15  Harold Hunt  <huntharo@msu.edu>
+
+	* windialogs.c: Fix path to locally installed changelog for the About 
+    dialog box.
+
 2004-05-27  Alexander Gottwald  <ago@freedesktop.org>
 
 	* winpriv.c: Create win32 window if not already created

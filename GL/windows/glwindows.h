@@ -35,9 +35,12 @@ typedef struct {
 extern glWinDebugSettingsRec glWinDebugSettings;
 
 typedef struct {
+    /* from GetSystemMetrics */
     int sm_cx;
     int sm_cy;
+
     BOOL visible;
+    HCURSOR handle;
     QueryBestSizeProcPtr QueryBestSize;
     miPointerSpriteFuncPtr spriteFuncs;
 } glWinCursorRec;
@@ -59,6 +62,12 @@ extern glWinScreenRec glWinScreens[MAXSCREENS];
 
 #define glWinGetScreenPriv(pScreen)  &glWinScreens[pScreen->myNum]
 #define glWinScreenPriv(pScreen) glWinScreenRec *pScreenPriv = glWinGetScreenPriv(pScreen);
+
+#if 1
+#define GLWIN_DEBUG_MSG if (glWinDebugSettings.enableDebug) ErrorF
+#else
+#define GLWIN_DEBUG_MSG(a, ...)
+#endif
 
 extern Bool glWinInitCursor (ScreenPtr pScreen);
 

@@ -49,7 +49,7 @@
 /* ggs: needed to call back to glx with visual configs */
 extern void GlxSetVisualConfigs(int nconfigs, __GLXvisualConfig *configs, void **configprivs);
 
-static glWinDebugSettingsRec glWinDebugSettings = { 1, 0, 0, 0};
+glWinDebugSettingsRec glWinDebugSettings = { 1, 0, 0, 0};
 
 static void glWinInitDebugSettings(void) 
 {
@@ -139,12 +139,6 @@ GLuint __glFloorLog2(GLuint val)
     }
     return c;
 }
-
-#if 1
-#define GLWIN_DEBUG_MSG if (glWinDebugSettings.enableDebug) ErrorF
-#else
-#define GLWIN_DEBUG_MSG(a, ...)
-#endif
 
 /* some prototypes */
 static Bool glWinScreenProbe(int screen);

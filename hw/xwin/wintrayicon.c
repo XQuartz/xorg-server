@@ -163,7 +163,7 @@ winHandleIconMessage (HWND hwnd, UINT message,
 	  {
 	    /* Remove Show Root Window button */
 	    RemoveMenu (hmenuTray,
-			ID_APP_SHOW_ROOT,
+			ID_APP_HIDE_ROOT,
 			MF_BYCOMMAND);
 	    
 	    /* Remove Hide Root Window button */

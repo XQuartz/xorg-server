@@ -1,3 +1,8 @@
+2004-06-27  Alexander Gottwald  <ago@freedesktop.org>
+
+   * winconfig.c: Add entry for us layout. This changes not much but 
+   removes a strange error message about the unknown us layout. 
+
 2004-06-24  Alexander Gottwald  <ago@freedesktop.org>
 
 	* InitOutput.c: Check for textmode mounted /tmp and print a warning

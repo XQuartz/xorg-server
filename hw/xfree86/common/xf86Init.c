@@ -1262,12 +1262,17 @@ AbortDDX()
 void
 OsVendorFatalError()
 {
-  ErrorF("\nWhen reporting a problem related to a server crash, please\n"
-	 "send the full server output, not just the last messages.\n");
-  if (xf86LogFile && xf86LogFileWasOpened)
-    ErrorF("This can be found in the log file \"%s\".\n", xf86LogFile);
-  ErrorF("Please report problems to %s.\n", BUILDERADDR);
-  ErrorF("\n");
+#ifdef VENDORSUPPORT
+    ErrorF("\nPlease refer to your Operating System Vendor support pages\n"
+	   "at %s for support on this crash.\n",VENDORSUPPORT);
+#else
+    ErrorF("\nPlease consult the X.org support \n"
+	   "\tat http://wiki.X.org\n for help. \n");
+#endif
+    if (xf86LogFile && xf86LogFileWasOpened)
+	ErrorF("Please also check the log file at \"%s\" for additional "
+              "information.\n", xf86LogFile);
+    ErrorF("\n");
 }
 
 int

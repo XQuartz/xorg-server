@@ -479,11 +479,15 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
       /* Free the screen DC */
       ReleaseDC (pRLWinPriv->hWnd, pRLWinPriv->hdcScreen);
       pRLWinPriv->hdcScreen = NULL;
+
+      /* Free shadow buffer info header */
+      free (pRLWinPriv->pbmihShadow);
+      pRLWinPriv->pbmihShadow = NULL;
       
       pRLWinPriv->fResized = FALSE;
       pRLWinPriv->pfb = NULL;
       free (pRLWinPriv);
-      SetProp (hwnd, WIN_WINDOW_PROP, (HANDLE)NULL);
+      RemoveProp (hwnd, WIN_WINDOW_PROP);
       break;
 
     case WM_MOUSEMOVE:

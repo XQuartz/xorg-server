@@ -241,6 +241,7 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
   pRLWinPriv->hbmpShadow = NULL;
   pRLWinPriv->hdcShadow = NULL;
   pRLWinPriv->hdcScreen = NULL;
+  pRLWinPriv->pbmihShadow = NULL;
   pRLWinPriv->fResized = TRUE;
   pRLWinPriv->fClose = FALSE;
   pRLWinPriv->fRestackingNow = FALSE;
@@ -377,6 +378,11 @@ void
 winMWExtWMDestroyFrame (RootlessFrameID wid)
 {
   win32RootlessWindowPtr pRLWinPriv = (win32RootlessWindowPtr) wid;
+  HICON			hiconClass;
+  HMODULE		hInstance;
+  int			iReturn;
+  char			pszClass[CLASS_NAME_LENGTH];
+
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winMWExtWMDestroyFrame (%08x) %08x\n",
 	  (int) pRLWinPriv, (int) pRLWinPriv->hWnd);
@@ -401,10 +407,39 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
 #endif
 #endif
 
+  /* Store the info we need to destroy after this window is gone */
+  hInstance = (HINSTANCE) GetClassLong (pRLWinPriv->hWnd, GCL_HMODULE);
+  hiconClass = (HICON) GetClassLong (pRLWinPriv->hWnd, GCL_HICON);
+  iReturn = GetClassName (pRLWinPriv->hWnd, pszClass, 512);
+
   pRLWinPriv->fClose = TRUE;
   pRLWinPriv->fDestroyed = TRUE;
+
   /* Destroy the Windows window */
   DestroyWindow (pRLWinPriv->hWnd);
+
+  /* Only if we were able to get the name */
+  if (iReturn)
+    { 
+#if CYGMULTIWINDOW_DEBUG
+      ErrorF ("winDestroyWindowsWindow - Unregistering %s: ", pszClass);
+#endif
+      iReturn = UnregisterClass (pszClass, hInstance);
+      
+#if CYGMULTIWINDOW_DEBUG
+      ErrorF ("winDestroyWindowsWindow - %d Deleting Icon: ", iReturn);
+#endif
+      
+      /* Only delete if it's not the default */
+      if (hiconClass != g_hiconX &&
+	  !winIconIsOverride((unsigned long)hiconClass))
+	{ 
+	  iReturn = DestroyIcon (hiconClass);
+#if CYGMULTIWINDOW_DEBUG
+	  ErrorF ("winDestroyWindowsWindow - %d\n", iReturn);
+#endif
+	}
+    }
 
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winMWExtWMDestroyFrame - done\n");
@@ -779,7 +814,7 @@ winMWExtWMStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow)
     }
   else
     {
-      ErrorF ("winMWExtWMStartDrawing - Already window was destoroyed \n"); 
+      ErrorF ("winMWExtWMStartDrawing - Already window was destroyed \n"); 
     }
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winMWExtWMStartDrawing - done (0x08x) 0x%08x %d\n",

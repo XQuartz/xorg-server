@@ -799,6 +799,10 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	    winSendMessageToWM (s_pScreenPriv->pWMInfo, &wmMsg);
 	}
 
+      RemoveProp (hwnd, WIN_WINDOW_PROP);
+      RemoveProp (hwnd, WIN_WID_PROP);
+      RemoveProp (hwnd, WIN_NEEDMANAGE_PROP);
+
 #if CYGMULTIWINDOW_DEBUG
       ErrorF ("winTopLevelWindowProc - WM_DESTROY\n");
 #endif

@@ -620,8 +620,6 @@ winDestroyWindowsWindow (WindowPtr pWin)
   if (pWinPriv->hWnd == NULL)
     return;
 
-  SetProp (pWinPriv->hWnd, WIN_WINDOW_PROP, 0);
-
   /* Store the info we need to destroy after this window is gone */
   hInstance = (HINSTANCE) GetClassLong (pWinPriv->hWnd, GCL_HMODULE);
   hiconClass = (HICON) GetClassLong (pWinPriv->hWnd, GCL_HICON);

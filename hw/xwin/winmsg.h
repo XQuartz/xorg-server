@@ -41,6 +41,7 @@ void winDrvMsgVerb (int scrnIndex,
 void winDrvMsg (int scrnIndex, MessageType type, const char *format, ...);
 void winMsgVerb (MessageType type, int verb, const char *format, ...);
 void winMsg (MessageType type, const char *format, ...);
+void winDebug (const char *format, ...);
 
 void winErrorFVerb (int verb, const char *format, ...);
 

@@ -519,7 +519,7 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	}
       
       /* Hide or show the Windows mouse cursor */
-      if (g_fCursor)
+      if (g_fSoftwareCursor && g_fCursor)
 	{
 	  /* Hide Windows cursor */
 	  g_fCursor = FALSE;
@@ -554,7 +554,7 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	break;
 
       /* Non-client mouse movement, show Windows cursor */
-      if (!g_fCursor)
+      if (g_fSoftwareCursor && !g_fCursor)
 	{
 	  g_fCursor = TRUE;
 	  ShowCursor (TRUE);
@@ -578,7 +578,7 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       s_fTracking = FALSE;
 
       /* Show the mouse cursor, if necessary */
-      if (!g_fCursor)
+      if (g_fSoftwareCursor && !g_fCursor)
 	{
 	  g_fCursor = TRUE;
 	  ShowCursor (TRUE);

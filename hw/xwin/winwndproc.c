@@ -37,10 +37,9 @@
 #include <commctrl.h>
 #include "winprefs.h"
 #include "winconfig.h"
-#ifdef CYGDEBUG
+#if CYGDEBUG
 #include "winmessages.h"
 #endif
-
 
 /*
  * Global variables
@@ -749,13 +748,13 @@ winWindowProc (HWND hwnd, UINT message,
 	}
 
       /* Hide or show the Windows mouse cursor */
-      if (g_fCursor && (s_pScreenPriv->fActive || s_pScreenInfo->fLessPointer))
+      if (g_fSoftwareCursor && g_fCursor && (s_pScreenPriv->fActive || s_pScreenInfo->fLessPointer))
 	{
 	  /* Hide Windows cursor */
 	  g_fCursor = FALSE;
 	  ShowCursor (FALSE);
 	}
-      else if (!g_fCursor && !s_pScreenPriv->fActive
+      else if (g_fSoftwareCursor && !g_fCursor && !s_pScreenPriv->fActive
 	       && !s_pScreenInfo->fLessPointer)
 	{
 	  /* Show Windows cursor */
@@ -784,7 +783,7 @@ winWindowProc (HWND hwnd, UINT message,
 	break;
       
       /* Non-client mouse movement, show Windows cursor */
-      if (!g_fCursor)
+      if (g_fSoftwareCursor && !g_fCursor)
 	{
 	  g_fCursor = TRUE;
 	  ShowCursor (TRUE);
@@ -798,7 +797,7 @@ winWindowProc (HWND hwnd, UINT message,
       s_fTracking = FALSE;
 
       /* Show the mouse cursor, if necessary */
-      if (!g_fCursor)
+      if (g_fSoftwareCursor && !g_fCursor)
 	{
 	  g_fCursor = TRUE;
 	  ShowCursor (TRUE);
@@ -1096,7 +1095,7 @@ winWindowProc (HWND hwnd, UINT message,
       s_pScreenPriv->iDeltaZ = 0;
 
       /* Reshow the Windows mouse cursor if we are being deactivated */
-      if (LOWORD(wParam) == WA_INACTIVE
+      if (g_fSoftwareCursor && LOWORD(wParam) == WA_INACTIVE
 	  && !g_fCursor)
 	{
 	  /* Show Windows cursor */
@@ -1118,7 +1117,7 @@ winWindowProc (HWND hwnd, UINT message,
       s_pScreenPriv->fActive = wParam;
 
       /* Reshow the Windows mouse cursor if we are being deactivated */
-      if (!s_pScreenPriv->fActive
+      if (g_fSoftwareCursor && !s_pScreenPriv->fActive
 	  && !g_fCursor)
 	{
 	  /* Show Windows cursor */

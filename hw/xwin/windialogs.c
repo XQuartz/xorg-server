@@ -45,6 +45,7 @@ extern HWND			g_hDlgExit;
 extern HWND			g_hDlgAbout;
 extern WINPREFS			pref;
 extern Bool			g_fClipboardStarted;
+extern Bool			g_fSoftwareCursor;
 
 
 /*
@@ -356,7 +357,7 @@ winExitDlgProc (HWND hDialog, UINT message,
     case WM_MOUSEMOVE:
     case WM_NCMOUSEMOVE:
       /* Show the cursor if it is hidden */
-      if (!g_fCursor)
+      if (g_fSoftwareCursor && !g_fCursor)
 	{
 	  g_fCursor = TRUE;
 	  ShowCursor (TRUE);
@@ -638,7 +639,7 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
     case WM_MOUSEMOVE:
     case WM_NCMOUSEMOVE:
       /* Show the cursor if it is hidden */
-      if (!g_fCursor)
+      if (g_fSoftwareCursor && !g_fCursor)
 	{
 	  g_fCursor = TRUE;
 	  ShowCursor (TRUE);

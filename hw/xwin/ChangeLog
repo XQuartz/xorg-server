@@ -1,3 +1,10 @@
+2004-05-17  Alexander Gottwald  <ago@freedesktop.org>
+
+	* windialogs.c (winExitDlgProc, winAboutDlgProc),
+	  winmultiwindowwndproc.c (winTopLevelWindowProc),
+	  winwndproc.c (winWindowProc): Check if g_fSoftwareCursor is set 
+	before calling ShowCursor.  
+
 2004-05-09  Dan Wilks  <Dan_Wilks@intuit.com>
     
 	* winclipboard.h: Add extern prototypes for winDebug, winErrorFVerb

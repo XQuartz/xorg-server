@@ -1,10 +1,32 @@
 /* $Xorg: mivaltree.c,v 1.4 2001/02/09 02:05:22 xorgcvs Exp $ */
-/* $XdotOrg: xc/programs/Xserver/mi/mivaltree.c,v 1.2.2.1 2004/07/30 06:54:42 anholt Exp $ */
+/* $XdotOrg: xc/programs/Xserver/mi/mivaltree.c,v 1.3 2004/07/31 08:24:14 anholt Exp $ */
 /*
  * mivaltree.c --
  *	Functions for recalculating window clip lists. Main function
  *	is miValidateTree.
  *
+
+Copyright (c) 2004, Sun Microsystems, Inc. 
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of The Open Group shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from The Open Group.
 
 Copyright 1987, 1988, 1989, 1998  The Open Group
 
@@ -101,6 +123,10 @@ Equipment Corporation.
 #include    "mivalidate.h"
 
 #include    "globals.h"
+
+#ifdef LG3D
+#include "../Xext/lgeint.h"
+#endif /* LG3D */
 
 #ifdef SHAPE
 /*
@@ -614,6 +640,27 @@ miValidateTree (pParent, pChild, kind)
     int			viewvals;
     Bool		forward;
 
+#ifdef LG3D
+    /* Never update the parent clips of a redirected window */
+    Bool okayToUpdateParent = (pChild == NullWindow) || !pChild->redirectDraw;
+
+    /* 
+    ** In order to avoid updating the parent clips, save them
+    ** and restore them afterwards. 
+    ** TODO: alternatively, we could update every place within
+    ** mivaltree.c where these are written and prevent the write.
+    */
+    RegionRec    parentClipListSave;
+    RegionRec    parentBorderClipSave;
+
+    if (!okayToUpdateParent) {
+	REGION_NULL(pScreen, &parentClipListSave);
+	REGION_NULL(pScreen, &parentBorderClipSave);
+	REGION_COPY(pScreen, &parentClipListSave, &pParent->clipList);
+	REGION_COPY(pScreen, &parentBorderClipSave, &pParent->borderClip);
+    }
+#endif /* LG3D */
+
     pScreen = pParent->drawable.pScreen;
     if (pChild == NullWindow)
 	pChild = pParent->firstChild;
@@ -816,7 +863,27 @@ miValidateTree (pParent, pChild, kind)
 
     REGION_UNINIT( pScreen, &totalClip);
     REGION_UNINIT( pScreen, &exposed);
+
+#ifdef LG3D
+    /* 
+    ** It is necessary to skip this when LG3D is active because this causes a 
+    ** WID hole when some windows are unmapped (at least on some DDX's, such 
+    ** as Nvidia). TODO: I'm not really sure why this works.
+    */
+    if (pScreen->ClipNotify && !lgeDisplayServerIsAlive)
+#else
     if (pScreen->ClipNotify)
+#endif /* LG3D */
 	(*pScreen->ClipNotify) (pParent, 0, 0);
+
+#ifdef LG3D
+    if (!okayToUpdateParent) {
+	REGION_COPY(pScreen, &pParent->clipList, &parentClipListSave);
+	REGION_COPY(pScreen, &pParent->borderClip, &parentBorderClipSave); 
+	REGION_UNINIT(pScreen, &parentClipListSave);
+	REGION_UNINIT(pScreen, &parentBorderClipSave);
+    }
+#endif /* LG3D */
+
     return (1);
 }

@@ -1,6 +1,28 @@
-/* $XdotOrg: xc/programs/Xserver/dix/events.c,v 1.5 2004/07/31 01:33:40 stukreit Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/events.c,v 1.6 2004/08/09 02:08:35 kem Exp $ */
 /* $XFree86: xc/programs/Xserver/dix/events.c,v 3.51 2004/01/12 17:04:52 tsi Exp $ */
 /************************************************************
+
+Copyright (c) 2004, Sun Microsystems, Inc. 
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of The Open Group shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from The Open Group.
 
 Copyright 1987, 1998  The Open Group
 
@@ -128,6 +150,14 @@ xEvent *xeviexE;
 #include "dixgrabs.h"
 #include "dispatch.h"
 
+#ifdef LG3D
+#include "damagewire.h"
+#include "../Xext/lgeint.h"
+
+extern int lgeTryClientEvents (ClientPtr client, xEvent *pEvents, int count, Mask mask, 
+			       Mask filter, GrabPtr grab);
+#endif /* LG3D */
+
 #define EXTENSION_EVENT_BASE  64
 
 #define NoSuchEvent 0x80000000	/* so doesn't match NoEventMask */
@@ -191,10 +221,17 @@ static struct {
  * windows between the root and the current pointer window each time a button
  * or key goes down. The grabs on each of those windows must be checked.
  */
+#ifdef LG3D
+WindowPtr *spriteTrace = (WindowPtr *)NULL;
+#define ROOT spriteTrace[0]
+int spriteTraceSize = 0;
+int spriteTraceGood;
+#else
 static WindowPtr *spriteTrace = (WindowPtr *)NULL;
 #define ROOT spriteTrace[0]
 static int spriteTraceSize = 0;
 static int spriteTraceGood;
+#endif /* LG3D */
 
 static  struct {
     CursorPtr	current;
@@ -215,6 +252,15 @@ static  struct {
     WindowPtr	confineWin;	/* confine window */ 
 #endif
 } sprite;			/* info about the cursor sprite */
+
+#ifdef LG3D
+typedef struct virtual_sprite {
+    WindowPtr win;              /* The top-level window the sprite is in (or PRW) */
+    HotSpot   hot;		/* Sprite location relative to win */
+} VirtualSprite;
+
+static VirtualSprite virtualSprite;
+#endif /* LG3D */
 
 #ifdef XEVIE
 WindowPtr xeviewin;
@@ -284,6 +330,33 @@ static CARD8 criticalEvents[32] =
 {
     0x7c				/* key and button events */
 };
+
+#ifdef LG3D
+
+#define LG3D_DECLARE_WINDOW() \
+    WindowPtr pEventWin = NULL
+    
+#define LG3D_GET_WINDOW(e) \
+    if ((e) != NULL) { \
+        pEventWin = (WindowPtr) LookupIDByType((e)->u.keyButtonPointer.event, RT_WINDOW); \
+    }
+
+/* 
+** In LG Event Mode the sprite hotspot is calculated by taking the 
+** event window local coordinates and converting them to screen
+** absolute.
+**
+*/
+#define LG3D_CALC_SPRITE_HOTXY(e) \
+    sprite.hot.x = (e)->u.keyButtonPointer.rootX; \
+    sprite.hot.y = (e)->u.keyButtonPointer.rootY; 
+
+extern WindowPtr XYToSubWindow (WindowPtr pWin, int x, int y, 
+				int *xWinRel, int *yWinRel);
+
+extern Bool PointInBorderSize(WindowPtr pWin, int x, int y);
+
+#endif /* LG3D */
 
 #ifdef PANORAMIX
 
@@ -425,8 +498,19 @@ XineramaCheckVirtualMotion(
     if (qe)
     {
 	sprite.hot.pScreen = qe->pScreen;  /* should always be Screen 0 */
+#ifdef LG3D
+	if (lgeDisplayServerIsAlive) {
+	    LG3D_DECLARE_WINDOW();
+	    LG3D_GET_WINDOW(qe->event);
+	    LG3D_CALC_SPRITE_HOTXY(qe->event);
+	} else {
+    	    sprite.hot.x = qe->event->u.keyButtonPointer.rootX;
+            sprite.hot.y = qe->event->u.keyButtonPointer.rootY;
+	}
+#else
 	sprite.hot.x = qe->event->u.keyButtonPointer.rootX;
 	sprite.hot.y = qe->event->u.keyButtonPointer.rootY;
+#endif /* LG3D */
 	pWin = inputInfo.pointer->grab ? inputInfo.pointer->grab->confineTo :
 					 NullWindow;
     }
@@ -594,6 +678,14 @@ XineramaConfineCursorToWindow(WindowPtr pWin, Bool generateEvents)
 static void
 XineramaChangeToCursor(CursorPtr cursor)
 {
+#ifdef LG3D
+    if (plgeDisplayServerForceThisCursor != NULL) {
+	(*sprite.hotPhys.pScreen->DisplayCursor) (sprite.hotPhys.pScreen,
+						  plgeDisplayServerForceThisCursor);
+        return;
+    }
+#endif /* LG3D */
+
     if (cursor != sprite.current)
     {
 	if ((sprite.current->bits->xhot != cursor->bits->xhot) ||
@@ -829,6 +921,14 @@ ChangeToCursor(CursorPtr cursor)
     }
 #endif
 
+#ifdef LG3D
+    if (plgeDisplayServerForceThisCursor != NULL) {
+	(*sprite.hotPhys.pScreen->DisplayCursor) (sprite.hotPhys.pScreen,
+						  plgeDisplayServerForceThisCursor);
+        return;
+    }
+#endif /* LG3D */
+
     if (cursor != sprite.current)
     {
 	if ((sprite.current->bits->xhot != cursor->bits->xhot) ||
@@ -951,6 +1051,118 @@ NoticeEventTime(xE)
 /**************************************************************************
  *            The following procedures deal with synchronous events       *
  **************************************************************************/
+
+#ifdef LG3D
+
+#define SEND_TO_ALLGRAB_CLIENT     0
+#define SEND_TO_NORMAL_CLIENT      1
+#define SEND_TO_BOTH_CLIENTS       2
+
+/*
+** Given an event, returns a code specifying to whom the event
+** should be sent. In the case where DS cares, this routine returns the event's 
+** destination window in the win argument.
+*/
+
+static int
+lgeDSCaresAboutEvent (xEvent *pEvent, Window *win) 
+{
+    int dest;
+
+    switch (pEvent->u.u.type) {
+
+    case KeyPress:
+    case KeyRelease:
+    case ButtonPress:
+    case ButtonRelease:
+    case MotionNotify:
+	*win = pEvent->u.keyButtonPointer.event;
+	dest = SEND_TO_ALLGRAB_CLIENT;
+	break;
+
+    case EnterNotify:
+    case LeaveNotify:
+	*win = pEvent->u.enterLeave.event;
+	dest = SEND_TO_ALLGRAB_CLIENT;
+	break;
+
+    case FocusIn:
+    case FocusOut:
+	dest = SEND_TO_ALLGRAB_CLIENT;
+	*win = pEvent->u.focus.window;
+	break;
+
+    case ConfigureNotify:
+        dest = SEND_TO_BOTH_CLIENTS;
+	*win = pEvent->u.configureNotify.window;
+	break;
+
+    default:
+	/* The above events are the only one the DS cares about */
+	/* Note: XDamageNotify is handled specially by client == NULL */
+	dest = SEND_TO_NORMAL_CLIENT;
+    }
+
+    return dest;
+}
+
+/*
+** If lgeGrabAllWindowEvents is active, send all events that the
+** LG DS cares that are destined for the grab window to the grab client.
+** 
+** HACK ALERT: the current lgeGrabAllWindowEvents is somewhat of a hack. It
+** was done because there is no method in the standard X11 protocol for
+** directing all events to a particular client. The main reason why this 
+** is necessary in LG3D is because there are problems in the Display Server
+** with Java AWT. The first problem is that X display connections in multiple
+** threads don't work properly (or, at least, we couldn't get it to work).
+** The second is that eventually AWT needs to be upgraded to handle extension
+** events such as DamageNotify and CursorImageNotify. There wasn't time to do 
+** this, so we opted to use lgeGrabAllWindowEvents to keep events from going
+** to AWT at all.
+*/
+
+int
+lgeTryClientEvents (ClientPtr client, xEvent *pEvents, int count, Mask mask, 
+		    Mask filter, GrabPtr grab)
+{
+    int    status = 1;
+    int    i;
+
+    if (!lgeGrabAllWindowEvents.active) {
+	return TryClientEvents (client, pEvents, count, mask, filter, grab);
+    }
+
+     for (i = 0; i < count; i++) { 
+	 Window win;
+	 int destination;
+
+	 destination = lgeDSCaresAboutEvent (pEvents, &win);
+	 
+	 if (client == NULL /* For XDamageNotify */ || 
+	     (destination != SEND_TO_NORMAL_CLIENT && win == lgeGrabAllWindowEvents.window)) {
+	     /* 
+	     ** Send events to grabbing client client. Use a null grab pointer 
+	     ** in order to sure that the event isn't eaten by any grabs; we want
+	     ** all input events to get to be sent to the all-grab client.
+	     */
+	     status =  TryClientEvents (lgeGrabAllWindowEvents.pClient, pEvents, 1,
+				       mask, filter, NULL);
+	     /*ErrorF("Sent to allgrab client, type = %d\n", pEvents->u.u.type);*/
+	     if (destination == SEND_TO_BOTH_CLIENTS) {
+		 status = TryClientEvents (client, pEvents, 1, mask, filter, grab);
+	     }
+	 } else {
+	    /* Send events to normal destination client only*/
+	    status = TryClientEvents (client, pEvents, 1, mask, filter, grab);
+	}
+
+	pEvents++;
+    }
+
+    return status;
+}
+#endif /* LG3D */
 
 void
 EnqueueEvent(xE, device, count)
@@ -1608,8 +1820,13 @@ DeliverEventsToWindow(pWin, pEvents, count, filter, grab, mskidx)
 	if (filter != CantBeFiltered &&
 	    !((wOtherEventMasks(pWin)|pWin->eventMask) & filter))
 	    return 0;
+#ifdef LG3D
+	if ( (attempt = lgeTryClientEvents(wClient(pWin), pEvents, count,
+				      pWin->eventMask, filter, grab)) )
+#else
 	if ( (attempt = TryClientEvents(wClient(pWin), pEvents, count,
 				      pWin->eventMask, filter, grab)) )
+#endif /* LG3D */
 	{
 	    if (attempt > 0)
 	    {
@@ -1636,8 +1853,13 @@ DeliverEventsToWindow(pWin, pEvents, count, filter, grab, mskidx)
 	    other = (InputClients *)wOtherClients(pWin);
 	for (; other; other = other->next)
 	{
+#ifdef LG3D
+	    if ( (attempt = lgeTryClientEvents(rClient(other), pEvents, count,
+					  other->mask[mskidx], filter, grab)) )
+#else
 	    if ( (attempt = TryClientEvents(rClient(other), pEvents, count,
 					  other->mask[mskidx], filter, grab)) )
+#endif /* LG3D */
 	    {
 		if (attempt > 0)
 		{
@@ -1728,8 +1950,13 @@ MaybeDeliverEventsToClient(pWin, pEvents, count, filter, dontClient)
 	    return XineramaTryClientEventsResult(
 			wClient(pWin), NullGrab, pWin->eventMask, filter);
 #endif
+#ifdef LG3D
+	return lgeTryClientEvents(wClient(pWin), pEvents, count,
+			       pWin->eventMask, filter, NullGrab);
+#else
 	return TryClientEvents(wClient(pWin), pEvents, count,
 			       pWin->eventMask, filter, NullGrab);
+#endif /* LG3D */
     }
     for (other = wOtherClients(pWin); other; other = other->next)
     {
@@ -1742,8 +1969,13 @@ MaybeDeliverEventsToClient(pWin, pEvents, count, filter, dontClient)
 	      return XineramaTryClientEventsResult(
 			rClient(other), NullGrab, other->mask, filter);
 #endif
+#ifdef LG3D
+	    return lgeTryClientEvents(rClient(other), pEvents, count,
+				   other->mask, filter, NullGrab);
+#else
 	    return TryClientEvents(rClient(other), pEvents, count,
 				   other->mask, filter, NullGrab);
+#endif /* LG3D */
 	}
     }
     return 2;
@@ -1756,6 +1988,11 @@ FixUpEventFromWindow(
     Window child,
     Bool calcChild)
 {
+#ifdef LG3D
+    Bool   isMouseEvent = FALSE;
+    Window mouseEventWinPrev = 0;
+#endif /* LG3D */
+
     if (calcChild)
     {
         WindowPtr w=spriteTrace[spriteTraceGood-1];
@@ -1784,15 +2021,93 @@ FixUpEventFromWindow(
         } 	    
     }
     XE_KBPTR.root = ROOT->drawable.id;
+#ifdef LG3D
+    if (xE->u.u.type == ButtonPress   ||
+        xE->u.u.type == ButtonRelease ||
+        xE->u.u.type == MotionNotify) {
+        isMouseEvent = TRUE;
+	mouseEventWinPrev = XE_KBPTR.event;
+    }
+
+    if (lgeDisplayServerIsAlive &&  
+	XE_KBPTR.event == lgeDisplayServerPRW) {
+
+	/* 
+	** Event is going to the PRW.
+	** Button and motion events already have the event 
+	** window field set.
+	*/
+	if (!isMouseEvent) {
+	    XE_KBPTR.event = pWin->drawable.id;
+	}
+
+    } else {
+	/*
+	** Non-LG event mode or the event is going to an 
+	** X application window. Need to set the event window 
+	** field to the destination window.
+	*/
+	XE_KBPTR.event = pWin->drawable.id;
+    }
+#else
     XE_KBPTR.event = pWin->drawable.id;
+#endif /* LG3D */
     if (sprite.hot.pScreen == pWin->drawable.pScreen)
     {
 	XE_KBPTR.sameScreen = xTrue;
 	XE_KBPTR.child = child;
+#ifdef LG3D
+	if (lgeDisplayServerIsAlive) {
+	    if (XE_KBPTR.event == lgeDisplayServerPRW) {
+		/* 
+		** Event is going to the PRW.
+		** Button and motion events already have the event
+		** XY fields set.
+		*/
+		if (!isMouseEvent) {
+		    XE_KBPTR.eventX = XE_KBPTR.rootX;
+		    XE_KBPTR.eventY = XE_KBPTR.rootY;
+		}
+	    } else {
+		/*
+		** Event is going to an X application 
+		** window. Need to set the window relative event XY for 
+		** ALL event types.
+		**
+		** TODO: I don't think this code deals very well with grab cases,
+		*/
+		if (!isMouseEvent || mouseEventWinPrev == pWin->drawable.id) {
+		    /* 
+		    ** A non-button/motion event (e.g. keypress or enter/leave)
+		    ** or the event occurred in a top-level window.
+		    ** Do nothing. The event coords are already correct.
+		    */
+		} else {
+		    /* TODO: it would be good to avoid a resource lookup here */
+		    WindowPtr pOuterWin = (WindowPtr) LookupIDByType(mouseEventWinPrev, RT_WINDOW);
+		    if (pOuterWin == NULL) {
+			ErrorF("Error: FixupEventFromWindow: outer window %d, not found. No XY fix up occuring.\n", mouseEventWinPrev);
+		    } else {
+			/* 
+			** Make the event coords relative to the destination window
+			** instead of relative to the outer window.
+			*/
+			XE_KBPTR.eventX -= pWin->drawable.x - pOuterWin->drawable.x;
+			XE_KBPTR.eventY -= pWin->drawable.y - pOuterWin->drawable.y;
+		    }		    
+		}
+	    }
+	} else {
+	    /* Non-LG event mode */
+	    XE_KBPTR.eventX = XE_KBPTR.rootX - pWin->drawable.x;
+	    XE_KBPTR.eventY = XE_KBPTR.rootY - pWin->drawable.y;
+	} 
+#else
 	XE_KBPTR.eventX =
 	XE_KBPTR.rootX - pWin->drawable.x;
 	XE_KBPTR.eventY =
 	XE_KBPTR.rootY - pWin->drawable.y;
+#endif /* LG3D */
     }
     else
     {
@@ -1836,6 +2151,19 @@ DeliverDeviceEvents(pWin, xE, grab, stopAt, dev, count)
 	    }
 	    if ((deliveries < 0) ||
 		(pWin == stopAt) ||
+#ifdef LG3D
+		/*
+		** Stop propogating when the parent of the window is the PRW.
+		** This prevents events that are not caught by any X11 window from
+		** being sent back to the the Display Server, because the DS can
+		** misinterpret these.
+		** TODO: we need to decide if a server change is the best way to 
+		** deal with this problem, or whether the DS or WM can do something 
+		** about it.
+		*/
+		(lgeDisplayServerIsAlive && 
+		 pWin->parent->drawable.id == lgeDisplayServerPRW) ||
+#endif /* LG3D */
 		(inputMasks &&
 		 (filter & inputMasks->dontPropagateMask[mskidx])))
 		return 0;
@@ -1861,6 +2189,11 @@ DeliverDeviceEvents(pWin, xE, grab, stopAt, dev, count)
 	    }
 	    if ((deliveries < 0) ||
 		(pWin == stopAt) ||
+#ifdef LG3D
+		/* See comment above */
+		(lgeDisplayServerIsAlive && 
+		 pWin->parent->drawable.id == lgeDisplayServerPRW) ||
+#endif /* LG3D */
 		(filter & wDontPropagateMask(pWin)))
 		return 0;
 	    child = pWin->drawable.id;
@@ -1912,7 +2245,11 @@ DeliverEvents(pWin, xE, count, otherParent)
 }
 
 
+#ifdef LG3D
+Bool 
+#else
 static Bool 
+#endif /* LG3D */
 PointInBorderSize(WindowPtr pWin, int x, int y)
 {
     BoxRec box;
@@ -1983,6 +2320,12 @@ static Bool
 CheckMotion(xEvent *xE)
 {
     WindowPtr prevSpriteWin = sprite.win;
+#ifdef LG3D
+    LG3D_DECLARE_WINDOW();
+    if (lgeDisplayServerIsAlive) {
+	LG3D_GET_WINDOW(xE);
+    }
+#endif /* LG3D */
 
 #ifdef PANORAMIX
     if(!noPanoramiXExtension)
@@ -1996,8 +2339,17 @@ CheckMotion(xEvent *xE)
 	    sprite.hot.pScreen = sprite.hotPhys.pScreen;
 	    ROOT = WindowTable[sprite.hot.pScreen->myNum];
 	}
+#ifdef LG3D
+	if (lgeDisplayServerIsAlive) {
+	    LG3D_CALC_SPRITE_HOTXY(xE);
+	} else {
+	    sprite.hot.x = XE_KBPTR.rootX;
+	    sprite.hot.y = XE_KBPTR.rootY;
+	}
+#else
 	sprite.hot.x = XE_KBPTR.rootX;
 	sprite.hot.y = XE_KBPTR.rootY;
+#endif /* LG3D */
 	if (sprite.hot.x < sprite.physLimits.x1)
 	    sprite.hot.x = sprite.physLimits.x1;
 	else if (sprite.hot.x >= sprite.physLimits.x2)
@@ -2022,7 +2374,39 @@ CheckMotion(xEvent *xE)
 	XE_KBPTR.rootY = sprite.hot.y;
     }
 
+#ifdef LG3D
+    if (pEventWin == NULL) {
+	sprite.win = XYToWindow(sprite.hot.x, sprite.hot.y);
+        virtualSprite.hot.x = sprite.hot.x - sprite.win->drawable.x;
+        virtualSprite.hot.y = sprite.hot.y - sprite.win->drawable.y;
+    } else {
+	WindowPtr pSpriteWin;
+
+       	/* 
+	** This is needed to decouple the virtual sprite position from 
+	** the physical sprite position.
+	*/
+	if (pEventWin->drawable.id == lgeDisplayServerPRW) {
+	    pSpriteWin = pEventWin;
+	    virtualSprite.hot.x = sprite.hot.x;
+	    virtualSprite.hot.y = sprite.hot.y;
+	} else {
+	    pSpriteWin = XYToSubWindow(pEventWin, 
+				       xE->u.keyButtonPointer.eventX,
+				       xE->u.keyButtonPointer.eventY,
+				       &virtualSprite.hot.x,
+				       &virtualSprite.hot.y);
+	}
+
+        sprite.win = pSpriteWin;
+    }
+
+    virtualSprite.win = sprite.win;
+
+#else
     sprite.win = XYToWindow(sprite.hot.x, sprite.hot.y);
+#endif /* LG3D */
+
 #ifdef notyet
     if (!(sprite.win->deliverableEvents &
 	  Motion_Filter(inputInfo.pointer->button))
@@ -2472,9 +2856,15 @@ CheckPassiveGrabsOnWindow(
  
 	    FixUpEventFromWindow(xE, grab->window, None, TRUE);
 
+#ifdef LG3D
+	    (void) lgeTryClientEvents(rClient(grab), xE, count,
+				   filters[xE->u.u.type],
+				   filters[xE->u.u.type],  grab);
+#else
 	    (void) TryClientEvents(rClient(grab), xE, count,
 				   filters[xE->u.u.type],
 				   filters[xE->u.u.type],  grab);
+#endif /* LG3D */
 
 	    if (device->sync.state == FROZEN_NO_EVENT)
 	    {
@@ -2626,9 +3016,15 @@ DeliverGrabbedEvent(xE, thisDev, deactivateGrab, count)
     if (!deliveries)
     {
 	FixUpEventFromWindow(xE, grab->window, None, TRUE);
+#ifdef LG3D
+	deliveries = lgeTryClientEvents(rClient(grab), xE, count,
+				     (Mask)grab->eventMask,
+				     filters[xE->u.u.type], grab);
+#else
 	deliveries = TryClientEvents(rClient(grab), xE, count,
 				     (Mask)grab->eventMask,
 				     filters[xE->u.u.type], grab);
+#endif /* LG3D */
 	if (deliveries && (xE->u.u.type == MotionNotify
 #ifdef XINPUT
 			   || xE->u.u.type == DeviceMotionNotify
@@ -3266,8 +3662,13 @@ EnterLeaveEvent(
 	     IsParent(focus, pWin)))
 	    event.u.enterLeave.flags |= ELFlagFocus;
 	if (grab)
+#ifdef LG3D
+	    (void)lgeTryClientEvents(rClient(grab), &event, 1, mask,
+				  filters[type], grab);
+#else
 	    (void)TryClientEvents(rClient(grab), &event, 1, mask,
 				  filters[type], grab);
+#endif /* LG3D */
 	else
 	    (void)DeliverEventsToWindow(pWin, &event, 1, filters[type],
 					NullGrab, 0);
@@ -3288,8 +3689,13 @@ EnterLeaveEvent(
 	memmove((char *)&ke.map[0], (char *)&keybd->key->down[1], 31);
 	ke.type = KeymapNotify;
 	if (grab)
+#ifdef LG3D
+	    (void)lgeTryClientEvents(rClient(grab), (xEvent *)&ke, 1, mask,
+				  KeymapStateMask, grab);
+#else
 	    (void)TryClientEvents(rClient(grab), (xEvent *)&ke, 1, mask,
 				  KeymapStateMask, grab);
+#endif /* LG3D */
 	else
 	    (void)DeliverEventsToWindow(pWin, (xEvent *)&ke, 1,
 					KeymapStateMask, NullGrab, 0);
@@ -3990,8 +4396,27 @@ ProcQueryPointer(client)
     if (sprite.hot.pScreen == pWin->drawable.pScreen)
     {
 	rep.sameScreen = xTrue;
+#ifdef LG3D
+	/* 
+	** TODO: this only works when pWin is the top-level
+        ** window (or a descendent of the top level window)
+	** of the current virtual sprite window. We haven't
+	** yet figured out what the semantics should be for
+	** the case where this is not true.
+	*/
+	if (lgeDisplayServerIsAlive) {
+	    rep.winX = virtualSprite.win->drawable.x + virtualSprite.hot.x -
+		       pWin->drawable.x;
+            rep.winY = virtualSprite.win->drawable.y + virtualSprite.hot.y -
+		       pWin->drawable.y;
+	} else {
+	    rep.winX = sprite.hot.x - pWin->drawable.x;
+	    rep.winY = sprite.hot.y - pWin->drawable.y;
+	}
+#else
 	rep.winX = sprite.hot.x - pWin->drawable.x;
 	rep.winY = sprite.hot.y - pWin->drawable.y;
+#endif /* LG3D */
 	for (t = sprite.win; t; t = t->parent)
 	    if (t->parent == pWin)
 	    {
@@ -4546,6 +4971,13 @@ ProcRecolorCursor(client)
     return (Success);
 }
 
+#if defined(LG3D) && defined (DEBUG)
+int print_events_all = 0;
+int print_events_to_ds = 0;
+int print_events_to_wm = 0;
+int print_events_to_app = 0;
+#endif /* LG3D && DEBUG */
+
 void
 WriteEventsToClient(pClient, count, events)
     ClientPtr	pClient;
@@ -4605,6 +5037,24 @@ WriteEventsToClient(pClient, count, events)
 	eventinfo.count = count;
 	CallCallbacks(&EventCallback, (pointer)&eventinfo);
     }
+
+#if defined(LG3D) && defined (DEBUG)
+	if (print_events_all ||
+	    (print_events_to_ds && pClient->index == 4) ||
+	    (print_events_to_wm && pClient->index == 5) ||
+	    (print_events_to_app && pClient->index == 6)) {
+	    xEvent *ev;
+
+	    for(i = 0; i < count; i++) {
+		ev = &events[i];
+		ErrorF("Send event %d to client %d, xy = %d, %d, event win = %d\n", 
+		       ev->u.u.type, pClient->index,
+		       ev->u.keyButtonPointer.eventX, ev->u.keyButtonPointer.eventY,
+		       ev->u.keyButtonPointer.event);
+	    }
+	}
+#endif /* LG3D && DEBUG */
+
     if(pClient->swapped)
     {
 	for(i = 0; i < count; i++)

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/include/globals.h,v 1.3 2004/07/31 04:23:21 kem Exp $ */
+/* $XdotOrg: xc/programs/Xserver/include/globals.h,v 1.4 2004/07/31 09:14:06 kem Exp $ */
 /* $XFree86: xc/programs/Xserver/include/globals.h,v 1.3 1999/09/25 14:38:21 dawes Exp $ */
 
 #ifndef _XSERV_GLOBAL_H_
@@ -59,6 +59,10 @@ extern Bool noXevieExtension;
 
 #ifdef COMPOSITE
 extern Bool noCompositeExtension;
+#endif
+
+#ifdef LG3D
+extern Bool noLgeExtension;
 #endif
 
 #endif /* _XSERV_GLOBAL_H_ */

@@ -25,6 +25,10 @@
 #include "windowstr.h"
 #include "cw.h"
 
+#ifdef LG3D
+#include "../../Xext/lgeint.h"
+#endif /* LG3D */
+
 #define CW_DEBUG 1
 
 #if CW_DEBUG
@@ -654,6 +658,13 @@ miInitializeCompositeWrapper(ScreenPtr pScreen)
     if (GetPictureScreen (pScreen))
 	cwInitializeRender(pScreen);
 #endif
+
+#ifdef LG3D
+    if (lgeDisplayServerIsAlive) {
+	SCREEN_EPILOGUE(pScreen, MoveWindow, lg3dMoveWindow);
+	SCREEN_EPILOGUE(pScreen, ResizeWindow, lg3dSlideAndSizeWindow);
+    }
+#endif /* LG3D */
 }
 
 static Bool
@@ -678,6 +689,13 @@ cwCloseScreen (int i, ScreenPtr pScreen)
     if (ps)
 	cwFiniRender(pScreen);
 #endif
+
+#ifdef LG3D
+    if (lgeDisplayServerIsAlive) {
+	pScreen->MoveWindow = pScreenPriv->MoveWindow;
+	pScreen->ResizeWindow = pScreenPriv->ResizeWindow;
+    }
+#endif /* LG3D */
 
     xfree((pointer)pScreenPriv);
 

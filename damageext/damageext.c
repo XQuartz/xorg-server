@@ -1,6 +1,28 @@
 /*
  * $Id$
  *
+ * Copyright (c) 2004, Sun Microsystems, Inc. 
+ * 
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation.
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ * OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Except as contained in this notice, the name of The Open Group shall not be
+ * used in advertising or otherwise to promote the sale, use or other dealings
+ * in this Software without prior written authorization from The Open Group.
+ *
  * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -36,6 +58,15 @@ RESTYPE		DamageExtWinType;
 
 #define prScreen	screenInfo.screens[0]
 
+#ifdef LG3D
+
+#include "../Xext/lgeint.h"
+
+extern int
+lgeTryClientEvents (ClientPtr client, xEvent *pEvents, int count, Mask mask, 
+		    Mask filter, GrabPtr grab);
+#endif /* LG3D */
+
 static void
 DamageExtNotify (DamageExtPtr pDamageExt, BoxPtr pBoxes, int nBoxes)
 {
@@ -67,8 +98,20 @@ DamageExtNotify (DamageExtPtr pDamageExt, BoxPtr pBoxes, int nBoxes)
 	    ev.area.y = pBoxes[i].y1;
 	    ev.area.width = pBoxes[i].x2 - pBoxes[i].x1;
 	    ev.area.height = pBoxes[i].y2 - pBoxes[i].y1;
-	    if (!pClient->clientGone)
+	    if (!pClient->clientGone) {
+#ifdef LG3D
+	        if (lgeDisplayServerIsAlive) {
+		    if (lgeTryClientEvents (NULL, (xEvent *) &ev, 1, 0, 0, NULL) == 0) {
+			ErrorF("DamageExtNotify: warning: call to lgeTryWriteEventsToClients failed.\n");
+			ErrorF("Couldn't deliver DamageNotify event.\n");
+		    }
+		} else {
+		    WriteEventsToClient (pClient, 1, (xEvent *) &ev);
+		}
+#else
 		WriteEventsToClient (pClient, 1, (xEvent *) &ev);
+#endif /* LG3D */
+	    }
 	}
     }
     else
@@ -77,8 +120,20 @@ DamageExtNotify (DamageExtPtr pDamageExt, BoxPtr pBoxes, int nBoxes)
 	ev.area.y = 0;
 	ev.area.width = pDrawable->width;
 	ev.area.height = pDrawable->height;
-	if (!pClient->clientGone)
+	if (!pClient->clientGone) {
+#ifdef LG3D
+	    if (lgeDisplayServerIsAlive) {
+		if (lgeTryClientEvents (NULL, (xEvent *) &ev, 1, 0, 0, NULL) == 0) {
+		    ErrorF("DamageExtNotify: warning: call to lgeTryWriteEventsToClients failed.\n");
+		    ErrorF("Couldn't deliver DamageNotify event.\n");
+		}
+	    } else {
+		WriteEventsToClient (pClient, 1, (xEvent *) &ev);
+	    }
+#else
 	    WriteEventsToClient (pClient, 1, (xEvent *) &ev);
+#endif /* LG3D */
+	}
     }
     /* Composite extension marks clients with manual Subwindows as critical */
     if (pDamageClient->critical > 0)

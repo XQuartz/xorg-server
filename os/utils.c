@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.5 2004/07/31 09:14:06 kem Exp $ */
+/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.6 2004/08/11 22:27:50 kem Exp $ */
 /* $Xorg: utils.c,v 1.5 2001/02/09 02:05:24 xorgcvs Exp $ */
 /*
 
@@ -145,6 +145,10 @@ Bool noXevieExtension = TRUE;
 #ifdef COMPOSITE
 Bool noCompositeExtension = TRUE;
 #endif
+
+#ifdef LG3D
+Bool noLgeExtension = TRUE;
+#endif 
 
 int auditTrailLevel = 1;
 

@@ -105,6 +105,12 @@ typedef struct {
 
     RasterizeTrapezoidProcPtr	RasterizeTrapezoid;
 #endif
+
+#ifdef LG3D
+    MoveWindowProcPtr           MoveWindow;
+    ResizeWindowProcPtr         ResizeWindow;
+#endif /* LG3D */
+
 } cwScreenRec, *cwScreenPtr;
 
 extern int cwScreenIndex;
@@ -162,3 +168,10 @@ cwFiniRender (ScreenPtr pScreen);
 /* cw.c */
 void
 miInitializeCompositeWrapper(ScreenPtr pScreen);
+
+#ifdef LG3D
+/* lg3dwindow.c */
+extern void lg3dMoveWindow (WindowPtr pWin, int x, int y, WindowPtr pNextSib, VTKind kind);
+extern void lg3dSlideAndSizeWindow (WindowPtr pWin, int x, int y, 
+				    unsigned int w, unsigned int h, WindowPtr pSib);
+#endif /* LG3D */

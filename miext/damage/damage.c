@@ -1,6 +1,28 @@
 /*
  * $Id$
  *
+ * Copyright (c) 2004, Sun Microsystems, Inc. 
+ * 
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation.
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ * OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Except as contained in this notice, the name of The Open Group shall not be
+ * used in advertising or otherwise to promote the sale, use or other dealings
+ * in this Software without prior written authorization from The Open Group.
+ *
  * Copyright © 2003 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -89,7 +111,6 @@ getDrawableDamageRef (DrawablePtr pDrawable)
 	if (!pPixmap)
 	{
 	    damageScrPriv(pScreen);
-
 	    return &pScrPriv->pScreenDamage;
 	}
     }
@@ -1540,6 +1561,19 @@ damageDestroyPixmap (PixmapPtr pPixmap)
     return TRUE;
 }
 
+#ifdef LG3D
+/* 
+** RUDE HACK: need to find a cleaner way to do this!
+** This variable is set by routines in lgwindow.c
+** in order to skip the wrappee paint window call from
+** this routine. This is necessary in order to keep the
+** DDX from preparing the DIDs where the X server thinks
+** the window is. But this isn't where the 3D window 
+** avatar really is.
+*/ 
+Bool damagePaintWindowCallWrappee = TRUE;
+#endif /* LG3D */
+
 static void
 damagePaintWindow(WindowPtr pWindow,
 		  RegionPtr prgn,
@@ -1555,6 +1589,12 @@ damagePaintWindow(WindowPtr pWindow,
     if ((what != PW_BACKGROUND || pWindow->backgroundState != None) &&
 	getWindowDamage (pWindow))
 	damageDamageRegion (&pWindow->drawable, prgn, FALSE);
+
+#ifdef LG3D
+    /* RUDE HACK: see comment above */
+    if (damagePaintWindowCallWrappee) {
+#endif /* LG3D */
+
     if(what == PW_BACKGROUND) {
 	unwrap (pScrPriv, pScreen, PaintWindowBackground);
 	(*pScreen->PaintWindowBackground) (pWindow, prgn, what);
@@ -1564,6 +1604,11 @@ damagePaintWindow(WindowPtr pWindow,
 	(*pScreen->PaintWindowBorder) (pWindow, prgn, what);
 	wrap (pScrPriv, pScreen, PaintWindowBorder, damagePaintWindow);
     }
+
+#ifdef LG3D
+    /* RUDE HACK: see comment above */
+    }
+#endif /* LG3D */
 }
 
 
@@ -1931,3 +1976,4 @@ DamageDamageRegion (DrawablePtr	pDrawable,
 {
     damageDamageRegion (pDrawable, pRegion, FALSE);
 }
+

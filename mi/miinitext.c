@@ -1,6 +1,28 @@
-/* $XdotOrg: xc/programs/Xserver/mi/miinitext.c,v 1.11 2004/08/03 05:39:19 anholt Exp $ */
+/* $XdotOrg: xc/programs/Xserver/mi/miinitext.c,v 1.12 2004/08/12 08:45:33 anholt Exp $ */
 /* $XFree86: xc/programs/Xserver/mi/miinitext.c,v 3.67 2003/01/12 02:44:27 dawes Exp $ */
 /***********************************************************
+
+Copyright (c) 2004, Sun Microsystems, Inc. 
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of The Open Group shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from The Open Group.
 
 Copyright 1987, 1998  The Open Group
 
@@ -86,6 +108,7 @@ SOFTWARE.
 #undef DAMAGE
 #undef XFIXES
 #undef XEVIE
+#undef LG3D
 #endif /* PRINT_ONLY_SERVER */
 
 #ifdef PANORAMIX
@@ -104,6 +127,9 @@ extern Bool noXevieExtension;
 #ifdef COMPOSITE
 extern Bool noCompositeExtension;
 #endif
+#ifdef LG3D
+extern Bool noLgeExtension;
+#endif /* LG3D */
 
 #ifndef XFree86LOADER
 #define INITARGS void
@@ -288,6 +314,9 @@ extern void DamageExtensionInit(INITARGS);
 #ifdef COMPOSITE
 extern void CompositeExtensionInit(INITARGS);
 #endif
+#ifdef LG3D
+extern void LgeExtensionInit(INITARGS);
+#endif
 
 /* The following is only a small first step towards run-time
  * configurable extensions.
@@ -315,6 +344,9 @@ static ExtensionToggle ExtensionToggleList[] =
 #ifdef COMPOSITE
     { "Composite", &noCompositeExtension },
 #endif
+#ifdef LG3D
+    { "LGE", &noLgeExtension },
+#endif /* LG3D */
     { NULL, NULL }
 };
 
@@ -495,6 +527,9 @@ InitExtensions(argc, argv)
 #ifdef DAMAGE
     DamageExtensionInit();
 #endif
+#ifdef LG3D
+    if (!noLgeExtension) LgeExtensionInit();
+#endif
 }
 
 void
@@ -629,6 +664,9 @@ static ExtensionModule staticExtensions[] = {
 #endif
 #ifdef XEVIE
     { XevieExtensionInit, "XEVIE", &noXevieExtension, NULL },
+#endif 
+#ifdef LG3D
+    { LgeExtensionInit, "LGE", &noLgeExtension, NULL },
 #endif 
     { NULL, NULL, NULL, NULL, NULL }
 };

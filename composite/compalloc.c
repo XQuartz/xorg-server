@@ -1,6 +1,28 @@
 /*
  * $Id$
  *
+ * Copyright (c) 2004, Sun Microsystems, Inc. 
+ * 
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation.
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ * OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Except as contained in this notice, the name of The Open Group shall not be
+ * used in advertising or otherwise to promote the sale, use or other dealings
+ * in this Software without prior written authorization from The Open Group.
+ * 
  * Copyright © 2003 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -26,6 +48,10 @@
 #include <config.h>
 #endif
 #include "compint.h"
+
+#ifdef LG3D
+#include "../Xext/lgeint.h"
+#endif /* LG3D */
 
 void
 compReportDamage (DamagePtr pDamage, RegionPtr pRegion, void *closure)
@@ -480,6 +506,35 @@ compAllocPixmap (WindowPtr pWin)
 	DamageRegister (&pWin->drawable, cw->damage);
 	cw->damageRegistered = TRUE;
     }
+
+#ifdef LG3D
+    /*
+    ** Applications which use shaped windows (e.g. xeyes) don't 
+    ** always clear the entire backing pixmap. We should clear the
+    ** backing pixmap here to avoid garbage from appearing.
+    ** TODO: this can be removed with the shape extension is fully implemented.
+    */
+    if (lgeDisplayServerIsAlive) {
+	GCPtr pScratchGC = GetScratchGC(pPixmap->drawable.depth, pPixmap->drawable.pScreen);
+	ChangeGCVal v[2];
+	xRectangle  rect;
+
+        v[0].val = GXcopy;
+        v[1].val = 0;
+	DoChangeGC(pScratchGC, (GCFunction|GCForeground), (XID*)v, 2);
+	ValidateGC((DrawablePtr)pPixmap, pScratchGC);
+
+	rect.x = 0;
+	rect.y = 0;
+	rect.width  = pPixmap->drawable.width;
+	rect.height = pPixmap->drawable.height;
+
+        (*pScratchGC->ops->PolyFillRect)((DrawablePtr)pPixmap, pScratchGC, 1, &rect);
+
+	FreeScratchGC(pScratchGC);
+    }
+#endif /* LG3D */
+
     return TRUE;
 }
 

@@ -1,5 +1,27 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/common/xf86Xinput.c,v 3.70 2003/11/03 05:11:02 tsi Exp $ */
 /*
+ * Copyright (c) 2004, Sun Microsystems, Inc. 
+ * 
+ * Permission to use, copy, modify, distribute, and sell this software and its
+ * documentation for any purpose is hereby granted without fee, provided that
+ * the above copyright notice appear in all copies and that both that
+ * copyright notice and this permission notice appear in supporting
+ * documentation.
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+ * OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * 
+ * Except as contained in this notice, the name of The Open Group shall not be
+ * used in advertising or otherwise to promote the sale, use or other dealings
+ * in this Software without prior written authorization from The Open Group.
+ *
  * Copyright 1995-1999 by Frederic Lepied, France. <Lepied@XFree86.org>
  *                                                                            
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -88,6 +110,11 @@
 #include "osdep.h"		/* EnabledDevices */
 #include "Xpoll.h"
 #include "xf86_OSproc.h"	/* sigio stuff */
+
+#ifdef LG3D
+# include "../../../dix/ds.h"
+# include "../../../Xext/lgeint.h"
+#endif /* LG3D */
 
 /******************************************************************************
  * debugging macro
@@ -706,6 +733,13 @@ xf86eqEnqueue (xEvent *e)
         break;
     }
 #endif
+
+#ifdef LG3D
+    /* If Display Server is not yet alive, do nothing to the event */
+    if (lgeDisplayServerIsAlive) {
+	dsProcessEvent(e);
+    }
+#endif /* LG3D */
 
     oldtail = xf86EventQueue.tail;
     isMotion = e->u.u.type == MotionNotify;

@@ -1,6 +1,28 @@
-/* $XdotOrg: xc/programs/Xserver/dix/window.c,v 1.4.2.1 2004/07/30 06:54:41 anholt Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/window.c,v 1.6 2004/07/31 08:24:13 anholt Exp $ */
 /* $Xorg: window.c,v 1.4 2001/02/09 02:04:41 xorgcvs Exp $ */
 /*
+
+Copyright (c) 2004, Sun Microsystems, Inc. 
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of The Open Group shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from The Open Group.
 
 Copyright 1987, 1998  The Open Group
 
@@ -107,6 +129,10 @@ Equipment Corporation.
 #define _SECURITY_SERVER
 #include "security.h"
 #endif
+
+#ifdef LG3D
+#include "../Xext/lgeint.h"
+#endif /* LG3D */
 
 /******
  * Window stuff for server 
@@ -1385,6 +1411,12 @@ ChangeWindowAttributes(pWin, vmask, vlist, client)
 	  case CWCursor:
 	    cursorID = (Cursor ) *pVlist;
 	    pVlist++;
+#ifdef LG3D
+	    /* Nullify the cursor of the PRW */
+	    if (lgeDisplayServerIsAlive && pWin->drawable.id == lgeDisplayServerPRW) {
+		cursorID = None;
+	    }
+#endif /* LG3D */
 	    /*
 	     * install the new
 	     */
@@ -2237,6 +2269,9 @@ ConfigureWindow(pWin, mask, vlist, client)
     ClientPtr ag_leader = NULL;
 #endif
     xEvent event;
+#ifdef LG3D
+    Bool   redirToWm;
+#endif /* LG3D */
 
     if ((pWin->drawable.class == InputOnly) && (mask & IllegalInputOnlyConfigureMask))
 	return(BadMatch);
@@ -2337,8 +2372,23 @@ ConfigureWindow(pWin, mask, vlist, client)
     ag_leader = XagLeader (win_owner);
 #endif
 
+#ifdef LG3D
+    if (lgeDisplayServerIsAlive) {
+
+	/* TODO: RedirectSend is not always true for prw; I don't know why. */
+	redirToWm = RedirectSend(pParent) || (pParent->drawable.id == lgeDisplayServerPRW);
+
+	/* Note: even send notifications for override redirect window */
+
+    } else {
+	redirToWm =  !pWin->overrideRedirect && RedirectSend(pParent);
+    }
+
+    if ((redirToWm
+#else
     if ((!pWin->overrideRedirect) && 
 	(RedirectSend(pParent)
+#endif /* LG3D */
 #ifdef XAPPGROUP
 	|| (win_owner->appgroup && ag_leader && 
 	    XagIsControlledRoot (client, pParent))
@@ -2722,6 +2772,9 @@ MapWindow(pWin, client)
     Bool	dosave = FALSE;
 #endif
     WindowPtr  pLayerWin;
+#ifdef LG3D
+    Bool   redirToWm;
+#endif /* LG3D */
 
     if (pWin->mapped)
 	return(Success);
@@ -2746,8 +2799,22 @@ MapWindow(pWin, client)
 	ClientPtr ag_leader = XagLeader (win_owner);
 #endif
 
+#ifdef LG3D
+	if (lgeDisplayServerIsAlive) {
+
+	    /* TODO: RedirectSend is not always true for prw; I don't know why. */
+	    redirToWm = RedirectSend(pParent) || (pParent->drawable.id == lgeDisplayServerPRW);
+
+	    /* Note: even send notifications for override redirect window */
+	} else {
+	    redirToWm =  !pWin->overrideRedirect && RedirectSend(pParent);
+	}
+
+	if ((redirToWm
+#else
 	if ((!pWin->overrideRedirect) && 
 	    (RedirectSend(pParent)
+#endif /* LG3D */
 #ifdef XAPPGROUP
 	    || (win_owner->appgroup && ag_leader &&
 		XagIsControlledRoot (client, pParent))
@@ -2857,6 +2924,9 @@ MapSubwindows(pParent, client)
     Bool	dosave = FALSE;
 #endif
     WindowPtr		pLayerWin;
+#ifdef LG3D
+    Bool   redirToWm;
+#endif /* LG3D */
 
     pScreen = pParent->drawable.pScreen;
     parentRedirect = RedirectSend(pParent);
@@ -2866,7 +2936,22 @@ MapSubwindows(pParent, client)
     {
 	if (!pWin->mapped)
 	{
+#ifdef LG3D
+	    if (lgeDisplayServerIsAlive) {
+
+		/* TODO: RedirectSend is not always true for prw; I don't know why. */
+		redirToWm = parentRedirect || (pParent->drawable.id == lgeDisplayServerPRW);
+    
+		/* Note: even send notifications for override redirect window */
+
+	    } else {
+		redirToWm = parentRedirect && !pWin->overrideRedirect;
+	    }
+    
+	    if (redirToWm) 
+#else
 	    if (parentRedirect && !pWin->overrideRedirect)
+#endif /* LG3D */
 	    {
 		event.u.u.type = MapRequest;
 		event.u.mapRequest.window = pWin->drawable.id;

@@ -318,6 +318,9 @@ ddxUseMsg (void)
   ErrorF ("-clipboard\n"
 	  "\tRun the clipboard integration module.\n"
 	  "\tDo not use at the same time as 'xwinclip'.\n");
+
+  ErrorF ("-nounicodeclipboard\n"
+	  "\tDo not use Unicode clipboard even if NT-based platform.\n");
 #endif
 
   ErrorF ("-scrollbars\n"
@@ -359,10 +362,22 @@ ddxUseMsg (void)
 	  "\tSpecify a keyboard device from the configuration file.\n");
 #endif
 
-#ifdef XWIN_CLIPBOARD
-  ErrorF ("-nounicodeclipboard\n"
-	  "\tDo not use Unicode clipboard even if NT-based platform.\n");
-#endif
+  ErrorF ("-xkbrules XKBRules\n"
+	  "\tEquivalent to XKBRules in XF86Config files.\n");
+
+  ErrorF ("-xkbmodel XKBModel\n"
+	  "\tEquivalent to XKBModel in XF86Config files.\n");
+
+  ErrorF ("-xkblayout XKBLayout\n"
+	  "\tEquivalent to XKBLayout in XF86Config files.\n"
+	  "\tFor example: -xkblayout de\n");
+
+  ErrorF ("-xkbvariant XKBVariant\n"
+	  "\tEquivalent to XKBVariant in XF86Config files.\n"
+	  "\tFor example: -xkbvariant nodeadkeys\n");
+
+  ErrorF ("-xkboptions XKBOptions\n"
+	  "\tEquivalent to XKBOptions in XF86Config files.\n");
 
   /* Log file will not be opened for UseMsg unless we open it now */
   if (!g_fLogInited) {

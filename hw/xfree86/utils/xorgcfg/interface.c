@@ -193,8 +193,8 @@ static char *device_names[] = {
 
 static XtResource appResources[] = {
 #if 0
-    {"xf86config",  "XF86Config",  XtRString, sizeof(char*),
-      0, XtRString, "/etc/X11/XF86Config"},
+    {"xf86config",  __XCONFIGFILE__,  XtRString, sizeof(char*),
+      0, XtRString, "/etc/X11/"__XCONFIGFILE__},
 #endif
     {"menuBitmap",  "MenuBitmap",  XtRString, sizeof(char*),
       0, XtRString, "menu10"},
@@ -208,8 +208,8 @@ Usage(void)
 "   xf86cfg [-option ...]\n"
 "\n"
 "Options:\n"
-"   -xf86config <XF86Config>   Alternate configuration file.\n"
-"   -modulepath <module-path>  XFree86 modules location.\n"
+"   -xf86config <"__XCONFIGFILE__">   Alternate configuration file.\n"
+"   -modulepath <module-path>  "__XSERVERNAME__" modules location.\n"
 "   -serverpath <server-path>  X server to start (if $DISPLAY is not defined).\n"
 "   -fontpath   <font-path>    Font path for fonts.\n"
 "   -rgbpath    <rgb-path>     Where the rgb.txt file is located.\n"
@@ -298,7 +298,7 @@ main(int argc, char *argv[])
     
     startedx = startx();
     if (XF86Config_path == NULL)
-	XF86Config_path = XtNewString("XF86Config-4");
+	XF86Config_path = XtNewString(__XCONFIGFILE__"-4");
     if (XkbConfig_path == NULL) {
 	XmuSnprintf(XkbConfig_path_static, sizeof(XkbConfig_path_static),
 		    "%s/%s%s", XFree86Dir, XkbConfigDir, XkbConfigFile);
@@ -534,9 +534,9 @@ main(int argc, char *argv[])
 # endif
 #else
 # ifdef XF86CONFIGDIR
-	XF86Config_path = XtNewString(XF86CONFIGDIR "/XF86Config-4");
+	XF86Config_path = XtNewString(XF86CONFIGDIR "/"__XCONFIGFILE__"-4");
 # else
-	XF86Config_path = XtNewString("/etc/X11/XF86Config-4");
+	XF86Config_path = XtNewString("/etc/X11/"__XCONFIGFILE__"-4");
 # endif
 #endif
     }

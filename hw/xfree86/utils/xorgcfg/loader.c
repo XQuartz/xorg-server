@@ -207,7 +207,7 @@ LoaderInitializeOptions(void)
 	checkerLegend[CHECKER_NO_OPTIONS_AVAILABLE] =
 	"The driver does not have an AvailableOptions function, or that\n"
 	"function is returning NULL. If the driver is returning NULL, and\n"
-	"really does not need any options from XF86Config, than the message\n"
+	"really does not need any options from "__XCONFIGFILE__", than the message\n"
 	"can be ignored.";
 	checkerLegend[CHECKER_NO_VENDOR_CHIPSET] =
 	"The checker could not fetch the PCI chipset/vendor information from\n"

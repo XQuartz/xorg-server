@@ -183,18 +183,6 @@ winPositionWindowMultiWindow (WindowPtr pWin, int x, int y)
       return fResult;
     }
 
-#if 0
-  if ( (pWin->drawable.width == 0) &&
-       (pWin->drawable.height == 0) )
-    {
-      /* The Windows window is in the iconic state. */
-#if CYGWINDOWING_DEBUG
-      ErrorF ("\timmediately return because drawable is 0x0\n");
-#endif
-      return fResult;
-    }
-#endif
-  
   /* Get the Windows window style and extended style */
   dwExStyle = GetWindowLongPtr (hWnd, GWL_EXSTYLE);
   dwStyle = GetWindowLongPtr (hWnd, GWL_STYLE);
@@ -960,10 +948,8 @@ winAdjustXWindow (WindowPtr pWin, HWND hwnd)
    * ([2] and [3]) but currently we set all the parameters and leave
    * the decision to ConfigureWindow.  The reason is code simplicity.
   */
-  vlist[0] = pDraw->x + dX - wBorderWidth(pWin)
-    - GetSystemMetrics(SM_XVIRTUALSCREEN);
-  vlist[1] = pDraw->y + dY - wBorderWidth(pWin)
-    - GetSystemMetrics(SM_YVIRTUALSCREEN);
+  vlist[0] = pDraw->x + dX - wBorderWidth(pWin);
+  vlist[1] = pDraw->y + dY - wBorderWidth(pWin);
   vlist[2] = pDraw->width + dW;
   vlist[3] = pDraw->height + dH;
 #if CYGWINDOWING_DEBUG

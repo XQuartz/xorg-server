@@ -101,3 +101,27 @@ winDebug (const char *format, ...)
   LogVMessageVerb(X_NONE, 3, format, ap);
   va_end (ap);
 }
+
+void
+winW32Error(int verb, DWORD errorcode, const char *format)
+{
+    LPVOID buffer;
+    if (!FormatMessage( 
+                FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+                FORMAT_MESSAGE_FROM_SYSTEM | 
+                FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL,
+                errorcode,
+                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                (LPTSTR) &buffer,
+                0,
+                NULL ))
+    {
+        winErrorFVerb(verb, "Unknown error in FormatMessage!\n"); 
+    }
+    else
+    {
+        winErrorFVerb(verb, format, (char *)buffer); 
+        LocalFree(buffer);
+    }
+}

@@ -44,5 +44,6 @@ void winMsg (MessageType type, const char *format, ...);
 void winDebug (const char *format, ...);
 
 void winErrorFVerb (int verb, const char *format, ...);
+void winW32Error(int verb, DWORD errorcode, const char *format);
 
 #endif

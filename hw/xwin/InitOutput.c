@@ -35,6 +35,7 @@ from The Open Group.
 #endif
 #include "winprefs.h"
 #include "X11/Xlocale.h"
+#include <mntent.h>
 
 
 /*
@@ -267,6 +268,89 @@ AbortDDX (void)
   ddxGiveUp ();
 }
 
+/* hasmntopt is currently not implemented for cygwin */
+const char *winCheckMntOpt(const struct mntent *mnt, const char *opt)
+{
+    const char *s;
+    size_t len;
+    if (mnt == NULL)
+        return NULL;
+    if (opt == NULL)
+        return NULL;
+    if (mnt->mnt_opts == NULL)
+        return NULL;
+
+    len = strlen(opt);
+    s = strstr(mnt->mnt_opts, opt);
+    if (s == NULL)
+        return NULL;
+    if ((s == mnt->mnt_opts || *(s-1) == ',') &&  (s[len] == 0 || s[len] == ','))
+        return (char *)opt;
+    return NULL;
+}
+
+void
+winCheckMount(void)
+{
+  FILE *mnt;
+  struct mntent *ent;
+
+  enum { none = 0, sys_root, user_root, sys_tmp, user_tmp } 
+    level = none, curlevel;
+  BOOL binary = TRUE;
+
+  mnt = setmntent("/etc/mtab", "r");
+  if (mnt == NULL)
+  {
+    ErrorF("setmntent failed");
+    return;
+  }
+
+  while ((ent = getmntent(mnt)) != NULL)
+  {
+    BOOL system = (strcmp(ent->mnt_type, "system") == 0);
+    BOOL root = (strcmp(ent->mnt_dir, "/") == 0);
+    BOOL tmp = (strcmp(ent->mnt_dir, "/tmp") == 0);
+    
+    if (system)
+    {
+      if (root)
+        curlevel = sys_root;
+      else if (tmp)
+        curlevel = sys_tmp;
+      else
+        continue;
+    }
+    else
+    {
+      if (root)
+        curlevel = user_root;
+      else if (tmp) 
+        curlevel = user_tmp;
+      else
+        continue;
+    }
+
+    if (curlevel <= level)
+      continue;
+    level = curlevel;
+
+    if (winCheckMntOpt(ent, "binmode") == NULL)
+      binary = 0;
+    else
+      binary = 1;
+  }
+    
+  if (endmntent(mnt) != 1)
+  {
+    ErrorF("endmntent failed");
+    return;
+  }
+  
+ if (!binary) 
+   winMsg(X_WARNING, "/tmp mounted int textmode\n"); 
+}
+
 
 void
 OsVendorInit (void)
@@ -295,6 +379,8 @@ OsVendorInit (void)
   /* Log the version information */
   if (serverGeneration == 1)
     winLogVersionInfo ();
+
+  winCheckMount();  
 
   /* Add a default screen if no screens were specified */
   if (g_iNumScreens == 0)

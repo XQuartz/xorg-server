@@ -59,6 +59,9 @@ Bool		g_fLogInited = FALSE;
 extern Bool			g_fUnicodeClipboard;
 extern Bool			g_fClipboardLaunched;
 extern Bool			g_fClipboardStarted;
+extern pthread_t		g_ptClipboardProc;
+extern HWND			g_hwndClipboard;
+extern Bool			g_fClipboard;
 #endif
 
 extern HMODULE			g_hmodDirectDraw;

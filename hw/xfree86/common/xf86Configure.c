@@ -1,4 +1,5 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/common/xf86Configure.c,v 3.81 2003/10/29 04:17:21 dawes Exp $ */
+/* $XdotOrg$ */
 /*
  * Copyright 2000-2002 by Alan Hourihane, Flint Mountain, North Wales.
  *
@@ -632,8 +633,8 @@ configureModuleSection (void)
             /* Add only those font backends which are referenced by fontpath */
             /* 'strstr(dFP,"/dir")' is meant as 'dFP =~ m(/dir\W)' */
     	    if (defaultFontPath && (
-		(strcmp(*el, "xtt")  == 0 &&
-		 strstr(defaultFontPath, "/TrueType")) ||
+		(strcmp(*el, "freetype")  == 0 &&
+		 strstr(defaultFontPath, "/TTF")) ||
     	        (strcmp(*el, "type1")  == 0 &&
 		 strstr(defaultFontPath, "/Type1")) ||
     	        (strcmp(*el, "speedo") == 0 &&

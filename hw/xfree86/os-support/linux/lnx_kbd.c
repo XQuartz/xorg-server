@@ -1,4 +1,5 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/linux/lnx_kbd.c,v 1.5 2003/11/04 03:14:39 tsi Exp $ */
+/* $XdotOrg$ */
 
 /*
  * Copyright (c) 2002 by The XFree86 Project, Inc.
@@ -117,7 +118,7 @@ KDKBDREP_ioctl_ok(int rate, int delay) {
    /* don't change, just test */
    kbdrep_s.rate = -1;
    kbdrep_s.delay = -1;
-   if (ioctl( 0, KDKBDREP, &kbdrep_s )) {
+   if (ioctl( xf86Info.consoleFd, KDKBDREP, &kbdrep_s )) {
        return 0;
    }
 
@@ -132,8 +133,8 @@ KDKBDREP_ioctl_ok(int rate, int delay) {
    if (kbdrep_s.delay < 1)
      kbdrep_s.delay = 1;
    
-   if (ioctl( 0, KDKBDREP, &kbdrep_s )) {
-     return 0;
+   if (ioctl( xf86Info.consoleFd, KDKBDREP, &kbdrep_s )) {
+       return 0;
    }
 
    return 1;			/* success! */
@@ -157,8 +158,9 @@ KIOCSRATE_ioctl_ok(int rate, int delay) {
    if (kbdrate_s.rate > 50)
      kbdrate_s.rate = 50;
 
-   if (ioctl( fd, KIOCSRATE, &kbdrate_s ))
-     return 0;
+   if (ioctl( fd, KIOCSRATE, &kbdrate_s )) {
+       return 0;
+   }
 
    close( fd );
 

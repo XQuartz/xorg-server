@@ -1849,13 +1849,13 @@ enum BadCode {
 #define ARGMSG \
     "\nIf the arguments used are valid, and have been rejected incorrectly\n" \
       "please send details of the arguments and why they are valid to\n" \
-      "XFree86@XFree86.org.  In the meantime, you can start the Xserver as\n" \
+      "&&&&&@X.org.  In the meantime, you can start the Xserver as\n" \
       "the \"super user\" (root).\n"   
 
 #define ENVMSG \
     "\nIf the environment is valid, and have been rejected incorrectly\n" \
       "please send details of the environment and why it is valid to\n" \
-      "XFree86@XFree86.org.  In the meantime, you can start the Xserver as\n" \
+      "&&&&&@X.org.  In the meantime, you can start the Xserver as\n" \
       "the \"super user\" (root).\n"
 
 void

@@ -68,7 +68,7 @@ window.  That can be done both for the generic case and for particular
 programs.
 .br
 3- To change the icon that is associated to the Windows window that
-\fIXWin -multiwindow\fP produces for each top-level X-window. Again,
+\fIXWin -multiwindow\fP produces for each top-level X-window.  Again,
 that can be done both for the generic case and for particular
 programs.
 .PP
@@ -82,7 +82,7 @@ manual page, \fIXWin\fP accepts the following command line switches,
 .TP 8
 .B \-clipboard
 Enables the integration
-between the Cygwin/X clipboard and Windows clipboard. Do not use in
+between the Cygwin/X clipboard and Windows clipboard.  Do not use in
 conjunction with the \fIxwinclip\fP program.
 .TP 8
 .B "\-clipupdates \fInum_boxes\fP"
@@ -104,7 +104,7 @@ Emulate a three button mouse; pressing both buttons within
 .I timeout
 milliseconds causes an emulated middle button press.  The default 
 .I timeout
-is 50 milliseconds. Note that most mice with scroll wheel have middle
+is 50 milliseconds.  Note that most mice with scroll wheel have middle
 button functionality, usually you will need this option only if you have
 a two button mouse without scroll wheel.
 .TP 8
@@ -140,7 +140,7 @@ fullscreen with a DirectDraw engine.  This parameter is ignored if
 Write a help text to the console and to the log file.
 .TP 8
 .B \-ignoreinput
-Ignore keyboard and mouse input. This is usually only used for testing
+Ignore keyboard and mouse input.  This is usually only used for testing
 and debugging purposes.
 .TP 8
 .B \-[no]keyhook
@@ -150,7 +150,7 @@ Server instead of letting \fIWindows\fP handle them.
 .TP 8
 .B \-lesspointer
 Hide the Windows mouse cursor when the mouse is over any Cygwin/X
-window (regardless of whether that window is active or inactive). This
+window (regardless of whether that window is active or inactive).  This
 prevents the Windows mouse cursor from being placed overtop of the X
 cursor.
 .TP 8
@@ -159,14 +159,14 @@ Change the log file from the default located at \fI/tmp/XWin.log\fP to
 the one indicated by \fIFile_Name\fP.
 .TP 8
 .B "\-logverbose \fIlevel\fP"
-Control de degree of verbosity of the log messages with the integer
-parameter \fIlevel\fP. For \fIlevel\fP=0  only fatal errors are
+Control the degree of verbosity of the log messages with the integer
+parameter \fIlevel\fP.  For \fIlevel\fP=0 only fatal errors are
 reported, for \fIlevel\fP=1 (default) simple information about
 configuration is also given, for \fIlevel\fP=2 a detailed log
-information (including trace and debug output) is produced. Bigger
-values will yield a still more detailed debug output.
-At this date (April 2004) the option is still not fully operativer; the
-default value is 2 and the output is insensitive to the level value.
+information (including trace and debug output) is produced.  Bigger
+values will yield a still more detailed debug output.  At this date
+(April 2004) the option is still not fully operative; the default
+value is 2 and the output is insensitive to the level value.
 .TP 8
 .B \-multimonitors
 Create a root window that covers all monitors on a system with
@@ -174,19 +174,19 @@ multiple monitors.
 .TP 8
 .B \-multiwindow
 Start the integrated \fIWindowsi\fP-based window manager, which launches each
-top-level X window in its own \fIWindows\fP window. Not to be used together
+top-level X window in its own \fIWindows\fP window.  Not to be used together
 with \fB\-rootless\fP nor \fB\-fullscreen\fP.
 .TP 8
 .B \-nodecoration
 Do not give the Cygwin/X window a Windows window border, title bar,
-etc. This parameter only applies to windowed mode screens, i.e., this
+etc.  This parameter only applies to windowed mode screens, i.e., this
 parameter is ignored when the \fB\-fullscreen\fP parameter is specified.
 .TP 8
 .B \-nounicodeclipboard
 Do not use Unicode clipboard even if NT-based platform.
 .TP 8
 .B \-rootless
-Run the server in rootless mode. Not to be used with \fB\-multiwindow\fP
+Run the server in rootless mode.  Not to be used with \fB\-multiwindow\fP
 nor with \fB\-fullscreen\fP.
 .TP 8
 .B "\-screen \fIscreen_number\fP \fIwidth\fP \fIheight\fP"
@@ -196,14 +196,14 @@ This parameter may be used to specify the
 and
 .I width
 of one or several Cygwin/X screens; each Cygwin/X screen will be
-opened in its own window. When using multiple screens, be sure not to
+opened in its own window.  When using multiple screens, be sure not to
 duplicate any screen numbers.
 .I XWin
 default behavior is to create a single screen that is roughly
 the size of the current Windows display area.
 Screen specific parameters, such as \fB\-fullscreen\fP, can be applied as a
 default to all screens by placing those screen specific parameters
-before any \fB\-screen\fP parameter. Screen specific parameters placed after
+before any \fB\-screen\fP parameter.  Screen specific parameters placed after
 the first \fB\-screen\fP parameter will apply only to the immediately
 preceeding \fB\-screen\fP parameter.
 .TP 8
@@ -219,7 +219,7 @@ icon per screen.  You can globally disable tray icons with
 .TP 8
 .B \-[no]unixkill
 Enable or disable the \fICtrl-Alt-Backspace\fP key combination as a
-signal to exit the X Server. The \fICtrl-Alt-Backspace\fP key combination
+signal to exit the X Server.  The \fICtrl-Alt-Backspace\fP key combination
 is disabled by default.
 .TP 8
 .B \-[no]winkill
@@ -241,9 +241,9 @@ Disable the usage of the windows cursor and use the X11 software cursor instead.
 .B "\-xkbvariant \fIvariant\fp"
 These options implement the xkeyboard extension for loading
 a particular keyboard map as the X server starts.  The behavior is similar
-to the \fIsetxkbmap\fP program. The layout data is located at
-\fI/usr/X11R6/lib/X11/xkb/\fP. Additional information is found in the
-README files therein and in the man page of \fIsetxkbmap\fP. For example
+to the \fIsetxkbmap\fP program.  The layout data is located at
+\fI/usr/X11R6/lib/X11/xkb/\fP.  Additional information is found in the
+README files therein and in the man page of \fIsetxkbmap\fP.  For example
 in order to load a German layout for a pc105 keyboard one uses
 the options:
 .br
@@ -260,7 +260,7 @@ X(__miscmansuffix__), Xserver(1), xdm(1), xinit(1), XWinrc(1), setxkbmap(1)
 
 .SH BUGS
 .I XWin
-and this man page still have many limitations. Some of the more obvious
+and this man page still have many limitations.  Some of the more obvious
 ones are:
 .br
 - The display mode can not be changed once the X server has started.

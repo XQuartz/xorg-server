@@ -222,6 +222,10 @@ winDisplayExitDialog (winPrivScreenPtr pScreenPriv)
   if (g_fClipboardStarted)
     liveClients--; /* clipboard manager */
 
+  /* A user reported that this sometimes drops below zero. just eye-candy. */ 
+  if (liveClients < 0)
+    liveClients = 0;      
+
   /* Don't show the exit confirmation dialog if SilentExit is enabled */
   if (pref.fSilentExit && liveClients <= 0)
     {

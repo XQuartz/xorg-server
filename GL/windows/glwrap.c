@@ -477,3 +477,100 @@ GLAPI void APIENTRY glWindowPos3fARB(GLfloat x, GLfloat y, GLfloat z)
     RESOLVE(PFNGLWINDOWPOS3FARBPROC, "glWindowPos3fARB");
     proc(x, y, z);
 }
+
+GLAPI void APIENTRY glPointParameteri(GLenum pname, GLint param)
+{
+    RESOLVE(PFNGLPOINTPARAMETERIPROC, "glPointParameteri");
+    proc(pname, param);
+}
+
+GLAPI void APIENTRY glPointParameteriv(GLenum pname, const GLint *params)
+{
+    RESOLVE(PFNGLPOINTPARAMETERIVPROC, "glPointParameteriv");
+    proc(pname, params);
+}
+
+GLAPI void APIENTRY glSecondaryColor3bv(const GLbyte *v)
+{
+    RESOLVE(PFNGLSECONDARYCOLOR3BVPROC, "glSecondaryColor3bv");
+    proc(v);
+}
+GLAPI void APIENTRY glSecondaryColor3dv(const GLdouble *v)
+{
+    RESOLVE(PFNGLSECONDARYCOLOR3DVPROC, "glSecondaryColor3dv");
+    proc(v);
+}
+GLAPI void APIENTRY glSecondaryColor3fv(const GLfloat *v)
+{
+    RESOLVE(PFNGLSECONDARYCOLOR3FVPROC, "glSecondaryColor3fv");
+    proc(v);
+}
+GLAPI void APIENTRY glSecondaryColor3iv(const GLint *v)
+{
+    RESOLVE(PFNGLSECONDARYCOLOR3IVPROC, "glSecondaryColor3iv");
+    proc(v);
+}
+GLAPI void APIENTRY glSecondaryColor3sv(const GLshort *v)
+{
+    RESOLVE(PFNGLSECONDARYCOLOR3SVPROC, "glSecondaryColor3sv");
+    proc(v);
+}
+GLAPI void APIENTRY glSecondaryColor3ubv(const GLubyte *v)
+{
+    RESOLVE(PFNGLSECONDARYCOLOR3UBVPROC, "glSecondaryColor3ubv");
+    proc(v);
+}
+GLAPI void APIENTRY glSecondaryColor3uiv(const GLuint *v)
+{
+    RESOLVE(PFNGLSECONDARYCOLOR3UIVPROC, "glSecondaryColor3uiv");
+    proc(v);
+}
+GLAPI void APIENTRY glSecondaryColor3usv(const GLushort *v)
+{
+    RESOLVE(PFNGLSECONDARYCOLOR3USVPROC, "glSecondaryColor3usv");
+    proc(v);
+}
+GLAPI void APIENTRY glSecondaryColorPointer(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
+{
+    RESOLVE(PFNGLSECONDARYCOLORPOINTERPROC, "glSecondaryColorPointer");
+    proc(size, type, stride, pointer);
+}
+
+
+GLAPI void APIENTRY glBlendFuncSeparate(GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha)
+{
+    RESOLVE(PFNGLBLENDFUNCSEPARATEPROC, "glBlendFuncSeparate");
+    proc(sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha);
+}
+GLAPI void APIENTRY glFogCoordfv(const GLfloat *coord)
+{
+    RESOLVE(PFNGLFOGCOORDFVPROC, "glFogCoordfv");
+    proc(coord);
+}
+GLAPI void APIENTRY glFogCoorddv(const GLdouble *coord)
+{
+    RESOLVE(PFNGLFOGCOORDDVPROC, "glFogCoorddv");
+    proc(coord);
+}
+GLAPI void APIENTRY glFogCoordPointer(GLenum type, GLsizei stride, const GLvoid *pointer)
+{
+    RESOLVE(PFNGLFOGCOORDPOINTERPROC, "glFogCoordPointer");
+    proc(type, stride, pointer);
+}
+
+
+GLAPI void APIENTRY glSampleCoverageARB(GLclampf value, GLboolean invert)
+{
+    RESOLVE(PFNGLSAMPLECOVERAGEARBPROC, "glSampleCoverageARB");
+    proc(value, invert);
+}
+GLAPI void APIENTRY glSampleMaskSGIS(GLclampf value, GLboolean invert)
+{
+    RESOLVE(PFNGLSAMPLEMASKSGISPROC, "glSampleMaskSGIS");
+    proc(value, invert);
+}
+GLAPI void APIENTRY glSamplePatternSGIS(GLenum pattern)
+{
+    RESOLVE(PFNGLSAMPLEPATTERNSGISPROC, "glSamplePatternSGIS");
+    proc(pattern);
+}

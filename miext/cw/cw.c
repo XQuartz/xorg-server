@@ -25,10 +25,6 @@
 #include "windowstr.h"
 #include "cw.h"
 
-#ifdef LG3D
-#include "../../Xext/lgeint.h"
-#endif /* LG3D */
-
 #define CW_DEBUG 1
 
 #if CW_DEBUG
@@ -447,6 +443,17 @@ cwFillRegionTiled(DrawablePtr pDrawable, RegionPtr pRegion, PixmapPtr pTile,
    FreeScratchGC(pGC);
 }
 
+#ifdef LG3D
+/* 
+** RUDE HACK: need to find a cleaner way to do this!
+** This variable is set by routines in lgwindow.c
+** in order to skip the wrappee paint window call from
+** this routine. This is necessary in order to keep the
+** DDX from preparing the DIDs, which causes visual artifaces.
+*/ 
+Bool cwPaintWindowCallWrappee = TRUE;
+#endif /* LG3D */
+
 static void
 cwPaintWindowBackground(WindowPtr pWin, RegionPtr pRegion, int what)
 {
@@ -455,7 +462,15 @@ cwPaintWindowBackground(WindowPtr pWin, RegionPtr pRegion, int what)
     SCREEN_PROLOGUE(pScreen, PaintWindowBackground);
 
     if (!cwDrawableIsRedirWindow((DrawablePtr)pWin)) {
+#ifdef LG3D
+	/* RUDE HACK: see comment above */
+	if (cwPaintWindowCallWrappee) {
+#endif /* LG3D */
 	(*pScreen->PaintWindowBackground)(pWin, pRegion, what);
+#ifdef LG3D
+	/* RUDE HACK: see comment above */
+	}
+#endif /* LG3D */
     } else {
 	DrawablePtr pBackingDrawable;
 	int x_off, y_off, x_screen, y_screen;
@@ -484,6 +499,8 @@ cwPaintWindowBackground(WindowPtr pWin, RegionPtr pRegion, int what)
 
 	    REGION_TRANSLATE(pScreen, pRegion, -x_screen, -y_screen);
 	}
+
+	COMPOSITE_DEBUGVIS_BACKING_PIXMAP(pBackingDrawable);
     }
 
     SCREEN_EPILOGUE(pScreen, PaintWindowBackground, cwPaintWindowBackground);
@@ -497,7 +514,15 @@ cwPaintWindowBorder(WindowPtr pWin, RegionPtr pRegion, int what)
     SCREEN_PROLOGUE(pScreen, PaintWindowBorder);
 
     if (!cwDrawableIsRedirWindow((DrawablePtr)pWin)) {
+#ifdef LG3D
+	/* RUDE HACK: see comment above */
+	if (cwPaintWindowCallWrappee) {
+#endif /* LG3D */
 	(*pScreen->PaintWindowBorder)(pWin, pRegion,  what);
+#ifdef LG3D
+	/* RUDE HACK: see comment above */
+	}
+#endif /* LG3D */
     } else {
 	DrawablePtr pBackingDrawable;
 	int x_off, y_off, x_screen, y_screen;
@@ -518,6 +543,8 @@ cwPaintWindowBorder(WindowPtr pWin, RegionPtr pRegion, int what)
 	}
 
 	REGION_TRANSLATE(pScreen, pRegion, -x_screen, -y_screen);
+
+	COMPOSITE_DEBUGVIS_BACKING_PIXMAP(pBackingDrawable);
     }
 
     SCREEN_EPILOGUE(pScreen, PaintWindowBorder, cwPaintWindowBorder);
@@ -580,6 +607,8 @@ cwCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
 	(*pGC->funcs->DestroyClip) (pGC);
 
 	FreeScratchGC(pGC);
+
+	COMPOSITE_DEBUGVIS_BACKING_PIXMAP(&pBackingPixmap->drawable);
     }
 	
     SCREEN_EPILOGUE(pScreen, CopyWindow, cwCopyWindow);
@@ -659,12 +688,6 @@ miInitializeCompositeWrapper(ScreenPtr pScreen)
 	cwInitializeRender(pScreen);
 #endif
 
-#ifdef LG3D
-    if (lgeDisplayServerIsAlive) {
-	SCREEN_EPILOGUE(pScreen, MoveWindow, lg3dMoveWindow);
-	SCREEN_EPILOGUE(pScreen, ResizeWindow, lg3dSlideAndSizeWindow);
-    }
-#endif /* LG3D */
 }
 
 static Bool
@@ -690,14 +713,83 @@ cwCloseScreen (int i, ScreenPtr pScreen)
 	cwFiniRender(pScreen);
 #endif
 
-#ifdef LG3D
-    if (lgeDisplayServerIsAlive) {
-	pScreen->MoveWindow = pScreenPriv->MoveWindow;
-	pScreen->ResizeWindow = pScreenPriv->ResizeWindow;
-    }
-#endif /* LG3D */
-
     xfree((pointer)pScreenPriv);
 
     return (*pScreen->CloseScreen)(i, pScreen);
 }
+
+#ifdef COMPOSITE_DEBUG_VISUALIZE
+
+int compositeDebugVisualizeBackingPixmap = 0;
+int compositeDebugVisualizeSharedPixmap  = 0;
+
+/* The place to display the composite backing pixmap */
+int compositeDebugVisualizeBackingPixmapDstX = 1280 - 500;
+int compositeDebugVisualizeBackingPixmapDstY = 20;
+
+/* The place to display the shared memory pixmap */
+int compositeDebugVisualizeSharedPixmapDstX = 1280 - 500;
+int compositeDebugVisualizeSharedPixmapDstY = 20 + 500 + 20;
+
+static PixmapPtr pScreenPixmapActual = NULL;
+static GCPtr     pGCCopy = NULL;
+
+/*
+** Determine the real screen pixmap by unwrapping and rewrapping.
+*/
+
+static void
+cdvGetScreenPixmapActual (ScreenPtr pScreen)
+{
+    WindowPtr pRootWin = WindowTable[pScreen->myNum];
+
+    SCREEN_PROLOGUE(pScreen, GetWindowPixmap);
+    pScreenPixmapActual = (*pScreen->GetWindowPixmap)(pRootWin);
+    SCREEN_EPILOGUE(pScreen, GetWindowPixmap, cwGetWindowPixmap);
+}
+
+static void
+cdvGetGCCopy (ScreenPtr pScreen) 
+{
+    cwGCPtr pGCPriv;
+    ChangeGCVal v[1];
+
+    pGCCopy = GetScratchGC(pScreenPixmapActual->drawable.depth, pScreen);
+    v[0].val = GXcopy;
+    dixChangeGC(NullClient, pGCCopy, GCFunction, NULL, v);
+
+    /* Need to unwrap first */
+    pGCPriv = (cwGCPtr) getCwGC(pGCCopy);
+    FUNC_PROLOGUE(pGCCopy, pGCPriv);
+
+    ValidateGC((DrawablePtr)pScreenPixmapActual, pGCCopy);
+}
+
+void
+compositeDebugVisualizeDrawable (DrawablePtr pDrawable, int dstx, int dsty)
+{
+    ScreenPtr pScreen = pDrawable->pScreen;
+
+    if (pScreenPixmapActual == NULL) {
+	cdvGetScreenPixmapActual(pScreen);
+    }
+
+    if (pGCCopy == NULL) {
+	cdvGetGCCopy(pScreen);
+    }
+
+    (void) (*pGCCopy->ops->CopyArea)(pDrawable, (DrawablePtr)pScreenPixmapActual, 
+				     pGCCopy, 0, 0, 
+				     pDrawable->width, pDrawable->height,
+				     dstx, dsty);
+}
+
+int
+hasBackingDrawable (DrawablePtr pDrawable)
+{
+    return pDrawable->type == DRAWABLE_WINDOW && 
+	    (getCwPixmap ((WindowPtr) pDrawable)) != NULL;
+}
+
+#endif /* COMPOSITE_DEBUG_VISUALIZE */
+

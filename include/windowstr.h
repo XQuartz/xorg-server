@@ -90,6 +90,21 @@ typedef struct _WindowOpt {
 #ifdef XINPUT
     struct _OtherInputMasks *inputMasks;   /* default: NULL */
 #endif
+#ifdef LG3D
+    /* 
+    ** Specifies the client that mapped this window.
+    ** Only valid for override redirect windows.
+    */       
+    ClientPtr           ovRedirCompRedirClient;
+
+    /* 
+    ** HACK ALERT:
+    ** Bug fix for lg3d bug 213. See comment in ProcQueryTree.
+    ** TODO: someday: it would be nice to fix the client bug and
+    ** get rid of this hack.
+    */
+    unsigned            ovRedirLieAboutRootParent : 1;
+#endif /* LG3D */
 } WindowOptRec, *WindowOptPtr;
 
 #define BackgroundPixel	    2L
@@ -177,6 +192,17 @@ extern Mask	    DontPropagateMasks[];
 #endif
 #define wClient(w)		(clients[CLIENT_ID((w)->drawable.id)])
 #define wBorderWidth(w)		((int) (w)->borderWidth)
+
+#ifdef LG3D
+#define wOvRedirCompRedirClient(w) wUseDefault(w, ovRedirCompRedirClient, NULL)
+/* 
+** HACK ALERT:
+** Bug fix for lg3d bug 213. See comment in ProcQueryTree.
+** TODO: someday: it would be nice to fix the client bug and
+** get rid of this hack.
+*/
+#define wovRedirLieAboutRootParent(w) wUseDefault(w, ovRedirLieAboutRootParent, 0)
+#endif /* LG3D */
 
 /* true when w needs a border drawn. */
 

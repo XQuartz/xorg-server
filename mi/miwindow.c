@@ -55,6 +55,17 @@ SOFTWARE.
 #include "pixmapstr.h"
 #include "mivalidate.h"
 
+#ifdef LG3D
+#include "../Xext/lgeint.h"
+
+extern void lg3dMoveWindow (WindowPtr pWin, int x, int y, WindowPtr pNextSib, 
+			    VTKind kind);
+
+extern void lg3dSlideAndSizeWindow (WindowPtr pWin, int x, int y, 
+				    unsigned int w, unsigned int h, WindowPtr pSib);
+
+#endif /* LG3D */
+
 void 
 miClearToBackground(pWin, x, y, w, h, generateExposures)
     WindowPtr pWin;
@@ -503,6 +514,18 @@ miMoveWindow(pWin, x, y, pNextSib, kind)
 #endif
     WindowPtr pLayerWin;
 
+#ifdef LG3D
+    /* 
+    ** TODO: I tried to do this with wrappers but it didn't work.
+    ** Is there a better way to override this function other than
+    ** just directly modifying it? 
+    */
+    if (lgeDisplayServerIsAlive) {
+	lg3dMoveWindow(pWin, x, y, pNextSib, kind);
+	return;
+    }
+#endif /* LG3D */
+
     /* if this is a root window, can't be moved */
     if (!(pParent = pWin->parent))
        return ;
@@ -636,6 +659,18 @@ miSlideAndSizeWindow(pWin, x, y, w, h, pSib)
     Bool	dosave = FALSE;
 #endif
     WindowPtr  pLayerWin;
+
+#ifdef LG3D
+    /* 
+    ** TODO: I tried to do this with wrappers but it didn't work.
+    ** Is there a better way to override this function other than
+    ** just directly modifying it? 
+    */
+    if (lgeDisplayServerIsAlive) {
+	lg3dSlideAndSizeWindow(pWin, x, y, w, h, pSib);
+	return;
+    }
+#endif /* LG3D */
 
     /* if this is a root window, can't be resized */
     if (!(pParent = pWin->parent))
@@ -883,7 +918,11 @@ miSlideAndSizeWindow(pWin, x, y, w, h, pSib)
 
 	    /* and move those bits */
 
-	    if (oldpt.x != x || oldpt.y != y)
+	    if (oldpt.x != x || oldpt.y != y
+#ifdef LG3D
+		|| pWin->redirectDraw
+#endif /* LG3D */
+            )	
 		(*pWin->drawable.pScreen->CopyWindow)(pWin, oldpt, gravitate[g]);
 
 	    /* remove any overwritten bits from the remaining useful bits */

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/dix/dispatch.c,v 1.4 2004/07/29 18:43:58 stukreit Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/dispatch.c,v 1.5.6.4 2005/01/06 04:14:00 deronj Exp $ */
 /* $Xorg: dispatch.c,v 1.5 2001/02/09 02:04:40 xorgcvs Exp $ */
 /************************************************************
 
@@ -77,6 +77,138 @@ Equipment Corporation.
 ******************************************************************/
 
 /* $XFree86: xc/programs/Xserver/dix/dispatch.c,v 3.32 2003/11/10 18:21:45 tsi Exp $ */
+
+#if defined(LG3D) && defined(DISPATCH_DEBUG)
+int printprocs = 0;
+int proc_num = 0;
+
+typedef char *ProcNameString;
+
+static ProcNameString procNames[] = {
+"",
+"CreateWindow",
+"ChangeWindowAttributes",
+"GetWindowAttributes",
+"DestroyWindow",
+"DestroySubwindows",
+"ChangeSaveSet",
+"ReparentWindow",
+"MapWindow",
+"MapSubwindows",
+"UnmapWindow",
+"UnmapSubwindows",
+"ConfigureWindow",
+"CirculateWindow",
+"GetGeometry",
+"QueryTree",
+"InternAtom",
+"GetAtomName",
+"ChangeProperty",
+"DeleteProperty",
+"GetProperty",
+"ListProperties",
+"SetSelectionOwner",
+"GetSelectionOwner",
+"ConvertSelection",
+"SendEvent",
+"GrabPointer",
+"UngrabPointer",
+"GrabButton",
+"UngrabButton",
+"ChangeActivePointerGrab",
+"GrabKeyboard",
+"UngrabKeyboard",
+"GrabKey",
+"UngrabKey",
+"AllowEvents",
+"GrabServer",
+"UngrabServer",
+"QueryPointer",
+"GetMotionEvents",
+"TranslateCoords",
+"WarpPointer",
+"SetInputFocus",
+"GetInputFocus",
+"QueryKeymap",
+"OpenFont",
+"CloseFont",
+"QueryFont",
+"QueryTextExtents",
+"ListFonts",
+"ListFontsWithInfo",
+"SetFontPath",
+"GetFontPath",
+"CreatePixmap",
+"FreePixmap",
+"CreateGC",
+"ChangeGC",
+"CopyGC",
+"SetDashes",
+"SetClipRectangles",
+"FreeGC",
+"ClearArea",
+"CopyArea",
+"CopyPlane",
+"PolyPoint",
+"PolyLine",
+"PolySegment",
+"PolyRectangle",
+"PolyArc",
+"FillPoly",
+"PolyFillRectangle",
+"PolyFillArc",
+"PutImage",
+"GetImage",
+"PolyText8",
+"PolyText16",
+"ImageText8",
+"ImageText16",
+"CreateColormap",
+"FreeColormap",
+"CopyColormapAndFree",
+"InstallColormap",
+"UninstallColormap",
+"ListInstalledColormaps",
+"AllocColor",
+"AllocNamedColor",
+"AllocColorCells",
+"AllocColorPlanes",
+"FreeColors",
+"StoreColors",
+"StoreNamedColor",
+"QueryColors",
+"LookupColor",
+"CreateCursor",
+"CreateGlyphCursor",
+"FreeCursor",
+"RecolorCursor",
+"QueryBestSize",
+"QueryExtension",
+"ListExtensions",
+"ChangeKeyboardMapping",
+"GetKeyboardMapping",
+"ChangeKeyboardControl",
+"GetKeyboardControl",
+"Bell",
+"ChangePointerControl",
+"GetPointerControl",
+"SetScreenSaver",
+"GetScreenSaver",
+"ChangeHosts",
+"ListHosts",
+"SetAccessControl",
+"SetCloseDownMode",
+"KillClient",
+"RotateProperties",
+"ForceScreenSaver",
+"SetPointerMapping",
+"GetPointerMapping",
+"SetModifierMapping",
+"GetModifierMapping"
+};
+
+#define NUM_PROC_NAMES (sizeof(procNames)/sizeof(char*))
+#endif /* LG3D && DISPATCH_DEBUG */
 
 #ifdef PANORAMIX_DEBUG
 #include <stdio.h>
@@ -449,6 +581,20 @@ Dispatch(void)
 		client->requestLog[client->requestLogIndex] = MAJOROP;
 		client->requestLogIndex++;
 #endif
+
+#if defined(LG3D) && defined(DISPATCH_DEBUG)
+		if (printprocs) {		
+		    char *procName;
+		    if (MAJOROP >= NUM_PROC_NAMES) {
+
+			procName = "Unknown";
+		    } else {
+			procName = procNames[MAJOROP];
+		    }
+		    ErrorF("dispatcher: %d, client = %d, op = %d (%s)\n", ++proc_num, client->index, MAJOROP, procName);
+		}
+#endif /* LG3D && DISPATCH_DEBUG */
+
 		if (result > (maxBigRequestSize << 2))
 		    result = BadLength;
 		else
@@ -855,6 +1001,9 @@ ProcGetGeometry(client)
     return(client->noClientException);
 }
 
+#ifdef LG3D
+#include "../Xext/lgeint.h"
+#endif /* LG3D */
 
 int
 ProcQueryTree(client)
@@ -878,6 +1027,27 @@ ProcQueryTree(client)
 	reply.parent = pWin->parent->drawable.id;
     else
         reply.parent = (Window)None;
+
+#ifdef LG3D
+    /* 
+    ** HACK ALERT:
+    ** Bug fix for lg3d bug 213. The emacs Optional menu displays 
+    ** tooltips for its entries. The emacs code (or possibly the 
+    ** Xaw3d code which provides the tooltips) cannot handle it
+    ** when these tooltips are reparented to the PRW; emacs takes
+    ** a segv. As a short-term workaround we will lie to the client
+    ** and say that a window is still parented off the root window
+    ** if it is an override redirect window that has been reparented
+    ** to the PRW.
+    **
+    ** TODO: someday: it would be nice to fix the client bug and
+    ** get rid of this hack.
+    */
+    if (wovRedirLieAboutRootParent(pWin)) {
+	reply.parent = WindowTable[pWin->drawable.pScreen->myNum]->drawable.id;
+    }
+#endif /* LG3D */
+
     pHead = RealChildHead(pWin);
     for (pChild = pWin->lastChild; pChild != pHead; pChild = pChild->prevSib)
 	numChildren++;

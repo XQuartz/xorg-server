@@ -175,3 +175,42 @@ extern void lg3dMoveWindow (WindowPtr pWin, int x, int y, WindowPtr pNextSib, VT
 extern void lg3dSlideAndSizeWindow (WindowPtr pWin, int x, int y, 
 				    unsigned int w, unsigned int h, WindowPtr pSib);
 #endif /* LG3D */
+
+#ifdef COMPOSITE_DEBUG_VISUALIZE
+
+#include "pixmapstr.h"
+
+extern int compositeDebugVisualizeBackingPixmap;
+extern int compositeDebugVisualizeSharedPixmap;
+extern int compositeDebugVisualizeBackingPixmapDstX;
+extern int compositeDebugVisualizeBackingPixmapDstY;
+extern int compositeDebugVisualizeSharedPixmapDstX;
+extern int compositeDebugVisualizeSharedPixmapDstY;
+
+extern void compositeDebugVisualizeDrawable (DrawablePtr pDrawable,
+					     int dstx, int dsty);
+
+#define COMPOSITE_DEBUGVIS_BACKING_PIXMAP(pDrawable) \
+    if (compositeDebugVisualizeBackingPixmap) { \
+        compositeDebugVisualizeDrawable(pDrawable, \
+					compositeDebugVisualizeBackingPixmapDstX, \
+					compositeDebugVisualizeBackingPixmapDstY); \
+    }
+
+extern int hasBackingDrawable (DrawablePtr pDrawable);
+
+#define DRAWABLE_IS_REDIRECTED_WINDOW(pDraw)  hasBackingDrawable(pDraw)
+
+#define COMPOSITE_DEBUGVIS_SHARED_PIXMAP(pDst, pSrc) \
+    if (compositeDebugVisualizeSharedPixmap && \
+	DRAWABLE_IS_REDIRECTED_WINDOW(pSrc) && \
+	pDst->type == DRAWABLE_PIXMAP) { \
+        compositeDebugVisualizeDrawable(pDst, \
+					compositeDebugVisualizeSharedPixmapDstX, \
+					compositeDebugVisualizeSharedPixmapDstY); \
+    }
+
+#else
+#define COMPOSITE_DEBUGVIS_BACKING_PIXMAP(pDrawable)
+#define COMPOSITE_DEBUGVIS_SHARED_PIXMAP(pDst, pSrc)
+#endif

@@ -69,6 +69,10 @@ in this Software without prior written authorization from The Open Group.
 
 #include "modinit.h"
 
+#ifdef LG3D
+#include "lgeint.h"
+#endif /* LG3D */
+
 typedef struct _ShmDesc {
     struct _ShmDesc *next;
     int shmid;
@@ -447,11 +451,22 @@ ProcShmAttach(client)
 	 * do manual checking of access rights for the credentials 
 	 * of the client */
 
-	if (shm_access(client, &(buf.shm_perm), stuff->readOnly) == -1) {
-	    shmdt(shmdesc->addr);
-	    xfree(shmdesc);
-	    return BadAccess;
+#ifdef LG3D
+	/* 
+	** Skip this access check when talking to the display server.
+	** TODO: POSSIBLE SECURITY HOLE: make sure that only the 
+	** actual LG Display Server can ever set this.
+	*/
+	if (!lgeDisplayServerIsAlive) {
+#endif /* LG3D */
+	    if (shm_access(client, &(buf.shm_perm), stuff->readOnly) == -1) {
+		shmdt(shmdesc->addr);
+		xfree(shmdesc);
+		return BadAccess;
+	    }
+#ifdef LG3D
 	}
+#endif /* LG3D */
 
 	shmdesc->shmid = stuff->shmid;
 	shmdesc->refcnt = 1;
@@ -1229,6 +1244,9 @@ SProcShmCreatePixmap(client)
     REQUEST(xShmCreatePixmapReq);
     swaps(&stuff->length, n);
     REQUEST_SIZE_MATCH(xShmCreatePixmapReq);
+#ifdef LG3D
+    swapl(&stuff->pid, n);
+#endif /* LG3D */
     swapl(&stuff->drawable, n);
     swaps(&stuff->width, n);
     swaps(&stuff->height, n);

@@ -31,7 +31,6 @@ from The Open Group.
 #include "winprefs.h"
 #include "winmsg.h"
 
-
 /*
  * References to external symbols
  */
@@ -49,6 +48,7 @@ extern char *			g_pszLogFile;
 extern Bool			g_fXdmcpEnabled;
 extern char *			g_pszCommandLine;
 extern Bool			g_fKeyboardHookLL;
+extern Bool			g_fNoHelpMessageBox;                     
 
 
 /*
@@ -190,15 +190,17 @@ ddxProcessArgument (int argc, char *argv[], int i)
 
       s_fBeenHere = TRUE;
 
-      /* Log the version information */
-      winLogVersionInfo ();
-
-      /* Log the command line */
-      winLogCommandLine (argc, argv);
-
       /* Initialize only if option is not -help */
-      if (!IS_OPTION("-help"))
+      if (!IS_OPTION("-help") && !IS_OPTION("-h") && !IS_OPTION("--help") &&
+          !IS_OPTION("-version") && !IS_OPTION("--version"))
 	{
+
+          /* Log the version information */
+          winLogVersionInfo ();
+
+          /* Log the command line */
+          winLogCommandLine (argc, argv);
+
 	  /*
 	   * Initialize default screen settings.  We have to do this before
 	   * OsVendorInit () gets called, otherwise we will overwrite
@@ -213,7 +215,29 @@ ddxProcessArgument (int argc, char *argv[], int i)
 #if CYGDEBUG
   winErrorFVerb (2, "ddxProcessArgument - arg: %s\n", argv[i]);
 #endif
-  
+
+  /*
+   * Look for the '-help' and similar options
+   */ 
+  if (IS_OPTION ("-help") || IS_OPTION("-h") || IS_OPTION("--help"))
+    {
+      /* Reset logfile. We don't need that helpmessage in the logfile */  
+      g_pszLogFile = NULL;
+      g_fNoHelpMessageBox = TRUE;
+      UseMsg();
+      exit (0);
+      return 1;
+    }
+
+  if (IS_OPTION ("-version") || IS_OPTION("--version"))
+    {
+      /* Reset logfile. We don't need that versioninfo in the logfile */  
+      g_pszLogFile = NULL;
+      winLogVersionInfo ();
+      exit (0);
+      return 1;
+    }
+
   /*
    * Look for the '-screen scr_num [width height]' argument
    */

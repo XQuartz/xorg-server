@@ -63,6 +63,7 @@ DWORD		g_dwCurrentThreadID = 0;
 Bool		g_fKeyboardHookLL = FALSE;
 HHOOK		g_hhookKeyboardLL = NULL;
 HWND		g_hwndKeyboardFocus = NULL;
+Bool		g_fNoHelpMessageBox = FALSE;
 
 
 /*

@@ -71,6 +71,7 @@ extern FARPROC			g_fpDirectDrawCreateClipper;
   
 extern HMODULE			g_hmodCommonControls;
 extern FARPROC			g_fpTrackMouseEvent;
+extern Bool			g_fNoHelpMessageBox;                     
   
   
 /*
@@ -320,13 +321,9 @@ OsVendorInit (void)
 }
 
 
-/* See Porting Layer Definition - p. 57 */
 void
-ddxUseMsg (void)
+winUseMsg (void)
 {
-  /* Set a flag so that FatalError won't give duplicate warning message */
-  g_fUseMsg = TRUE;
-
   ErrorF ("-depth bits_per_pixel\n"
 	  "\tSpecify an optional bitdepth to use in fullscreen mode\n"
 	  "\twith a DirectDraw engine.\n");
@@ -463,6 +460,16 @@ ddxUseMsg (void)
   ErrorF ("-[no]keyhook\n"
       "\tGrab special windows key combinations like Alt-Tab or the Menu key.\n" 
       "\tThese keys are discarded by default.\n");
+}
+
+/* See Porting Layer Definition - p. 57 */
+void
+ddxUseMsg(void)
+{
+  /* Set a flag so that FatalError won't give duplicate warning message */
+  g_fUseMsg = TRUE;
+  
+  winUseMsg();  
 
   /* Log file will not be opened for UseMsg unless we open it now */
   if (!g_fLogInited) {
@@ -472,7 +479,8 @@ ddxUseMsg (void)
   LogClose ();
 
   /* Notify user where UseMsg text can be found.*/
-  winMessageBoxF ("The Cygwin/X help text has been printed to "
+  if (!g_fNoHelpMessageBox)
+    winMessageBoxF ("The Cygwin/X help text has been printed to "
 		  "/tmp/XWin.log.\n"
 		  "Please open /tmp/XWin.log to read the help text.\n",
 		  MB_ICONINFORMATION);

@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/loader/extsym.c,v 1.1.4.3.2.1 2004/02/27 21:31:00 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/loader/extsym.c,v 1.9 2003/10/15 16:29:03 dawes Exp $ */
 
 /*

@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/Xext/saver.c,v 1.1.4.3.2.2 2004/03/04 17:47:20 eich Exp $ */
 /*
  * $XConsortium: saver.c,v 1.12 94/04/17 20:59:36 dpw Exp $
  *
@@ -27,7 +28,7 @@ in this Software without prior written authorization from the X Consortium.
  * Author:  Keith Packard, MIT X Consortium
  */
 
-/* $XFree86: xc/programs/Xserver/Xext/saver.c,v 3.8 2003/11/17 22:20:26 dawes Exp $ */
+/* $XFree86: xc/programs/Xserver/Xext/saver.c,v 3.7 2003/10/28 23:08:43 tsi Exp $ */
 
 #define NEED_REPLIES
 #define NEED_EVENTS

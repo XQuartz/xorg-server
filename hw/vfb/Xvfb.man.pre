@@ -1,3 +1,4 @@
+.\" $XdotOrg: xc/programs/Xserver/hw/vfb/Xvfb.man,v 1.1.4.2.4.1 2004/03/04 17:47:33 eich Exp $
 .\" $Xorg: Xvfb.man,v 1.4 2001/02/09 02:04:45 xorgcvs Exp $
 .\" Copyright 1993, 1998  The Open Group
 .\" 
@@ -49,7 +50,7 @@ that don't really need an X server but insist on having one anyway.
 .SH BUILDING
 To build \fIXvfb\fP, put the following in your host.def and remake.
 .PP
-\&#define BuildServer YES /* if you aren't already building other servers */
+\&#define BuildServer YES /\(** if you aren't already building other servers */
 .br
 \&#define XVirtualFramebufferServer YES
 

@@ -1,4 +1,6 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/loader/dixsym.c,v 1.61 2003/11/10 18:22:35 tsi Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/loader/dixsym.c,v 1.1.4.4.4.2 2004/03/04 17:48:07 eich Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/loader/dixsym.c,v 1.63 2003/12/03
+ * 17:11:29 tsi Exp $ */
 
 /*
  * Copyright 1995-1998 by Metro Link, Inc.
@@ -114,6 +116,10 @@ LOOKUP dixLookupTab[] = {
     SYMFUNC(InitFocusClassDeviceStruct)
     SYMFUNC(InitLedFeedbackClassDeviceStruct)
     SYMFUNC(InitPtrFeedbackClassDeviceStruct)
+    SYMFUNC(InitKbdFeedbackClassDeviceStruct)
+    SYMFUNC(InitIntegerFeedbackClassDeviceStruct)
+    SYMFUNC(InitStringFeedbackClassDeviceStruct)
+    SYMFUNC(InitBellFeedbackClassDeviceStruct)
     SYMFUNC(InitValuatorClassDeviceStruct)
     SYMFUNC(InitKeyClassDeviceStruct)
     SYMFUNC(InitKeyboardDeviceStruct)
@@ -201,7 +207,6 @@ LOOKUP dixLookupTab[] = {
     SYMVAR(DPMSEnabledSwitch)
     SYMVAR(DPMSDisabledSwitch)
     SYMVAR(defaultDPMSEnabled)
-    SYMVAR(currentRegionScreen)
     /* bigreq */
     SYMVAR(maxBigRequestSize)
 #ifdef XV
@@ -340,6 +345,7 @@ LOOKUP dixLookupTab[] = {
     SYMFUNC(TimerFree)
     SYMFUNC(TimerSet)
     SYMFUNC(TimerCancel)
+    SYMFUNC(SetDPMSTimers)
     /* io.c */
     SYMFUNC(WriteToClient)
     SYMFUNC(SetCriticalOutputPending)

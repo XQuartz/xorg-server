@@ -41,6 +41,7 @@
 #include "mipict.h"
 #include "fbpict.h"
 #include "safeAlpha.h"
+#include "rootlessCommon.h"
 
 # define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))
 

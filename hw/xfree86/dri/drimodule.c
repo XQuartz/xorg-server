@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/GL/dri/drimodule.c,v 1.1.4.1.4.2 2004/03/04 17:47:18 eich Exp $ */
 /**************************************************************************
 
 Copyright 1999 Precision Insight, Inc., Cedar Park, Texas.
@@ -24,7 +25,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
-/* $XFree86: xc/programs/Xserver/GL/dri/drimodule.c,v 1.6 2001/12/10 19:07:19 dawes Exp $ */
+/* $XFree86: xc/programs/Xserver/GL/dri/drimodule.c,v 1.5 2001/06/15 21:22:39 dawes Exp $ */
 
 /*
  * Authors:

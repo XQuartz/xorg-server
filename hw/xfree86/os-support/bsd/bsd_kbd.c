@@ -497,7 +497,7 @@ OpenKeyboard(InputInfoPtr pInfo)
 #endif
            default:
                xf86Msg(X_ERROR, "%s: Unsupported wskbd type \"%d\"",
-                                pKbd->wsKbdType, pInfo->name);
+                                pInfo->name, pKbd->wsKbdType);
                close(pInfo->fd);
                return FALSE;
        }

@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/hw/darwin/quartz/cr/crScreen.m,v 1.1.4.2.4.2 2004/03/04 17:47:30 eich Exp $ */
 /*
  * Cocoa rootless implementation initialization
  */
@@ -300,6 +301,7 @@ static QuartzModeProcsRec crModeProcs = {
     NULL,               // No capture or release in rootless mode
     NULL,
     CRIsX11Window,
+    NULL,               // Cocoa NSWindows hide themselves
     RootlessFrameForWindow,
     TopLevelParent,
     NULL,		// No support for DRI surfaces

@@ -32,7 +32,6 @@
 #define _SAFEALPHA_H
 
 #include "picturestr.h"
-#include "rootlessCommon.h"
 
 void SafeAlphaPaintWindow(WindowPtr pWin, RegionPtr pRegion, int what);
 

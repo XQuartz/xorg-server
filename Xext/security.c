@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/Xext/security.c,v 1.1.4.3.4.1 2004/03/04 17:47:20 eich Exp $ */
 /* $Xorg: security.c,v 1.4 2001/02/09 02:04:32 xorgcvs Exp $ */
 /*
 
@@ -24,12 +25,13 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
 
 */
-/* $XFree86: xc/programs/Xserver/Xext/security.c,v 1.16 2003/11/17 22:20:26 dawes Exp $ */
+/* $XFree86: xc/programs/Xserver/Xext/security.c,v 1.16tsi Exp $ */
 
 #include "dixstruct.h"
 #include "extnsionst.h"
 #include "windowstr.h"
 #include "inputstr.h"
+#include "scrnintstr.h"
 #include "gcstruct.h"
 #include "colormapst.h"
 #include "propertyst.h"

@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.1.4.6.2.4 2004/03/04 17:48:31 eich Exp $ */
 /* $Xorg: utils.c,v 1.5 2001/02/09 02:05:24 xorgcvs Exp $ */
 /*
 
@@ -49,7 +50,7 @@ OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE
 OR PERFORMANCE OF THIS SOFTWARE.
 
 */
-/* $XFree86: xc/programs/Xserver/os/utils.c,v 3.95 2003/10/01 18:36:38 alanh Exp $ */
+/* $XFree86: xc/programs/Xserver/os/utils.c,v 3.96 2004/01/07 04:16:37 dawes Exp $ */
 
 #ifdef __CYGWIN__
 #include <stdlib.h>
@@ -244,6 +245,7 @@ LockServer(void)
   int lfd, i, haslock, l_pid, t;
   char *tmppath = NULL;
   int len;
+  char port[20];
 
   if (nolock) return;
   /*
@@ -258,13 +260,14 @@ LockServer(void)
     FatalError("No TMP dir found\n");
 #endif
 
+  sprintf(port, "%d", atoi(display));
   len = strlen(LOCK_PREFIX) > strlen(LOCK_TMP_PREFIX) ? strlen(LOCK_PREFIX) :
 						strlen(LOCK_TMP_PREFIX);
-  len += strlen(tmppath) + strlen(display) + strlen(LOCK_SUFFIX) + 1;
+  len += strlen(tmppath) + strlen(port) + strlen(LOCK_SUFFIX) + 1;
   if (len > sizeof(LockFile))
-    FatalError("Display name `%s' is too long\n", display);
-  (void)sprintf(tmp, "%s" LOCK_TMP_PREFIX "%s" LOCK_SUFFIX, tmppath, display);
-  (void)sprintf(LockFile, "%s" LOCK_PREFIX "%s" LOCK_SUFFIX, tmppath, display);
+    FatalError("Display name `%s' is too long\n", port);
+  (void)sprintf(tmp, "%s" LOCK_TMP_PREFIX "%s" LOCK_SUFFIX, tmppath, port);
+  (void)sprintf(LockFile, "%s" LOCK_PREFIX "%s" LOCK_SUFFIX, tmppath, port);
 
   /*
    * Create a temporary file containing our PID.  Attempt three times
@@ -359,7 +362,7 @@ LockServer(void)
          */
         unlink(tmp);
 	FatalError("Server is already active for display %s\n%s %s\n%s\n",
-		   display, "\tIf this server is no longer running, remove",
+		   port, "\tIf this server is no longer running, remove",
 		   LockFile, "\tand start again.");
       }
     }
@@ -584,8 +587,10 @@ ProcessCommandLine(int argc, char *argv[])
 
     defaultKeyboardControl.autoRepeat = TRUE;
 
-#ifdef PART_NET
-	PartialNetwork = TRUE;
+#ifdef NO_PART_NET
+    PartialNetwork = FALSE;
+#else
+    PartialNetwork = TRUE;
 #endif
 
     for ( i = 1; i < argc; i++ )
@@ -1844,13 +1849,13 @@ enum BadCode {
 #define ARGMSG \
     "\nIf the arguments used are valid, and have been rejected incorrectly\n" \
       "please send details of the arguments and why they are valid to\n" \
-      "XFree86@XFree86.org.  In the meantime, you can start the Xserver as\n" \
+      "&&&&&@X.org.  In the meantime, you can start the Xserver as\n" \
       "the \"super user\" (root).\n"   
 
 #define ENVMSG \
     "\nIf the environment is valid, and have been rejected incorrectly\n" \
       "please send details of the environment and why it is valid to\n" \
-      "XFree86@XFree86.org.  In the meantime, you can start the Xserver as\n" \
+      "&&&&&@X.org.  In the meantime, you can start the Xserver as\n" \
       "the \"super user\" (root).\n"
 
 void

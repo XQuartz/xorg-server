@@ -1,4 +1,5 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/xf8_32bpp/cfbpntwin.c,v 1.5 2001/10/01 13:44:15 eich Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/xf8_32bpp/cfbpntwin.c,v 1.1.4.2.2.3 2004/03/04 20:16:51 kaleb Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/xf8_32bpp/cfbpntwin.c,v 1.1 1999/01/03 03:58:56 dawes Exp $ */
 
 #include "X.h"
 

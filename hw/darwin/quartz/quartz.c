@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/hw/darwin/quartz/quartz.c,v 1.1.4.3.4.2 2004/03/04 17:47:30 eich Exp $ */
 /**************************************************************
  *
  * Quartz-specific support for the Darwin X Server
@@ -156,9 +157,7 @@ void DarwinModeInitInput(
     int argc,
     char **argv )
 {
-    if (serverGeneration == 1) {
-        QuartzMessageMainThread(kQuartzServerStarted, NULL, 0);
-    }
+    QuartzMessageMainThread(kQuartzServerStarted, NULL, 0);
 
     // Do final display mode specific initialization before handling events
     if (quartzProcs->InitInput)

@@ -33,6 +33,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
+/* $XdotOrg: xc/programs/Xserver/hw/darwin/iokit/xfIOKit.c,v 1.1.4.1.4.2 2004/03/04 20:16:10 kaleb Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/darwin/iokit/xfIOKit.c,v 1.2 2003/10/16 23:50:09 torrey Exp $ */
 
 #include "X.h"
@@ -516,8 +517,7 @@ static Bool SetupFBandHID(
     dfb->bitsPerComponent = pixelInfo.bitsPerComponent;
 
     // allocate shadow framebuffer
-    iokitScreen->shadowPtr = shadowAlloc(dfb->width, dfb->height,
-                                         dfb->bitsPerPixel);
+    iokitScreen->shadowPtr = xalloc(dfb->pitch * dfb->height);
     dfb->framebuffer = iokitScreen->shadowPtr;
 
     // Note: Darwin kIORGBDirectPixels = X TrueColor, not DirectColor

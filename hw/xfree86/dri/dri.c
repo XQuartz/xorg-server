@@ -1191,8 +1191,8 @@ DRIGetDrawableInfo(ScreenPtr pScreen,
 
 	       if (x0 < 0) x0 = 0;
 	       if (y0 < 0) y0 = 0;
-	       if (x1 > pScreen->width-1) x1 = pScreen->width-1;
-	       if (y1 > pScreen->height-1) y1 = pScreen->height-1;
+	       if (x1 > pScreen->width) x1 = pScreen->width;
+	       if (y1 > pScreen->height) y1 = pScreen->height;
 
 	       pDRIPriv->private_buffer_rect.x1 = x0;
 	       pDRIPriv->private_buffer_rect.y1 = y0;

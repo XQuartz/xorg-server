@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/Xext/xtest1di.c,v 1.1.4.3.4.1 2004/03/04 17:47:20 eich Exp $ */
 /* $Xorg: xtest1di.c,v 1.4 2001/02/09 02:04:33 xorgcvs Exp $ */
 /*
  *	File:  xtest1di.c
@@ -52,7 +53,7 @@ Telephone and Telegraph Company or of the Regents of the
 University of California.
 
 */
-/* $XFree86: xc/programs/Xserver/Xext/xtest1di.c,v 3.6 2003/11/17 22:20:28 dawes Exp $ */
+/* $XFree86: xc/programs/Xserver/Xext/xtest1di.c,v 3.5 2003/09/13 21:33:03 dawes Exp $ */
 
 /*****************************************************************************
  * include files
@@ -73,8 +74,6 @@ University of California.
 #define  XTestSERVER_SIDE
 #include "xtestext1.h"
 #include "modinit.h"
-
-#include "xtest1dd.h"
 
 #include "xtest1dd.h"
 

@@ -325,6 +325,7 @@ extern void __glXDisp_MultiTexCoord4dvARB(GLbyte*);
 extern void __glXDisp_MultiTexCoord4fvARB(GLbyte*);
 extern void __glXDisp_MultiTexCoord4ivARB(GLbyte*);
 extern void __glXDisp_MultiTexCoord4svARB(GLbyte*);
+extern void __glXDisp_SampleCoverageARB(GLbyte *);
 extern void __glXDisp_WindowPos3fARB(GLbyte *);
 
 extern int __glXSwapRender(__GLXclientState*, GLbyte*);
@@ -621,6 +622,7 @@ extern void __glXDispSwap_MultiTexCoord4dvARB(GLbyte*);
 extern void __glXDispSwap_MultiTexCoord4fvARB(GLbyte*);
 extern void __glXDispSwap_MultiTexCoord4ivARB(GLbyte*);
 extern void __glXDispSwap_MultiTexCoord4svARB(GLbyte*);
+extern void __glXDispSwap_SampleCoverageARB(GLbyte *);
 extern void __glXDispSwap_WindowPos3fARB(GLbyte *);
 
 #define __GLX_MIN_GLXCMD_OPCODE 1

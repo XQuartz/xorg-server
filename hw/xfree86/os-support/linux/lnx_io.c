@@ -1,4 +1,5 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/linux/lnx_io.c,v 3.26 2003/11/17 22:20:41 dawes Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/linux/lnx_io.c,v 3.25 2003/08/19 17:32:34 tsi Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/os-support/linux/lnx_io.c,v 1.1.4.2.6.2 2004/03/04 17:48:09 eich Exp $ */
 /*
  * Copyright 1992 by Orest Zborowski <obz@Kodak.com>
  * Copyright 1993 by David Dawes <dawes@xfree86.org>
@@ -90,10 +91,9 @@ KDKBDREP_ioctl_ok(int rate, int delay) {
    /* don't change, just test */
    kbdrep_s.rate = -1;
    kbdrep_s.delay = -1;
-   if (ioctl( 0, KDKBDREP, &kbdrep_s )) {
+   if (ioctl( xf86Info.consoleFd, KDKBDREP, &kbdrep_s )) {
        return 0;
    }
-
    /* do the change */
    if (rate == 0)				/* switch repeat off */
      kbdrep_s.rate = 0;
@@ -105,7 +105,7 @@ KDKBDREP_ioctl_ok(int rate, int delay) {
    if (kbdrep_s.delay < 1)
      kbdrep_s.delay = 1;
    
-   if (ioctl( 0, KDKBDREP, &kbdrep_s )) {
+   if (ioctl( xf86Info.consoleFd, KDKBDREP, &kbdrep_s )) {
      return 0;
    }
 
@@ -130,8 +130,9 @@ KIOCSRATE_ioctl_ok(int rate, int delay) {
    if (kbdrate_s.rate > 50)
      kbdrate_s.rate = 50;
 
-   if (ioctl( fd, KIOCSRATE, &kbdrate_s ))
-     return 0;
+   if (ioctl( fd, KIOCSRATE, &kbdrate_s )) {
+       return 0;
+   }
 
    close( fd );
 
@@ -172,7 +173,6 @@ void xf86SetKbdRepeat(char rad)
     rate = xf86Info.kbdRate * 10;
   if (xf86Info.kbdDelay >= 0)
     delay = xf86Info.kbdDelay;
-
 
   if(KDKBDREP_ioctl_ok(rate, delay)) 	/* m68k? */
     return;

@@ -80,6 +80,9 @@ extern void GlxExtensionInit(void);
 
 extern Bool __glXCoreType(void);
 
+extern const char GLServerVersion[];
+extern int DoGetString(__GLXclientState *cl, GLbyte *pc, GLboolean need_swap);
+
 extern int GlxInitVisuals(
     VisualPtr *       visualp,
     DepthPtr *        depthp,

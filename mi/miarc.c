@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/mi/miarc.c,v 1.1.4.4.2.2 2004/03/04 20:17:04 kaleb Exp $ */
 /* $XFree86: xc/programs/Xserver/mi/miarc.c,v 3.14 2003/10/29 22:57:48 tsi Exp $ */
 /***********************************************************
 
@@ -49,7 +50,8 @@ SOFTWARE.
 /* Author: Keith Packard and Bob Scheifler */
 /* Warning: this code is toxic, do not dally very long here. */
 
-#if defined(_XOPEN_SOURCE) || defined(__QNXNTO__)
+#if defined(_XOPEN_SOURCE) || defined(__QNXNTO__) \
+	|| (defined(sun) && defined(__SVR4))
 #include <math.h>
 #else
 #define _XOPEN_SOURCE	/* to get prototype for hypot on some systems */
@@ -1702,6 +1704,8 @@ miGetArcPts(
 
     poly[cpt].x = (xc + x0);
     poly[cpt].y = (yc + y0);
+    poly[cpt + 1].x = (xc + x1);
+    poly[cpt + 1].y = (yc + y1);
 
     for(i = 2; i < count; i++)
     {

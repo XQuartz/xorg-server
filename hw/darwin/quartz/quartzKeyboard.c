@@ -34,8 +34,6 @@
 */
 /* $XFree86: xc/programs/Xserver/hw/darwin/quartz/quartzKeyboard.c,v 1.1 2003/11/01 08:13:08 torrey Exp $ */
 
-#ifdef HAS_KL_API
-
 #include "quartzCommon.h"
 
 #include <CoreServices/CoreServices.h>
@@ -44,6 +42,8 @@
 #include "darwinKeyboard.h"
 #include "keysym.h"
 #include "keysym2ucs.h"
+
+#ifdef HAS_KL_API
 
 #define HACK_MISSING 1
 #define HACK_KEYPAD 1

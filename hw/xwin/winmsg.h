@@ -29,7 +29,7 @@
  *
  * Authors: Alexander Gottwald	
  */
-/* $XFree86: xc/programs/Xserver/hw/xwin/winmsg.h,v 1.2 2003/10/02 13:30:10 eich Exp $ */
+/* $XFree86$ */
 
 
 /*

@@ -1,5 +1,6 @@
+/* $XdotOrg: xc/programs/Xserver/render/render.c,v 1.1.4.3.2.2 2004/03/04 17:48:45 eich Exp $ */
 /*
- * $XFree86: xc/programs/Xserver/render/render.c,v 1.28 2003/11/03 05:12:02 tsi Exp $
+ * $XFree86: xc/programs/Xserver/render/render.c,v 1.27tsi Exp $
  *
  * Copyright © 2000 SuSE, Inc.
  *

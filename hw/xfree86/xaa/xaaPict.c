@@ -219,6 +219,9 @@ XAADoComposite (
     ySrc += pSrc->pDrawable->y;
 
     if(pMask) {
+	if(pMask->componentAlpha)
+	    return FALSE;
+ 
 	/* for now we only do it if there is a 1x1 (solid) source */
 
 	if((pSrc->pDrawable->width == 1) && (pSrc->pDrawable->height == 1)) {

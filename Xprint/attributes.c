@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/Xprint/attributes.c,v 1.1.4.3.4.1 2004/03/04 17:47:23 eich Exp $ */
 /* $Xorg: attributes.c,v 1.3 2000/08/17 19:48:07 cpqbld Exp $ */
 /*
 (c) Copyright 1996 Hewlett-Packard Company
@@ -52,7 +53,7 @@ copyright holders.
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <pwd.h>
-#if defined(sun) && defined(SVR4)
+#if (defined(sun) && defined(SVR4)) || (defined(SCO))
 #include <wchar.h>
 #endif
 

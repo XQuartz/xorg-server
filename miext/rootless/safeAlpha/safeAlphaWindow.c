@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/miext/rootless/safeAlpha/safeAlphaWindow.c,v 1.1.4.2.2.2 2004/03/04 17:48:30 eich Exp $ */
 /*
  * Specialized window functions to protect the alpha channel
  */
@@ -35,6 +36,7 @@
 
 #include "fb.h"
 #include "safeAlpha.h"
+#include "rootlessCommon.h"
 
 #ifdef PANORAMIX
 #include "panoramiX.h"

@@ -30,6 +30,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
+/* $XdotOrg: xc/programs/Xserver/hw/darwin/quartz/quartz.h,v 1.1.4.2.4.2 2004/03/04 20:16:11 kaleb Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/darwin/quartz/quartz.h,v 1.7 2003/11/12 20:21:51 torrey Exp $ */
 
 #ifndef _QUARTZ_H
@@ -70,6 +71,7 @@ typedef void (*ReleaseScreensProc)(void);
  * Rootless helper functions
  */
 typedef Bool (*IsX11WindowProc)(void *nsWindow, int windowNumber);
+typedef void (*HideWindowsProc)(Bool hide);
 
 /*
  * Rootless functions for optional export to GLX layer
@@ -103,6 +105,7 @@ typedef struct _QuartzModeProcs {
     ReleaseScreensProc ReleaseScreens;	// Only called in fullscreen
 
     IsX11WindowProc IsX11Window;
+    HideWindowsProc HideWindows;
 
     FrameForWindowProc FrameForWindow;
     TopLevelParentProc TopLevelParent;

@@ -1,3 +1,4 @@
+/* $XdotOrg: xc/programs/Xserver/hw/darwin/quartz/xpr/xprScreen.c,v 1.1.4.2.4.2 2004/03/04 17:47:30 eich Exp $ */
 /*
  * Xplugin rootless implementation screen functions
  */
@@ -358,6 +359,7 @@ static QuartzModeProcsRec xprModeProcs = {
     NULL,               // No capture or release in rootless mode
     NULL,
     xprIsX11Window,
+    xprHideWindows,
     RootlessFrameForWindow,
     TopLevelParent,
     DRICreateSurface,

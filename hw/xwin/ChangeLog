@@ -1,3 +1,12 @@
+2004-07-09  Alexander Gottwald  <ago@freedesktop.org>
+
+	* winconfig.c: Add entry for irish layout (ie)
+	* InitOutput.c, winerror.c, winglobals.c: rename g_fUseMsg to 
+	g_fSilentFatalError
+	* InitOutput.c, winglobals.c, winprocarg.c: added commandline option 
+	-silent-dup-error to allow silent termination if another instance of
+	XWin was found running
+
 2004-06-27  Alexander Gottwald  <ago@freedesktop.org>
 
 	* winconfig.c: Add entry for us layout. This changes not much but 

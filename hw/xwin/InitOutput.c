@@ -46,7 +46,7 @@ extern int			g_iNumScreens;
 extern winScreenInfo		g_ScreenInfo[];
 extern int			g_iLastScreen;
 extern char *			g_pszCommandLine;
-extern Bool			g_fUseMsg;
+extern Bool			g_fSilentFatalError;
 
 extern char *			g_pszLogFile;
 extern int			g_iLogVerbose;
@@ -73,6 +73,7 @@ extern FARPROC			g_fpDirectDrawCreateClipper;
 extern HMODULE			g_hmodCommonControls;
 extern FARPROC			g_fpTrackMouseEvent;
 extern Bool			g_fNoHelpMessageBox;                     
+extern Bool			g_fSilentDupError;                     
   
   
 /*
@@ -558,7 +559,7 @@ void
 ddxUseMsg(void)
 {
   /* Set a flag so that FatalError won't give duplicate warning message */
-  g_fUseMsg = TRUE;
+  g_fSilentFatalError = TRUE;
   
   winUseMsg();  
 
@@ -616,6 +617,8 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   /* Check for duplicate invocation on same display number.*/
   if (serverGeneration == 1 && !winCheckDisplayNumber ())
     {
+      if (g_fSilentDupError)
+        g_fSilentFatalError = TRUE;  
       FatalError ("InitOutput - Duplicate invocation on display "
 		  "number: %s.  Exiting.\n", display);
     }

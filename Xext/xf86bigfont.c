@@ -99,11 +99,11 @@ static int FontShmdescIndex;
 
 static unsigned int pagesize;
 
+static Bool badSysCall = FALSE;
+
 #if defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__CYGWIN__)
 
 #include <sys/signal.h>
-
-static Bool badSysCall = FALSE;
 
 static void
 SigSysHandler(
@@ -471,13 +471,16 @@ ProcXF86BigfontQueryFont(
 
     if (nCharInfos > 0) {
 #ifdef HAS_SHM
-	pDesc = (ShmDescPtr) FontGetPrivate(pFont, FontShmdescIndex);
+	if (!badSysCall)
+	    pDesc = (ShmDescPtr) FontGetPrivate(pFont, FontShmdescIndex);
+	else
+	    pDesc = NULL;
 	if (pDesc) {
 	    pCI = (xCharInfo *) pDesc->attach_addr;
 	    if (stuff_flags & XF86Bigfont_FLAGS_Shm)
 		shmid = pDesc->shmid;
 	} else {
-	    if (stuff_flags & XF86Bigfont_FLAGS_Shm)
+	    if (stuff_flags & XF86Bigfont_FLAGS_Shm && !badSysCall)
 		pDesc = shmalloc(nCharInfos * sizeof(xCharInfo)
 				 + sizeof(CARD32));
 	    if (pDesc) {
@@ -522,7 +525,7 @@ ProcXF86BigfontQueryFont(
 		}
 	    }
 #ifdef HAS_SHM
-	    if (pDesc) {
+	    if (pDesc && !badSysCall) {
 		*(CARD32 *)(pCI + nCharInfos) = signature;
 		if (!FontSetPrivate(pFont, FontShmdescIndex, pDesc)) {
 		    shmdealloc(pDesc);

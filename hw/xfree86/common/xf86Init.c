@@ -96,6 +96,7 @@ extern int xtest_command_key;
 #ifdef DPMSExtension
 #define DPMS_SERVER
 #include "extensions/dpms.h"
+#include "dpmsproc.h"
 #endif
 
 
@@ -1244,7 +1245,7 @@ AbortDDX()
   /*
    * try to deinitialize all input devices
    */
-  if (xf86Info.pKeyboard)
+  if (xf86Info.kbdProc && xf86Info.pKeyboard)
     (xf86Info.kbdProc)(xf86Info.pKeyboard, DEVICE_CLOSE);
 
   /*
@@ -1253,6 +1254,10 @@ AbortDDX()
 #ifdef HAS_USL_VTS
   /* Need the sleep when starting X from within another X session */
   sleep(1);
+#endif
+#ifdef DPMSExtension /* Turn screens back on */
+  if (DPMSPowerLevel != DPMSModeOn)
+      DPMSSet(DPMSModeOn);
 #endif
   if (xf86Screens) {
       if (xf86Screens[0]->vtSema)
@@ -1265,10 +1270,6 @@ AbortDDX()
 	       * screen explicitely.
 	       */
 	      xf86EnableAccess(xf86Screens[i]);
-#ifdef DPMSExtension
-	      if (xf86Screens[i]->DPMSSet)
-		  xf86Screens[i]->DPMSSet(xf86Screens[i],DPMSModeOn,0);
-#endif
 	      (xf86Screens[i]->LeaveVT)(i, 0);
 	  }
   }
@@ -1763,8 +1764,22 @@ xf86PrintBanner()
 #endif
 
 #if XORG_VERSION_SNAP >= 900
-  ErrorF(" (%d.%d.0 RC %d)", XORG_VERSION_MAJOR, XORG_VERSION_MINOR + 1,
-				XORG_VERSION_SNAP - 900);
+  /* When the patch number is 99, that signifies that the we are making
+   * a release candidate for a major version; however, if the patch
+   * number is < 99, then we are making a release candidate for the next
+   * point release.
+   */
+  if (XORG_VERSION_PATCH == 99)
+      ErrorF(" (%d.%d.0 RC %d)",
+	     XORG_VERSION_MAJOR,
+	     XORG_VERSION_MINOR + 1,
+	     XORG_VERSION_SNAP - 900);
+  else
+      ErrorF(" (%d.%d.%d RC %d)",
+	     XORG_VERSION_MAJOR,
+	     XORG_VERSION_MINOR,
+	     XORG_VERSION_PATCH + 1,
+	     XORG_VERSION_SNAP - 900);
 #endif
 
 #ifdef XORG_CUSTOM_VERSION

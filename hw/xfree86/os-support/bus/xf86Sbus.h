@@ -27,6 +27,7 @@
 
 #if defined(linux)
 #include <asm/types.h>
+#include <linux/fb.h>
 #include <asm/fbio.h>
 #include <asm/openpromio.h>
 #elif defined(SVR4)

@@ -1,4 +1,4 @@
-/* $XdotOrg$ */
+/* $XdotOrg: xc/programs/Xserver/Xext/saver.c,v 1.2.4.2 2004/12/13 03:34:33 gisburn Exp $ */
 /*
  * $XConsortium: saver.c,v 1.12 94/04/17 20:59:36 dpw Exp $
  *
@@ -210,7 +210,7 @@ static int ScreenPrivateIndex;
 
 #define GetScreenPrivate(s) ((ScreenSaverScreenPrivatePtr)(s)->devPrivates[ScreenPrivateIndex].ptr)
 #define SetScreenPrivate(s,v) ((s)->devPrivates[ScreenPrivateIndex].ptr = (pointer) v);
-#define SetupScreen(s)	ScreenSaverScreenPrivatePtr pPriv = GetScreenPrivate(s)
+#define SetupScreen(s)	ScreenSaverScreenPrivatePtr pPriv = (s ? GetScreenPrivate(s) : NULL)
 
 #define New(t)	((t *) xalloc (sizeof (t)))
 
@@ -1185,6 +1185,7 @@ ScreenSaverUnsetAttributes (ClientPtr client)
     pPriv = GetScreenPrivate (pDraw->pScreen);
     if (pPriv && pPriv->attr && pPriv->attr->client == client)
     {
+	FreeResource (pPriv->attr->resource, AttrType);
     	FreeScreenAttr (pPriv->attr);
 	pPriv->attr = NULL;
 	CheckScreenPrivate (pDraw->pScreen);

@@ -329,12 +329,12 @@ AllocatePclPrivates(ScreenPtr pScreen)
  */
 
 static char DOC_ATT_SUPP[]="document-attributes-supported";
-static char DOC_ATT_VAL[]="document-format";
+static char DOC_ATT_VAL[]="document-format xp-listfonts-modes";
 static char JOB_ATT_SUPP[]="job-attributes-supported";
 static char JOB_ATT_VAL[]="";
 static char PAGE_ATT_SUPP[]="xp-page-attributes-supported";
 static char PAGE_ATT_VAL[]="content-orientation default-printer-resolution \
-default-input-tray default-medium plex";
+default-input-tray default-medium plex xp-listfonts-modes";
 
 static int
 PclInitContext(XpContextPtr pCon)
@@ -427,7 +427,7 @@ PclInitContext(XpContextPtr pCon)
     server = XpGetOneAttribute( pCon, XPServerAttr, DOC_ATT_SUPP );
     if( ( attrStr = (char *)xalloc(strlen(server) + strlen(DOC_ATT_SUPP)
 				   + strlen(DOC_ATT_VAL) +
-				   strlen(PAGE_ATT_VAL) + 6 ) ) 
+				   strlen(PAGE_ATT_VAL) + 8 ) ) 
        == (char *)NULL )
       return BadAlloc;
     sprintf( attrStr, "*%s:\t%s %s %s", DOC_ATT_SUPP, server,
@@ -440,7 +440,7 @@ PclInitContext(XpContextPtr pCon)
      */
     server = XpGetOneAttribute( pCon, XPServerAttr, JOB_ATT_SUPP );
     if( ( attrStr = (char *)xalloc(strlen(server) + strlen(JOB_ATT_SUPP)
-				   + strlen(JOB_ATT_VAL) + 4 ) ) 
+				   + strlen(JOB_ATT_VAL) + 8 ) ) 
        == (char *)NULL )
       return BadAlloc;
     sprintf( attrStr, "*%s:\t%s %s", JOB_ATT_SUPP, server, JOB_ATT_VAL );
@@ -452,7 +452,7 @@ PclInitContext(XpContextPtr pCon)
      */
     server = XpGetOneAttribute( pCon, XPServerAttr, PAGE_ATT_SUPP );
     if( ( attrStr = (char *)xalloc(strlen(server) + strlen(PAGE_ATT_SUPP)
-				   + strlen(PAGE_ATT_VAL) + 4 ) ) 
+				   + strlen(PAGE_ATT_VAL) + 8 ) ) 
        == (char *)NULL )
       return BadAlloc;
     sprintf( attrStr, "*%s:\t%s %s", PAGE_ATT_SUPP, server, PAGE_ATT_VAL );

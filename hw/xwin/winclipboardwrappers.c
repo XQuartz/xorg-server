@@ -42,13 +42,6 @@
 
 
 /*
- * Globals
- */
-
-static Window		g_iOwners[CLIP_NUM_SELECTIONS] = {None};
-
-
-/*
  * Local function prototypes
  */
 
@@ -289,6 +282,7 @@ winProcSetSelectionOwner (ClientPtr client)
   DrawablePtr		pDrawable;
   WindowPtr		pWindow = None;
   Bool			fOwnedToNotOwned = FALSE;
+  static Window		g_iOwners[CLIP_NUM_SELECTIONS] = {None};
   REQUEST(xSetSelectionOwnerReq);
   
   REQUEST_SIZE_MATCH(xSetSelectionOwnerReq);
@@ -375,10 +369,12 @@ winProcSetSelectionOwner (ClientPtr client)
       && g_hwndClipboard != NULL
       && g_hwndClipboard == GetClipboardOwner ())
     {
+#if 0
       ErrorF ("winProcSetSelectionOwner - We currently own the "
 	      "clipboard and neither the PRIMARY nor the CLIPBOARD "
 	      "selections are owned, releasing ownership of Win32 "
 	      "clipboard.\n");
+#endif
       
       /* Release ownership of the Windows clipboard */
       OpenClipboard (NULL);
@@ -410,8 +406,10 @@ winProcSetSelectionOwner (ClientPtr client)
   /* Abort if clipboard manager is owning the selection */
   if (pDrawable->id == g_iClipboardWindow)
     {
+#if 0
       ErrorF ("winProcSetSelectionOwner - We changed ownership, "
 	      "aborting.\n");
+#endif
       goto winProcSetSelectionOwner_Done;
     }
 

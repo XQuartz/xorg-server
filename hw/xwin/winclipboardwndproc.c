@@ -87,7 +87,9 @@ winClipboardWindowProc (HWND hwnd, UINT message,
     {
     case WM_DESTROY:
       {
+#if 0
 	ErrorF ("winClipboardWindowProc - WM_DESTROY\n");
+#endif
 
 	/* Remove ourselves from the clipboard chain */
 	ChangeClipboardChain (hwnd, s_hwndNextViewer);
@@ -101,7 +103,9 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 
     case WM_CREATE:
       {
+#if 0
 	ErrorF ("winClipboardWindowProc - WM_CREATE\n");
+#endif
 	
 	/* Add ourselves to the clipboard viewer chain */
 	s_hwndNextViewer = SetClipboardViewer (hwnd);
@@ -150,8 +154,10 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	/* Bail when we still own the clipboard */
 	if (hwnd == GetClipboardOwner ())
 	  {
+#if 0
 	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
 		    "We own the clipboard, returning.\n");
+#endif
 	    return 0;
 	  }
 
@@ -163,9 +169,11 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	if (!IsClipboardFormatAvailable (CF_TEXT)
 	    && !IsClipboardFormatAvailable (CF_UNICODETEXT))
 	  {
+#if 0
 	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
 		    "Clipboard does not contain CF_TEXT nor "
 		    "CF_UNICODETEXT.\n");
+#endif
 
 	    /*
 	     * We need to make sure that the X Server has processed
@@ -225,11 +233,13 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
 		    "Could not reassert ownership of PRIMARY\n");
 	  }
+#if 0
 	else
 	  {
 	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
 		    "Reasserted ownership of PRIMARY\n");
 	  }
+#endif
 	
 	/* Reassert ownership of the CLIPBOARD */	  
 	iReturn = XSetSelectionOwner (pDisplay,
@@ -243,11 +253,13 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
 		    "Could not reassert ownership of CLIPBOARD\n");
 	  }
+#if 0
 	else
 	  {
 	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
 		    "Reasserted ownership of CLIPBOARD\n");
 	  }
+#endif
 	
 	/* Flush the pending SetSelectionOwner event now */
 	XFlush (pDisplay);

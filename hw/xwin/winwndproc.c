@@ -1069,7 +1069,8 @@ winWindowProc (HWND hwnd, UINT message,
 
 	default:
 	  /* It's probably one of the custom menus... */
-	  return HandleCustomWM_COMMAND (0, LOWORD (wParam));
+	  if (HandleCustomWM_COMMAND (0, LOWORD (wParam)))
+	    return 0;
 	}
       break;
 

@@ -132,7 +132,7 @@ void
 HandleCustomWM_INITMENU(unsigned long hwndIn,
 			unsigned long hmenuIn);
 
-int
+Bool
 HandleCustomWM_COMMAND (unsigned long hwndIn,
 			int           command);
 

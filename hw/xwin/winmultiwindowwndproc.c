@@ -387,23 +387,30 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       /*
        * Any window menu items go through here
        */
-      /* If minimizing then remove always-on-top, and store the setting */
-      if (wParam == SC_MINIMIZE)
+      switch (wParam & 0xFFF0) /* See MSDN for the magic number 0xFFF0 */
 	{
+	case SC_MINIMIZE:
+	  /* If minimizing then remove always-on-top, and store the setting */
 	  if (GetWindowLong (hwnd, GWL_EXSTYLE) & WS_EX_TOPMOST)
 	    pWinPriv->fAlwaysOnTop = TRUE;
 	  else
 	    pWinPriv->fAlwaysOnTop = FALSE;
 	  SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0,
 		       SWP_NOMOVE|SWP_NOSIZE);
-	}
-      else if (wParam == SC_RESTORE)
-	{
+	  break;
+
+	case SC_RESTORE:
 	  if (pWinPriv->fAlwaysOnTop)
 	    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
 			 SWP_NOMOVE|SWP_NOSIZE);
+	  break;
+
+	default:
+	  if (HandleCustomWM_COMMAND ((unsigned long)hwnd, LOWORD(wParam)))
+	    /* Don't pass customized menus to DefWindowProc */
+	    return 0;
+	  break;
 	}
-      HandleCustomWM_COMMAND ((unsigned long)hwnd, LOWORD(wParam));
       break;
 
     case WM_INITMENU:

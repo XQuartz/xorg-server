@@ -284,9 +284,10 @@ HandleCustomWM_INITMENU(unsigned long hwndIn,
 }
     
 /*
- * Searches for the custom WM_COMMAND command ID and performs action
+ * Searches for the custom WM_COMMAND command ID and performs action.
+ * Return TRUE if command is proccessed, FALSE otherwise.
  */
-int
+Bool
 HandleCustomWM_COMMAND (unsigned long hwndIn,
 			int           command)
 {
@@ -298,7 +299,7 @@ HandleCustomWM_COMMAND (unsigned long hwndIn,
   hwnd = (HWND)hwndIn;
 
   if (!command)
-    return 0;
+    return FALSE;
 
   for (i=0; i<pref.menuItems; i++)
     {
@@ -332,12 +333,12 @@ HandleCustomWM_COMMAND (unsigned long hwndIn,
 		      exit (0);
 		    }
 		  else
-		    return 0;
+		    return TRUE;
 		  break;
 		  
 		case CMD_ALWAYSONTOP:
 		  if (!hwnd)
-		    return 0;
+		    return FALSE;
 
 		  /* Get extended window style */
 		  dwExStyle = GetWindowLong (hwnd, GWL_EXSTYLE);
@@ -355,20 +356,20 @@ HandleCustomWM_COMMAND (unsigned long hwndIn,
 				  0, 0,
 				  0, 0,
 				  SWP_NOSIZE | SWP_NOMOVE);
-		  return 0;
+		  return TRUE;
 		  
 		case CMD_RELOAD:
 		  ReloadPrefs();
-		  return 0;
+		  return TRUE;
 
 		default:
-		  return 0;
+		  return FALSE;
 	      }
 	    } /* match */
 	} /* for j */
     } /* for i */
 
-  return 0;
+  return FALSE;
 }
 
 

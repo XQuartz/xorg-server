@@ -64,6 +64,10 @@ CARD8 mach64Rop[16] = {
 #define MACH64_DRAW_COMBO_SOLID	0x1
 #define MACH64_DRAW_COMBO_COPY	0x8
 
+#define SYNC_ALWAYS 0
+#if SYNC_ALWAYS
+static ScreenPtr    mach64Screen;
+#endif
 static Reg	*reg;
 static CARD32	avail;
 static CARD32	triple;
@@ -102,6 +106,9 @@ mach64Setup (PixmapPtr pDst, PixmapPtr pSrc, CARD32 combo, int wait)
 
     reg = mach64c->reg;
     triple = mach64s->bpp24;
+#if SYNC_ALWAYS
+    mach64Screen = pScreen;
+#endif
     if (!reg)
 	return FALSE;
     
@@ -179,6 +186,9 @@ mach64Solid (int x1, int y1, int x2, int y2)
 void
 mach64DoneSolid (void)
 {
+#if SYNC_ALWAYS
+    KdCheckSync (mach64Screen);
+#endif
 }
 
 static int copyDx;
@@ -263,6 +273,9 @@ mach64Copy (int srcX,
 void
 mach64DoneCopy (void)
 {
+#if SYNC_ALWAYS
+    KdCheckSync (mach64Screen);
+#endif
 }
 
 KaaScreenInfoRec    mach64Kaa = {

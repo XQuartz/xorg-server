@@ -48,173 +48,6 @@ static Bool g_winKeyState[NUM_KEYCODES];
 /* Stored to get internal mode key states.  Must be read-only.  */
 static unsigned short const *g_winInternalModeKeyStatesPtr = NULL;
 
-#if WIN_NEW_KEYBOARD_SUPPORT
-
-const unsigned int MaxKeysPerKey = 4;
-
-void
-winProcessKeyEvent (DWORD dwVirtualKey, DWORD dwKeyData)
-{
-  Bool			fDown = ((dwKeyData & 0x80000000) == 0);
-  winKeyEventsRec	kerEvent;
-  int			i;
-
-  /* Get the key events */
-  kerEvent = winTranslateKey (dwVirtualKey, dwKeyData);
-
-  if (kerEvent.dwReleaseModifiers & WIN_MOD_LCONTROL)
-    winSendKeyEvent (XK_Control_L, FALSE);
-  if (kerEvent.dwReleaseModifiers & WIN_MOD_RCONTROL)
-    winSendKeyEvent (XK_Control_R, FALSE);
-  if (kerEvent.dwReleaseModifiers & WIN_MOD_LALT)
-    winSendKeyEvent (XK_Alt_L, FALSE);
-  if (kerEvent.dwReleaseModifiers & WIN_MOD_RALT)
-    winSendKeyEvent (XK_Alt_R, FALSE);
-  
-  for (i = 0; kerEvent.dwXKeycodes[i] != XK_VoidSymbol; ++i)
-    winSendKeyEvent (kerEvent.dwXKeycodes[i], fDown);
-  
-  if (kerEvent.dwReleaseModifiers & WIN_MOD_LCONTROL)
-    winSendKeyEvent (XK_Control_L, FALSE);
-  if (kerEvent.dwReleaseModifiers & WIN_MOD_RCONTROL)
-    winSendKeyEvent (XK_Control_R, TRUE);
-  if (kerEvent.dwReleaseModifiers & WIN_MOD_LALT)
-    winSendKeyEvent (XK_Alt_L, FALSE);
-  if (kerEvent.dwReleaseModifiers & WIN_MOD_RALT)
-    winSendKeyEvent (XK_Alt_R, TRUE);
-  
-}
-
-
-winKeyEventsRec
-winTranslateKey (DWORD dwVirtualKey, DWORD dwKeyData)
-{
-  winKeyEventsRec	kerEvents;
-  Bool			fExtended = ((HIWORD (dwKeyData) & KF_EXTENDED) != 0);
-  int			i;
-  DWORD			dwNumEvents = 0;
-  BYTE			bKeyboardState[256];
-  int			iReturn;
-  unsigned char		cAscii[4];
-
-  /* Remap extended modifiers to the right version of that key.  */
-  if (fExtended)
-    {
-      switch (dwVirtualKey)
-	{
-	case VK_MENU:
-	  dwVirtualKey = VK_RMENU;
-	  break;
-
-	case VK_CONTROL:
-	  dwVirtualKey = VK_RCONTROL;
-	  break;
-	}
-    }
-
-  /* Initialize the modifiers to release flag */
-  kerEvents.dwReleaseModifiers = 0;
-   
-  /* Look up the current virtual key code in the translation table */
-  for (i = 0; i < g_winKeymapEntries; ++i)
-    {
-      /* Did we find a mapping? */
-      if (winKeymap[i].dwVirtualKey == dwVirtualKey)
-	{
-	  /* Mapping found, we have at least one event now */
-	  kerEvents.dwXKeycodes[dwNumEvents] = winKeymap[i].dwXKey;
-	  break;
-	}
-    }
-
-  
-  /* Break out early, if we found the key in the translation table */
-  if (dwNumEvents != 0)
-    {
-      /* Terminate the last of the key events with a void symbol */
-      kerEvents.dwXKeycodes[dwNumEvents] = XK_VoidSymbol;
-      return kerEvents;
-    }
-  
-  /* Get the state of all keyboard keys */
-  GetKeyboardState (bKeyboardState);
-
-  /* Try to convert the key to ASCII */
-  iReturn = ToAscii (dwVirtualKey, 0, bKeyboardState, (WORD *) cAscii, 0);
-  
-  /*
-   * Left Control and Alt pressed, combined with a valid result
-   * from ToAscii means that we have found the Windows version of AltGr.
-   */
-  if ((bKeyboardState[VK_MENU] & 0x80) && (bKeyboardState[VK_CONTROL] & 0x80)
-      && (iReturn >= 1)
-      && (((cAscii[0] >= 32) && (cAscii[0] <= 126))
-	  || (cAscii[0] >= 160)))
-    {
-      /* These three calls will return 0 on Windows 95/98/Me */
-      if ((GetKeyState (VK_LCONTROL) & KF_UP))
-	kerEvents.dwReleaseModifiers |= WIN_MOD_LCONTROL;
-      if ((GetKeyState (VK_LMENU) & KF_UP))
-	kerEvents.dwReleaseModifiers |= WIN_MOD_LALT;
-      if ((GetKeyState (VK_RMENU) & KF_UP))
-	kerEvents.dwReleaseModifiers |= WIN_MOD_RALT;
-
-      /* Windows 95/98/Me handling - pop all of them */
-      if (kerEvents.dwReleaseModifiers == 0)
-	kerEvents.dwReleaseModifiers
-	  = WIN_MOD_LCONTROL | WIN_MOD_LALT | WIN_MOD_RALT;
-
-      /* Copy the string of character events */
-      for (i = 0; i < iReturn; ++i)
-	kerEvents.dwXKeycodes[dwNumEvents++] = cAscii[i];
-    }
-
-  /* Handle non Ctrl+Alt cases*/
-  if (dwNumEvents == 0)
-    {
-      bKeyboardState[VK_CONTROL] = 0;
-      bKeyboardState[VK_LCONTROL] = 0;
-      bKeyboardState[VK_RCONTROL] = 0;
-      
-      iReturn = ToAscii (dwVirtualKey, 0, bKeyboardState, (WORD *)cAscii, 0);
-      if (iReturn < 0)
-	{
-	  switch (cAscii[0])
-	    {
-	    case '`':
-	      kerEvents.dwXKeycodes[dwNumEvents++] = XK_dead_grave;
-	      break;
-	      
-	    case '\'':
-	      kerEvents.dwXKeycodes[dwNumEvents++] = XK_dead_acute;
-	      break;
-	      
-	    case '~':
-	      kerEvents.dwXKeycodes[dwNumEvents++] = XK_dead_tilde;
-	      break;
-	      
-	    case '^':
-	      kerEvents.dwXKeycodes[dwNumEvents++] = XK_dead_circumflex;
-	      break;
-	    }
-	}
-      
-      /* Send what we've got if its a printable character */
-      if (iReturn >= 1)
-	for (i = 0; i < iReturn; ++i)
-	  kerEvents.dwXKeycodes[dwNumEvents++] = cAscii[i];
-    }
-
-  
-  /* Terminate the last of the key events with a void symbol */
-  kerEvents.dwXKeycodes[dwNumEvents] = XK_VoidSymbol;
-  return kerEvents;
-}
-
-
-#else /* WIN_NEW_KEYBOARD_SUPPORT */
-
-
 /* 
  * Translate a Windows WM_[SYS]KEY(UP/DOWN) message
  * into an ASCII scan code.
@@ -238,8 +71,6 @@ winTranslateKey (WPARAM wParam, LPARAM lParam, int *piScanCode)
   else
     *piScanCode = LOBYTE (HIWORD (lParam));
 }
-
-#endif /* WIN_NEW_KEYBOARD_SUPPORT */
 
 
 /*
@@ -290,7 +121,6 @@ winGetKeyMappings (KeySymsPtr pKeySyms, CARD8 *pModMap)
 	  pModMap[i] = AltMask;
 	  break;
 
-#if !WIN_NEW_KEYBOARD_SUPPORT
 	case XK_Num_Lock:
 	  pModMap[i] = NumLockMask;
 	  break;
@@ -304,7 +134,6 @@ winGetKeyMappings (KeySymsPtr pKeySyms, CARD8 *pModMap)
 	case XK_Kana_Shift:
 	  pModMap[i] = KanaMask;
 	  break;
-#endif
 
 	/* alternate toggle for multinational support */
 	case XK_Mode_switch:
@@ -469,7 +298,6 @@ winKeybdProc (DeviceIntPtr pDeviceInt, int iState)
 void
 winInitializeModeKeyStates (void)
 {
-#if !WIN_NEW_KEYBOARD_SUPPORT
   /* Restore NumLock */
   if (GetKeyState (VK_NUMLOCK) & 0x0001)
     {
@@ -497,7 +325,6 @@ winInitializeModeKeyStates (void)
       winSendKeyEvent (KEY_HKTG, TRUE);
       winSendKeyEvent (KEY_HKTG, FALSE);
     }
-#endif
 }
 
 
@@ -510,9 +337,8 @@ winInitializeModeKeyStates (void)
 void
 winRestoreModeKeyStates ()
 {
-#if !WIN_NEW_KEYBOARD_SUPPORT
   DWORD			dwKeyState;
-  unsigned short internalKeyStates;
+  unsigned short	internalKeyStates;
 
   /* X server is being initialized */
   if (!g_winInternalModeKeyStatesPtr)
@@ -561,11 +387,9 @@ winRestoreModeKeyStates ()
       winSendKeyEvent (KEY_HKTG, TRUE);
       winSendKeyEvent (KEY_HKTG, FALSE);
     }
-#endif
 }
 
 
-#if !WIN_NEW_KEYBOARD_SUPPORT
 /*
  * Look for the lovely fake Control_L press/release generated by Windows
  * when AltGr is pressed/released on a non-U.S. keyboard.
@@ -595,6 +419,21 @@ winIsFakeCtrl_L (UINT message, WPARAM wParam, LPARAM lParam)
       fReturn = PeekMessage (&msgNext, NULL,
 			     WM_KEYDOWN, WM_KEYDOWN,
 			     PM_NOREMOVE);
+
+      /*
+       * Try again if the first call fails.
+       * NOTE: This usually happens when TweakUI is enabled.
+       */
+      if (!fReturn)
+	{
+	  /* Voodoo to make sure that the Alt_R message has posted */
+	  Sleep (0);
+
+	  /* Look for fake Ctrl_L preceeding an Alt_R press. */
+	  fReturn = PeekMessage (&msgNext, NULL,
+				 WM_KEYDOWN, WM_KEYDOWN,
+				 PM_NOREMOVE);
+	}
 
       /* Is next press an Alt_R with the same timestamp? */
       if (fReturn && msgNext.wParam == VK_MENU
@@ -628,6 +467,21 @@ winIsFakeCtrl_L (UINT message, WPARAM wParam, LPARAM lParam)
 			     WM_KEYUP, WM_SYSKEYUP, 
 			     PM_NOREMOVE);
 
+      /*
+       * Try again if the first call fails.
+       * NOTE: This usually happens when TweakUI is enabled.
+       */
+      if (!fReturn)
+	{
+	  /* Voodoo to make sure that the Alt_R message has posted */
+	  Sleep (0);
+
+	  /* Look for fake Ctrl_L release preceeding an Alt_R release. */
+	  fReturn = PeekMessage (&msgNext, NULL,
+				 WM_KEYUP, WM_SYSKEYUP, 
+				 PM_NOREMOVE);
+	}
+
       /* Is next press an Alt_R with the same timestamp? */
       if (fReturn
 	  && (msgNext.message == WM_KEYUP
@@ -648,7 +502,6 @@ winIsFakeCtrl_L (UINT message, WPARAM wParam, LPARAM lParam)
   /* Not a fake control left press/release */
   return FALSE;
 }
-#endif /* WIN_NEW_KEYBOARD_SUPPORT */
 
 
 /*
@@ -658,7 +511,6 @@ winIsFakeCtrl_L (UINT message, WPARAM wParam, LPARAM lParam)
 void
 winKeybdReleaseKeys ()
 {
-#if !WIN_NEW_KEYBOARD_SUPPORT
   int				i;
 
   /* Verify that the mi input system has been initialized */
@@ -675,7 +527,6 @@ winKeybdReleaseKeys ()
       /* Reset pressed flag for keys */
       g_winKeyState[i] = FALSE;
     }
-#endif
 }
 
 

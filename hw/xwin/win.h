@@ -49,7 +49,6 @@
  */
 #define WIN_NATIVE_GDI_SUPPORT			YES
 #define WIN_LAYER_SUPPORT			NO
-#define WIN_NEW_KEYBOARD_SUPPORT		NO
 #define WIN_EMULATE_PSEUDO_SUPPORT		YES
 #define WIN_UPDATE_STATS			NO
 
@@ -349,19 +348,6 @@ typedef struct
   PALETTEENTRY		peColors[WIN_NUM_PALETTE_ENTRIES];
 } winPrivCmapRec, *winPrivCmapPtr;
 
-
-#if WIN_NEW_KEYBOARD_SUPPORT
-/*
- * Keyboard event structure
- */
-
-typedef struct
-{
-  DWORD			dwXKeycodes[WIN_MAX_KEYS_PER_KEY];
-  DWORD			dwReleaseModifiers;
-} winKeyEventsRec, *winKeyEventsPtr;
-
-#endif /* WIN_NEW_KEYBOARD_SUPPORT */
 
 /*
  * Screen information structure that we need before privates are available
@@ -961,13 +947,8 @@ winGetSpansNativeGDI (DrawablePtr	pDrawable,
  * winkeybd.c
  */
 
-#if WIN_NEW_KEYBOARD_SUPPORT
-winKeyEventsRec
-winTranslateKey (DWORD dwVirtualKey, DWORD dwKeyData);
-#else
 void
 winTranslateKey (WPARAM wParam, LPARAM lParam, int *piScanCode);
-#endif
 
 void
 winGetKeyMappings (KeySymsPtr pKeySyms, CARD8 *pModMap);
@@ -996,11 +977,6 @@ winKeybdReleaseKeys (void);
 
 void
 winSendKeyEvent (DWORD dwKey, Bool fDown);
-
-#if WIN_NEW_KEYBOARD_SUPPORT
-void
-winProcessKeyEvent (DWORD dwVirtKey, DWORD dwKeyData);
-#endif
 
 
 /*

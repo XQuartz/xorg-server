@@ -846,26 +846,6 @@ winWindowProc (HWND hwnd, UINT message,
       winKeybdReleaseKeys ();
       return 0;
 
-#if WIN_NEW_KEYBOARD_SUPPORT
-    case WM_SYSKEYDOWN:
-    case WM_KEYDOWN:
-    case WM_SYSKEYUP:
-    case WM_KEYUP:
-      if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
-	break;
-
-      /* Don't process keys if we are not active */
-      if (!s_pScreenPriv->fActive)
-	return 0;
-
-      winProcessKeyEvent ((DWORD)wParam, (DWORD) lParam);
-      return 0;
-
-    case WM_DEADCHAR:
-    case WM_SYSDEADCHAR:
-      return 0;
-
-#else /* WIN_NEW_KEYBOARD_SUPPORT */
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
       if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
@@ -955,7 +935,6 @@ winWindowProc (HWND hwnd, UINT message,
       winTranslateKey (wParam, lParam, &iScanCode);
       winSendKeyEvent (iScanCode, FALSE);
       return 0;
-#endif /* WIN_NEW_KEYBOARD_SUPPORT */
 
     case WM_HOTKEY:
       if (s_pScreenPriv == NULL)

@@ -150,10 +150,12 @@ void OsVendorFatalError()
     return;
 }
 
-void BeforeReset(void)
+#ifdef DDXBEFORERESET
+void ddxBeforeReset(void)
 {
     return;
 }
+#endif
 
 /* this is just to get the server to link on AIX */
 #ifdef AIXV3

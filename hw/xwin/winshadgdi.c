@@ -228,6 +228,8 @@ winQueryRGBBitsAndMasks (ScreenPtr pScreen)
 BOOL CALLBACK
 winRedrawAllProcShadowGDI (HWND hwnd, LPARAM lParam)
 {
+  if (hwnd == (HWND)lParam)
+    return TRUE;  
   InvalidateRect (hwnd, NULL, FALSE);
   UpdateWindow (hwnd);
   return TRUE;
@@ -839,7 +841,8 @@ winBltExposedRegionsShadowGDI (ScreenPtr pScreen)
 #ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
   if (pScreenInfo->fMultiWindow)
-    EnumThreadWindows(g_dwCurrentThreadID, winRedrawAllProcShadowGDI, 0);
+    EnumThreadWindows(g_dwCurrentThreadID, winRedrawAllProcShadowGDI, 
+            (LPARAM)pScreenPriv->hwndScreen);
 #endif
 
   return TRUE;

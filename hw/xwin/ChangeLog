@@ -1,3 +1,9 @@
+2005-01-27  Alexander Gottwald  <ago at freedesktop dot org>
+
+	* winmultiwindowwindow.c
+	* winmultiwindowwndproc.c:
+	Backout last change. There was a window focus regression
+
 2005-01-24  Alexander Gottwald  <ago at freedesktop dot org>
 
 	* winmultiwindowwindow.c

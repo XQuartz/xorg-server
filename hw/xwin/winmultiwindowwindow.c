@@ -789,6 +789,7 @@ winReorderWindowsMultiWindow (void)
 	hwnd;
 	hwnd = GetNextWindow (hwnd, GW_HWNDNEXT) )
     {
+      /* Don't take care of other Cygwin/X process's windows */
       GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
 
       if ( GetProp (hwnd, WIN_WINDOW_PROP)

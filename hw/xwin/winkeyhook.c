@@ -1,5 +1,5 @@
 /*
- *Copyright (C) 2003-2004 Harold L Hunt II All Rights Reserved.
+ *Copyright (C) 2004 Harold L Hunt II All Rights Reserved.
  *
  *Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -28,18 +28,62 @@
  * Authors:	Harold L Hunt II
  */
 
-#include "winclipboard.h"
+#include "win.h"
 
 
 /*
- * Determine whether we suport Unicode or not.
- * NOTE: Currently, just check if we are on an NT-based platform or not.
+ * References to external symbols
+ */
+
+extern HHOOK			g_hhookKeyboardLL;
+extern DWORD			g_dwCurrentThreadID;
+
+
+/*
+ * Function prototypes
+ */
+
+static LRESULT CALLBACK
+winKeyboardMessageHookLL (int iCode, WPARAM wParam, LPARAM lParam);
+
+
+/*
+ * KeyboardMessageHook
+ */
+
+static LRESULT CALLBACK
+winKeyboardMessageHookLL (int iCode, WPARAM wParam, LPARAM lParam)
+{
+  BOOL			fEatKeystroke = FALSE;
+  PKBDLLHOOKSTRUCT	p = (PKBDLLHOOKSTRUCT) lParam;
+
+  /* Swallow keystrokes only for our app */
+  if (iCode == HC_ACTION)
+    {
+      switch (wParam)
+	{
+	case WM_KEYDOWN:  case WM_SYSKEYDOWN:
+	case WM_KEYUP:    case WM_SYSKEYUP: 
+	  p = (PKBDLLHOOKSTRUCT) lParam;
+
+	  fEatKeystroke = 
+	    (p->vkCode == VK_TAB) && ((p->flags & LLKHF_ALTDOWN) != 0);
+	  break;
+	}
+    }
+  
+  return (fEatKeystroke ? 1 : CallNextHookEx (NULL, iCode, wParam, 
+					      lParam));
+}
+
+
+/*
+ * Attempt to install the keyboard hook, return FALSE if it was not installed
  */
 
 Bool
-winClipboardDetectUnicodeSupport (void)
+winInstallKeyboardHookLL ()
 {
-  Bool			fReturn = FALSE;
   OSVERSIONINFO		osvi = {0};
   
   /* Get operating system version information */
@@ -50,17 +94,34 @@ winClipboardDetectUnicodeSupport (void)
   switch (osvi.dwPlatformId)
     {
     case VER_PLATFORM_WIN32_NT:
-      /* Unicode supported on NT only */
-      ErrorF ("DetectUnicodeSupport - Windows NT/2000/XP\n");
-      fReturn = TRUE;
+      /* Low-level is supported on NT 4.0 SP3+ only */
+      /* TODO: Return FALSE on NT 4.0 with no SP, SP1, or SP2 */
       break;
 
     case VER_PLATFORM_WIN32_WINDOWS:
-      /* Unicode is not supported on non-NT */
-      ErrorF ("DetectUnicodeSupport - Windows 95/98/Me\n");
-      fReturn = FALSE;
-      break;
+      /* Low-level hook is not supported on non-NT */
+      return FALSE;
     }
 
-  return fReturn;
+  /* Install the hook only once */
+  if (!g_hhookKeyboardLL)
+    g_hhookKeyboardLL = SetWindowsHookEx (WH_KEYBOARD_LL,
+					  winKeyboardMessageHookLL,
+					  g_hInstance,
+					  0);
+
+  return TRUE;
+}
+
+
+/*
+ * Remove the keyboard hook if it is installed
+ */
+
+void
+winRemoveKeyboardHookLL ()
+{
+  if (g_hhookKeyboardLL)
+    UnhookWindowsHookEx (g_hhookKeyboardLL);
+  g_hhookKeyboardLL = NULL;
 }

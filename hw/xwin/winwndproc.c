@@ -52,6 +52,7 @@ Bool				g_fCursor = TRUE;
 
 extern Bool			g_fClipboard;
 extern HWND			g_hDlgDepthChange;
+extern Bool			g_fKeyboardHookLL;
 
 
 /*
@@ -913,6 +914,10 @@ winWindowProc (HWND hwnd, UINT message,
 
       /* Restore the state of all mode keys */
       winRestoreModeKeyStates ();
+
+      /* Add the keyboard hook if possible */
+      if (g_fKeyboardHookLL)
+	g_fKeyboardHookLL = winInstallKeyboardHookLL ();
       return 0;
 
     case WM_KILLFOCUS:
@@ -921,6 +926,9 @@ winWindowProc (HWND hwnd, UINT message,
 
       /* Release any pressed keys */
       winKeybdReleaseKeys ();
+
+      /* Remove our keyboard hook if it is installed */
+      winRemoveKeyboardHookLL ();
       return 0;
 
     case WM_SYSKEYDOWN:

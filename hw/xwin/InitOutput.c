@@ -245,6 +245,9 @@ ddxGiveUp (void)
       g_pszCommandLine = NULL;
     }
 
+  /* Remove our keyboard hook if it is installed */
+  winRemoveKeyboardHookLL ();
+
   /* Tell Windows that we want to end the app */
   PostQuitMessage (0);
 }

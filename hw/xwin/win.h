@@ -968,6 +968,17 @@ winSendKeyEvent (DWORD dwKey, Bool fDown);
 
 
 /*
+ * winkeyhook.c
+ */
+
+Bool
+winInstallKeyboardHookLL ();
+
+void
+winRemoveKeyboardHookLL ();
+
+
+/*
  * winmisc.c
  */
 

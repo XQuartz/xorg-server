@@ -59,9 +59,9 @@ int		g_iLogVerbose = 4;
 Bool		g_fLogInited = FALSE;
 char *		g_pszCommandLine = NULL;
 Bool		g_fUseMsg = FALSE;
-#ifdef XWIN_MULTIWINDOW
 DWORD		g_dwCurrentThreadID = 0;
-#endif
+Bool		g_fKeyboardHookLL = TRUE;
+HHOOK		g_hhookKeyboardLL = NULL;
 
 
 /*
@@ -110,9 +110,7 @@ Atom			g_atomLastOwnedSelection = None;
 void
 winInitializeGlobals (void)
 {
-#ifdef XWIN_MULTIWINDOW
   g_dwCurrentThreadID = GetCurrentThreadId ();
-#endif
 #ifdef XWIN_CLIPBOARD
   g_fClipboardLaunched = FALSE;
   g_fClipboardStarted = FALSE;

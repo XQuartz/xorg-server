@@ -50,7 +50,7 @@ DISPATCH_PROC(winProcSetSelectionOwner);
  * Local global declarations
  */
 
-CARD32			g_c32LastInputEventTime = 0;
+CARD32				g_c32LastInputEventTime = 0;
 
 
 /*

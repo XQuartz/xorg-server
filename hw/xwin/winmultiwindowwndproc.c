@@ -40,8 +40,9 @@
  * External global variables
  */
 
-extern Bool		g_fCursor;
-extern HICON		g_hiconX;
+extern Bool			g_fCursor;
+extern HICON			g_hiconX;
+extern Bool			g_fKeyboardHookLL;
 
 
 /*
@@ -57,7 +58,6 @@ static UINT_PTR		g_uipMousePollingTimerID = 0;
 
 #define MOUSE_POLLING_INTERVAL		500
 #define WIN_MULTIWINDOW_SHAPE		YES
-
 
 
 /*
@@ -626,11 +626,18 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	break;
 
       winRestoreModeKeyStates ();
+
+      /* Add the keyboard hook if possible */
+      if (g_fKeyboardHookLL)
+	g_fKeyboardHookLL = winInstallKeyboardHookLL ();
       return 0;
       
     case WM_KILLFOCUS:
       /* Pop any pressed keys since we are losing keyboard focus */
       winKeybdReleaseKeys ();
+
+      /* Remove our keyboard hook if it is installed */
+      winRemoveKeyboardHookLL ();
       return 0;
 
     case WM_SYSDEADCHAR:      

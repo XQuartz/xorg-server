@@ -400,7 +400,7 @@ ddxUseMsg (void)
           "\tAlt+F4 exits the X Server.\n");
 
 #ifdef XWIN_XF86CONFIG
-  ErrorF ("-xf86config\n"
+  ErrorF ("-config\n"
           "\tSpecify a configuration file.\n");
 
   ErrorF ("-keyboard\n"
@@ -482,7 +482,7 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
     }
 
 #ifdef XWIN_XF86CONFIG
-  /* Try to read the XF86Config-style configuration file */
+  /* Try to read the xorg.conf-style configuration file */
   if (!winReadConfigfile ())
     winErrorFVerb (1, "InitOutput - Error reading config file\n");
 #else

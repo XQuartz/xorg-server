@@ -139,6 +139,11 @@ winReadConfigfile ()
   /* Parse config file into data structure */
 
   filename = xf86openConfigFile (CONFIGPATH, xf86ConfigFile, PROJECTROOT);
+    
+  /* Hack for backward compatibility */
+  if (!filename && from == X_DEFAULT)
+    filename = xf86openConfigFile (CONFIGPATH, "XF86Config", PROJECTROOT);
+
   if (filename)
     {
       winMsg (from, "Using config file: \"%s\"\n", filename);
@@ -278,7 +283,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
   g_winInfo.xkb.variant = NULL;
   g_winInfo.xkb.options = NULL;
 # else
-  g_winInfo.xkb.rules = "xfree86";
+  g_winInfo.xkb.rules = "xorg";
   g_winInfo.xkb.model = "pc101";
   g_winInfo.xkb.layout = "us";
   g_winInfo.xkb.variant = NULL;

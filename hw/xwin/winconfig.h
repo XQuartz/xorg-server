@@ -29,7 +29,7 @@
  *
  * Authors: Alexander Gottwald	
  */
-/* $XFree86: xc/programs/Xserver/hw/xwin/winconfig.h,v 1.1 2002/10/17 08:18:22 alanh Exp $ */
+/* $Id$ */
 
 #include "win.h"
 #ifdef XWIN_XF86CONFIG

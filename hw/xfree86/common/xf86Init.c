@@ -1344,7 +1344,7 @@ ddxProcessArgument(int argc, char **argv, int i)
       return 2;
     }
   }
-  if (!strcmp(argv[i], "-config"))
+  if (!strcmp(argv[i], "-config") || !strcmp(argv[i], "-xf86config"))
   {
     if (!argv[i + 1])
       return 0;

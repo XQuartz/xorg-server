@@ -540,12 +540,32 @@ void
 winWin32RootlessReshapeFrame (RootlessFrameID wid, RegionPtr pShape)
 {
   win32RootlessWindowPtr pRLWinPriv = (win32RootlessWindowPtr) wid;
-  HRGN hRgn;
+  HRGN hRgn, hRgnWindow, hRgnClient;
+  RECT rcWindow, rcClient;
+  POINT ptOffset;
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winWin32RootlessReshapeFrame (%08x)\n", (int) pRLWinPriv);
 #endif
+
   hRgn = winWin32RootlessCreateRgnFromRegion (pShape);
+
+  /* Create region for non-client area */
+  GetWindowRect (pRLWinPriv->hWnd, &rcWindow);
+  GetClientRect (pRLWinPriv->hWnd, &rcClient);
+  MapWindowPoints (pRLWinPriv->hWnd, HWND_DESKTOP, (LPPOINT)&rcClient, 2);
+  OffsetRgn (hRgn, rcClient.left - rcWindow.left, rcClient.top - rcWindow.top);
+  OffsetRect (&rcClient, -rcWindow.left, -rcWindow.top);
+  OffsetRect (&rcWindow, -rcWindow.left, -rcWindow.top);
+  hRgnWindow = CreateRectRgnIndirect (&rcWindow);
+  hRgnClient = CreateRectRgnIndirect (&rcClient);
+  CombineRgn (hRgnWindow, hRgnWindow, hRgnClient, RGN_DIFF);
+  CombineRgn (hRgn, hRgnWindow, hRgn, RGN_OR);
+
+
   SetWindowRgn (pRLWinPriv->hWnd, hRgn, TRUE);
+
+  DeleteObject (hRgnWindow);
+  DeleteObject (hRgnClient);
 }
 
 void

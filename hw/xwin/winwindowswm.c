@@ -440,6 +440,8 @@ ProcWindowsWMFrameDraw (register ClientPtr client)
   win32RootlessWindowPtr pRLWinPriv;
   RECT rcNew;
   WINDOWPLACEMENT wndpl;
+  RegionRec newShape;
+  ScreenPtr pScreen;
 
   REQUEST_SIZE_MATCH (xWindowsWMFrameDrawReq);
 
@@ -506,6 +508,18 @@ ProcWindowsWMFrameDraw (register ClientPtr client)
 
   winWin32RootlessUpdateIcon (pWin->drawable.id);
 
+  if (wBoundingShape(pWin) != NULL)
+    {
+      pScreen = pWin->drawable.pScreen;
+      /* wBoundingShape is relative to *inner* origin of window.
+	 Translate by borderWidth to get the outside-relative position. */
+      
+      REGION_NULL(pScreen, &newShape);
+      REGION_COPY(pScreen, &newShape, wBoundingShape(pWin));
+      REGION_TRANSLATE(pScreen, &newShape, pWin->borderWidth, pWin->borderWidth);
+      winWin32RootlessReshapeFrame (pRLWinPriv, &newShape);
+      REGION_UNINIT(pScreen, &newShape);
+    }
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("ProcWindowsWMFrameDraw - done\n");
 #endif

@@ -210,7 +210,7 @@ __GLXscreenInfo __glDDXScreenInfo = {
 };
 
 __GLXextensionInfo __glDDXExtensionInfo = {
-    GL_CORE_APPLE,
+    GL_CORE_WINDOWS,
     glWinResetExtension,
     glWinInitVisuals,
     glWinSetVisualConfigs

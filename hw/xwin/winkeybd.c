@@ -359,14 +359,21 @@ void
 winRestoreModeKeyStates ()
 {
   DWORD			dwKeyState;
+  BOOL			processEvents = TRUE;
   unsigned short	internalKeyStates;
 
   /* X server is being initialized */
   if (!g_winInternalModeKeyStatesPtr)
     return;
 
+  /* Only process events if the rootwindow is mapped. The keyboard events
+   * will cause segfaults otherwise */
+  if (WindowTable && WindowTable[0] && WindowTable[0]->mapped == FALSE)
+    processEvents = FALSE;    
+  
   /* Force to process all pending events in the mi event queue */
-  mieqProcessInputEvents ();
+  if (processEvents)
+    mieqProcessInputEvents ();
   
   /* Read the mode key states of our X server */
   internalKeyStates = *g_winInternalModeKeyStatesPtr;

@@ -36,7 +36,7 @@
  */
 
 #define WIN_CLIPBOARD_PROP	"cyg_clipboard_prop"
-#define WIN_POLL_TIMEOUT	2
+#define WIN_POLL_TIMEOUT	1
 
 
 /*

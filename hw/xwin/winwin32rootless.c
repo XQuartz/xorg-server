@@ -51,7 +51,6 @@
 #define ULW_ALPHA	0x00000002
 #define ULW_OPAQUE	0x00000004
 #define AC_SRC_ALPHA	0x01
-#define CYGMULTIWINDOW_DEBUG    YES
 
 /*
  * Global variables
@@ -77,7 +76,7 @@ Bool
 winWin32RootlessQueryDIBFormat (win32RootlessWindowPtr pRLWinPriv, BITMAPINFOHEADER *pbmih)
 {
   HBITMAP		hbmp;
-#if CYGDEBUG
+#if CYGMULTIWINDOW_DEBUG
   LPDWORD		pdw = NULL;
 #endif
   
@@ -106,12 +105,12 @@ winWin32RootlessQueryDIBFormat (win32RootlessWindowPtr pRLWinPriv, BITMAPINFOHEA
       return FALSE;
     }
 
-#if CYGDEBUG
+#if CYGMULTIWINDOW_DEBUG
   /* Get a pointer to bitfields */
   pdw = (DWORD*) ((CARD8*)pbmih + sizeof (BITMAPINFOHEADER));
 
   ErrorF ("winWin32RootlessQueryDIBFormat - First call masks: %08x %08x %08x\n",
-	  pdw[0], pdw[1], pdw[2]);
+	  (unsigned int)pdw[0], (unsigned int)pdw[1], (unsigned int)pdw[2]);
 #endif
 
   /* Get optimal color table, or the optimal bitfields */
@@ -236,6 +235,7 @@ winWin32RootlessCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
   pRLWinPriv->fClose = FALSE;
   pRLWinPriv->fRestackingNow = FALSE;
   pRLWinPriv->fDestroyed = FALSE;
+  pRLWinPriv->fMovingOrSizing = FALSE;
   
   // Store the implementation private frame ID
   pFrame->wid = (RootlessFrameID) pRLWinPriv;
@@ -616,7 +616,7 @@ winWin32RootlessStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesP
 	    }
 	  else
 	    {
-#if CYGDEBUG
+#if CYGMULTIWINDOW_DEBUG
 	      ErrorF ("winWin32RootlessStartDrawing - Shadow buffer allocated\n");
 #endif
 	    }
@@ -624,19 +624,20 @@ winWin32RootlessStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesP
 	  /* Get information about the bitmap that was allocated */
 	  GetObject (hbmpNew, sizeof (dibsection), &dibsection);
 	  
-#if CYGDEBUG
+#if CYGMULTIWINDOW_DEBUG
 	  /* Print information about bitmap allocated */
 	  ErrorF ("winWin32RootlessStartDrawing - Dibsection width: %d height: %d "
 		  "depth: %d size image: %d\n",
-		  dibsection.dsBmih.biWidth, dibsection.dsBmih.biHeight,
-		  dibsection.dsBmih.biBitCount,
-		  dibsection.dsBmih.biSizeImage);
+		  (unsigned int)dibsection.dsBmih.biWidth,
+		  (unsigned int)dibsection.dsBmih.biHeight,
+		  (unsigned int)dibsection.dsBmih.biBitCount,
+		  (unsigned int)dibsection.dsBmih.biSizeImage);
 #endif
 	  
 	  /* Select the shadow bitmap into the shadow DC */
 	  SelectObject (hdcNew, hbmpNew);
 	  
-#if CYGDEBUG
+#if CYGMULTIWINDOW_DEBUG
 	  ErrorF ("winWin32RootlessStartDrawing - Attempting a shadow blit\n");
 #endif
 	  
@@ -649,7 +650,7 @@ winWin32RootlessStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesP
 			    SRCCOPY);
 	  if (fReturn)
 	    {
-#if CYGDEBUG
+#if CYGMULTIWINDOW_DEBUG
 	      ErrorF ("winWin32RootlessStartDrawing - Shadow blit success\n");
 #endif
 	    }
@@ -671,9 +672,9 @@ winWin32RootlessStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesP
 	  
 	  pRLWinPriv->dwWidthBytes = dibsection.dsBm.bmWidthBytes;
 	  
-#if CYGDEBUG
+#if CYGMULTIWINDOW_DEBUG
 	  ErrorF ("winWin32RootlessStartDrawing - bytesPerRow: %d\n",
-		  dibsection.dsBm.bmWidthBytes);
+		  (unsigned int)dibsection.dsBm.bmWidthBytes);
 #endif
 	  
 	  /* Free the old shadow bitmap */
@@ -690,9 +691,9 @@ winWin32RootlessStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesP
     {
       ErrorF ("winWin32RootlessStartDrawing - Already window was destoroyed \n"); 
     }
-#if CYGDEBUG
+#if CYGMULTIWINDOW_DEBUG
   ErrorF ("winWin32RootlessStartDrawing - 0x%08x %d\n",
-	  pRLWinPriv->pfb, dibsection.dsBm.bmWidthBytes);
+	  (unsigned int)pRLWinPriv->pfb, (unsigned int)dibsection.dsBm.bmWidthBytes);
 #endif
   *pixelData = pRLWinPriv->pfb;
   *bytesPerRow = pRLWinPriv->dwWidthBytes;
@@ -876,12 +877,14 @@ winWin32RootlessCopyWindow (RootlessFrameID wid, int nDstRects, const BoxRec *pD
 
   for (pEnd = pDstRects + nDstRects; pDstRects < pEnd; pDstRects++)
     {
+#if CYGMULTIWINDOW_DEBUG
       ErrorF ("BitBlt (%d, %d, %d, %d) (%d, %d)\n",
 	      pDstRects->x1, pDstRects->y1,
 	      pDstRects->x2 - pDstRects->x1,
 	      pDstRects->y2 - pDstRects->y1,
 	      pDstRects->x1 + nDx,
 	      pDstRects->y1 + nDy);
+#endif
 
       if (!BitBlt (pRLWinPriv->hdcShadow,
 		   pDstRects->x1, pDstRects->y1,

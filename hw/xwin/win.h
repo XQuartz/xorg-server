@@ -568,7 +568,7 @@ typedef struct _winPrivScreenRec
 } winPrivScreenRec;
 
 
- typedef struct {
+typedef struct {
   RootlessWindowPtr	pFrame;
   HWND			hWnd;
   int			dwWidthBytes;
@@ -579,6 +579,7 @@ typedef struct _winPrivScreenRec
   BOOL			fResized;
   BOOL			fRestackingNow;
   BOOL			fClose;
+  BOOL			fMovingOrSizing;
   BOOL			fDestroyed;//for debug
   char			*pfb;
 } win32RootlessWindowRec, *win32RootlessWindowPtr;
@@ -1515,6 +1516,9 @@ winMoveXWindow (WindowPtr pWin, int x, int y);
 void
 winResizeXWindow (WindowPtr pWin, int w, int h);
 
+void
+winWin32RootlessMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h);
+
 XID
 winGetWindowID (WindowPtr pWin);
 
@@ -1654,6 +1658,10 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 /*
  * winwindowswm.c
  */
+
+void
+winWindowsWMSendEvent (int type, unsigned int mask, int which, int arg,
+		       Window window, int x, int y, int w, int h);
 
 void
 winWindowsWMExtensionInit (void);

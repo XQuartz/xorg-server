@@ -136,6 +136,25 @@ winWin32RootlessResizeXWindow (WindowPtr pWin, int w, int h)
 
 
 /*
+ * winWin32RootlessMoveResizeXWindow
+ */
+
+void
+winWin32RootlessMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h)
+{
+  XID *vlist = malloc(sizeof(long)*4);
+
+  (CARD32*)vlist[0] = x;
+  (CARD32*)vlist[1] = y;
+  (CARD32*)vlist[2] = w;
+  (CARD32*)vlist[3] = h;
+
+  ConfigureWindow (pWin, CWX | CWY | CWWidth | CWHeight, vlist, wClient(pWin));
+  free(vlist);
+}
+
+
+/*
  * winWin32RootlessUpdateIcon
  * Change the Windows window icon 
  */

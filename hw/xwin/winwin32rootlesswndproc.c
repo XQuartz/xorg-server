@@ -34,6 +34,8 @@
 #define _WINDOWSWM_SERVER_
 #include "windowswmstr.h"
 #include "dixevents.h"
+#include "propertyst.h"
+#include "Xatom.h"
 #include "winmultiwindowclass.h"
 
 
@@ -42,7 +44,8 @@
  */
 
 #define MOUSE_POLLING_INTERVAL		500
-#define CYGMULTIWINDOW_DEBUG    YES
+
+
 
 /*
  * Global variables
@@ -274,6 +277,163 @@ ValidateSizing (HWND hwnd, WindowPtr pWin,
 
 
 /*
+ * IsRaiseOnClick
+ */
+
+static Bool
+IsRaiseOnClick (WindowPtr pWin)
+{
+
+  struct _Window	*pwin;
+  struct _Property	*prop;  
+  static Atom		atmWindowsWmRaiseOnClick = 0;
+  WindowPtr		pRoot = GetCurrentRootWindow ();
+
+  if (!pWin)
+    {
+      ErrorF ("IsRaiseOnClick - pWin was NULL\n");
+      return 0;
+    } 
+
+  if (!atmWindowsWmRaiseOnClick)
+    atmWindowsWmRaiseOnClick = MakeAtom (WINDOWSWM_RAISE_ON_CLICK,
+					 strlen(WINDOWSWM_RAISE_ON_CLICK),
+					 1);
+  
+  pwin = (struct _Window*) pWin;
+
+  if (pwin->optional)
+    prop = (struct _Property *) pwin->optional->userProps;
+  else
+    prop = NULL;
+
+  while (prop)
+    {
+      if (prop->propertyName == atmWindowsWmRaiseOnClick
+	  && prop->type == XA_INTEGER
+	  && prop->format == 32)
+	{
+	  return *(int*)prop->data;
+	}
+      else
+	prop = prop->next;
+    }
+
+  if (pWin != pRoot)
+    {
+      IsRaiseOnClick (pRoot);
+    }
+  else
+    {
+      return 0;
+    }
+}
+
+
+/*
+ * IsMouseActive
+ */
+
+static Bool
+IsMouseActive (WindowPtr pWin)
+{
+
+  struct _Window	*pwin;
+  struct _Property	*prop;
+  static Atom		atmWindowsWMMouseActivate = 0;
+  WindowPtr		pRoot = GetCurrentRootWindow ();
+
+  if (!pWin)
+    {
+      ErrorF ("IsMouseActive - pWin was NULL\n");
+      return 0;
+    } 
+
+  if (!atmWindowsWMMouseActivate)
+    atmWindowsWMMouseActivate = MakeAtom (WINDOWSWM_MOUSE_ACTIVATE,
+					 strlen(WINDOWSWM_MOUSE_ACTIVATE),
+					 1);
+  
+  pwin = (struct _Window*) pWin;
+
+  if (pwin->optional)
+    prop = (struct _Property *) pwin->optional->userProps;
+  else
+    prop = NULL;
+
+  while (prop)
+    {
+      if (prop->propertyName == atmWindowsWMMouseActivate
+	  && prop->type == XA_INTEGER
+	  && prop->format == 32)
+	{
+	  return *(int*)prop->data;
+	}
+      else
+	prop = prop->next;
+    }
+
+  if (pWin != pRoot)
+    {
+      IsMouseActive (pRoot);
+    }
+  else
+    {
+      return 0;
+    }
+  
+  return 0;
+}
+
+
+/*
+ * WWMPropClientWindow
+ */
+
+static WindowPtr
+WWMPropClientWindow (WindowPtr pWin)
+{
+
+  struct _Window	*pwin;
+  struct _Property	*prop;  
+  static Atom		atmWindowsWMClientWindow = 0;
+
+  if (!pWin)
+    {
+      ErrorF ("WWMPropClientWindow - pWin was NULL\n");
+      return 0;
+    } 
+
+  if (!atmWindowsWMClientWindow)
+    atmWindowsWMClientWindow = MakeAtom (WINDOWSWM_CLIENT_WINDOW,
+					 strlen(WINDOWSWM_CLIENT_WINDOW),
+					 1);
+  
+  pwin = (struct _Window*) pWin;
+
+  if (pwin->optional)
+    prop = (struct _Property *) pwin->optional->userProps;
+  else
+    prop = NULL;
+
+  while (prop)
+    {
+      if (prop->propertyName == atmWindowsWMClientWindow
+	  && prop->type == XA_INTEGER
+	  && prop->format == 32)
+	{
+	  pWin = LookupIDByType (*(int*)prop->data, RT_WINDOW);
+	  return pWin;
+	}
+      else
+	prop = prop->next;
+    }
+  
+  return 0;
+}
+
+
+/*
  * winWin32RootlessWindowProc - Window procedure
  */
 
@@ -291,6 +451,9 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
   static Bool		s_fTracking = FALSE;
   HDC			hdcUpdate;
   PAINTSTRUCT		ps;
+  LPWINDOWPOS		pWinPos = NULL;
+  RECT			rcClient;
+  WindowPtr		pClientWin = NULL;
   
   /* Check if the Windows window property for our X window pointer is valid */
   if ((pRLWinPriv = (win32RootlessWindowPtr)GetProp (hwnd, WIN_WINDOW_PROP)) != NULL)
@@ -300,14 +463,14 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
       if (pScreen) pScreenPriv		= winGetScreenPriv(pScreen);
       if (pScreenPriv) pScreenInfo	= pScreenPriv->pScreenInfo;
       if (pScreenPriv) hwndScreen	= pScreenPriv->hwndScreen;
-#if 1
+#if 0
       ErrorF ("hWnd %08X\n", hwnd);
       ErrorF ("pScreenPriv %08X\n", pScreenPriv);
       ErrorF ("pScreenInfo %08X\n", pScreenInfo);
       ErrorF ("hwndScreen %08X\n", hwndScreen);
-#endif
       ErrorF ("winWin32RootlessWindowProc (%08x) %08x %08x %08x\n",
 	      pRLWinPriv, message, wParam, lParam);
+#endif
     }
   /* Branch on message type */
   switch (message)
@@ -346,7 +509,7 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 #if CYGMULTIWINDOW_DEBUG
       ErrorF ("winWin32RootlessWindowProc - WM_DESTROY\n");
 #endif
-      /* Free the shadow DC; which allows the bitmap to be freed */
+      /* Free the shaodw DC; which allows the bitmap to be freed */
       DeleteDC (pRLWinPriv->hdcShadow);
       pRLWinPriv->hdcShadow = NULL;
       
@@ -552,6 +715,8 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 	  return MA_NOACTIVATE;
 	}
 #endif
+      if (!IsMouseActive (pWin)) return MA_NOACTIVATE;
+
       break;
       
     case WM_KILLFOCUS:
@@ -665,47 +830,31 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 	}
       return 0;
       
-#if 0
+#if 1
     case WM_WINDOWPOSCHANGING:
       pWinPos = (LPWINDOWPOS)lParam;
-      /* Window manager does restacking */
       if (!(pWinPos->flags & SWP_NOZORDER))
 	{
 	  if (pRLWinPriv->fRestackingNow)
 	    {
-	      ErrorF ("Win %08x is now restacking.\n", pRLWinPriv);
-	      return 0;
-	    }
-
-	  //if (pRLWinPriv->fXTop)
-	  if (pScreenPriv->widTop == pRLWinPriv)
-	    {
-#if 0
-	      if ((pWinPos->hwndInsertAfter == HWND_TOP)||
-		  (pWinPos->hwndInsertAfter == HWND_TOPMOST)||
-		  (pWinPos->hwndInsertAfter == HWND_NOTOPMOST))
-		{
-		  ErrorF ("Win %08x is top and become top/topmost/notopmost.\n", pRLWinPriv);
-		  return 0;
-		}
-
-	      for (hInsWnd = GetNextWindow (hwnd, GW_HWNDPREV);
-		   hInsWnd; hInsWnd = GetNextWindow (hInsWnd, GW_HWNDPREV))
-		{
-		  if (hInsWnd == pWinPos->hwndInsertAfter)
-		    {
-		      ErrorF ("Win %08x is top and go above.\n",
-			      pRLWinPriv);
-		      return 0;
-		    }
-		  hInsWnd = GetNextWindow (hInsWnd, GW_HWNDPREV);
-		}
-	      ErrorF ("Win %08x is top but forbid.\n", pRLWinPriv);
+#if CYGMULTIWINDOW_DEBUG
+	      ErrorF ("Win %08x is now restacking.\n", (unsigned int)pRLWinPriv);
 #endif
 	      return 0;
 	    }
+
+	  if (IsRaiseOnClick (pWin))
+	    {
+#if CYGMULTIWINDOW_DEBUG
+	      ErrorF ("Win %08x has WINDOWSWM_RAISE_ON_CLICK.\n", (unsigned int)pRLWinPriv);
+#endif
+	      return 0;
+	    }
+
+#if CYGMULTIWINDOW_DEBUG
 	  ErrorF ("Win %08x forbid to change z order (%08x).\n",
-		  pRLWinPriv, pWinPos->hwndInsertAfter);
+		  (unsigned int)pRLWinPriv, (unsigned int)pWinPos->hwndInsertAfter);
+#endif
 	  pWinPos->flags |= SWP_NOZORDER;
 	}
       break;
@@ -713,7 +862,8 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 
     case WM_MOVE:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winWin32RootlessWindowProc - WM_MOVE - %d ms\n", GetTickCount ());
+      ErrorF ("winWin32RootlessWindowProc - WM_MOVE - %d ms\n",
+	      (unsigned int)GetTickCount ());
 #endif
       if (g_fNoConfigureWindow) break;
 #if 0
@@ -750,17 +900,25 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 			    (HIWORD(lParam) - wBorderWidth (pWin) - GetSystemMetrics (SM_YVIRTUALSCREEN)),
 			    0, 0);
 #else
-      winWin32RootlessMoveXWindow (pWin,
-		      (LOWORD(lParam) - wBorderWidth (pWin)
-		       - GetSystemMetrics (SM_XVIRTUALSCREEN)),
-		      (HIWORD(lParam) - wBorderWidth (pWin)
-		       - GetSystemMetrics (SM_YVIRTUALSCREEN)));
+      if (!pRLWinPriv->fMovingOrSizing)
+	{
+	  WindowPtr pClientWin = WWMPropClientWindow (pWin);
+	  
+	  if (pClientWin == NULL) pClientWin = pWin;
+	  
+	  winWin32RootlessMoveXWindow (pClientWin,
+				       (LOWORD(lParam) - wBorderWidth (pWin)
+					- GetSystemMetrics (SM_XVIRTUALSCREEN)),
+				       (HIWORD(lParam) - wBorderWidth (pWin)
+					- GetSystemMetrics (SM_YVIRTUALSCREEN)));
+	}
 #endif
       return 0;
 
     case WM_SHOWWINDOW:
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winWin32RootlessWindowProc - WM_SHOWWINDOW - %d ms\n", GetTickCount ());
+      ErrorF ("winWin32RootlessWindowProc - WM_SHOWWINDOW - %d ms\n",
+	      (unsigned int)GetTickCount ());
 #endif
       /* Bail out if the window is being hidden */
       if (!wParam)
@@ -800,7 +958,8 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
       /* see dix/window.c */
       /* FIXME: Maximize/Restore? */
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winWin32RootlessWindowProc - WM_SIZE - %d ms\n", GetTickCount ());
+      ErrorF ("winWin32RootlessWindowProc - WM_SIZE - %d ms\n",
+	      (unsigned int)GetTickCount ());
 #endif
 #if CYGMULTIWINDOW_DEBUG
       ErrorF ("\t(%d, %d) %d\n", (short) LOWORD(lParam), (short) HIWORD(lParam), g_fNoConfigureWindow);
@@ -863,9 +1022,16 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 			    0, 0,
 			    LOWORD(lParam), HIWORD(lParam));
 #else
-      winWin32RootlessResizeXWindow (pWin,
-			(short) LOWORD(lParam),
-			(short) HIWORD(lParam));
+      if (!pRLWinPriv->fMovingOrSizing)
+	{
+	  WindowPtr pClientWin = WWMPropClientWindow (pWin);
+	  
+	  if (pClientWin == NULL) pClientWin = pWin;
+	  
+	  winWin32RootlessResizeXWindow (pClientWin,
+					 (short) LOWORD(lParam),
+					 (short) HIWORD(lParam));
+	}
 #endif
       break;
 
@@ -900,6 +1066,30 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 	}
       break;
 
+    case WM_ENTERSIZEMOVE:
+      pRLWinPriv->fMovingOrSizing = TRUE;
+      break;
+
+    case WM_EXITSIZEMOVE:
+      pRLWinPriv->fMovingOrSizing = FALSE;
+
+      GetClientRect (hwnd, &rcClient);
+      
+      pClientWin = WWMPropClientWindow (pWin);
+      if (pClientWin == NULL) pClientWin = pWin;
+
+      MapWindowPoints (hwnd, HWND_DESKTOP, (LPPOINT)&rcClient, 2);
+      winWin32RootlessMoveResizeXWindow (pClientWin,
+					 rcClient.left - wBorderWidth (pWin)
+					 - GetSystemMetrics (SM_XVIRTUALSCREEN),
+					 rcClient.top - wBorderWidth (pWin)
+					 - GetSystemMetrics (SM_YVIRTUALSCREEN),
+					 rcClient.right - rcClient.left
+					 - wBorderWidth (pWin)*2,
+					 rcClient.bottom - rcClient.top
+					 - wBorderWidth (pWin)*2);
+      break;
+   
     default:
       break;
     }

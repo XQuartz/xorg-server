@@ -315,7 +315,7 @@ ddxUseMsg (void)
 
   ErrorF ("-lesspointer\n"
 	  "\tHide the windows mouse pointer when it is over an inactive\n"
-          "\tXFree86 window.  This prevents ghost cursors appearing where\n"
+          "\tCygwin/X window.  This prevents ghost cursors appearing where\n"
 	  "\tthe Windows cursor is drawn overtop of the X cursor\n");
 
   ErrorF ("-nodecoration\n"

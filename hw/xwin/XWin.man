@@ -48,13 +48,13 @@ Sets the display resolution for the X server to use on screen
 .I screen_number.
 .TP 8
 .B \-nodecoration
-Draw the Cygwin/XFree86 window without a border or title bar.
+Draw the Cygwin/X window without a border or title bar.
 .TP 8
 .B \-rootless
-EXPERIMENTAL: Run Cygwin/XFree86 in pseduo-rootless mode.
+EXPERIMENTAL: Run Cygwin/X in pseduo-rootless mode.
 .TP 8
 .B \-lesspointer
-Hide the Windows mouse pointer when over an inactive XFree86 window
+Hide the Windows mouse pointer when over an inactive Cygwin/X window
 .TP 8
 .B \-scrollbars
 In windowed mode, allow screens bigger than the Windows desktop.
@@ -96,14 +96,14 @@ ones are:
 - The display mode can not be changed once the X server has started.
 .PP
 .SH AUTHORS
-XFree86 was originally ported to Cygwin by Dakshinamurthy Karra,
+The X Window System was originally ported to Cygwin by Dakshinamurthy Karra,
 Dr. Peter Busch, John Fortin, and Suhaib Siddiqi.
 .I XWin
-is maintained by the Cygwin/XFree86 project, with hosting services
+is maintained by the Cygwin/X project, with hosting services
 provided by RedHat.
 .PP
 The following members, in alphabetical order by last name, of the
-Cygwin/XFree86 Team contributed to the XFree86 4.1.0 release:
+Cygwin/X Team contributed to the 4.1.0 release:
 .PP
 Robert Collins - Cygwin developer, miscellaneous
 .br

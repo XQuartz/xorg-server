@@ -365,6 +365,7 @@ winClipboardFlushXEvents (HWND hwnd,
 	    XFree (pszAtomName);
 	  }
 
+
 	  /*
 	   * Request conversion of UTF8 and CompoundText targets.
 	   */

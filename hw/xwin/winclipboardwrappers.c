@@ -475,11 +475,12 @@ winProcSetSelectionOwner (ClientPtr client)
       goto winProcSetSelectionOwner_Done;
     }
 
-  /* Setup supported clipboard formats */
+  /* Advertise Unicode if we support it */
   if (g_fUnicodeSupport)
     SetClipboardData (CF_UNICODETEXT, NULL);
-  else
-    SetClipboardData (CF_TEXT, NULL);
+
+  /* Always advertise regular text */
+  SetClipboardData (CF_TEXT, NULL);
 
   /* Save handle to last owned selection */
   pScreenPriv->atomLastOwnedSelection = stuff->selection;

@@ -215,10 +215,17 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	int	iReturn;
 	Display *pDisplay = *(pWindowProp->ppClipboardDisplay);
 	Window	iWindow = *(pWindowProp->piClipboardWindow);
+	Bool	fConvertToUnicode;
 
 #if 0
 	ErrorF ("winClipboardWindowProc - WM_RENDER*FORMAT - Hello.\n");
 #endif
+
+	/* Flag whether to convert to Unicode or not */
+	if (message == WM_RENDERALLFORMATS)
+	  fConvertToUnicode = FALSE;
+	else
+	  fConvertToUnicode = g_fUnicodeSupport && (CF_UNICODETEXT == wParam);
 
 	/* Request the selection contents */
 	iReturn = XConvertSelection (pDisplay,
@@ -265,7 +272,7 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	iReturn = winClipboardFlushXEvents (hwnd,
 					    iWindow,
 					    pDisplay,
-					    g_fUnicodeSupport);
+					    fConvertToUnicode);
 	if (WIN_XEVENTS_CONVERT == iReturn)
 	  {
 	    /*
@@ -280,7 +287,7 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	    winClipboardFlushXEvents (hwnd,
 				      iWindow,
 				      pDisplay,
-				      g_fUnicodeSupport);
+				      fConvertToUnicode);
 	  }
 
 	/* Special handling for WM_RENDERALLFORMATS */

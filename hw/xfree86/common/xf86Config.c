@@ -1102,7 +1102,7 @@ configInputKbd(IDevPtr inputp)
 #endif
 #ifdef XKB
   if (!xf86IsPc98()) {
-    xf86Info.xkbrules      = "xfree86";
+    xf86Info.xkbrules      = __XKBDEFRULES__;
     xf86Info.xkbmodel      = "pc105";
     xf86Info.xkblayout     = "us";
     xf86Info.xkbvariant    = NULL;

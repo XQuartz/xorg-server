@@ -1,3 +1,4 @@
+/* $XdotOrg$ */
 /* gtf.c  Generate mode timings using the GTF Timing Standard
  *
  * gcc gtf.c -o gtf -lm -Wall
@@ -63,7 +64,7 @@
  *
  * This program takes a desired resolution and vertical refresh rate,
  * and computes mode timings according to the GTF Timing Standard.
- * These mode timings can then be formatted as an XFree86 modeline
+ * These mode timings can then be formatted as an XServer modeline
  * or a mode description for use by fbset(8).
  *
  *
@@ -74,7 +75,7 @@
  * surrounding the addressable video); on most non-overscan type
  * systems, the margin period is zero.  I've implemented the margin
  * computations but not enabled it because 1) I don't really have
- * any experience with this, and 2) neither XFree86 modelines nor
+ * any experience with this, and 2) neither XServer modelines nor
  * fbset fb.modes provide an obvious way for margin timings to be
  * included in their mode descriptions (needs more investigation).
  * 
@@ -102,7 +103,7 @@
  * o Error checking.
  *
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/etc/gtf.c,v 1.2 2002/11/15 17:01:53 tsi Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/etc/gtf.c,v 1.2 2002/11/15 17:01:53tsi Exp $ */
 
 
 #include <stdio.h>
@@ -180,7 +181,7 @@ void print_value(int n, char *name, float val)
 
 
 
-/* print_xf86_mode() - print the XFree86 modeline, given mode timings. */
+/* print_xf86_mode() - print the XServer modeline, given mode timings. */
 
 void print_xf86_mode (mode *m)
 {
@@ -282,7 +283,7 @@ void print_fb_mode (mode *m)
  * feel like testing it right now.
  *
  * XXX margin computations are implemented but not tested (nor used by
- * XFree86 of fbset mode descriptions, from what I can tell).
+ * XServer of fbset mode descriptions, from what I can tell).
  */
 
 mode *vert_refresh (int h_pixels, int v_lines, float freq,
@@ -708,7 +709,7 @@ options *parse_command_line (int argc, char *argv[])
              "(traces each step of the computation)\n");
     fprintf (stderr, "  -f|--fbmode : output an fbset(8)-style mode "
              "description\n");
-    fprintf (stderr, " -x|-xf86mode : output an XFree86-style mode "
+    fprintf (stderr, " -x|-xf86mode : output an "__XSERVERNAME__"-style mode "
              "description (this is the default\n"
              "                if no mode description is requested)\n");
     

@@ -4,7 +4,6 @@
  *
  * Authors: Alexander Gottwald
  */
-/* $XDotOrg$ */
 
 #include <GL/gl.h>
 #include <GL/glext.h>

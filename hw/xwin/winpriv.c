@@ -3,7 +3,6 @@
  *
  * Authors: Alexander Gottwald
  */
-/* $XDotOrg$ */
 
 #include "win.h"
 #include "winpriv.h"

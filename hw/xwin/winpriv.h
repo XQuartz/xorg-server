@@ -3,7 +3,6 @@
  *
  * Authors: Alexander Gottwald
  */
-/* $XDotOrg$ */
 #include <windows.h>
 
 typedef struct

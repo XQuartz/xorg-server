@@ -62,6 +62,7 @@ Bool		g_fUseMsg = FALSE;
 DWORD		g_dwCurrentThreadID = 0;
 Bool		g_fKeyboardHookLL = FALSE;
 HHOOK		g_hhookKeyboardLL = NULL;
+HWND		g_hwndKeyboardFocus = NULL;
 
 
 /*
@@ -111,6 +112,7 @@ void
 winInitializeGlobals (void)
 {
   g_dwCurrentThreadID = GetCurrentThreadId ();
+  g_hwndKeyboardFocus = NULL;
 #ifdef XWIN_CLIPBOARD
   g_fClipboardLaunched = FALSE;
   g_fClipboardStarted = FALSE;

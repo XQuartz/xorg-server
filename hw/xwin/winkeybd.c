@@ -42,7 +42,6 @@
 #define XKB_IN_SERVER
 #include "XKBsrv.h"
 #endif
-#include "../../Xext/xf86miscproc.h"
 
 static Bool g_winKeyState[NUM_KEYCODES];
 
@@ -130,11 +129,18 @@ winGetKeyMappings (KeySymsPtr pKeySyms, CARD8 *pModMap)
 	  pModMap[i] = ScrollLockMask;
 	  break;
 
+#if 0
+	case XK_Super_L:
+	case XK_Super_R:
+	  pModMap[i] = Mod4Mask;
+	  break;
+#else
 	/* Hirigana/Katakana toggle */
 	case XK_Kana_Lock:
 	case XK_Kana_Shift:
 	  pModMap[i] = KanaMask;
 	  break;
+#endif
 
 	/* alternate toggle for multinational support */
 	case XK_Mode_switch:
@@ -267,8 +273,6 @@ winKeybdProc (DeviceIntPtr pDeviceInt, int iState)
             }
         }
 #endif
-
-      
 
       g_winInternalModeKeyStatesPtr = &(pDeviceInt->key->state);
       break;
@@ -415,7 +419,7 @@ winIsFakeCtrl_L (UINT message, WPARAM wParam, LPARAM lParam)
 
       /* Get time of current message */
       lTime = GetMessageTime ();
-      			
+
       /* Look for fake Ctrl_L preceeding an Alt_R press. */
       fReturn = PeekMessage (&msgNext, NULL,
 			     WM_KEYDOWN, WM_KEYDOWN,

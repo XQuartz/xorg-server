@@ -29,7 +29,6 @@
 #define XK_TECHNICAL
 #define	XK_KATAKANA
 #include "keysym.h"
-#include "XF86keysym.h"
 
 #define GLYPHS_PER_KEY	4
 #define NUM_KEYCODES	248

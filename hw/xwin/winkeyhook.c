@@ -37,6 +37,7 @@
 
 extern HHOOK			g_hhookKeyboardLL;
 extern DWORD			g_dwCurrentThreadID;
+extern HWND			g_hwndKeyboardFocus;
 
 
 /*
@@ -47,6 +48,14 @@ static LRESULT CALLBACK
 winKeyboardMessageHookLL (int iCode, WPARAM wParam, LPARAM lParam);
 
 
+#ifndef LLKHF_EXTENDED
+# define LLKHF_EXTENDED  0x00000001
+#endif
+#ifndef LLKHF_UP
+# define LLKHF_UP  0x00000080
+#endif
+
+
 /*
  * KeyboardMessageHook
  */
@@ -54,26 +63,53 @@ winKeyboardMessageHookLL (int iCode, WPARAM wParam, LPARAM lParam);
 static LRESULT CALLBACK
 winKeyboardMessageHookLL (int iCode, WPARAM wParam, LPARAM lParam)
 {
-  BOOL			fEatKeystroke = FALSE;
+  BOOL			fPassKeystroke = FALSE;
   PKBDLLHOOKSTRUCT	p = (PKBDLLHOOKSTRUCT) lParam;
 
-  /* Swallow keystrokes only for our app */
+  /* Pass keystrokes on to our main message loop */
   if (iCode == HC_ACTION)
     {
       switch (wParam)
 	{
 	case WM_KEYDOWN:  case WM_SYSKEYDOWN:
 	case WM_KEYUP:    case WM_SYSKEYUP: 
-	  p = (PKBDLLHOOKSTRUCT) lParam;
-
-	  fEatKeystroke = 
-	    (p->vkCode == VK_TAB) && ((p->flags & LLKHF_ALTDOWN) != 0);
+	  fPassKeystroke = 
+	    (p->vkCode == VK_TAB) && ((p->flags & LLKHF_ALTDOWN) != 0)
+	    || (p->vkCode == VK_LWIN) || (p->vkCode == VK_RWIN);
 	  break;
 	}
     }
-  
-  return (fEatKeystroke ? 1 : CallNextHookEx (NULL, iCode, wParam, 
-					      lParam));
+
+  /*
+   * Pass message on to our main message loop.
+   * We process this immediately with SendMessage so that the keystroke
+   * appears in, hopefully, the correct order.
+   */
+  if (fPassKeystroke)
+    {
+      LPARAM		lParamKey = 0x0;
+
+      /* Construct the lParam from KBDLLHOOKSTRUCT */
+      lParamKey = lParamKey | (0x0000FFFF & 0x00000001); /* Repeat count */
+      lParamKey = lParamKey | (0x00FF0000 & (p->scanCode << 16));
+      lParamKey = lParamKey
+	| (0x01000000 & ((p->flags & LLKHF_EXTENDED) << 23));
+      lParamKey = lParamKey
+	| (0x20000000
+	   & ((p->flags & LLKHF_ALTDOWN) << 24));
+      lParamKey = lParamKey | (0x80000000 & ((p->flags & LLKHF_UP) << 24));
+
+      /* Send message to our main window that has the keyboard focus */
+      PostMessage (g_hwndKeyboardFocus,
+		   (UINT) wParam,
+		   (WPARAM) p->vkCode,
+		   lParamKey);
+
+      return 1;
+    }
+
+  /* Call next hook */
+  return CallNextHookEx (NULL, iCode, wParam, lParam);
 }
 
 

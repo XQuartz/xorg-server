@@ -497,13 +497,13 @@ SetupRootMenu (unsigned long hmenuRoot)
  * Check for and return an overridden default ICON specified in the prefs
  */
 unsigned long
-winOverrideDefaultIcon()
+winOverrideDefaultIcon(int size)
 {
   HICON hicon;
   
   if (pref.defaultIconName[0])
     {
-      hicon = LoadImageComma (pref.defaultIconName, 0, 0, LR_DEFAULTSIZE);
+      hicon = LoadImageComma (pref.defaultIconName, size, size, 0);
       if (hicon==NULL)
         ErrorF ("winOverrideDefaultIcon: LoadImageComma(%s) failed\n",
 		pref.defaultIconName);

@@ -1,4 +1,11 @@
 2004-05-19  Alexander Gottwald  <ago@freedesktop.org>
+	
+	* winmultiwindowicons.c (winInitGlobalIcons): Load the small default
+	icon too
+	* winprefs.h, winprefs.c (winOverrideDefaultIcon): Takes the iconsize
+	as parameter
+
+2004-05-19  Alexander Gottwald  <ago@freedesktop.org>
 
 	* win.h, winmultiwindowicons.c (winXIconToHICON): Takes iconsize
 	as parameter 

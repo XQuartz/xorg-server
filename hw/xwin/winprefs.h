@@ -157,5 +157,5 @@ unsigned long
 winTaskbarIcon(void);
 
 unsigned long
-winOverrideDefaultIcon(void);
+winOverrideDefaultIcon(int size);
 #endif

@@ -403,11 +403,13 @@ winUpdateIcon (Window id)
 
 void winInitGlobalIcons (void)
 {
+  int sm_cx = GetSystemMetrics(SM_CXICON);
+  int sm_cxsm = GetSystemMetrics(SM_CXSMICON);
   /* Load default X icon in case it's not ready yet */
   if (!g_hIconX) 
     {  
-      g_hIconX = (HICON)winOverrideDefaultIcon();
-      g_hSmallIconX = NULL;
+      g_hIconX = (HICON)winOverrideDefaultIcon(sm_cx);
+      g_hSmallIconX = (HICON)winOverrideDefaultIcon(sm_cxsm);
     }
   
   if (!g_hIconX)

@@ -1,0 +1,136 @@
+.TH XWIN 5 __vendorversion__
+
+
+.SH NAME
+XWinrc\- XWin Server Resource Configuration File.
+
+
+.SH DESCRIPTION
+The X Server for the X Window System on the Cygwin/X environment
+running on Microsoft Windows, \fIXWin\fP can be optionally configured
+with the \fIXWinrc\fP file. A system-wide configuration file should
+be placed in \fI/usr/X11R6/lib/X11/system.XWinrc\fP, a per-user
+file should be put at \fI$HOME/.XWinrc\fP. The \fIsystem.XWinrc\fP file is read
+only if no \fI$HOME/.XWinrc\fP exist.
+.PP
+With the \fI.XWinrc\fP configuration file it is possible to do the following:
+.PP
+1- To include items into the menu associated with the \fIXWin\fP icon
+which is in the \fIWindows\fP system tray. This feature functions in all
+XWin  modes that have such tray icon.
+.PP
+2- To include items into the menu which is associated with the \fIWindows\fP
+window that \fIXWin -multiwindow\fP produces for each top-level X-window.
+That can be done both for the generic case and for particular programs.
+.PP
+3- To change the icon that is associated to the \fIWindows\fP window that
+\fIXWin -multiwindow\fP produces for each top-level X-window. Again, that
+can be done both for the generic case and for particular programs. The new
+icons associated should be \fIWindows\fP kind incons \fI.ico\fP.
+
+
+.SH FILE FORMAT
+.B Keywords
+are case insensitive, but in this document they will be written
+completely capitalized.
+.PP
+.B Comments
+are legal pretty much anywhere you can have an end-of-line; they
+begin with "#" or "//" and go to the end-of-line.
+.PP
+Quote marks in strings are optional unless the string has included spaces.
+.PP
+There are three kinds of instructions, debug, menu and icon instructions.
+
+
+.SH Debug instruction
+.TP 8
+.B DEBUG \fIString\fP
+The \fIString\fP is printed to the XWin.log file.
+
+
+.SH Menu instructions
+.TP 8
+.B MENU \fIMenu_Name\fP {
+.br
+.B       \fIMenu_Item_Line\fP
+.br
+.B       \fIMenu_Item_Line\fP
+.br
+.B        \fI...\fP
+.br
+.B }
+.br
+This instruction defines a menu and asigns a \fIMenu_Name\fP to it.
+\fIMenu_Item_Line\fP are lines  of any of the following types:
+.TP 8
+.B \t SEPARATOR
+.TP 8
+.B  \t \fIItem_Label\fP  EXEC \fICommand\fP
+.TP 8
+.B \t \fIItem_Label\fP  MENU \fIpreviously-defined-menu-name\fP
+.TP 8
+.B \t \fIItem_Label\fP  ALWAYSONTOP
+.TP 8
+.B \t \fIItem_Label\fP  RELOAD
+.br
+The \fIItem_Label\fP is the string that is written in the menu item.
+.br
+\fICommand\fP is a string with the command that will be executed. Here
+paths should be \fICYGWIN\fP style (e.g. /usr/local/bin/myprogram).
+A string "%display%" appearing in the \fICommand\fP will be replaced
+with the proper display variable (i.e. 127.0.0.1:<display>.0).
+.br
+\fBALWAYSONTOP\fP sets the window to which the menu is associated to
+display above all others.
+.br
+\fBRELOAD\fP causes the XWinrc file to be reloaded and icons and menus
+regenerated.
+.TP 8
+.B ROOTMENU \fIpreviously-defined-menu-name\fP
+Includes the items in the indicated menu into the menu associated with
+\fIXWin\fP that appears in the system tray.
+.TP 8
+.B DEFAULTSYSMENU \fIpreviously-defined-menu-name\fP ATSTART|ATEND
+Includes the items in the indicated menu into the menu associated with
+generic top-level X-Windows in the \fIXWin\fP \fImultiwindow\fP mode. The
+keywords \fBATSTART\fP and \fBATEND\fP indicate if such items should be
+included at the start or at the end of the menu.
+.TP 8
+.B SYSMENU {
+  \fIclass-or-name-of-window\fP \fIdefined-menu-name\fP \fBATSTART|ATEND\fP
+.br
+  \fI...\fP
+.br
+  \fB}\fP
+.br
+Associates a specific menu to a specific WM_CLASS or WM_NAME.
+
+
+.SH Icon Instructions
+.TP 8
+.B ICONDIRECTORY \fIWindows-path-to-icon-directory\fP
+Defines the directory where the \fI.ico\fP files are located. It should
+be a \fIWindows\fP style path (e.g. C:\\cygwin\\usr\\local\\icons).
+.TP 8
+.B DEFAULTICON \fIicon-file-name.ico\fP
+Defines a replacement for the standard X icon for applications without
+specified icons.
+.TP 8
+.B ICONS {
+ \fIclass-or-name-of-window\fP \fIicon-file-name.ico\fP
+.br
+  \fI...\fP
+.br
+  \fB}\fP
+.br
+Defines icon replacements for specific windows.
+
+
+.SH "SEE ALSO"
+ XWin(1)
+
+
+.SH AUTHOR
+The XWinrc feature of XWin was written primarily by Earle F. Philhower
+III.

@@ -385,7 +385,7 @@ winUpdateIcon (Window id)
 	  /* Delete the icon if its not the default */
 	  if (hiconOld != g_hiconX &&
 	      !winIconIsOverride((unsigned long)hiconOld))
-	    DeleteObject (hiconOld);
+	    DestroyIcon (hiconOld);
 	}
     }
 }

@@ -245,6 +245,14 @@ if (fDebugProcMsg) \
 #define DEBUGPROC_MSG
 #endif
 
+#define PROFILEPOINT(point,thresh)\
+{\
+static unsigned int PROFPT##point = 0;\
+if (++PROFPT##point % thresh == 0)\
+ErrorF (#point ": PROFILEPOINT hit %u times\n", PROFPT##point);\
+}
+
+
 /* We use xor this macro for detecting toggle key state changes */
 #define WIN_XOR(a,b) ((!(a) && (b)) || ((a) && !(b)))
 

@@ -32,12 +32,20 @@
 #include "win.h"
 
 /*
+ * External global variables
+ */
+extern DWORD		g_dwCurrentProcessID;
+
+/*
  * Local function prototypes
  */
 
 #ifdef XWIN_MULTIWINDOW
 BOOL CALLBACK
 winRedrawAllProcShadowGDI (HWND hwnd, LPARAM lParam);
+
+BOOL CALLBACK
+winRedrawDamagedWindowShadowGDI (HWND hwnd, LPARAM lParam);
 #endif
 
 Bool
@@ -218,15 +226,66 @@ winQueryRGBBitsAndMasks (ScreenPtr pScreen)
 BOOL CALLBACK
 winRedrawAllProcShadowGDI (HWND hwnd, LPARAM lParam)
 {
-  char strClassName[100];
+  DWORD dwWindowProcessID;
 
-  if (GetClassName (hwnd, strClassName, 100))
+#if 0
+  PROFILEPOINT(winRedrawAllProcShadowGDI,10);
+#endif
+  GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
+  if (dwWindowProcessID == g_dwCurrentProcessID)
     {
-      if (strncmp (WINDOW_CLASS_X, strClassName, strlen (WINDOW_CLASS_X)) == 0)
-	{
-	  InvalidateRect (hwnd, NULL, FALSE);
-	  UpdateWindow (hwnd);
-	}
+      InvalidateRect (hwnd, NULL, FALSE);
+      UpdateWindow (hwnd);
+    }
+  return TRUE;
+}
+
+BOOL CALLBACK
+winRedrawDamagedWindowShadowGDI (HWND hwnd, LPARAM lParam)
+{
+  BoxPtr pDamage = (BoxPtr)lParam;
+  RECT rcClient, rcDamage, rcRedraw;
+  POINT topLeft, bottomRight;
+  DWORD dwWindowProcessID;
+  
+  GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
+  if (dwWindowProcessID != g_dwCurrentProcessID)
+    return TRUE; /* This window is not ours */
+
+  if (IsIconic (hwnd))
+    return TRUE; /* Don't care minimized windows */
+  
+  /* Convert the damaged area from Screen coords to Client coords */
+  topLeft.x = pDamage->x1; topLeft.y = pDamage->y1;
+  bottomRight.x = pDamage->x2; bottomRight.y = pDamage->y2;
+  topLeft.x += GetSystemMetrics (SM_XVIRTUALSCREEN);
+  bottomRight.x += GetSystemMetrics (SM_XVIRTUALSCREEN);
+  topLeft.y += GetSystemMetrics (SM_YVIRTUALSCREEN);
+  bottomRight.y += GetSystemMetrics (SM_YVIRTUALSCREEN);
+  ScreenToClient (hwnd, &topLeft);
+  ScreenToClient (hwnd, &bottomRight);
+  SetRect (&rcDamage, topLeft.x, topLeft.y, bottomRight.x, bottomRight.y);
+
+  GetClientRect (hwnd, &rcClient);
+
+  if (IntersectRect (&rcRedraw, &rcClient, &rcDamage))
+    {
+      InvalidateRect (hwnd, &rcRedraw, FALSE);
+      UpdateWindow (hwnd);
+#ifdef XWIN_UPDATESTATS
+#define DIMENSION(r) ( (r.right-r.left) * (r.bottom-r.top) )
+      {
+	static unsigned int called = 0;
+	static unsigned int pix = 0;
+
+	called++;
+	pix += DIMENSION(rcClient) - DIMENSION(rcRedraw);
+	if (called % 100 == 0)
+	  ErrorF ("winRedrawDamagedWindowShadowGDI - "
+		  "%u pixels have been saved in %d calls\n", pix, called);
+      }
+#undef DIMENSION
+#endif
     }
   return TRUE;
 }
@@ -399,6 +458,7 @@ winShadowUpdateGDI (ScreenPtr pScreen,
   static DWORD		s_dwTotalUpdates = 0;
   static DWORD		s_dwTotalBoxes = 0;
 #endif
+  BoxPtr		pBoxExtents = REGION_EXTENTS (pScreen, damage);
 
   /*
    * Return immediately if the app is not active
@@ -458,8 +518,6 @@ winShadowUpdateGDI (ScreenPtr pScreen,
     }
   else
     {
-      BoxPtr		pBoxExtents = REGION_EXTENTS (pScreen, damage);
-
       /* Compute a GDI region from the damaged region */
       hrgnCombined = CreateRectRgn (pBox->x1, pBox->y1, pBox->x2, pBox->y2);
       dwBox--;
@@ -495,7 +553,8 @@ winShadowUpdateGDI (ScreenPtr pScreen,
 
 #ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
-  if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawAllProcShadowGDI, 0);
+  if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawDamagedWindowShadowGDI,
+					     (LPARAM)pBoxExtents);
 #endif
 }
 

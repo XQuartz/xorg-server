@@ -42,6 +42,7 @@
  */
 
 extern HICON		g_hiconX;
+extern DWORD		g_dwCurrentProcessID;
 
 
 /*
@@ -149,7 +150,7 @@ Bool
 winPositionWindowMultiWindow (WindowPtr pWin, int x, int y)
 {
   Bool			fResult = TRUE;
-  int		        iX, iY, iWidth, iHeight, iBorder;
+  int		        iX, iY, iWidth, iHeight;
   winWindowPriv(pWin);
   HWND hWnd = pWinPriv->hWnd;
   RECT rcNew;
@@ -187,9 +188,6 @@ winPositionWindowMultiWindow (WindowPtr pWin, int x, int y)
   dwExStyle = GetWindowLongPtr (hWnd, GWL_EXSTYLE);
   dwStyle = GetWindowLongPtr (hWnd, GWL_STYLE);
 
-  /* Get the width of the X window border */
-  iBorder = wBorderWidth (pWin);
-  
   /* Get the X and Y location of the X window */
   iX = pWin->drawable.x + GetSystemMetrics (SM_XVIRTUALSCREEN);
   iY = pWin->drawable.y + GetSystemMetrics (SM_YVIRTUALSCREEN);
@@ -461,7 +459,6 @@ winCreateWindowsWindow (WindowPtr pWin)
   int                   iX, iY;
   int			iWidth;
   int			iHeight;
-  int                   iBorder;
   HWND			hWnd;
   WNDCLASS		wc;
   winWindowPriv(pWin);
@@ -476,8 +473,6 @@ winCreateWindowsWindow (WindowPtr pWin)
   ErrorF ("winCreateWindowsWindow - pWin: %08x\n", pWin);
 #endif
 
-  iBorder = wBorderWidth (pWin);
-  
   iX = pWin->drawable.x + GetSystemMetrics (SM_XVIRTUALSCREEN);
   iY = pWin->drawable.y + GetSystemMetrics (SM_YVIRTUALSCREEN);
   
@@ -747,14 +742,15 @@ winReorderWindowsMultiWindow (ScreenPtr pScreen)
   HWND hwnd = NULL;
   WindowPtr pWin = NULL;
   WindowPtr pWinSib = NULL;
-  DWORD dwCurrentProcessID = GetCurrentProcessId ();
   DWORD dwWindowProcessID = 0;
   XID vlist[2];
 
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winReorderWindowsMultiWindow\n");
 #endif
-
+#if 0
+  PROFILEPOINT (winReorderWindowsMultiWindow,100);
+#endif
   pScreenPriv->fRestacking = TRUE;
 
   if (pScreenPriv->fWindowOrderChanged)
@@ -768,7 +764,7 @@ winReorderWindowsMultiWindow (ScreenPtr pScreen)
 	{
 	  GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
 
-	  if ( (dwWindowProcessID == dwCurrentProcessID)
+	  if ( (dwWindowProcessID == g_dwCurrentProcessID)
 	       && GetProp (hwnd, WIN_WINDOW_PROP)
 	       && !IsIconic (hwnd) ) /* ignore minimized windows */
 	    {

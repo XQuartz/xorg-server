@@ -58,6 +58,7 @@ int		g_iLogVerbose = 4;
 Bool		g_fLogInited = FALSE;
 char *		g_pszCommandLine = NULL;
 Bool		g_fUseMsg = FALSE;
+DWORD		g_dwCurrentProcessID = 0;
 
 
 /*
@@ -106,6 +107,7 @@ Atom			g_atomLastOwnedSelection;
 void
 winInitializeGlobals (void)
 {
+  g_dwCurrentProcessID = GetCurrentProcessId ();
 #ifdef XWIN_CLIPBOARD
   g_fClipboardLaunched = FALSE;
   g_fClipboardStarted = FALSE;

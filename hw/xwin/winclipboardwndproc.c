@@ -199,7 +199,7 @@ winClipboardWindowProc (HWND hwnd, UINT message,
         s_fCBCInitialized = FALSE;
         ChangeClipboardChain (hwnd, s_hwndNextViewer);
         s_hwndNextViewer = NULL;
-        s_fCBCInitialized = TRUE;
+        s_fCBCInitialized = FALSE;
         s_hwndNextViewer = SetClipboardViewer (hwnd);
       }
       return 0;
@@ -218,8 +218,6 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	/* Bail on first message */
 	if (!s_fCBCInitialized)
 	  {
-	    winDebug ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
-		    "Initializing - Returning.\n");
 	    s_fCBCInitialized = TRUE;
 	    return 0;
 	  }

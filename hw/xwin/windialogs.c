@@ -182,7 +182,7 @@ winCenterDialog (HWND hwndDlg)
   RECT rc, rcDlg, rcDesk; 
  
   hwndDesk = GetParent (hwndDlg);
-  if (!hwndDesk)
+  if (!hwndDesk || IsIconic (hwndDesk))
     hwndDesk = GetDesktopWindow (); 
   
   GetWindowRect (hwndDesk, &rcDesk); 

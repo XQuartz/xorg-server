@@ -737,7 +737,9 @@ winFindWindow (pointer value, XID id, pointer cdata)
 
 
 /*
- * winReorderWindowsMultiWindow - 
+ * winReorderWindowsMultiWindow -
+ *
+ * Change X windows' Z orders with respect to their Windows counterparts.
  */
 
 void
@@ -754,48 +756,41 @@ winReorderWindowsMultiWindow (ScreenPtr pScreen)
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winReorderWindowsMultiWindow\n");
 #endif
-
+  
   pScreenPriv->fRestacking = TRUE;
 
-  if (pScreenPriv->fWindowOrderChanged)
+  hwnd = GetTopWindow (NULL);
+
+  while (hwnd)
     {
-#if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winReorderWindowsMultiWindow - Need to restack\n");
-#endif
-      hwnd = GetTopWindow (NULL);
+      GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
 
-      while (hwnd)
+      if ( (dwWindowProcessID == dwCurrentProcessID)
+	   && GetProp (hwnd, WIN_WINDOW_PROP)
+	   && !IsIconic (hwnd) ) /* ignore minimized windows */
 	{
-	  GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
-
-	  if ( (dwWindowProcessID == dwCurrentProcessID)
-	       && GetProp (hwnd, WIN_WINDOW_PROP)
-	       && !IsIconic (hwnd) ) /* ignore minimized windows */
-	    {
-	      pWinSib = pWin;
-	      pWin = GetProp (hwnd, WIN_WINDOW_PROP);
+	  pWinSib = pWin;
+	  pWin = GetProp (hwnd, WIN_WINDOW_PROP);
 	      
-	      if (!pWinSib)
-		{ /* 1st window - raise to the top */
-		  vlist[0] = Above;
+	  if (!pWinSib)
+	    { /* 1st window - raise to the top */
+	      vlist[0] = Above;
 		  
-		  ConfigureWindow (pWin, CWStackMode, vlist, wClient(pWin));
-		}
-	      else
-		{ /* 2nd or deeper windows - just below the previous one */
-		  vlist[0] = winGetWindowID (pWinSib);
-		  vlist[1] = Below;
-
-		  ConfigureWindow (pWin, CWSibling | CWStackMode,
-				   vlist, wClient(pWin));
-		}
+	      ConfigureWindow (pWin, CWStackMode, vlist, wClient(pWin));
 	    }
-	  hwnd = GetNextWindow (hwnd, GW_HWNDNEXT);
+	  else
+	    { /* 2nd or deeper windows - just below the previous one */
+	      vlist[0] = winGetWindowID (pWinSib);
+	      vlist[1] = Below;
+
+	      ConfigureWindow (pWin, CWSibling | CWStackMode,
+			       vlist, wClient(pWin));
+	    }
 	}
+      hwnd = GetNextWindow (hwnd, GW_HWNDNEXT);
     }
 
   pScreenPriv->fRestacking = FALSE;
-  pScreenPriv->fWindowOrderChanged = FALSE;
 }
 
 

@@ -129,9 +129,9 @@ winClipboardFlushXEvents (HWND hwnd,
 					 event.xselectionrequest.requestor,
 					 event.xselectionrequest.property,
 					 event.xselectionrequest.target,
-					 8,
+					 sizeof (atomTargetArr[0]),
 					 PropModeReplace,
-					 (char *) atomTargetArr,
+					 (unsigned char *) atomTargetArr,
 					 sizeof (atomTargetArr));
 	      if (iReturn == BadAlloc
 		  || iReturn == BadAtom

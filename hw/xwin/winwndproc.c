@@ -294,8 +294,6 @@ winWindowProc (HWND hwnd, UINT message,
 #endif
 	}
 
-
-
       /* Store the new display dimensions and depth */
       if (s_pScreenInfo->fMultipleMonitors)
 	{

@@ -373,7 +373,7 @@ extern void IncrementClientCount(void);
 #endif /* LBX */
 
 #if defined(DDXBEFORERESET)
-extern void BeforeReset (void);
+extern void ddxBeforeReset (void);
 #endif
 
 /* dixutils.c */

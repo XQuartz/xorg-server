@@ -47,7 +47,7 @@
 
 #define BRIGHTNESS(x) (x##Red * 0.299 + x##Green * 0.587 + x##Blue * 0.114)
 
-#if 1
+#if 0
 # define WIN_DEBUG_MSG winDebug
 #else
 # define WIN_DEBUG_MSG(...)

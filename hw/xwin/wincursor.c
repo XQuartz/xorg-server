@@ -38,6 +38,7 @@
 #include <mipointrst.h>
 #include <servermd.h>
 
+
 #ifndef MIN
 #define MIN(x,y) ((x)<(y)?(x):(y))
 #endif
@@ -161,6 +162,8 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
   HDC hDC;
   int bpp, planes;
   unsigned short fg16, bg16;
+  BITMAPV4HEADER bi;
+  unsigned long *lpBits;
 
   /* We can use only White and Black, so calc brightness of color */
   dForeY = pCursor->foreRed*0.299 + pCursor->foreGreen*.587 + pCursor->foreBlue*.114;
@@ -244,7 +247,60 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
   planes = GetDeviceCaps (hDC, PLANES);
   bpp = GetDeviceCaps (hDC, BITSPIXEL);
   ReleaseDC (GetDesktopWindow (), hDC);
-  if (bpp>=15 && planes==1)
+
+  hXor = NULL;
+  hAnd = NULL;
+  hCursor = NULL;
+  lpBits = NULL;
+
+  /* We have a truecolor alpha-blended cursor and can use it! */
+  if (bpp>=24 && planes==1 && pCursor->bits->argb) 
+    {
+      hAnd = CreateBitmap (pScreenPriv->cursor.sm_cx, pScreenPriv->cursor.sm_cy, 1, 1, pAnd);
+      if (hAnd)
+	{
+	  memset (&bi, 0, sizeof (BITMAPV4HEADER));
+	  bi.bV4Size = sizeof(BITMAPV4HEADER);
+	  bi.bV4Width = pScreenPriv->cursor.sm_cx;
+	  bi.bV4Height = pScreenPriv->cursor.sm_cy;
+	  bi.bV4Planes = 1;
+	  bi.bV4BitCount = 32;
+	  bi.bV4V4Compression = BI_BITFIELDS;
+	  bi.bV4RedMask = 0x00FF0000;
+	  bi.bV4GreenMask = 0x0000FF00;
+	  bi.bV4BlueMask = 0x000000FF;
+	  bi.bV4AlphaMask = 0xFF000000; 
+	  
+	  hDC = GetDC(NULL);
+	  if (hDC)
+	    {
+	      hXor = CreateDIBSection (hDC, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
+				       (void **)&lpBits, NULL, 0);
+	      ReleaseDC (NULL, hDC);
+	    }
+	  
+	  if (hXor && lpBits)
+	    {
+	      memset (lpBits, 0, 4*pScreenPriv->cursor.sm_cx*pScreenPriv->cursor.sm_cy);
+	      for (y=0; y<nCY; y++)
+		{
+		  unsigned long *src, *dst;
+		  src = &(pCursor->bits->argb[y * pCursor->bits->width]);
+		  /*DIBs are upside down */
+		  dst = &(lpBits[(pScreenPriv->cursor.sm_cy-y-1) * pScreenPriv->cursor.sm_cx]);
+		  memcpy (dst, src, 4*nCX);
+		}
+	    }
+	  else
+	    {
+	      DeleteObject (hAnd);
+	      hAnd = NULL;
+	    }
+	} /* End if hAnd */
+    } /* End if-truecolor-icon */
+
+  /* Try and make a bicolor icon */
+  if (bpp>=15 && planes==1 && !hXor && !hAnd)
     {
       if (bpp==15)
 	bpp = 16;
@@ -349,38 +405,29 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
       bm.bmPlanes = 1;
       bm.bmBitsPixel = bpp;
       bm.bmBits = (void *)pColor;
-      hXor = CreateBitmapIndirect (&bm);
+      if (hAnd)
+	hXor = CreateBitmapIndirect (&bm);
       free (pColor);
-      
-      /* Make the icon/cursor */
+    } /* End if-bicolor-icon */
+
+  /* If one of the previous two methods gave us the bitmaps we need, make a cursor */
+  if (hXor && hAnd)
+    {
       ii.fIcon = FALSE;
       ii.xHotspot = pCursor->bits->xhot;
       ii.yHotspot = pCursor->bits->yhot;
       ii.hbmMask = hAnd;
       ii.hbmColor = hXor;
-      if (hAnd && hXor)
-	{
-	  /* We created all the needed bitmaps, make it! */
-	  hCursor = (HCURSOR) CreateIconIndirect( &ii );
-	  DeleteObject (hAnd);
-	  DeleteObject (hXor);
-	}
-      else
-	{
-	  /* Couldn't make all needed bitmaps, use fallback BnW */
-	  if (hAnd)
-	    DeleteObject (hAnd);
-	  if (hXor)
-	    DeleteObject (hXor);
-	  hCursor = CreateCursor (g_hInstance,
-				  pCursor->bits->xhot, pCursor->bits->yhot,
-				  pScreenPriv->cursor.sm_cx, pScreenPriv->cursor.sm_cy,
-				  pAnd, pXor);
-	}
+      hCursor = (HCURSOR) CreateIconIndirect( &ii );
     }
-  else
+  if (hAnd)
+    DeleteObject (hAnd);
+  if (hXor)
+    DeleteObject (hXor);
+
+  if (!hCursor)
     {
-      /* We don't know how to make a color cursor for this screen, use
+      /* We couldn't make a color cursor for this screen, use
 	 black and white instead */
       hCursor = CreateCursor (g_hInstance,
 			      pCursor->bits->xhot, pCursor->bits->yhot,

@@ -1174,6 +1174,12 @@ winLogCommandLine (int argc, char *argv[])
 void
 winLogVersionInfo (void)
 {
+  static Bool		s_fBeenHere = FALSE;
+
+  if (s_fBeenHere)
+    return;
+  s_fBeenHere = TRUE;
+
   ErrorF ("Welcome to the XWin X Server\n");
   ErrorF ("Vendor: %s\n", VENDOR_STRING);
   ErrorF ("Release: %s\n\n", VERSION_STRING);

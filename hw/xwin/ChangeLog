@@ -1,5 +1,10 @@
 2005-01-27  Alexander Gottwald  <ago at freedesktop dot org>
 
+	* winmultiwindowwndproc.c:
+	Fixes for window ordering problem (updated) (Kensuke Matsuzaki)
+
+2005-01-27  Alexander Gottwald  <ago at freedesktop dot org>
+
 	* winconfig.c:
 	Added hungarian keyboard layout.
 

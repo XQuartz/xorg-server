@@ -239,14 +239,14 @@ winQueryRGBBitsAndMasks (ScreenPtr pScreen)
                  )))));
 #endif
 
-      /* Wine returns this */
+      /* Handle BI_RGB case, which is returned by Wine */
       if (pbmih->biCompression == BI_RGB)
         {
-          dwRedBits = 15;
-          dwGreenBits = 10;
-          dwBlueBits = 5;
-
-       	  pScreenPriv->dwBitsPerRGB = 15;
+	  dwRedBits = 5;
+	  dwGreenBits = 5;
+	  dwBlueBits = 5;
+	  
+	  pScreenPriv->dwBitsPerRGB = 5;
 	  
 	  /* Set screen privates masks */
 	  pScreenPriv->dwRedMask = 0x7c00;

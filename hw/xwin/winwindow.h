@@ -90,7 +90,7 @@ typedef struct _winWMMessageRec{
 
 
 /*
- * winrootlesswm.c
+ * winmultiwindowwm.c
  */
 
 #define		WM_WM_MOVE		(WM_USER + 1)
@@ -104,11 +104,6 @@ typedef struct _winWMMessageRec{
 #define	        WM_WM_NAME_EVENT	(WM_USER + 9)
 #define	        WM_WM_HINTS_EVENT	(WM_USER + 10)
 #define		WM_WM_CHANGE_STATE	(WM_USER + 11)
-
-
-/*
- * winmultiwindowwm.c
- */
 
 void
 winSendMessageToWM (void *pWMInfo, winWMMessagePtr msg);

@@ -770,22 +770,10 @@ winConfigFiles ()
 	      str = fgets(buffer, sizeof(buffer), fontdirs);
 	      if (str == NULL) /* stop on error or eof */
 		break;
+
+              if (strchr(str, '\n') != NULL)
+                has_eol = TRUE;
 	     
-	      /* strip whitespaces from beginning */
-	      while (*str == ' ' || *str == '\t')
-		str++;
-
-	      /* get size, strip whitespaces from end */ 
-	      blen = strlen(str);
-	      while (blen > 0 && (str[blen-1] == ' ' || 
-		    str[blen-1] == '\t' || str[blen-1] == '\n'))
-		{
-		  if (str[blen-1] == '\n') /* flag that we've read a */
-		    has_eol = TRUE;         /* complete line          */
-		  str[--blen] = 0;
-		}
-
-
 	      /* check if block is continued comment */
 	      if (comment_block)
 	        {
@@ -804,13 +792,19 @@ winConfigFiles ()
 		      *hashchar = 0;
 		      if (!has_eol) /* mark next block as continued comment */
 		        comment_block = TRUE;
-
-		      /* get size, strip whitespaces from end (again) */ 
-		      blen = strlen(str);
-		      while (blen > 0 && (str[blen-1] == ' ' || 
-			    str[blen-1] == '\t'))
-			str[--blen] = 0;
 		    }
+		}
+              
+	      /* strip whitespaces from beginning */
+	      while (*str == ' ' || *str == '\t')
+		str++;
+
+	      /* get size, strip whitespaces from end */ 
+	      blen = strlen(str);
+	      while (blen > 0 && (str[blen-1] == ' ' || 
+		    str[blen-1] == '\t' || str[blen-1] == '\n'))
+		{
+		  str[--blen] = 0;
 		}
 	     
 	      /* still something left to add? */ 
@@ -849,7 +843,8 @@ winConfigFiles ()
 	  /* cleanup */
 	  fclose(fontdirs);  
           from = X_CONFIG;
-          defaultFontPath = fontpath;
+          defaultFontPath = xstrdup(fontpath);
+          free(fontpath);
 	}
     }
   winMsg (from, "FontPath set to \"%s\"\n", defaultFontPath);

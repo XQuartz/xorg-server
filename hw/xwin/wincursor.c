@@ -268,7 +268,7 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
 */
 
 /*
- * winMWExtWMRealizeCursor
+ * winRealizeCursor
  *  Convert the X cursor representation to native format if possible.
  */
 static Bool
@@ -286,7 +286,7 @@ winRealizeCursor (ScreenPtr pScreen, CursorPtr pCursor)
 
 
 /*
- * winMWExtWMUnrealizeCursor
+ * winUnrealizeCursor
  *  Free the storage space associated with a realized cursor.
  */
 static Bool
@@ -298,7 +298,7 @@ winUnrealizeCursor(ScreenPtr pScreen, CursorPtr pCursor)
 
 
 /*
- * winMWExtWMSetCursor
+ * winSetCursor
  *  Set the cursor sprite and position.
  */
 static void
@@ -337,7 +337,7 @@ winSetCursor (ScreenPtr pScreen, CursorPtr pCursor, int x, int y)
 
 
 /*
- * winMWExtWMReallySetCursor
+ * winReallySetCursor
  *  Not needed for xpr. Cursor is set from the X server thread.
  */
 void
@@ -373,7 +373,7 @@ static miPointerSpriteFuncRec winSpriteFuncsRec = {
 */
 
 /*
- * winMWExtWMCursorQueryBestSize
+ * winCursorQueryBestSize
  *  Handle queries for best cursor size
  */
 static void

@@ -42,6 +42,7 @@
 
 extern Bool			g_fCursor;
 extern Bool			g_fKeyboardHookLL;
+extern Bool			g_fSoftwareCursor;
 
 
 /*
@@ -975,6 +976,14 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 
 	  /* */
 	  return MA_NOACTIVATE;
+	}
+      break;
+
+    case WM_SETCURSOR:
+      if (LOWORD(lParam) == HTCLIENT)
+	{
+	  if (!g_fSoftwareCursor) SetCursor (s_pScreenPriv->cursor.handle);
+	  return TRUE;
 	}
       break;
 

@@ -55,6 +55,7 @@
 
 extern HICON			g_hiconX;
 extern Bool			g_fNoConfigureWindow;
+extern Bool			g_fSoftwareCursor;
 
 
 /*
@@ -868,8 +869,6 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
       ErrorF ("winMWExtWMWindowProc - WM_SHOWWINDOW - %d ms\n",
 	      (unsigned int)GetTickCount ());
 #endif
-      if (pScreenPriv != NULL)
-	pScreenPriv->fWindowOrderChanged = TRUE;
       break;
 
     case WM_SIZING:
@@ -906,7 +905,6 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 	    && !(pWinPos->flags & SWP_NOZORDER)
 	    && !(pWinPos->flags & SWP_SHOWWINDOW))
 	  {
-	    pScreenPriv->fWindowOrderChanged = TRUE;
 	    if (pWinPos->hwndInsertAfter == HWND_TOP
 		||pWinPos->hwndInsertAfter == HWND_TOPMOST
 		||pWinPos->hwndInsertAfter == HWND_NOTOPMOST)
@@ -921,6 +919,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 	      }
 	    else
 	      {
+		/* Check if this window is top of X windows. */
 		HWND hWndAbove = NULL;
 		DWORD dwCurrentProcessID = GetCurrentProcessId ();
 		DWORD dwWindowProcessID = 0;
@@ -929,6 +928,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 		     hWndAbove != NULL;
 		     hWndAbove = GetNextWindow (hWndAbove, GW_HWNDPREV))
 		  {
+		    /* Ignore other XWin process's window */
 		    GetWindowThreadProcessId (hWndAbove, &dwWindowProcessID);
 
 		    if ((dwWindowProcessID == dwCurrentProcessID)
@@ -936,6 +936,8 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 			&& !IsIconic (hwnd) ) /* ignore minimized windows */
 		      break;
 		  }
+		/* If this is top of X windows in Windows stack,
+		   raise it in X stack. */
 		if (hWndAbove == NULL)
 		  {
 		    vlist[0] = Above;
@@ -1039,9 +1041,6 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 #endif
       if (g_fNoConfigureWindow) break;
 
-      if (pScreenPriv != NULL)
-	pScreenPriv->fWindowOrderChanged = TRUE;
-
       /* Branch on type of resizing occurring */
       switch (wParam)
 	{
@@ -1122,7 +1121,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
     case WM_SETCURSOR:
       if (LOWORD(lParam) == HTCLIENT)
 	{
-	  SetCursor (pScreenPriv->hCursor);
+	  if (!g_fSoftwareCursor) SetCursor (pScreenPriv->cursor.handle);
 	  return TRUE;
 	}
       break;

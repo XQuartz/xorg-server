@@ -504,14 +504,7 @@ typedef struct _winPrivScreenRec
 #ifdef XWIN_MULTIWINDOWEXTWM
   /* Privates used by multi-window external window manager */
   RootlessFrameID	widTop;
-  QueryBestSizeProcPtr	QueryBestSize;
-  miPointerSpriteFuncPtr spriteFuncs;
-  HCURSOR		hCursor;
-  Bool			fCursorVisible;
-  int			nCX;
-  int			nCY;
-  Bool                  fRestacking;
-  Bool                  fWindowOrderChanged;
+  Bool			fRestacking;
 #endif
 
 #ifdef XWIN_MULTIWINDOW
@@ -1380,16 +1373,6 @@ winMWExtWMMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h);
 
 void
 winMWExtWMUpdateIcon (Window id);
-#endif
-
-
-#ifdef XWIN_MULTIWINDOWEXTWM
-/*
- * winwin32rootlesscursor.c
- */
-
-Bool
-winMWExtWMInitCursor (ScreenPtr pScreen);
 #endif
 
 

@@ -443,11 +443,7 @@ winFinishScreenInitFB (int index,
       rootless_CompositePixels_threshold = 0;
       /* FIXME: How many? Profiling needed? */
       rootless_CopyWindow_threshold = 1;
-      
-      if (!winMWExtWMInitCursor (pScreen))
-	{
-	  return FALSE;
-	}
+
       winWindowsWMExtensionInit ();
     }
 #endif
@@ -569,9 +565,6 @@ winFinishScreenInitFB (int index,
 #endif
 
 #ifdef XWIN_MULTIWINDOWEXTWM
-  /* Set the WindowOrderChanged flag to false */
-  pScreenPriv->fWindowOrderChanged = FALSE;
-
   pScreenPriv->fRestacking = FALSE;
 #endif
 

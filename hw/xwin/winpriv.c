@@ -92,7 +92,7 @@ extern void winGetWindowInfo(WindowPtr pWin, winWindowInfoPtr pWinInfo)
             {
                 /* copy size and window handle */
                 pWinInfo->rect = rect_extends;
-                pWinInfo->rect = rect;
+                pWinInfo->hwnd = pRLWinPriv->hWnd;
             }
             return;
         }

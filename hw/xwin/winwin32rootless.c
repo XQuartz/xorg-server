@@ -257,7 +257,11 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
     g_hiconX = (HICON)winOverrideDefaultIcon();
   
   if (!g_hiconX)
-    g_hiconX = LoadIcon (g_hInstance, MAKEINTRESOURCE(IDI_XWIN));
+    g_hiconX = (HICON)LoadImage (g_hInstance,
+				 MAKEINTRESOURCE(IDI_XWIN),
+				 IMAGE_ICON,
+				 0, 0,
+				 LR_DEFAULTSIZE);
   
   /* Try and get the icon from WM_HINTS */
   hIcon = winXIconToHICON (pFrame->win);

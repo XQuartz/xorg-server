@@ -500,7 +500,11 @@ winCreateWindowsWindow (WindowPtr pWin)
     g_hiconX = (HICON)winOverrideDefaultIcon();
   
   if (!g_hiconX)
-    g_hiconX = LoadIcon (g_hInstance, MAKEINTRESOURCE(IDI_XWIN));
+    g_hiconX = (HICON)LoadImage (g_hInstance,
+				 MAKEINTRESOURCE(IDI_XWIN),
+				 IMAGE_ICON,
+				 0, 0,
+				 LR_DEFAULTSIZE);
   
   /* Try and get the icon from WM_HINTS */
   hIcon = winXIconToHICON (pWin);
@@ -510,7 +514,7 @@ winCreateWindowsWindow (WindowPtr pWin)
     hIcon = g_hiconX;
 
   /* Set standard class name prefix so we can identify window easily */
-  strncpy (pszClass, WINDOW_CLASS_X, strlen (WINDOW_CLASS_X));
+  strncpy (pszClass, WINDOW_CLASS_X, sizeof(pszClass));
 
   if (winMultiWindowGetClassHint (pWin, &res_name, &res_class))
     {
@@ -601,7 +605,6 @@ winCreateWindowsWindow (WindowPtr pWin)
  * winDestroyWindowsWindow - Destroy a Windows window associated
  * with an X window
  */
-
 static void
 winDestroyWindowsWindow (WindowPtr pWin)
 {
@@ -653,7 +656,7 @@ winDestroyWindowsWindow (WindowPtr pWin)
 #endif
       
       /* Only delete if it's not the default */
-      if (hiconClass != g_hiconX &&
+      if ((hiconClass != g_hiconX) &&
 	  !winIconIsOverride((unsigned long)hiconClass))
 	{ 
 	  iReturn = DestroyIcon (hiconClass);

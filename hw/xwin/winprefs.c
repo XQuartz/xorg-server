@@ -82,7 +82,7 @@ MakeMenu (char *name,
   int i;
   int item;
   MENUPARSED *m;
-  HMENU hmenu;
+  HMENU hmenu, hsub;
 
   for (i=0; i<pref.menuItems; i++)
     {
@@ -107,6 +107,11 @@ MakeMenu (char *name,
   else
     {
       hmenu = CreatePopupMenu();
+      if (!hmenu)
+	{
+	  ErrorF("MakeMenu: Unable to CreatePopupMenu() %s\n", name);
+	  return NULL;
+	}
       item = 0;
     }
 
@@ -139,11 +144,13 @@ MakeMenu (char *name,
 	  
 	case CMD_MENU:
 	  /* Recursive! */
-	  InsertMenu (hmenu,
-		      item,
-		      MF_BYPOSITION|MF_POPUP|MF_ENABLED|MF_STRING,
-		      (UINT_PTR)MakeMenu (m->menuItem[i].param, 0, 0),
-		      m->menuItem[i].text);
+	  hsub = MakeMenu (m->menuItem[i].param, 0, 0);
+	  if (hsub)
+	    InsertMenu (hmenu,
+			item,
+			MF_BYPOSITION|MF_POPUP|MF_ENABLED|MF_STRING,
+			(UINT_PTR)hsub,
+			m->menuItem[i].text);
 	  break;
 	}
 
@@ -165,6 +172,12 @@ static BOOL CALLBACK
 ReloadEnumWindowsProc (HWND hwnd, LPARAM lParam)
 {
   HICON   hicon;
+  Window  wid;
+
+  if (!hwnd) {
+    ErrorF("ReloadEnumWindowsProc: hwnd==NULL!\n");
+    return FALSE;
+  }
 
   /* It's our baby, either clean or dirty it */
   if (lParam==FALSE) 
@@ -175,8 +188,9 @@ ReloadEnumWindowsProc (HWND hwnd, LPARAM lParam)
       SetClassLong (hwnd, GCL_HICON, (LONG)LoadIcon (NULL, IDI_APPLICATION));
 
       /* If it's generated on-the-fly, get rid of it, will regen */
-      if (!winIconIsOverride((unsigned long)hicon) && hicon!=g_hiconX)
+      if (!winIconIsOverride((unsigned long)hicon) && (hicon!=g_hiconX))
 	DestroyIcon (hicon);
+      
       
       /* Remove any menu additions, use bRevert flag */
       GetSystemMenu (hwnd, TRUE);
@@ -185,9 +199,11 @@ ReloadEnumWindowsProc (HWND hwnd, LPARAM lParam)
     }
   else
     {
-      /* Make the icon default, dynamic, of from xwinrc */
+      /* Make the icon default, dynamic, or from xwinrc */
       SetClassLong (hwnd, GCL_HICON, (LONG)g_hiconX);
-      winUpdateIcon ((Window)GetProp (hwnd, WIN_WID_PROP));
+      wid = (Window)GetProp (hwnd, WIN_WID_PROP);
+      if (wid)
+	winUpdateIcon (wid);
       /* Update the system menu for this window */
       SetupSysMenu ((unsigned long)hwnd);
 
@@ -243,7 +259,8 @@ ReloadPrefs (void)
   pref.iconItems = 0;
   
   /* Free global default X icon */
-  DestroyIcon (g_hiconX);
+  if (g_hiconX)
+    DestroyIcon (g_hiconX);
 
   /* Reset the custom command IDs */
   g_cmdid = STARTMENUID;
@@ -253,8 +270,13 @@ ReloadPrefs (void)
 
   /* Define global icon, load it */
   g_hiconX = (HICON)winOverrideDefaultIcon();
+  /* Use LoadImage so we get a non-shared, safe-to-kill resource */
   if (!g_hiconX)
-    g_hiconX = LoadIcon (g_hInstance, MAKEINTRESOURCE(IDI_XWIN));
+    g_hiconX = (HICON)LoadImage (g_hInstance,
+				 MAKEINTRESOURCE(IDI_XWIN),
+				 IMAGE_ICON,
+				 0, 0,
+				 LR_DEFAULTSIZE);
   
 #ifdef XWIN_MULTIWINDOW
   /* Rebuild the icons and menus */
@@ -478,8 +500,8 @@ winOverrideDefaultIcon()
     {
       hicon = LoadImageComma (pref.defaultIconName, 0, 0, LR_DEFAULTSIZE);
       if (hicon==NULL)
-        ErrorF ("winOverrideDefaultIcon: LoadIcon(%s) failed\n",
-                 pref.defaultIconName);
+        ErrorF ("winOverrideDefaultIcon: LoadImageComma(%s) failed\n",
+		pref.defaultIconName);
 
       return (unsigned long)hicon;
     }
@@ -501,19 +523,19 @@ winTaskbarIcon(void)
   if (pref.trayIconName[0])
     {
       hicon = LoadImageComma (pref.trayIconName,
-                             GetSystemMetrics (SM_CXSMICON),
-                             GetSystemMetrics (SM_CYSMICON),
-                             0 );
+			      GetSystemMetrics (SM_CXSMICON),
+			      GetSystemMetrics (SM_CYSMICON),
+			      0 );
     }
 
   /* Otherwise return the default */
   if (!hicon)
     hicon =  (HICON) LoadImage (g_hInstance,
-                               MAKEINTRESOURCE(IDI_XWIN),
-                               IMAGE_ICON,
-                               GetSystemMetrics (SM_CXSMICON),
-                               GetSystemMetrics (SM_CYSMICON),
-                               0);
+				MAKEINTRESOURCE(IDI_XWIN),
+				IMAGE_ICON,
+				GetSystemMetrics (SM_CXSMICON),
+				GetSystemMetrics (SM_CYSMICON),
+				0);
 
   return (unsigned long)hicon;
 }
@@ -623,7 +645,7 @@ winOverrideIcon (unsigned long longWin)
 
        hicon = LoadImageComma (pref.icon[i].iconFile, 0, 0, LR_DEFAULTSIZE);
        if (hicon==NULL)
-         ErrorF ("winOverrideIcon: LoadIcon(%s) failed\n",
+         ErrorF ("winOverrideIcon: LoadImageComma(%s) failed\n",
                   pref.icon[i].iconFile);
 
 	pref.icon[i].hicon = (unsigned long)hicon;
@@ -695,11 +717,18 @@ LoadPreferences ()
       strcat (fname, ".XWinrc");
       
       prefFile = fopen (fname, "r");
+      if (prefFile)
+	ErrorF ("winPrefsLoadPreferences: %s\n", fname);
     }
 
   /* No home file found, check system default */
   if (!prefFile)
-    prefFile = fopen (PROJECTROOT"/lib/X11/system.XWinrc", "r");
+    {
+      prefFile = fopen (PROJECTROOT"/lib/X11/system.XWinrc", "r");
+      if (prefFile)
+	ErrorF ("winPrefsLoadPreferences: %s\n",
+		PROJECTROOT"/lib/X11/system.XWinrc");
+    }
 
   /* If we could open it, then read the settings and close it */
   if (prefFile)

@@ -41,7 +41,6 @@
  */
 
 extern Bool			g_fCursor;
-extern HICON			g_hiconX;
 extern Bool			g_fKeyboardHookLL;
 
 

@@ -102,22 +102,6 @@ winScreenInit (int index,
 	  pScreenInfo->dwWidth, pScreenInfo->dwHeight);
 #endif
 
-#if defined(XWIN_MULTIWINDOW)
-  /* Bail if -pseudorootless and -multiwindow flags both present */
-  if (pScreenInfo->fPseudoRootless && pScreenInfo->fMultiWindow)
-    {
-      ErrorF ("winScreenInit - The -rootless and -multiwindow parameters\n"
-	      "\tcannot be used together.  Note that the -rootless parameter\n"
-	      "\trequires an external window manager (e.g. twm), while the\n"
-	      "\t-multiwindow parameter forbids an external window manager\n"
-	      "\tsince it uses an internal window manager.  Please correct\n"
-	      "\tyour command-line parameters; do not forget to stop\n"
-	      "\tlaunching an external window manager if you are using\n"
-	      "\tthe -multiwindow command-line parameter.");
-      return FALSE;
-    }
-#endif
-
   /* Allocate privates for this screen */
   if (!winAllocatePrivates (pScreen))
     {

@@ -160,9 +160,10 @@
 #define T_MANU GET(E_TMANU)
 
 /* extract information from estabished timing section */
-#define _VALID_TIMING(x) ((x[0] != 0x01 && x[1] != 0x01) \
-                       && (x[0] != 0x00 && x[1] != 0x00) \
-                       && (x[0] != 0x20 && x[1] != 0x20) )
+#define _VALID_TIMING(x) !(((x[0] == 0x01) && (x[1] == 0x01)) \
+                        || ((x[0] == 0x00) && (x[1] == 0x00)) \
+                        || ((x[0] == 0x20) && (x[1] == 0x20)) )
+
 #define VALID_TIMING _VALID_TIMING(c)
 #define _HSIZE1(x) ((x[0] + 31) * 8)
 #define HSIZE1 _HSIZE1(c)
@@ -174,8 +175,8 @@
 #define RATIO5_4 2
 #define RATIO16_9 3
 #define _VSIZE1(x,y,r) switch(RATIO(x)){ \
-  case RATIO1_1: y = _HSIZE1(x) * ((v->version>1||v->revision>2) ? 10/16 : 1); \
-                                         break; \
+  case RATIO1_1: y =  ((v->version > 1 || v->revision > 2) \
+		       ? (_HSIZE1(x) * 10) / 16 : _HSIZE1(x)); break; \
   case RATIO4_3: y = _HSIZE1(x) * 3 / 4; break; \
   case RATIO5_4: y = _HSIZE1(x) * 4 / 5; break; \
   case RATIO16_9: y = _HSIZE1(x) * 9 / 16; break; \

@@ -64,6 +64,11 @@ WinCmdlineRec g_cmdline = {
 #ifdef XKB
   FALSE,			/* noXkbExtension */
   NULL,				/* xkbMap */
+  NULL,             /* xkbRules */
+  NULL,             /* xkbModel */
+  NULL,             /* xkbLayout */
+  NULL,             /* xkbVariant */
+  NULL,             /* xkbOptions */
 #endif
   NULL,				/* screenname */
   NULL,				/* mousename */
@@ -429,34 +434,84 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	}
       else
 	{
-	  if ((s = winSetStrOption (kbd->inp_option_lst, "XkbRules", NULL)))
+          if (g_cmdline.xkbRules)
+            {
+              s = g_cmdline.xkbRules;
+              from = X_CMDLINE;  
+            }
+          else 
+            {   
+              s = winSetStrOption (kbd->inp_option_lst, "XkbRules", NULL);
+              from = X_CONFIG;  
+            }
+          if (s)
 	    {
 	      g_winInfo.xkb.rules = NULL_IF_EMPTY (s);
-	      winMsg (X_CONFIG, "XKB: rules: \"%s\"\n", s);
+	      winMsg (from, "XKB: rules: \"%s\"\n", s);
 	    }
 
-	  if ((s = winSetStrOption (kbd->inp_option_lst, "XkbModel", NULL)))
+          if (g_cmdline.xkbModel)
+            {
+              s = g_cmdline.xkbModel;
+              from = X_CMDLINE;
+            }
+          else
+            {
+              s = winSetStrOption (kbd->inp_option_lst, "XkbModel", NULL);
+              from = X_CONFIG;
+            }  
+	  if (s)
 	    {
 	      g_winInfo.xkb.model = NULL_IF_EMPTY (s);
-	      winMsg (X_CONFIG, "XKB: model: \"%s\"\n", s);
+	      winMsg (from, "XKB: model: \"%s\"\n", s);
 	    }
 
-	  if ((s = winSetStrOption (kbd->inp_option_lst, "XkbLayout", NULL)))
+          if (g_cmdline.xkbLayout)
+            {
+              s = g_cmdline.xkbLayout;
+              from = X_CMDLINE;
+            } 
+          else
+            {
+              s = winSetStrOption (kbd->inp_option_lst, "XkbLayout", NULL);
+              from = X_CONFIG;
+            }
+          if (s)  
 	    {
 	      g_winInfo.xkb.layout = NULL_IF_EMPTY (s);
-	      winMsg (X_CONFIG, "XKB: layout: \"%s\"\n", s);
+	      winMsg (from, "XKB: layout: \"%s\"\n", s);
 	    }
 
-	  if ((s = winSetStrOption (kbd->inp_option_lst, "XkbVariant", NULL)))
+          if (g_cmdline.xkbVariant)
+            {
+              s = g_cmdline.xkbVariant;
+              from = X_CMDLINE;
+            }
+          else
+            { 
+              s = winSetStrOption (kbd->inp_option_lst, "XkbVariant", NULL);
+              from = X_CONFIG;
+            }
+	  if (s)
 	    {
 	      g_winInfo.xkb.variant = NULL_IF_EMPTY (s);
-	      winMsg (X_CONFIG, "XKB: variant: \"%s\"\n", s);
+	      winMsg (from, "XKB: variant: \"%s\"\n", s);
 	    }
 
-	  if ((s = winSetStrOption (kbd->inp_option_lst, "XkbOptions", NULL)))
+          if (g_cmdline.xkbOptions)
+            {
+              s=g_cmdline.xkbOptions;
+              from = X_CMDLINE;
+            } 
+          else
+            { 
+              s = winSetStrOption (kbd->inp_option_lst, "XkbOptions", NULL);
+              from = X_CONFIG;
+            }
+          if (s)
 	    {
 	      g_winInfo.xkb.options = NULL_IF_EMPTY (s);
-	      winMsg (X_CONFIG, "XKB: options: \"%s\"\n", s);
+	      winMsg (from, "XKB: options: \"%s\"\n", s);
 	    }
 
 	  from = X_CMDLINE;
@@ -525,6 +580,32 @@ winConfigKeyboard (DeviceIntPtr pDevice)
           winMsg (X_CMDLINE, "XkbExtension disabled\n");
         }
 #endif
+    }
+#else
+  if (g_cmdline.xkbRules) 
+    {
+      g_winInfo.xkb.rules = g_cmdline.xkbRules;
+      winMsg (X_CMDLINE, "XKB: rules: \"%s\"\n", g_cmdline.xkbRules);
+    }
+  if (g_cmdline.xkbModel) 
+    {
+      g_winInfo.xkb.model = g_cmdline.xkbModel;
+      winMsg (X_CMDLINE, "XKB: model: \"%s\"\n", g_cmdline.xkbModel);
+    }
+  if (g_cmdline.xkbLayout) 
+    {
+      g_winInfo.xkb.layout = g_cmdline.xkbLayout;
+      winMsg (X_CMDLINE, "XKB: layout: \"%s\"\n", g_cmdline.xkbLayout);
+    }
+  if (g_cmdline.xkbVariant) 
+    {
+      g_winInfo.xkb.variant = g_cmdline.xkbVariant;
+      winMsg (X_CMDLINE, "XKB: variant: \"%s\"\n", g_cmdline.xkbVariant);
+    }
+  if (g_cmdline.xkbOptions) 
+    {
+      g_winInfo.xkb.options = g_cmdline.xkbOptions;
+      winMsg (X_CMDLINE, "XKB: options: \"%s\"\n", g_cmdline.xkbOptions);
     }
 #endif
 

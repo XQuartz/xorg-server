@@ -1040,6 +1040,37 @@ ddxProcessArgument (int argc, char *argv[], int i)
       g_cmdline.noXkbExtension = TRUE;  
       return 0; /* Let DIX parse this again */
     }
+
+  if (IS_OPTION ("-xkbrules"))
+    {
+      CHECK_ARGS (1);
+      g_cmdline.xkbRules = argv[++i];
+      return 2;
+    }
+  if (IS_OPTION ("-xkbmodel"))
+    {
+      CHECK_ARGS (1);
+      g_cmdline.xkbModel = argv[++i];
+      return 2;
+    }
+  if (IS_OPTION ("-xkblayout"))
+    {
+      CHECK_ARGS (1);
+      g_cmdline.xkbLayout = argv[++i];
+      return 2;
+    }
+  if (IS_OPTION ("-xkbvariant"))
+    {
+      CHECK_ARGS (1);
+      g_cmdline.xkbVariant = argv[++i];
+      return 2;
+    }
+  if (IS_OPTION ("-xkboptions"))
+    {
+      CHECK_ARGS (1);
+      g_cmdline.xkbOptions = argv[++i];
+      return 2;
+    }
 #endif
 
   return 0;

@@ -195,6 +195,12 @@ typedef struct
 #ifdef XKB
   Bool noXkbExtension;
   char *xkbMap;
+  char *xkbRules; 
+  char *xkbModel;
+  char *xkbLayout;
+  char *xkbVariant;
+  char *xkbOptions;
+
 #endif
   /* layout */
   char *screenname;

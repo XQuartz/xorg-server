@@ -189,7 +189,7 @@ winReadConfigfile ()
 			     g_xf86configptr->conf_layout_lst,
 			     NULL))
 	    {
-	      winMsg (X_ERROR, "Unable to determin the screen layout\n");
+	      winMsg (X_ERROR, "Unable to determine the screen layout\n");
 	      return FALSE;
 	    }
 	}

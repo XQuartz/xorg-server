@@ -66,12 +66,12 @@ winDetectSupportedEngines ()
     {
     case VER_PLATFORM_WIN32_NT:
       /* Engine 4 is supported on NT only */
-      ErrorF ("winDetectSupportedEngines - Windows NT/2000/XP\n");
+      winErrorFVerb (2, "winDetectSupportedEngines - Windows NT/2000/XP\n");
       break;
 
     case VER_PLATFORM_WIN32_WINDOWS:
       /* Engine 4 is supported on NT only */
-      ErrorF ("winDetectSupportedEngines - Windows 95/98/Me\n");
+      winErrorFVerb (2, "winDetectSupportedEngines - Windows 95/98/Me\n");
       break;
     }
 
@@ -97,20 +97,20 @@ winDetectSupportedEngines ()
       if (FAILED (ddrval))
 	{
 	  /* No DirectDraw support */
-	  ErrorF ("winDetectSupportedEngines - DirectDraw not installed\n");
+	  winErrorFVerb (2, "winDetectSupportedEngines - DirectDraw not installed\n");
 	  return;
 	}
       else
 	{
 	  /* We have DirectDraw */
-	  ErrorF ("winDetectSupportedEngines - DirectDraw installed\n");
+	  winErrorFVerb (2, "winDetectSupportedEngines - DirectDraw installed\n");
 	  g_dwEnginesSupported |= WIN_SERVER_SHADOW_DD;
 
 	  /* Allow PrimaryDD engine if NT */
 	  if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
 	    {
 	      g_dwEnginesSupported |= WIN_SERVER_PRIMARY_DD;
-	      ErrorF ("winDetectSupportedEngines - Allowing PrimaryDD\n");
+	      winErrorFVerb (2, "winDetectSupportedEngines - Allowing PrimaryDD\n");
 	    }
 	}
       
@@ -121,7 +121,7 @@ winDetectSupportedEngines ()
       if (SUCCEEDED (ddrval))
 	{
 	  /* We have DirectDraw4 */
-	  ErrorF ("winDetectSupportedEngines - DirectDraw4 installed\n");
+	  winErrorFVerb (2, "winDetectSupportedEngines - DirectDraw4 installed\n");
 	  g_dwEnginesSupported |= WIN_SERVER_SHADOW_DDNL;
 	}
 
@@ -132,7 +132,7 @@ winDetectSupportedEngines ()
 	IDirectDraw_Release (lpdd);
     }
 
-  ErrorF ("winDetectSupportedEngines - Returning, supported engines %08x\n",
+  winErrorFVerb (2, "winDetectSupportedEngines - Returning, supported engines %08x\n",
 	  (unsigned int) g_dwEnginesSupported);
 }
 

@@ -407,7 +407,7 @@ winKeybdProc (DeviceIntPtr pDeviceInt, int iState)
 	      names.geometry = g_winInfo.xkb.geometry;
 	    }
 
-	  ErrorF("Rules = \"%s\" Model = \"%s\" Layout = \"%s\""
+	  winErrorFVerb(2, "Rules = \"%s\" Model = \"%s\" Layout = \"%s\""
 		 " Variant = \"%s\" Options = \"%s\"\n",
 		 g_winInfo.xkb.rules, g_winInfo.xkb.model,
 		 g_winInfo.xkb.layout, g_winInfo.xkb.variant,
@@ -433,7 +433,7 @@ winKeybdProc (DeviceIntPtr pDeviceInt, int iState)
             }
           else
             {  
-              ErrorF ("winKeybdProc - Error initializing keyboard AutoRepeat (No XKB)\n");
+              winErrorFVerb (1, "winKeybdProc - Error initializing keyboard AutoRepeat (No XKB)\n");
             }
         }
 #endif

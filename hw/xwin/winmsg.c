@@ -33,13 +33,7 @@
 #include "winmsg.h"
 #include <stdarg.h>
 
-#ifndef VERBOSE_LEVEL
-#define VERBOSE_LEVEL 4
-#endif
-
-
 void winVMsg (int, MessageType, int verb, const char *, va_list);
-
 
 void
 winVMsg (int scrnIndex, MessageType type, int verb, const char *format,
@@ -64,7 +58,7 @@ winMsg (MessageType type, const char *format, ...)
 {
   va_list ap;
   va_start (ap, format);
-  LogVMessageVerb(type, 0, format, ap);
+  LogVMessageVerb(type, 1, format, ap);
   va_end (ap);
 }
 

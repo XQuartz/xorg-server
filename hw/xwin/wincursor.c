@@ -575,16 +575,6 @@ winSetCursor (ScreenPtr pScreen, CursorPtr pCursor, int x, int y)
 
 
 /*
- * winReallySetCursor
- *  Not needed for xpr. Cursor is set from the X server thread.
- */
-void
-winReallySetCursor ()
-{
-}
-
-
-/*
  * QuartzMoveCursor
  *  Move the cursor. This is a noop for us.
  */

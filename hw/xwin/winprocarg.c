@@ -49,6 +49,7 @@ extern Bool			g_fXdmcpEnabled;
 extern char *			g_pszCommandLine;
 extern Bool			g_fKeyboardHookLL;
 extern Bool			g_fNoHelpMessageBox;                     
+extern Bool			g_fSoftwareCursor;
 
 
 /*
@@ -1144,6 +1145,12 @@ ddxProcessArgument (int argc, char *argv[], int i)
   if (IS_OPTION ("-nokeyhook"))
     {
       g_fKeyboardHookLL = FALSE;
+      return 1;
+    }
+  
+  if (IS_OPTION ("-swcursor"))
+    {
+      g_fSoftwareCursor = TRUE;
       return 1;
     }
   

@@ -34,6 +34,7 @@
 /* $XFree86: xc/programs/Xserver/hw/xwin/winscrinit.c,v 1.27 2003/07/29 21:25:18 dawes Exp $ */
 
 #include "win.h"
+#include "winmsg.h"
 #include "safeAlpha.h"	
 
 
@@ -72,6 +73,7 @@ winMWExtWMProcs = {
 extern winScreenInfo		g_ScreenInfo[];
 extern miPointerScreenFuncRec	g_winPointerCursorFuncs;
 extern int			g_iScreenPrivateIndex;
+extern Bool                     g_fSoftwareCursor;
 
 
 /*
@@ -106,7 +108,7 @@ winScreenInit (int index,
   HDC			hdc;
 
 #if CYGDEBUG || YES
-  ErrorF ("winScreenInit - dwWidth: %ld dwHeight: %ld\n",
+  winErrorFVerb (2, "winScreenInit - dwWidth: %ld dwHeight: %ld\n",
 	  pScreenInfo->dwWidth, pScreenInfo->dwHeight);
 #endif
 
@@ -231,8 +233,13 @@ winScreenInit (int index,
       return FALSE;
     }
 
+  if (!g_fSoftwareCursor)
+    winInitCursor(pScreen);
+  else
+    winErrorFVerb(2, "winScreenInit - Using software cursor\n");  
+
 #if CYGDEBUG || YES
-  ErrorF ("winScreenInit - returning\n");
+  winDebug ("winScreenInit - returning\n");
 #endif
 
   return TRUE;
@@ -268,7 +275,7 @@ winFinishScreenInitFB (int index,
       + winCountBits (pScreenPriv->dwGreenMask)
       + winCountBits (pScreenPriv->dwBlueMask);
   
-  ErrorF ("winFinishScreenInitFB - Masks: %08x %08x %08x\n",
+  winErrorFVerb (2, "winFinishScreenInitFB - Masks: %08x %08x %08x\n",
 	  (unsigned int) pScreenPriv->dwRedMask,
 	  (unsigned int) pScreenPriv->dwGreenMask,
 	  (unsigned int) pScreenPriv->dwBlueMask);
@@ -385,14 +392,14 @@ winFinishScreenInitFB (int index,
   /* KDrive does miDCInitialize right after miInitializeBackingStore */
   /* Setup the cursor routines */
 #if CYGDEBUG
-  ErrorF ("winFinishScreenInitFB - Calling miDCInitialize ()\n");
+  winDebug ("winFinishScreenInitFB - Calling miDCInitialize ()\n");
 #endif
   miDCInitialize (pScreen, &g_winPointerCursorFuncs);
 
   /* KDrive does winCreateDefColormap right after miDCInitialize */
   /* Create a default colormap */
 #if CYGDEBUG
-  ErrorF ("winFinishScreenInitFB - Calling winCreateDefColormap ()\n");
+  winDebug ("winFinishScreenInitFB - Calling winCreateDefColormap ()\n");
 #endif
   if (!winCreateDefColormap (pScreen))
     {
@@ -410,7 +417,7 @@ winFinishScreenInitFB (int index,
       )
     {
 #if CYGDEBUG
-      ErrorF ("winFinishScreenInitFB - Calling shadowInit ()\n");
+      winDebug ("winFinishScreenInitFB - Calling shadowInit ()\n");
 #endif
       if (!shadowInit (pScreen,
 		       pScreenPriv->pwinShadowUpdate,
@@ -425,11 +432,11 @@ winFinishScreenInitFB (int index,
   /* Handle multi-window external window manager mode */
   if (pScreenInfo->fMWExtWM)
     {
-      ErrorF ("winScreenInit - MultiWindowExtWM - Calling RootlessInit\n");
+      winDebug ("winScreenInit - MultiWindowExtWM - Calling RootlessInit\n");
       
       RootlessInit(pScreen, &winMWExtWMProcs);
       
-      ErrorF ("winScreenInit - MultiWindowExtWM - RootlessInit returned\n");
+      winDebug ("winScreenInit - MultiWindowExtWM - RootlessInit returned\n");
       
       rootless_CopyBytes_threshold = 0;
       rootless_FillBytes_threshold = 0;
@@ -571,7 +578,7 @@ winFinishScreenInitFB (int index,
 #ifdef XWIN_MULTIWINDOW
 #if CYGDEBUG || YES
   if (pScreenInfo->fMultiWindow)
-    ErrorF ("winFinishScreenInitFB - Calling winInitWM.\n");
+    winDebug ("winFinishScreenInitFB - Calling winInitWM.\n");
 #endif
 
   /* Initialize multi window mode */
@@ -594,7 +601,7 @@ winFinishScreenInitFB (int index,
   pScreenPriv->fBadDepth = FALSE;
 
 #if CYGDEBUG || YES
-  ErrorF ("winFinishScreenInitFB - returning\n");
+  winDebug ("winFinishScreenInitFB - returning\n");
 #endif
 
   return TRUE;

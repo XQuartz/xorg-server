@@ -1,7 +1,6 @@
                               Fonts in X11R6.7
 
                   Juliusz Chroboczek, <jch@pps.jussieu.fr>
-                 Updated by Jim Gettys, <jg@freedesktop.org>
 
                                 25 March 2004
 
@@ -1183,5 +1182,5 @@ The IANA RFC documents, available from a number of sites throughout the
 world, often provide interesting information about character set issues; see
 for example RFC 373.
 
-     Based on Generated from XFree86: xc/programs/Xserver/hw/xfree86/doc/sgml/fonts.sgml,v 1.23 dawes Exp $. Updated by Jim Gettys.
+     $Id$
 

@@ -765,6 +765,9 @@ winPixmapToRegionNativeGDI (PixmapPtr pPix);
 
 Bool
 winInitClipboard (void);
+
+void
+winFixClipboardChain (void);
 #endif
 
 

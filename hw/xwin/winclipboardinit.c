@@ -47,6 +47,8 @@ DISPATCH_PROC(winProcSetSelectionOwner);
 
 extern pthread_t		g_ptClipboardProc;
 extern winDispatchProcPtr	winProcSetSelectionOwnerOrig;
+extern Bool			g_fClipboard;
+extern HWND			g_hwndClipboard;
 
 
 /*
@@ -125,4 +127,14 @@ winClipboardCreateMessagingWindow ()
   UpdateWindow (hwnd);
 
   return hwnd;
+}
+
+void
+winFixClipboardChain (void)
+{
+   if (g_fClipboard
+       && g_hwndClipboard)
+     {
+       SendMessage (g_hwndClipboard, WM_WM_REINIT, 0, 0);
+     }
 }

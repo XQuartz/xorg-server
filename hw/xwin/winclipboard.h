@@ -76,6 +76,7 @@
 #define WIN_XEVENTS_CONVERT			2
 #define WIN_XEVENTS_NOTIFY			3
 
+#define WM_WM_REINIT                           (WM_USER + 1)
 
 /*
  * References to external symbols

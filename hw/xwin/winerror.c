@@ -64,6 +64,10 @@ OsVendorVErrorF (const char *pszFormat, va_list va_args)
 void
 OsVendorFatalError (void)
 {
-  
+  MessageBox (NULL,
+	      "A fatal error has occurred and Cygwin/X will now exit.\n"
+	      "Please open /tmp/XWin.log for more information.\n",
+	      "Cygwin/X - Fatal Error",
+	      MB_OK);
 }
 #endif

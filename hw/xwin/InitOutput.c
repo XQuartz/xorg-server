@@ -364,11 +364,19 @@ ddxUseMsg (void)
 	  "\tDo not use Unicode clipboard even if NT-based platform.\n");
 #endif
 
+  /* Log file will not be opened for UseMsg unless we open it now */
   if (!g_fLogInited) {
     LogInit (g_pszLogFile, NULL);
     g_fLogInited = TRUE;
   }  
   LogClose ();
+
+  /* Notify user where UseMsg text can be found.*/
+  MessageBox (NULL,
+	      "The Cygwin/X help text has been printed to /tmp/XWin.log.\n"
+	      "Please open /tmp/XWin.log to read the help text.",
+	      "Cygwin/X - Help Text Information",
+	      MB_OK);
 }
 
 
@@ -546,7 +554,7 @@ winCheckDisplayNumber ()
   if (!mutex)
     {
       LPVOID lpMsgBuf;
-	  
+
       /* Display a fancy error message */
       FormatMessage (FORMAT_MESSAGE_ALLOCATE_BUFFER | 
 		     FORMAT_MESSAGE_FROM_SYSTEM | 

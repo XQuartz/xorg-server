@@ -241,7 +241,7 @@ Bool
 winConfigKeyboard (DeviceIntPtr pDevice)
 {
   char                          layoutName[KL_NAMELENGTH];
-  unsigned int                  layoutNum;
+  static unsigned int           layoutNum = 0;
   int                           keyboardType;  
   XF86ConfInputPtr		kbd = NULL;
   XF86ConfInputPtr		input_list = NULL;
@@ -295,14 +295,25 @@ winConfigKeyboard (DeviceIntPtr pDevice)
   if (keyboardType > 0 && GetKeyboardLayoutName (layoutName)) 
   {
     WinKBLayoutPtr	pLayout;
-      
-    layoutNum = strtoul (layoutName, (char **)NULL, 16);
+
+    if (! layoutNum)
+      layoutNum = strtoul (layoutName, (char **)NULL, 16);
     if ((layoutNum & 0xffff) == 0x411) {
         /* The japanese layouts know a lot of different IMEs which all have
-	  different layout numbers set. Map them to a single entry. 
-	  Same might apply for chinese, korean and other symbol languages
-	  too */
+	   different layout numbers set. Map them to a single entry. 
+	   Same might apply for chinese, korean and other symbol languages
+	   too */
         layoutNum = (layoutNum & 0xffff);
+	if (keyboardType == 7)
+	  {
+	    /* Japanese layouts have problems with key event messages
+	       such as the lack of WM_KEYUP for Caps Lock key.
+	       Loading US layout fixes this problem. */
+	    if (LoadKeyboardLayout("00000409", KLF_ACTIVATE) != NULL)
+	      winMsg (X_INFO, "Loading US keyboard layout.\n");
+	    else
+	      winMsg (X_ERROR, "LoadKeyboardLaout failed.\n");
+	  }
     }
     winMsg (X_PROBED, "winConfigKeyboard - Layout: \"%s\" (%08x) \n", 
             layoutName, layoutNum);
@@ -325,17 +336,6 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	break;
       }
 
-    if ((layoutNum == 0x411) && keyboardType == 7)
-      {
-	/* Japanese layouts have problems with key event messages
-	   such as the lack of WM_KEYUP for Caps Lock key.
-	   Loading US layout fixes this problem. */
-	if (LoadKeyboardLayout("00000409", KLF_ACTIVATE) != NULL)
-	  winMsg (X_INFO, "Loading US keyboard layout.\n");
-	else
-	  winMsg (X_ERROR, "LoadKeyboardLaout failed.\n");
-      }
-	   
   }  
   
   g_winInfo.xkb.initialMap = NULL;

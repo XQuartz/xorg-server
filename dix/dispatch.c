@@ -147,11 +147,6 @@ static int nextFreeClientID; /* always MIN free client ID */
 
 static int	nClients;	/* number of authorized clients */
 
-#if defined(DDXOSRESET)
-extern void OsVendorReset ();
-#endif
-
-
 CallbackListPtr ClientStateCallback;
 char dispatchException = 0;
 char isItTimeToYield;
@@ -471,8 +466,8 @@ Dispatch(void)
 	}
 	dispatchException &= ~DE_PRIORITYCHANGE;
     }
-#if defined(DDXOSRESET)
-    OsVendorReset ();
+#if defined(DDXBEFORERESET)
+    BeforeReset ();
 #endif
     KillAllClients();
     DEALLOCATE_LOCAL(clientReady);

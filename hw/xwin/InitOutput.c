@@ -76,12 +76,8 @@ extern FARPROC			g_fpTrackMouseEvent;
  * Function prototypes
  */
 
-#ifdef DDXOSVERRORF
+#if defined(DDXOSVERRORF)
 void OsVendorVErrorF (const char *pszFormat, va_list va_args);
-#endif
-
-#if defined(DDXOSRESET)
-void OsVendorReset (void);
 #endif
 
 void winInitializeDefaultScreens (void);
@@ -115,16 +111,18 @@ static PixmapFormatRec g_PixmapFormats[] = {
 
 const int NUMFORMATS = sizeof (g_PixmapFormats) / sizeof (g_PixmapFormats[0]);
 
-#if defined(DDXOSRESET)
+#if defined(DDXBEFORERESET)
 /*
  * Called right before KillAllClients when the server is going to reset,
  * allows us to shutdown our seperate threads cleanly.
  */
 
 void
-OsVendorReset (void)
+BeforeReset (void)
 {
-  ErrorF ("OsVendorReset - Hello\n");
+  ErrorF ("BeforeReset - Hello\n");
+
+  glPixelStorei (0, 0);
 
 #ifdef XWIN_CLIPBOARD
   /* Close down clipboard resources */
@@ -137,7 +135,7 @@ OsVendorReset (void)
       /* Wait for the clipboard thread to exit */
       pthread_join (g_ptClipboardProc, NULL);
 
-      ErrorF ("OsVendorReset - Clipboard thread has exited.\n");
+      ErrorF ("BeforeReset - Clipboard thread has exited.\n");
     }
 #endif
 }

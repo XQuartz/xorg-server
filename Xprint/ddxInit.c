@@ -215,6 +215,12 @@ OsVendorFatalError(void)
 }
 #endif
 
+void
+BeforeReset(void)
+{
+    return;
+}
+
 #ifdef DDXTIME
 CARD32
 GetTimeInMillis(void)

@@ -150,7 +150,7 @@ void OsVendorFatalError()
     return;
 }
 
-void OsVendorReset(void)
+void BeforeReset(void)
 {
     return;
 }

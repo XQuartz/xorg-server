@@ -26,6 +26,22 @@
 // ggs: needed to call back to glx with visual configs
 extern void GlxSetVisualConfigs(int nconfigs, __GLXvisualConfig *configs, void **configprivs);
 
+static char errorbuffer[1024];
+const char *winErrorMessage(void)
+{
+    if (!FormatMessage( 
+                FORMAT_MESSAGE_FROM_SYSTEM | 
+                FORMAT_MESSAGE_IGNORE_INSERTS,
+                NULL,
+                GetLastError(),
+                MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+                (LPTSTR) &errorbuffer,
+                sizeof(errorbuffer),
+                NULL ))
+        snprintf(errorbuffer, sizeof(errorbuffer), "Unknown error in FormatMessage!\n"); 
+    return errorbuffer; 
+}
+
 /*
  * GLX implementation that uses Win32's OpenGL
  */
@@ -185,6 +201,7 @@ struct __GLcontextRec {
   struct __GLinterfaceRec interface; // required to be first
 
   HGLRC ctx;
+  HWND wnd;
   int pixelFormat;
 
   /* set when attached */
@@ -197,7 +214,7 @@ struct __GLcontextRec {
 // Context manipulation; return GL_FALSE on failure
 static GLboolean glWinDestroyContext(__GLcontext *gc)
 {
-    GLWIN_DEBUG_MSG("glWinDestroyContext (ctx 0x%p\n", gc->ctx);
+    GLWIN_DEBUG_MSG("glWinDestroyContext (ctx %p\n", gc->ctx);
 
     if (gc != NULL)
     {
@@ -213,12 +230,14 @@ static GLboolean glWinDestroyContext(__GLcontext *gc)
 static GLboolean glWinLoseCurrent(__GLcontext *gc)
 {
     BOOL ret;
+    HDC dc = GetDC(gc->wnd);
 
-    GLWIN_DEBUG_MSG("glWinLoseCurrent (ctx 0x%p)\n", gc->ctx);
+    GLWIN_DEBUG_MSG("glWinLoseCurrent (ctx %p)\n", gc->ctx);
 
-    ret = wglMakeCurrent(wglGetCurrentDC(), NULL);
+    ret = wglMakeCurrent(dc, NULL);
     if (!ret)
-	ErrorF("wglMakeCurrent: 0x%x\n", (int)GetLastError());
+	ErrorF("wglMakeCurrent: %s\n", winErrorMessage());
+    ReleaseDC(gc->wnd, dc);
 
     __glXLastContext = NULL; // Mesa does this; why?
 
@@ -227,26 +246,29 @@ static GLboolean glWinLoseCurrent(__GLcontext *gc)
 
 static void unattach(__GLcontext *gc)
 {
-    GLWIN_DEBUG_MSG("unattach 0x%p\n", gc);
+    GLWIN_DEBUG_MSG("unattach %p\n", gc);
 }
 
 static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
 {
-    GLWIN_DEBUG_MSG("attach 0x%p\n", gc);
+    GLWIN_DEBUG_MSG("attach %p\n", gc);
 }
 
 static GLboolean glWinMakeCurrent(__GLcontext *gc)
 {
     __GLdrawablePrivate *glPriv = gc->interface.imports.getDrawablePrivate(gc);
     BOOL ret;
+    HDC dc;
 
-    GLWIN_DEBUG_MSG("glWinMakeCurrent (ctx 0x%p)\n", gc->ctx);
+    GLWIN_DEBUG_MSG("glWinMakeCurrent (ctx %p)\n", gc->ctx);
 
     attach(gc, glPriv);
 
-    ret = wglMakeCurrent(wglGetCurrentDC(), gc->ctx);
+    dc = GetDC(gc->wnd);
+    ret = wglMakeCurrent(dc, gc->ctx);
     if (!ret)
-	ErrorF("glMakeCurrent error: 0x%x\n", (int)GetLastError());
+	ErrorF("glMakeCurrent error: %s\n", winErrorMessage());
+    ReleaseDC(gc->wnd, dc);
 
     return ret;
 }
@@ -284,12 +306,15 @@ static GLboolean glWinCopyContext(__GLcontext *dst, const __GLcontext *src,
 static GLboolean glWinForceCurrent(__GLcontext *gc)
 {
     BOOL ret; 
+    HDC dc;
 
-    GLWIN_DEBUG_MSG("glWinForceCurrent (ctx 0x%p)\n", gc->ctx);
+    GLWIN_DEBUG_MSG("glWinForceCurrent (ctx %p)\n", gc->ctx);
 
-    ret = wglMakeCurrent(wglGetCurrentDC(), gc->ctx);
+    dc = GetDC(gc->wnd);
+    ret = wglMakeCurrent(dc, gc->ctx);
     if (!ret)
-	ErrorF("wglSetCurrent error: 0x%x\n", (int)GetLastError());
+	ErrorF("wglSetCurrent error: %s\n", winErrorMessage());
+    ReleaseDC(gc->wnd, dc);
 
     return ret;
 }
@@ -329,7 +354,39 @@ static void glWinEndDispatchOverride(__GLcontext *gc)
     GLWIN_DEBUG_MSG("unimplemented glWinEndDispatchOverride");
 }
 
-static int makeFormat(__GLcontextModes *mode)
+static void pfdOut(const PIXELFORMATDESCRIPTOR *pfd)
+{
+    ErrorF("PIXELFORMATDESCRIPTOR:\n");
+    ErrorF("nSize = %u\n", pfd->nSize);
+    ErrorF("nVersion = %u\n", pfd->nVersion);
+    ErrorF("dwFlags = %lu\n", pfd->dwFlags);
+    ErrorF("iPixelType = %hhu\n", pfd->iPixelType);
+    ErrorF("cColorBits = %hhu\n", pfd->cColorBits);
+    ErrorF("cRedBits = %hhu\n", pfd->cRedBits);
+    ErrorF("cRedShift = %hhu\n", pfd->cRedShift);
+    ErrorF("cGreenBits = %hhu\n", pfd->cGreenBits);
+    ErrorF("cGreenShift = %hhu\n", pfd->cGreenShift);
+    ErrorF("cBlueBits = %hhu\n", pfd->cBlueBits);
+    ErrorF("cBlueShift = %hhu\n", pfd->cBlueShift);
+    ErrorF("cAlphaBits = %hhu\n", pfd->cAlphaBits);
+    ErrorF("cAlphaShift = %hhu\n", pfd->cAlphaShift);
+    ErrorF("cAccumBits = %hhu\n", pfd->cAccumBits);
+    ErrorF("cAccumRedBits = %hhu\n", pfd->cAccumRedBits);
+    ErrorF("cAccumGreenBits = %hhu\n", pfd->cAccumGreenBits);
+    ErrorF("cAccumBlueBits = %hhu\n", pfd->cAccumBlueBits);
+    ErrorF("cAccumAlphaBits = %hhu\n", pfd->cAccumAlphaBits);
+    ErrorF("cDepthBits = %hhu\n", pfd->cDepthBits);
+    ErrorF("cStencilBits = %hhu\n", pfd->cStencilBits);
+    ErrorF("cAuxBuffers = %hhu\n", pfd->cAuxBuffers);
+    ErrorF("iLayerType = %hhu\n", pfd->iLayerType);
+    ErrorF("bReserved = %hhu\n", pfd->bReserved);
+    ErrorF("dwLayerMask = %lu\n", pfd->dwLayerMask);
+    ErrorF("dwVisibleMask = %lu\n", pfd->dwVisibleMask);
+    ErrorF("dwDamageMask = %lu\n", pfd->dwDamageMask);
+    ErrorF("\n");
+}    
+
+static int makeFormat(__GLcontextModes *mode, __GLcontext *gc)
 {
     PIXELFORMATDESCRIPTOR pfd = {
 	sizeof(PIXELFORMATDESCRIPTOR),   // size of this pfd
@@ -352,6 +409,7 @@ static int makeFormat(__GLcontextModes *mode)
 	0, 0, 0                // layer masks ignored
     }, *result = &pfd;
     int iPixelFormat;
+    HDC dc;
 
     GLWIN_DEBUG_MSG("makeFormat\n");
 
@@ -411,9 +469,13 @@ static int makeFormat(__GLcontextModes *mode)
     GLWIN_DEBUG_MSG("makeFormat almost done\n");
 
     result = NULL;
-    iPixelFormat = ChoosePixelFormat(wglGetCurrentDC(), &pfd);
+    dc = GetDC(gc->wnd);
+
+    pfdOut(&pfd);
+    iPixelFormat = ChoosePixelFormat(dc, &pfd);
     if (iPixelFormat == 0)
-	ErrorF("ChoosePixelFormat error: 0x%x\n", (int)GetLastError());
+	ErrorF("ChoosePixelFormat error: %s\n", winErrorMessage());
+    ReleaseDC(gc->wnd, dc);
 
     GLWIN_DEBUG_MSG("makeFormat done (%d)\n", iPixelFormat);
 
@@ -427,6 +489,7 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
     __GLcontext *result;
     BOOL ret;
     PIXELFORMATDESCRIPTOR pfd;
+    HDC dc;
 
     GLWIN_DEBUG_MSG("glWinCreateContext\n");
 
@@ -435,8 +498,9 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
 
     result->interface.imports = *imports;
     result->interface.exports = glWinExports;
+    result->wnd = GetActiveWindow(); // FIXME
 
-    result->pixelFormat = makeFormat(mode);
+    result->pixelFormat = makeFormat(mode, result);
     if (result->pixelFormat == 0) {
         free(result);
         return NULL;
@@ -444,22 +508,26 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
 
     result->ctx = NULL;
 
-    DescribePixelFormat(wglGetCurrentDC(), result->pixelFormat, 
+    dc = GetDC(result->wnd);
+    DescribePixelFormat(dc, result->pixelFormat, 
             sizeof(pfd), &pfd);
-    ret = SetPixelFormat(wglGetCurrentDC(), result->pixelFormat, &pfd);
+    pfdOut(&pfd);
+    ret = SetPixelFormat(dc, result->pixelFormat, &pfd);
 
     if (!ret) {
         free(result);
         return NULL;
     }
     
-    result->ctx = wglCreateContext(wglGetCurrentDC());
+    result->ctx = wglCreateContext(dc);
 
     if (result->ctx == NULL) {
-	ErrorF("wglCreateContext error: 0x%x\n", (int)GetLastError());
+	ErrorF("wglCreateContext error: %s\n", winErrorMessage());
+        ReleaseDC(result->wnd, dc);
         free(result);
         return NULL;
     }
+    ReleaseDC(result->wnd, dc);
 
     GLWIN_DEBUG_MSG("glWinCreateContext done\n");
     return (__GLinterface *)result;
@@ -1044,17 +1112,20 @@ static GLboolean glWinSwapBuffers(__GLXdrawablePrivate *glxPriv)
     // swap buffers on only *one* of the contexts
     // (e.g. the last one for drawing)
     __GLcontext *gc = (__GLcontext *)glxPriv->drawGlxc->gc;
-    //CGLError gl_err;
-
-    GLWIN_DEBUG_MSG("glWinSwapBuffers\n");
+    HDC dc;
+    BOOL ret;
 
     if (gc != NULL && gc->ctx != NULL)
     {
-        /*
-	gl_err = CGLFlushDrawable(gc->ctx);
-	if (gl_err != 0)
-	    ErrorF("CGLFlushDrawable error: %s\n", CGLErrorString(gl_err));
-        */
+        dc = GetDC(gc->wnd);
+
+        ret = SwapBuffers(dc);
+        if (!ret)
+            ErrorF("SwapBuffers failed: %s\n", winErrorMessage());
+        
+        ReleaseDC(gc->wnd, dc);
+        if (!ret)
+            return GL_FALSE;
     }
 
     return GL_TRUE;

@@ -193,7 +193,7 @@ static char *device_names[] = {
 
 static XtResource appResources[] = {
 #if 0
-    {"xf86config",  __XCONFIGFILE__,  XtRString, sizeof(char*),
+    {"config",  __XCONFIGFILE__,  XtRString, sizeof(char*),
       0, XtRString, "/etc/X11/"__XCONFIGFILE__},
 #endif
     {"menuBitmap",  "MenuBitmap",  XtRString, sizeof(char*),
@@ -205,10 +205,10 @@ Usage(void)
 {
     fprintf(stderr,
 "Usage:\n"
-"   xf86cfg [-option ...]\n"
+"   xorgcfg [-option ...]\n"
 "\n"
 "Options:\n"
-"   -xf86config <"__XCONFIGFILE__">   Alternate configuration file.\n"
+"   -config <"__XCONFIGFILE__">   Alternate configuration file.\n"
 "   -modulepath <module-path>  "__XSERVERNAME__" modules location.\n"
 "   -serverpath <server-path>  X server to start (if $DISPLAY is not defined).\n"
 "   -fontpath   <font-path>    Font path for fonts.\n"
@@ -217,7 +217,7 @@ Usage(void)
 "   -textmode                  Use this option for the text only interface.\n"
 #endif
 #ifdef USE_MODULES
-"   -nomodules                 Use this option if xf86cfg is slow to start.\n"
+"   -nomodules                 Use this option if xorgcfg is slow to start.\n"
 "   -verbose <number>          Verbosity used in the loader (default 1).\n"
 #endif
 "   -verify                    Verify modules/options integrity.\n"
@@ -253,7 +253,9 @@ main(int argc, char *argv[])
     noverify = True;
 
     for (i = 1; i < argc; i++) {
-	if (strcmp(argv[i], "-xf86config") == 0) {
+	if (strcmp(argv[i], "-config") == 0 ||
+	    strcmp(argv[i], "-xorgconfig") == 0 ||
+	    strcmp(argv[i], "-xf86config") == 0) {
 	    if (i + 1 < argc) {
 		XF86Config_path = argv[++i];
 		config_set = True;
@@ -304,7 +306,7 @@ main(int argc, char *argv[])
 		    "%s/%s%s", XFree86Dir, XkbConfigDir, XkbConfigFile);
 	XkbConfig_path = XkbConfig_path_static;
     }
-    toplevel = XtAppInitialize(&appcon, "XF86Cfg",
+    toplevel = XtAppInitialize(&appcon, "XOrgCfg",
 		    	       NULL, 0,
 			       &argc, argv,
 			       NULL, NULL, 0);

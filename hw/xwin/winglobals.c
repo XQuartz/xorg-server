@@ -54,8 +54,8 @@ HWND		g_hDlgExit = NULL;
 Bool		g_fCalledSetLocale = FALSE;
 const char *	g_pszQueryHost = NULL;
 Bool		g_fUnicodeClipboard = TRUE;
+Bool		g_fClipboard = FALSE;
 Bool		g_fXdmcpEnabled = FALSE;
-Bool		g_fClipboardLaunched = FALSE;
 
 
 /*
@@ -77,6 +77,23 @@ FARPROC		g_fpTrackMouseEvent = (FARPROC) (void (*)())NoopDDA;
 winDispatchProcPtr	winProcEstablishConnectionOrig = NULL;
 winDispatchProcPtr	winProcQueryTreeOrig = NULL;
 winDispatchProcPtr	winProcSetSelectionOwnerOrig = NULL;
+
+
+/*
+ * Clipboard variables
+ */
+
+Bool			g_fClipboardLaunched = FALSE;
+Bool			g_fClipboardStarted = FALSE;
+pthread_t		g_ptClipboardProc;
+Bool			g_fClipboardStarted;
+HWND			g_hwndClipboard;
+void			*g_pClipboardDisplay;
+Window			g_iClipboardWindow;
+Atom			g_atomLastOwnedSelection;
+#if 0
+Window			g_iClipboardOwner[CLIP_NUM_SELECTIONS];
+#endif
 
 
 /*

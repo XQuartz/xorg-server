@@ -32,6 +32,7 @@
 #include "winclipboard.h"
 #include "Xauth.h"
 
+
 /*
  * Constants
  */
@@ -48,6 +49,10 @@ extern Bool		g_fUnicodeClipboard;
 extern unsigned long	serverGeneration;
 extern unsigned int	g_uiAuthDataLen;
 extern char		*g_pAuthData;
+extern Bool		g_fClipboardStarted;
+extern HWND		g_hwndClipboard;
+extern void		*g_pClipboardDisplay;
+extern Window		g_iClipboardWindow;
 
 
 /*
@@ -74,7 +79,7 @@ winClipboardIOErrorHandler (Display *pDisplay);
  */
 
 void *
-winClipboardProc (void *pArg)
+winClipboardProc ()
 {
   Atom			atomClipboard, atomClipboardManager;
   int			iReturn;
@@ -85,20 +90,11 @@ winClipboardProc (void *pArg)
   int			iMaxDescriptor;
   Display		*pDisplay;
   Window		iWindow;
-  Bool			fReturn;
   int			iRetries;
   Bool			fUnicodeSupport;
   char			szDisplay[512];
-  ClipboardProcArgPtr	pProcArg = (ClipboardProcArgPtr) pArg;
 
   ErrorF ("winClipboardProc - Hello\n");
-
-  /* Check that argument pointer is not invalid */
-  if (pArg == NULL)
-    {
-      ErrorF ("winClipboardProc - pArg is NULL, bailing.\n");
-      pthread_exit (NULL);
-    }
 
   /* Do we have Unicode support? */
   fUnicodeSupport = g_fUnicodeClipboard && winClipboardDetectUnicodeSupport ();
@@ -170,11 +166,17 @@ winClipboardProc (void *pArg)
   iRetries = 0;
 
   /* Setup the display connection string x */
+  /*
+   * NOTE: Always connect to screen 0 since we require that screen
+   * numbers start at 0 and increase without gaps.  We only need
+   * to connect to one screen on the display to get events
+   * for all screens on the display.  That is why there is only
+   * one clipboard client thread.
+   */
   snprintf (szDisplay,
 	    512,
-	    "127.0.0.1:%s.%d",
-	    display,
-	    (int) pProcArg->dwScreen);
+	    "127.0.0.1:%s.0",
+	    display);
 
   /* Print the display connection string */
   ErrorF ("winClipboardProc - DISPLAY=%s\n", szDisplay);
@@ -205,7 +207,7 @@ winClipboardProc (void *pArg)
     }
 
   /* Save the display in the screen privates */
-  *(pProcArg->ppClipboardDisplay) = pDisplay;
+  g_pClipboardDisplay = pDisplay;
 
   ErrorF ("winClipboardProc - XOpenDisplay () returned and "
 	  "successfully opened the display.\n");
@@ -255,13 +257,13 @@ winClipboardProc (void *pArg)
     }
 
   /* Save the window in the screen privates */
-  *(pProcArg->piClipboardWindow) = iWindow;
+  g_iClipboardWindow = iWindow;
 
   /* Create Windows messaging window */
-  hwnd = winClipboardCreateMessagingWindow (pProcArg);
+  hwnd = winClipboardCreateMessagingWindow ();
   
   /* Save copy of HWND in screen privates */
-  *(pProcArg->phwndClipboard) = hwnd;
+  g_hwndClipboard = hwnd;
 
 #if 0
   /* Assert ownership of CLIPBOARD_MANAGER */
@@ -312,7 +314,7 @@ winClipboardProc (void *pArg)
     return 0;
 
   /* Signal that the clipboard client has started */
-  *(pProcArg->pfClipboardStarted) = TRUE;
+  g_fClipboardStarted = TRUE;
 
   /* Loop for X events */
   while (1)

@@ -30,8 +30,8 @@
 /* $XFree86: xc/programs/Xserver/hw/xwin/winclipboardinit.c,v 1.2 2003/07/29 21:25:16 dawes Exp $ */
 
 #include "dixstruct.h"
-
 #include "winclipboard.h"
+
 
 /*
  * Local typedefs
@@ -41,6 +41,12 @@ typedef int (*winDispatchProcPtr) (ClientPtr);
 
 DISPATCH_PROC(winProcSetSelectionOwner);
 
+
+/*
+ * References to external symbols
+ */
+
+extern pthread_t		g_ptClipboardProc;
 extern winDispatchProcPtr	winProcSetSelectionOwnerOrig;
 
 
@@ -49,27 +55,9 @@ extern winDispatchProcPtr	winProcSetSelectionOwnerOrig;
  */
 
 Bool
-winInitClipboard (pthread_t *ptClipboardProc,
-		  Bool *pfClipboardStarted,
-		  HWND *phwndClipboard,
-		  void **ppClipboardDisplay,
-		  Window *piClipboardWindow,
-		  HWND *phwndClipboardNextViewer,
-		  Bool *pfCBCInitialized,
-		  Atom *patomLastOwnedSelection,
-		  DWORD dwScreen)
+winInitClipboard ()
 {
-  ClipboardProcArgPtr		pArg;
-
   ErrorF ("winInitClipboard ()\n");
-
-  /* Allocate the parameter structure */
-  pArg = (ClipboardProcArgPtr) malloc (sizeof (ClipboardProcArgRec));
-  if (pArg == NULL)
-    {
-      ErrorF ("winInitClipboard - malloc for ClipboardProcArgRec failed.\n");
-      return FALSE;
-    }
 
   /* Wrap some internal server functions */
   if (ProcVector[X_SetSelectionOwner] != winProcSetSelectionOwner)
@@ -78,18 +66,11 @@ winInitClipboard (pthread_t *ptClipboardProc,
       ProcVector[X_SetSelectionOwner] = winProcSetSelectionOwner;
     }
   
-  /* Setup the argument structure for the thread function */
-  pArg->dwScreen = dwScreen;
-  pArg->pfClipboardStarted = pfClipboardStarted;
-  pArg->phwndClipboard = phwndClipboard;
-  pArg->ppClipboardDisplay = ppClipboardDisplay;
-  pArg->piClipboardWindow = piClipboardWindow;
-  pArg->phwndClipboardNextViewer = phwndClipboardNextViewer;
-  pArg->patomLastOwnedSelection = patomLastOwnedSelection;
-  pArg->pfCBCInitialized = pfCBCInitialized;
-
   /* Spawn a thread for the Clipboard module */
-  if (pthread_create (ptClipboardProc, NULL, winClipboardProc, pArg))
+  if (pthread_create (&g_ptClipboardProc,
+		      NULL,
+		      winClipboardProc,
+		      NULL))
     {
       /* Bail if thread creation failed */
       ErrorF ("winInitClipboard - pthread_create failed.\n");
@@ -105,11 +86,10 @@ winInitClipboard (pthread_t *ptClipboardProc,
  */
 
 HWND
-winClipboardCreateMessagingWindow (ClipboardProcArgPtr pProcArg)
+winClipboardCreateMessagingWindow ()
 {
   WNDCLASS			wc;
   HWND				hwnd;
-  ClipboardWindowPropPtr	pWindowProp = NULL;
 
   /* Setup our window class */
   wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -124,19 +104,6 @@ winClipboardCreateMessagingWindow (ClipboardProcArgPtr pProcArg)
   wc.lpszClassName = WIN_CLIPBOARD_WINDOW_CLASS;
   RegisterClass (&wc);
 
-  /* Allocate and setup window property structure */
-  pWindowProp = malloc (sizeof (ClipboardWindowPropRec));
-  if (pWindowProp == NULL)
-    {
-      ErrorF ("winClipboardCreateMessagingWindow - malloc failed!\n");
-      pthread_exit (NULL);
-    }
-  pWindowProp->ppClipboardDisplay = pProcArg->ppClipboardDisplay;
-  pWindowProp->piClipboardWindow = pProcArg->piClipboardWindow;
-  pWindowProp->phwndClipboardNextViewer = pProcArg->phwndClipboardNextViewer;
-  pWindowProp->pfCBCInitialized = pProcArg->pfCBCInitialized;
-  pWindowProp->patomLastOwnedSelection = pProcArg->patomLastOwnedSelection;
-
   /* Create the window */
   hwnd = CreateWindowExA (0,			/* Extended styles */
 			  WIN_CLIPBOARD_WINDOW_CLASS,/* Class name */
@@ -149,7 +116,7 @@ winClipboardCreateMessagingWindow (ClipboardProcArgPtr pProcArg)
 			  (HWND) NULL,		/* No parent or owner window */
 			  (HMENU) NULL,		/* No menu */
 			  GetModuleHandle (NULL),/* Instance handle */
-			  pWindowProp);		/* Creation data */
+			  NULL);		/* Creation data */
   assert (hwnd != NULL);
 
   /* I'm not sure, but we may need to call this to start message processing */

@@ -402,7 +402,6 @@ typedef struct
   Bool			fPseudoRootless;
   Bool			fMultiWindow;
   Bool                  fMultipleMonitors;
-  Bool			fClipboard;
   Bool			fLessPointer;
   Bool			fScrollbars;
   Bool			fNoTrayIcon;
@@ -443,16 +442,6 @@ typedef struct _winPrivScreenRec
 
   /* Handle to icons that must be freed */
   HICON			hiconNotifyIcon;
-
-  /* Clipboard support */
-  pthread_t		ptClipboardProc;
-  Bool			fClipboardStarted;
-  HWND			hwndClipboard;
-  void			*pClipboardDisplay;
-  Window		iClipboardWindow;
-  HWND			hwndClipboardNextViewer;
-  Bool			fCBCInitialized;
-  Atom			atomLastOwnedSelection;
 
   /* Last width, height, and depth of the Windows display */
   DWORD			dwLastWindowsWidth;
@@ -774,15 +763,8 @@ winPixmapToRegionNativeGDI (PixmapPtr pPix);
  */
 
 Bool
-winInitClipboard (pthread_t *ptClipboardProc,
-		  Bool *pfClipboardStarted,
-		  HWND *phwndClipboard,
-		  void **ppClipboardDisplay,
-		  Window *piClipboardWindow,
-		  HWND *phwndClipboardNextViewer,
-		  Bool *pfCBCInitialized,
-		  Atom *patomLastOwnedSelection,
-		  DWORD dwScreen);
+winInitClipboard ();
+
 
 /*
  * winclipboardthread.c
@@ -1206,6 +1188,14 @@ winPolyLineNativeGDI (DrawablePtr	pDrawable,
 		      int		mode,
 		      int		npt,
 		      DDXPointPtr	ppt);
+
+
+/*
+ * winprocarg.c
+ */
+
+void
+winInitializeDefaultScreens (void);
 
 
 /*

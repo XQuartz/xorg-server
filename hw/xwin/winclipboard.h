@@ -76,35 +76,6 @@
 
 
 /*
- * Argument structure for Clipboard module main thread
- */
-
-typedef struct _ClipboardProcArgRec {
-  DWORD			dwScreen;
-  Bool			*pfClipboardStarted;
-  HWND			*phwndClipboard;
-  void			**ppClipboardDisplay;
-  Window		*piClipboardWindow;
-  HWND			*phwndClipboardNextViewer;
-  Bool			*pfCBCInitialized;
-  Atom			*patomLastOwnedSelection;
-} ClipboardProcArgRec, *ClipboardProcArgPtr;
-
-
-/*
- * Structure for messaging window properties
- */
-
-typedef struct _ClipboardWindowProp {
-  void			**ppClipboardDisplay;
-  Window		*piClipboardWindow;
-  HWND			*phwndClipboardNextViewer;
-  Bool			*pfCBCInitialized;
-  Atom			*patomLastOwnedSelection;
-} ClipboardWindowPropRec, *ClipboardWindowPropPtr;
-
-
-/*
  * References to external symbols
  */
 
@@ -117,18 +88,10 @@ extern void ErrorF (const char* /*f*/, ...);
  */
 
 Bool
-winInitClipboard (pthread_t *ptClipboardProc,
- 		  Bool *pfClipboardStarted,
- 		  HWND *phwndClipboard,
-		  void **ppClipboardDisplay,
- 		  Window *piClipboardWindow,
- 		  HWND *phwndClipboardNextViewer,
- 		  Bool *pfCBCInitialized,
- 		  Atom *patomLastOwnedSelection,
-		  DWORD dwScreen);
+winInitClipboard ();
 
 HWND
-winClipboardCreateMessagingWindow (ClipboardProcArgPtr pProcArg);
+winClipboardCreateMessagingWindow ();
 
 
 /*
@@ -147,7 +110,7 @@ winClipboardUNIXtoDOS (unsigned char **ppszData, int iLength);
  */
 
 void *
-winClipboardProc (void *pArg);
+winClipboardProc ();
 
 void
 winDeinitClipboard (void);

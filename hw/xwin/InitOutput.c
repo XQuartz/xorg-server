@@ -105,6 +105,10 @@ static PixmapFormatRec g_PixmapFormats[] = {
 const int NUMFORMATS = sizeof (g_PixmapFormats) / sizeof (g_PixmapFormats[0]);
 
 #if defined(DDXOSRESET)
+extern pthread_t		g_ptClipboardProc;
+extern HWND			g_hwndClipboard;
+extern Bool			g_fClipboard;
+
 /*
  * Called right before KillAllClients when the server is going to reset,
  * allows us to shutdown our seperate threads cleanly.
@@ -117,32 +121,17 @@ OsVendorReset ()
 
   ErrorF ("OsVendorReset - Hello\n");
 
-  /* Walk the list of screens */
-  for (i = 0; i < g_iNumScreens; i++)
+  /* Close down clipboard resources */
+  if (g_fClipboard)
     {
-      ScreenPtr		pScreen = g_ScreenInfo[i].pScreen;
-      winScreenPriv(pScreen);
+      /* Synchronously destroy the clipboard window */
+      if (g_hwndClipboard != NULL)
+	SendMessage (g_hwndClipboard, WM_DESTROY, 0, 0);
+      
+      /* Wait for the clipboard thread to exit */
+      pthread_join (g_ptClipboardProc, NULL);
 
-      /* Close down clipboard resources */
-      if (g_ScreenInfo[i].fClipboard)
-	{
-	  HWND		hwndClipboard = pScreenPriv->hwndClipboard;
-	  
-	  /* Prevent our wrapped SetSelectionOwner function from segfaulting */
-	  pScreenPriv->hwndClipboard = NULL;
-	  pScreenPriv->pClipboardDisplay = NULL;
-	  pScreenPriv->iClipboardWindow = 0;
-	  pScreenPriv->fCBCInitialized = FALSE;
-
-	  /* Synchronously destroy the clipboard window */
-	  if (hwndClipboard != NULL)
-	    SendMessage (hwndClipboard, WM_DESTROY, 0, 0);
-
-	  /* Wait for the clipboard thread to exit */
-	  pthread_join (pScreenPriv->ptClipboardProc, NULL);
-	  
-	  ErrorF ("OsVendorReset - Clipboard thread has exited.\n");
-	}
+      ErrorF ("OsVendorReset - Clipboard thread has exited.\n");
     }
 }
 #endif

@@ -47,6 +47,13 @@ Bool			g_fCursor = TRUE;
 
 
 /*
+ * References to external symbols
+ */
+
+extern Bool		g_fClipboard;
+
+
+/*
  * Called by winWakeupHandler
  * Processes current Windows message
  */
@@ -271,8 +278,20 @@ winWindowProc (HWND hwnd, UINT message,
 	}
 
       /* Store the new display dimensions and depth */
-      s_pScreenPriv->dwLastWindowsWidth = GetSystemMetrics (SM_CXSCREEN);
-      s_pScreenPriv->dwLastWindowsHeight = GetSystemMetrics (SM_CYSCREEN);
+      if (s_pScreenInfo->fMultipleMonitors)
+	{
+	  s_pScreenPriv->dwLastWindowsWidth
+	    = GetSystemMetrics (SM_CXVIRTUALSCREEN);
+	  s_pScreenPriv->dwLastWindowsHeight
+	    = GetSystemMetrics (SM_CYVIRTUALSCREEN);
+	}
+      else
+	{
+	  s_pScreenPriv->dwLastWindowsWidth
+	    = GetSystemMetrics (SM_CXSCREEN);
+	  s_pScreenPriv->dwLastWindowsHeight
+	    = GetSystemMetrics (SM_CYSCREEN);
+	}
       s_pScreenPriv->dwLastWindowsBitsPixel
 	= GetDeviceCaps (s_pScreenPriv->hdcScreen, BITSPIXEL);
       break;
@@ -1057,7 +1076,7 @@ winWindowProc (HWND hwnd, UINT message,
     case WM_ENDSESSION:
     case WM_GIVEUP:
       /* Tell X that we are giving up */
-      if (s_pScreenInfo->fClipboard)
+      if (g_fClipboard)
 	winDeinitClipboard ();
       if (s_pScreenInfo->fMultiWindow)
 	winDeinitMultiWindowWM ();

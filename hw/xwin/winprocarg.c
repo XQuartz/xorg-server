@@ -42,6 +42,7 @@ extern int			g_iLastScreen;
 extern Bool			g_fInitializedDefaultScreens;
 extern Bool			g_fUnicodeClipboard;
 extern Bool			g_fXdmcpEnabled;
+extern Bool			g_fClipboard;
 extern int			g_iLogVerbose;
 extern char *			g_pszLogFile;
 
@@ -107,7 +108,6 @@ winInitializeDefaultScreens (void)
       g_ScreenInfo[i].fPseudoRootless = FALSE;
       g_ScreenInfo[i].fMultiWindow = FALSE;
       g_ScreenInfo[i].fMultipleMonitors = FALSE;
-      g_ScreenInfo[i].fClipboard = FALSE;
       g_ScreenInfo[i].fLessPointer = FALSE;
       g_ScreenInfo[i].fScrollbars = FALSE;
       g_ScreenInfo[i].fNoTrayIcon = FALSE;
@@ -564,22 +564,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
    */
   if (IS_OPTION ("-clipboard"))
     {
-      /* Is this parameter attached to a screen or is it global? */
-      if (-1 == g_iLastScreen)
-	{
-	  int			j;
-
-	  /* Parameter is for all screens */
-	  for (j = 0; j < MAXSCREENS; j++)
-	    {
-	      g_ScreenInfo[j].fClipboard = TRUE;
-	    }
-	}
-      else
-	{
-	  /* Parameter is for a single screen */
-	  g_ScreenInfo[g_iLastScreen].fClipboard = TRUE;
-	}
+      g_fClipboard = TRUE;
 
       /* Indicate that we have processed this argument */
       return 1;

@@ -44,6 +44,9 @@
  */
 
 extern Bool		g_fUnicodeSupport;
+extern void		*g_pClipboardDisplay;
+extern Window		g_iClipboardWindow;
+extern Atom		g_atomLastOwnedSelection;
 
 
 /* 
@@ -76,8 +79,8 @@ LRESULT CALLBACK
 winClipboardWindowProc (HWND hwnd, UINT message, 
 			WPARAM wParam, LPARAM lParam)
 {
-  ClipboardWindowPropPtr	pWindowProp = GetProp (hwnd,
-						       WIN_CLIPBOARD_PROP);
+  static HWND		s_hwndNextViewer;
+  static Bool		s_fCBCInitialized;
 
   /* Branch on message type */
   switch (message)
@@ -86,17 +89,10 @@ winClipboardWindowProc (HWND hwnd, UINT message,
       {
 	ErrorF ("winClipboardWindowProc - WM_DESTROY\n");
 
-	HWND	*phwndNextViewer = pWindowProp->phwndClipboardNextViewer;
-	
 	/* Remove ourselves from the clipboard chain */
-	ChangeClipboardChain (hwnd, *phwndNextViewer);
+	ChangeClipboardChain (hwnd, s_hwndNextViewer);
 	
-	*phwndNextViewer = NULL;
-	
-	/* Free the window property data */
-	free (pWindowProp);
-	pWindowProp = NULL;
-	SetProp (hwnd, WIN_CLIPBOARD_PROP, NULL);
+	s_hwndNextViewer = NULL;
 
 	PostQuitMessage (0);
       }
@@ -107,58 +103,49 @@ winClipboardWindowProc (HWND hwnd, UINT message,
       {
 	ErrorF ("winClipboardWindowProc - WM_CREATE\n");
 	
-	/* Fetch window data from creation data */
-	pWindowProp = ((LPCREATESTRUCT) lParam)->lpCreateParams;
-	
-	/* Save data as a window property */
-	SetProp (hwnd, WIN_CLIPBOARD_PROP, pWindowProp);
-
 	/* Add ourselves to the clipboard viewer chain */
-	*(pWindowProp->phwndClipboardNextViewer) = SetClipboardViewer (hwnd);
+	s_hwndNextViewer = SetClipboardViewer (hwnd);
       }
       return 0;
 
 
     case WM_CHANGECBCHAIN:
       {
-	HWND	*phwndNextViewer = pWindowProp->phwndClipboardNextViewer;
-
-	if ((HWND) wParam == *phwndNextViewer)
-	  *phwndNextViewer = (HWND) lParam;
-	else if (*phwndNextViewer)
-	  SendMessage (*phwndNextViewer, message, wParam, lParam);
+	if ((HWND) wParam == s_hwndNextViewer)
+	  s_hwndNextViewer = (HWND) lParam;
+	else if (s_hwndNextViewer)
+	  SendMessage (s_hwndNextViewer, message,
+		       wParam, lParam);
       }
       return 0;
 
 
     case WM_DRAWCLIPBOARD:
       {
-	HWND	*phwndNextViewer = pWindowProp->phwndClipboardNextViewer;
-	Bool	*pfCBCInitialized = pWindowProp->pfCBCInitialized;
-	Display *pDisplay = *(pWindowProp->ppClipboardDisplay);
-	Window	iWindow = *(pWindowProp->piClipboardWindow);
+	Display	*pDisplay = g_pClipboardDisplay;
+	Window	iWindow = g_iClipboardWindow;
 	int	iReturn;
 
 	/* Pass the message on the next window in the clipboard viewer chain */
-	if (*phwndNextViewer)
-	  SendMessage (*phwndNextViewer, message, 0, 0);
+	if (s_hwndNextViewer)
+	  SendMessage (s_hwndNextViewer, message, 0, 0);
 	
 	/* Bail on first message */
-	if (!*pfCBCInitialized)
+	if (!s_fCBCInitialized)
 	  {
 	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
 		    "Initializing - Returning.\n");
-	    *pfCBCInitialized = TRUE;
+	    s_fCBCInitialized = TRUE;
 	    return 0;
 	  }
-	
-	/* Bail when clipboard is unowned */
-	if (NULL == GetClipboardOwner ())
-	  {
-	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
-		    "Clipboard is unowned.\n");
-	    return 0;
-	  }
+
+	/*
+	 * NOTE: We cannot bail out when NULL == GetClipboardOwner ()
+	 * because some applications deal with the clipboard in a manner
+	 * that causes the clipboard owner to be NULL when they are in
+	 * fact taking ownership.  One example of this is the Win32
+	 * native compile of emacs.
+	 */
 	
 	/* Bail when we still own the clipboard */
 	if (hwnd == GetClipboardOwner ())
@@ -208,13 +195,66 @@ winClipboardWindowProc (HWND hwnd, UINT message,
       return 0;
 
 
+    case WM_DESTROYCLIPBOARD:
+#if 0
+      {
+	int	iReturn;
+	Display *pDisplay = g_pClipboardDisplay;
+
+	/* Do nothing if winProcSetSelectionOwner called EmptyClipboard */
+	if (hwnd == GetClipboardOwner ())
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DESTROYCLIPBOARD - "
+		    "winProcSetSelectionOwner called EmptyClipboard, "
+		    "doing nothing.\n");
+	    return 0;
+	  }
+
+	/* Release ownership of PRIMARY */	  
+	iReturn = XSetSelectionOwner (pDisplay,
+				      XA_PRIMARY,
+				      None,
+				      CurrentTime);
+	if (iReturn == BadAtom || iReturn == BadWindow)
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DESTROYCLIPBOARD - "
+		    "Could not release ownership of PRIMARY\n");
+	  }
+	else
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DESTROYCLIPBOARD - "
+		    "Released ownership of PRIMARY\n");
+	  }
+	
+	/* Release ownership of the CLIPBOARD */	  
+	iReturn = XSetSelectionOwner (pDisplay,
+				      XInternAtom (pDisplay,
+						   "CLIPBOARD",
+						   FALSE),
+				      None,
+				      CurrentTime);
+	if (iReturn == BadAtom || iReturn == BadWindow)
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DESTROYCLIPBOARD - "
+		    "Could not release ownership of CLIPBOARD\n");
+	  }
+	else
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DESTROYCLIPBOARD - "
+		    "Released ownership of CLIPBOARD\n");
+	  }
+      }
+#endif
+      return 0;
+
+
     case WM_RENDERFORMAT:
     case WM_RENDERALLFORMATS:
       {
 	XEvent	event;
 	int	iReturn;
-	Display *pDisplay = *(pWindowProp->ppClipboardDisplay);
-	Window	iWindow = *(pWindowProp->piClipboardWindow);
+	Display *pDisplay = g_pClipboardDisplay;
+	Window	iWindow = g_iClipboardWindow;
 	Bool	fConvertToUnicode;
 
 #if 0
@@ -225,11 +265,11 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	if (message == WM_RENDERALLFORMATS)
 	  fConvertToUnicode = FALSE;
 	else
-	  fConvertToUnicode = (CF_UNICODETEXT == wParam);
-	
+	  fConvertToUnicode = g_fUnicodeSupport && (CF_UNICODETEXT == wParam);
+
 	/* Request the selection contents */
 	iReturn = XConvertSelection (pDisplay,
-				     *(pWindowProp->patomLastOwnedSelection),
+				     g_atomLastOwnedSelection,
 				     XInternAtom (pDisplay,
 						  "COMPOUND_TEXT", False),
 				     XInternAtom (pDisplay,

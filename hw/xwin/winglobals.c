@@ -85,7 +85,6 @@ winDispatchProcPtr	winProcSetSelectionOwnerOrig = NULL;
 Bool			g_fClipboardLaunched = FALSE;
 Bool			g_fClipboardStarted = FALSE;
 pthread_t		g_ptClipboardProc;
-Bool			g_fClipboardStarted;
 HWND			g_hwndClipboard;
 void			*g_pClipboardDisplay;
 Window			g_iClipboardWindow;
@@ -98,7 +97,12 @@ Atom			g_atomLastOwnedSelection;
  */
 
 void
-winInitializeGlobals ()
+winInitializeGlobals (void)
 {
   g_fClipboardLaunched = FALSE;
+  g_fClipboardStarted = FALSE;
+  g_iClipboardWindow = None;
+  g_pClipboardDisplay = NULL;
+  g_atomLastOwnedSelection = None;
+  g_hwndClipboard = NULL;
 }

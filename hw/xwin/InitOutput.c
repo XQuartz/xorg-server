@@ -57,6 +57,9 @@ int		g_iLogVerbose = 4;
 char *		g_pszLogFile = WIN_LOG_FNAME;
 Bool		g_fLogInited = FALSE;
 
+extern Bool			g_fClipboardLaunched;
+extern Bool			g_fClipboardStarted;
+
 extern HMODULE			g_hmodDirectDraw;
 extern FARPROC			g_fpDirectDrawCreate;
 extern FARPROC			g_fpDirectDrawCreateClipper;
@@ -123,7 +126,7 @@ OsVendorReset (void)
   ErrorF ("OsVendorReset - Hello\n");
 
   /* Close down clipboard resources */
-  if (g_fClipboard)
+  if (g_fClipboard && g_fClipboardLaunched && g_fClipboardStarted)
     {
       /* Synchronously destroy the clipboard window */
       if (g_hwndClipboard != NULL)

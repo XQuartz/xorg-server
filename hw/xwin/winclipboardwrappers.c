@@ -102,6 +102,17 @@ winProcQueryTree (ClientPtr client)
       return iReturn;
     }
 
+  /* Make errors more obvious */
+  winProcQueryTreeOrig = NULL;
+
+  /* Do nothing if clipboard is not enabled */
+  if (!g_fClipboard)
+    {
+      ErrorF ("winProcQueryTree - Clipboard is not enabled, "
+	      "returning.\n");
+      return iReturn;
+    }
+
   /* If the clipboard client has already been started, abort */
   if (g_fClipboardLaunched)
     {
@@ -171,6 +182,19 @@ winProcEstablishConnection (ClientPtr client)
   static unsigned long	s_ulServerGeneration = 0;
 
   ErrorF ("winProcEstablishConnection - Hello\n");
+
+  /* Do nothing if clipboard is not enabled */
+  if (!g_fClipboard)
+    {
+      ErrorF ("winProcEstablishConnection - Clipboard is not enabled, "
+	      "returning.\n");
+      
+      /* Unwrap the original function, call it, and return */
+      InitialVector[2] = winProcEstablishConnectionOrig;
+      iReturn = (*winProcEstablishConnectionOrig) (client);
+      winProcEstablishConnectionOrig = NULL;
+      return iReturn;
+    }
 
   /* Watch for server reset */
   if (s_ulServerGeneration != serverGeneration)

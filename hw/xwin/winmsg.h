@@ -1,3 +1,5 @@
+#ifndef __WIN_MSG_H__
+#define __WIN_MSG_H__
 /*
  *Copyright (C) 1994-2000 The XFree86 Project, Inc. All Rights Reserved.
  *
@@ -29,8 +31,6 @@
  */
 /* $XFree86: xc/programs/Xserver/hw/xwin/winmsg.h,v 1.2 2003/10/02 13:30:10 eich Exp $ */
 
-#ifndef __WIN_MSG_H__
-#define __WIN_MSG_H__
 
 /*
  * Function prototypes

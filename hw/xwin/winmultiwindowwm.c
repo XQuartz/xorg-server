@@ -661,7 +661,7 @@ winMultiWindowWMProc (void *pArg)
 	  break;
 
 	default:
-	  ErrorF ("winMultiWindowWMProc - Unknown Message.\n");
+	  ErrorF ("winMultiWindowWMProc - Unknown Message.  Exiting.\n");
 	  pthread_exit (NULL);
 	  break;
 	}
@@ -688,7 +688,6 @@ winMultiWindowWMProc (void *pArg)
 }
 
 
-
 /*
  * X message procedure
  */
@@ -712,7 +711,7 @@ winMultiWindowXMsgProc (void *pArg)
   /* Check that argument pointer is not invalid */
   if (pProcArg == NULL)
     {
-      ErrorF ("winMultiWindowXMsgProc - pProcArg is NULL, bailing.\n");
+      ErrorF ("winMultiWindowXMsgProc - pProcArg is NULL.  Exiting.\n");
       pthread_exit (NULL);
     }
 
@@ -722,7 +721,8 @@ winMultiWindowXMsgProc (void *pArg)
   iReturn = pthread_mutex_lock (pProcArg->ppmServerStarted);
   if (iReturn != 0)
     {
-      ErrorF ("winMultiWindowXMsgProc - pthread_mutex_lock () failed: %d\n",
+      ErrorF ("winMultiWindowXMsgProc - pthread_mutex_lock () failed: %d.  "
+	      "Exiting.\n",
 	      iReturn);
       pthread_exit (NULL);
     }
@@ -732,7 +732,7 @@ winMultiWindowXMsgProc (void *pArg)
   /* Allow multiple threads to access Xlib */
   if (XInitThreads () == 0)
     {
-      ErrorF ("winMultiWindowXMsgProc - XInitThreads () failed.\n");
+      ErrorF ("winMultiWindowXMsgProc - XInitThreads () failed.  Exiting.\n");
       pthread_exit (NULL);
     }
 
@@ -757,13 +757,13 @@ winMultiWindowXMsgProc (void *pArg)
       && iReturn != WIN_JMP_OKAY)
     {
       /* setjmp returned an unknown value, exit */
-      ErrorF ("winInitMultiWindowXMsgProc - setjmp returned: %d exiting\n",
+      ErrorF ("winInitMultiWindowXMsgProc - setjmp returned: %d.  Exiting.\n",
 	      iReturn);
       pthread_exit (NULL);
     }
   else if (iReturn == WIN_JMP_ERROR_IO)
     {
-      ErrorF ("winInitMultiWindowXMsgProc - Caught IO Error, shutting down\n");
+      ErrorF ("winInitMultiWindowXMsgProc - Caught IO Error.  Exiting.\n");
       pthread_exit (NULL);
     }
 
@@ -803,8 +803,8 @@ winMultiWindowXMsgProc (void *pArg)
   /* Make sure that the display opened */
   if (pProcArg->pDisplay == NULL)
     {
-      ErrorF ("winMultiWindowXMsgProc - "
-	      "Failed opening the display, giving up.\n\f");
+      ErrorF ("winMultiWindowXMsgProc - Failed opening the display.  "
+	      "Exiting.\n");
       pthread_exit (NULL);
     }
 
@@ -978,7 +978,7 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
   /* Check that argument pointer is not invalid */
   if (pProcArg == NULL)
     {
-      ErrorF ("winInitMultiWindowWM - pProcArg is NULL, bailing.\n");
+      ErrorF ("winInitMultiWindowWM - pProcArg is NULL.  Exiting.\n");
       pthread_exit (NULL);
     }
 
@@ -988,7 +988,8 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
   iReturn = pthread_mutex_lock (pProcArg->ppmServerStarted);
   if (iReturn != 0)
     {
-      ErrorF ("winInitMultiWindowWM - pthread_mutex_lock () failed: %d\n",
+      ErrorF ("winInitMultiWindowWM - pthread_mutex_lock () failed: %d.  "
+	      "Exiting.\n",
 	      iReturn);
       pthread_exit (NULL);
     }
@@ -998,7 +999,7 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
   /* Allow multiple threads to access Xlib */
   if (XInitThreads () == 0)
     {
-      ErrorF ("winInitMultiWindowWM - XInitThreads () failed.\n");
+      ErrorF ("winInitMultiWindowWM - XInitThreads () failed.  Exiting.\n");
       pthread_exit (NULL);
     }
 
@@ -1022,13 +1023,13 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
       && iReturn != WIN_JMP_OKAY)
     {
       /* setjmp returned an unknown value, exit */
-      ErrorF ("winInitMultiWindowWM - setjmp returned: %d exiting\n",
+      ErrorF ("winInitMultiWindowWM - setjmp returned: %d.  Exiting.\n",
 	      iReturn);
       pthread_exit (NULL);
     }
   else if (iReturn == WIN_JMP_ERROR_IO)
     {
-      ErrorF ("winInitMultiWindowWM - Caught IO Error, shutting down\n");
+      ErrorF ("winInitMultiWindowWM - Caught IO Erro.  Exiting.\n");
       pthread_exit (NULL);
     }
 
@@ -1068,8 +1069,8 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
   /* Make sure that the display opened */
   if (pWMInfo->pDisplay == NULL)
     {
-      ErrorF ("winInitMultiWindowWM - Failed opening the display, "
-	      "giving up.\n\f");
+      ErrorF ("winInitMultiWindowWM - Failed opening the display.  "
+	      "Exiting.\n");
       pthread_exit (NULL);
     }
 

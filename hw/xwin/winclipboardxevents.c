@@ -78,6 +78,7 @@ winClipboardFlushXEvents (HWND hwnd,
       int			i;
       Bool			fAbort = FALSE;
       Bool			fCloseClipboard = FALSE;
+      Bool			fSetClipboardData = TRUE;
 
       /* Get the next event - will not block because one is ready */
       XNextEvent (pDisplay, &event);
@@ -734,6 +735,9 @@ winClipboardFlushXEvents (HWND hwnd,
 	  else
 	    SetClipboardData (CF_TEXT, hGlobal);
 
+	  /* Flag that SetClipboardData has been called */
+	  fSetClipboardData = FALSE;
+
 	  /*
 	   * NOTE: Do not try to free pszGlobalData, it is owned by
 	   * Windows after the call to SetClipboardData ().
@@ -751,6 +755,10 @@ winClipboardFlushXEvents (HWND hwnd,
 	    free (pwszUnicodeStr);
 	  if (hGlobal && pszGlobalData)
 	    GlobalUnlock (hGlobal);
+	  if (fSetClipboardData && fUnicodeSupport)
+	    SetClipboardData (CF_UNICODETEXT, NULL);
+	  if (fSetClipboardData && !fUnicodeSupport)
+	    SetClipboardData (CF_TEXT, NULL);
 	  break;
 
 	default:

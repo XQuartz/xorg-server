@@ -65,10 +65,12 @@
 #define WIN_CLIPBOARD_WINDOW_CLASS		"xwinclip"
 #define WIN_CLIPBOARD_WINDOW_TITLE		"xwinclip"
 #define WIN_MSG_QUEUE_FNAME			"/dev/windows"
-#define WIN_CONNECT_RETRIES			3
+#define WIN_CONNECT_RETRIES			40
 #define WIN_CONNECT_DELAY			4
 #define WIN_JMP_OKAY				0
 #define WIN_JMP_ERROR_IO			2
+#define WIN_LOCAL_PROPERTY			"CYGX_CUT_BUFFER"
+
 
 /*
  * Argument structure for Clipboard module main thread
@@ -76,8 +78,27 @@
 
 typedef struct _ClipboardProcArgRec {
   DWORD			dwScreen;
-  pthread_mutex_t	*ppmServerStarted;
+  Bool			*pfClipboardStarted;
+  HWND			*phwndClipboard;
+  void			**ppClipboardDisplay;
+  Window		*piClipboardWindow;
+  HWND			*phwndClipboardNextViewer;
+  Bool			*pfCBCInitialized;
+  Atom			*patomLastOwnedSelection;
 } ClipboardProcArgRec, *ClipboardProcArgPtr;
+
+
+/*
+ * Structure for messaging window properties
+ */
+
+typedef struct _ClipboardWindowProp {
+  void			**ppClipboardDisplay;
+  Window		*piClipboardWindow;
+  HWND			*phwndClipboardNextViewer;
+  Bool			*pfCBCInitialized;
+  Atom			*patomLastOwnedSelection;
+} ClipboardWindowPropRec, *ClipboardWindowPropPtr;
 
 
 /*
@@ -94,11 +115,17 @@ extern void ErrorF (const char* /*f*/, ...);
 
 Bool
 winInitClipboard (pthread_t *ptClipboardProc,
-		  pthread_mutex_t *ppmServerStarted,
+ 		  Bool *pfClipboardStarted,
+ 		  HWND *phwndClipboard,
+		  void **ppClipboardDisplay,
+ 		  Window *piClipboardWindow,
+ 		  HWND *phwndClipboardNextViewer,
+ 		  Bool *pfCBCInitialized,
+ 		  Atom *patomLastOwnedSelection,
 		  DWORD dwScreen);
 
 HWND
-winClipboardCreateMessagingWindow (void);
+winClipboardCreateMessagingWindow (ClipboardProcArgPtr pProcArg);
 
 
 /*
@@ -121,6 +148,7 @@ winClipboardProc (void *pArg);
 
 void
 winDeinitClipboard (void);
+
 
 /*
  * winclipboardunicode.c
@@ -148,12 +176,6 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 
 Bool
 winClipboardFlushXEvents (HWND hwnd,
-			  Atom atomClipboard,
-			  Atom atomLocalProperty,
-			  Atom atomUTF8String,
-			  Atom atomCompoundText,
-			  Atom atomTargets,
-			  Atom atomDeleteWindow,
 			  int iWindow,
 			  Display *pDisplay,
 			  Bool fUnicodeSupport);

@@ -30,6 +30,16 @@
 /* $XFree86: xc/programs/Xserver/hw/xwin/wingc.c,v 1.11 2003/08/07 23:47:58 alanh Exp $ */
 
 #include "win.h"
+
+
+/*
+ * References to external symbols
+ */
+
+extern int			g_iScreenPrivateIndex;
+extern int			g_iGCPrivateIndex;
+
+
 void
 winPushPixels(GCPtr pGC, PixmapPtr pBitMap, DrawablePtr pDrawable, int dx, int dy, int xOrg, int yOrg);
 

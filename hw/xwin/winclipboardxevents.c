@@ -38,21 +38,10 @@
 
 Bool
 winClipboardFlushXEvents (HWND hwnd,
-			  Atom atomClipboard,
-			  Atom atomLocalProperty,
-			  Atom atomUTF8String,
-			  Atom atomCompoundText,
-			  Atom atomTargets,
-			  Atom atomDeleteWindow,
 			  int iWindow,
 			  Display *pDisplay,
 			  Bool fUnicodeSupport)
 {
-#if 0
-  Atom			atomReturnType;
-  int			iReturnFormat;
-  unsigned long		ulReturnItems;
-#endif
   XTextProperty		xtpText;
   XEvent		event;
   XSelectionEvent	eventSelection;
@@ -72,6 +61,18 @@ winClipboardFlushXEvents (HWND hwnd,
   int			iUnicodeLen = 0;
   int			iReturnDataLen = 0;
   int			i;
+  Atom			atomLocalProperty = XInternAtom (pDisplay,
+							 WIN_LOCAL_PROPERTY,
+							 False);
+  Atom			atomUTF8String = XInternAtom (pDisplay,
+						      "UTF8_STRING",
+						      False);
+  Atom			atomCompoundText = XInternAtom (pDisplay,
+							"COMPOUND_TEXT",
+							False);
+  Atom			atomTargets = XInternAtom (pDisplay,
+						   "TARGETS",
+						   False);
 
   /* Process all pending events */
   while (XPending (pDisplay))
@@ -82,50 +83,24 @@ winClipboardFlushXEvents (HWND hwnd,
       /* Branch on the event type */
       switch (event.type)
 	{
-	case ClientMessage:
-	  if (event.xclient.data.l[0] == atomDeleteWindow)
-	    {
-	      ErrorF ("\nwinClipboardFlushXEvents - Received "
-		      "WM_DELETE_WINDOW\n\n");
-	      fReturn = FALSE;
-	    }
-	  else
-	    ErrorF ("\nwinClipboardFlushXEvents - Unknown ClientMessage\n\n");
-	  break;
-
-	case SelectionClear:
-	  /* Request the lost selection contents */
-	  iReturn = XConvertSelection (pDisplay,
-				       event.xselectionclear.selection,
-				       atomCompoundText,
-				       atomLocalProperty,
-				       iWindow,
-				       CurrentTime);
-	  if (iReturn == BadAtom || iReturn == BadWindow)
-	    {
-	      ErrorF ("winClipboardFlushXEvents - SelectionClear - "
-		      "XConvertSelection () failed\n");
-	      pthread_exit (NULL);
-	    }
-	  break;
-
-	  
 	  /*
 	   * SelectionRequest
 	   */
 
 	case SelectionRequest:
 #if 0
-	  char			*pszAtomName = NULL
-
-	  ErrorF ("SelectionRequest - target %d\n",
-		  event.xselectionrequest.target);
-
-	  pszAtomName = XGetAtomName (pDisplay,
-				      event.xselectionrequest.target);
-	  ErrorF ("SelectionRequest - Target atom name %s\n", pszAtomName);
-	  XFree (pszAtomName);
-	  pszAtomName = NULL;
+	  {
+	    char			*pszAtomName = NULL;
+	    
+	    ErrorF ("SelectionRequest - target %d\n",
+		    event.xselectionrequest.target);
+	    
+	    pszAtomName = XGetAtomName (pDisplay,
+					event.xselectionrequest.target);
+	    ErrorF ("SelectionRequest - Target atom name %s\n", pszAtomName);
+	    XFree (pszAtomName);
+	    pszAtomName = NULL;
+	  }
 #endif
 
 	  /* Abort if invalid target type */
@@ -189,14 +164,14 @@ winClipboardFlushXEvents (HWND hwnd,
 		}
 
 	      /* Setup selection notify xevent */
-	      eventSelection.type = SelectionNotify;
-	      eventSelection.send_event = True;
-	      eventSelection.display	 = pDisplay;
-	      eventSelection.requestor = event.xselectionrequest.requestor;
-	      eventSelection.selection = event.xselectionrequest.selection;
-	      eventSelection.target	 = event.xselectionrequest.target;
-	      eventSelection.property  = event.xselectionrequest.property;
-	      eventSelection.time	 = event.xselectionrequest.time;
+	      eventSelection.type	= SelectionNotify;
+	      eventSelection.send_event	= True;
+	      eventSelection.display	= pDisplay;
+	      eventSelection.requestor	= event.xselectionrequest.requestor;
+	      eventSelection.selection	= event.xselectionrequest.selection;
+	      eventSelection.target	= event.xselectionrequest.target;
+	      eventSelection.property	= event.xselectionrequest.property;
+	      eventSelection.time	= event.xselectionrequest.time;
 
 	      /*
 	       * Notify the requesting window that
@@ -238,7 +213,7 @@ winClipboardFlushXEvents (HWND hwnd,
 	   * FIXME: Can't pass CF_UNICODETEXT on Windows 95/98/Me
 	   */
 	  
-	  /* Get a pointer to the clipboard text */
+	  /* Get a pointer to the clipboard text, in desired format */
 	  if (fUnicodeSupport)
 	    hGlobal = GetClipboardData (CF_UNICODETEXT);
 	  else
@@ -256,13 +231,13 @@ winClipboardFlushXEvents (HWND hwnd,
 	  if (fUnicodeSupport)
 	    {
 	      iConvertDataLen = WideCharToMultiByte (CP_UTF8,
-					   0,
-					   (LPCWSTR)pszGlobalData,
-					   -1,
-					   NULL,
-					   0,
-					   NULL,
-					   NULL);
+						     0,
+						     (LPCWSTR)pszGlobalData,
+						     -1,
+						     NULL,
+						     0,
+						     NULL,
+						     NULL);
 	      /* NOTE: iConvertDataLen includes space for null terminator */
 	      pszConvertData = (char *) malloc (iConvertDataLen);
 	      WideCharToMultiByte (CP_UTF8,
@@ -283,14 +258,14 @@ winClipboardFlushXEvents (HWND hwnd,
 	  /* Convert DOS string to UNIX string */
 	  winClipboardDOStoUNIX (pszConvertData, strlen (pszConvertData));
 
-	      /* Setup our text list */
+	  /* Setup our text list */
 	  pszTextList[0] = pszConvertData;
-	      pszTextList[1] = NULL;
-	      
-	      /* Initialize the text property */
-	      xtpText.value = NULL;
-	      
-	      /* Create the text property from the text list */
+	  pszTextList[1] = NULL;
+
+	  /* Initialize the text property */
+	  xtpText.value = NULL;
+
+	  /* Create the text property from the text list */
 	  if (fUnicodeSupport)
 	    {
 	      iReturn = Xutf8TextListToTextProperty (pDisplay,
@@ -307,26 +282,26 @@ winClipboardFlushXEvents (HWND hwnd,
 						   xiccesStyle,
 						   &xtpText);
 	    }
-	      if (iReturn == XNoMemory || iReturn == XLocaleNotSupported)
-		{
-		  ErrorF ("winClipboardFlushXEvents - SelectionRequest - "
+	  if (iReturn == XNoMemory || iReturn == XLocaleNotSupported)
+	    {
+	      ErrorF ("winClipboardFlushXEvents - SelectionRequest - "
 		      "X*TextListToTextProperty failed: %d\n",
-			  iReturn);
-		  exit(1);
-		}
-	      
+		      iReturn);
+	      pthread_exit (NULL);
+	    }
+	  
 	  /* Free the converted string */
 	  free (pszConvertData);
 
 	  /* Copy the clipboard text to the requesting window */
-	    iReturn = XChangeProperty (pDisplay,
-				       event.xselectionrequest.requestor,
-				       event.xselectionrequest.property,
-				       event.xselectionrequest.target,
-				       8,
-				       PropModeReplace,
-				       xtpText.value,
-				       xtpText.nitems);
+	  iReturn = XChangeProperty (pDisplay,
+				     event.xselectionrequest.requestor,
+				     event.xselectionrequest.property,
+				     event.xselectionrequest.target,
+				     8,
+				     PropModeReplace,
+				     xtpText.value,
+				     xtpText.nitems);
 	  if (iReturn == BadAlloc || iReturn == BadAtom
 	      || iReturn == BadMatch || iReturn == BadValue
 	      || iReturn == BadWindow)
@@ -343,8 +318,8 @@ winClipboardFlushXEvents (HWND hwnd,
 	  CloseClipboard ();
 
 	  /* Clean up */
-	      XFree (xtpText.value);
-	      xtpText.value = NULL;
+	  XFree (xtpText.value);
+	  xtpText.value = NULL;
 
 	  /* Setup selection notify event */
 	  eventSelection.type = SelectionNotify;
@@ -369,7 +344,7 @@ winClipboardFlushXEvents (HWND hwnd,
 	      pthread_exit (NULL);
 	    }
 	  break;
-	  
+
 
 	  /*
 	   * SelectionNotify
@@ -377,7 +352,7 @@ winClipboardFlushXEvents (HWND hwnd,
 
 	case SelectionNotify:
 #if 0
-	  ErrorF ("SelectionNotify\n");
+	  ErrorF ("winClipboardFlushXEvents - SelectionNotify\n");
 #endif
 	  {
 	    char		*pszAtomName;
@@ -391,86 +366,86 @@ winClipboardFlushXEvents (HWND hwnd,
 	    XFree (pszAtomName);
 	  }
 
-#if 0
 	  /*
-	   * TEMP: Bail if selection is anything other than CLIPBOARD
+	   * Request conversion of UTF8 and CompoundText targets.
 	   */
-
-	  if (event.xselection.selection != atomClipboard)
-	    break;
-#endif
-
-	  /*
-	   *
-	   * What are we doing here?
-	   *
-	   */
-	      if (event.xselection.property == None)
+	  if (event.xselection.property == None)
+	    {
+	      if (event.xselection.target == XA_STRING)
 		{
-		  if(event.xselection.target == XA_STRING)
-		    {
 #if 0
-		      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-			      "XA_STRING\n");
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
+			  "XA_STRING\n");
 #endif
-		      return fReturn;
-		    }
-		  else if (event.xselection.target == atomUTF8String)
-		    {
-		      ErrorF ("winClipboardFlushXEvents - SelectionNotify "
-			      "UTF8\n");
-		      iReturn = XConvertSelection (pDisplay,
-						   event.xselection.selection,
-						   XA_STRING,
-						   atomLocalProperty,
-						   iWindow,
-						   CurrentTime);
-		      if (iReturn == BadAtom || iReturn == BadWindow)
-			{
-			  ErrorF ("winClipboardFlushXEvents - SelectionNotify "
-				  "- XConvertSelection () failed\n");
-			  pthread_exit (NULL);
-			}
-		      return fReturn;
-		    }
-		  else if (event.xselection.target == atomCompoundText)
-		    {
-		      ErrorF ("winClipboardFlushXEvents - SelectionNotify "
-			      "CompoundText\n");
-		      iReturn = XConvertSelection (pDisplay,
-						   event.xselection.selection,
-						   atomUTF8String,
-						   atomLocalProperty,
-						   iWindow,
-						   CurrentTime);
-		      if (iReturn == BadAtom || iReturn == BadWindow)
-			{
-			  ErrorF ("winClipboardFlushXEvents - SelectionNotify "
-				  "- XConvertSelection () failed\n");
-			  pthread_exit (NULL);
-			}
-		      return fReturn;
-		    }
-		  else
-		    {
-		      ErrorF ("winClipboardFlushXEvents - Unknown format\n");
-		      return fReturn;
-		    }
+		  return FALSE;
 		}
+	      else if (event.xselection.target == atomUTF8String)
+		{
+#if 0
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
+			  "Requesting conversion of UTF8 target.\n");
+#endif
+		  iReturn = XConvertSelection (pDisplay,
+					       event.xselection.selection,
+					       XA_STRING,
+					       atomLocalProperty,
+					       iWindow,
+					       CurrentTime);
+		  if (iReturn == BadAtom || iReturn == BadWindow)
+		    {
+		      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
+			      "XConvertSelection () failed\n");
+		      pthread_exit (NULL);
+		    }
+
+		  /* Process the ConvertSelection event */
+		  XFlush (pDisplay);
+		  return FALSE;
+		}
+	      else if (event.xselection.target == atomCompoundText)
+		{
+#if 0
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
+			  "Requesting conversion of CompoundText target.\n");
+#endif
+		  iReturn = XConvertSelection (pDisplay,
+					       event.xselection.selection,
+					       atomUTF8String,
+					       atomLocalProperty,
+					       iWindow,
+					       CurrentTime);
+		  if (iReturn == BadAtom || iReturn == BadWindow)
+		    {
+		      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
+			      "XConvertSelection () failed\n");
+		      pthread_exit (NULL);
+		    }
+
+		  /* Process the ConvertSelection event */
+		  XFlush (pDisplay);
+		  return FALSE;
+		}
+	      else
+		{
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
+			  "Unknown format.  Cannot request conversion.\n");
+		  return FALSE;
+		}
+	    }
 
 	  /* Retrieve the size of the stored data */
-	    iReturn = XGetWindowProperty (pDisplay,
-					  iWindow,
-					  atomLocalProperty,
-					  0,
-					  0, /* Don't get data, just size */
-					  False,
-					  AnyPropertyType,
-					  &xtpText.encoding,
-					  &xtpText.format,
-					  &xtpText.nitems,
-					  &ulReturnBytesLeft,
-					  &xtpText.value);
+	  iReturn = XGetWindowProperty (pDisplay,
+					iWindow,
+					atomLocalProperty,
+					0,
+					0, /* Don't get data, just size */
+					False,
+					AnyPropertyType,
+					&xtpText.encoding,
+					&xtpText.format,
+					&xtpText.nitems,
+					&ulReturnBytesLeft,
+					&xtpText.value);
 	  if (iReturn != Success)
 	    {
 	      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
@@ -479,23 +454,23 @@ winClipboardFlushXEvents (HWND hwnd,
 	    }
 
 #if 0
-	    ErrorF ("SelectionNotify - returned data %d left %d\n",
-		    xtpText.nitems, ulReturnBytesLeft);
+	  ErrorF ("SelectionNotify - returned data %d left %d\n",
+		  xtpText.nitems, ulReturnBytesLeft);
 #endif
 
 	  /* Request the selection data */
-	    iReturn = XGetWindowProperty (pDisplay,
-					  iWindow,
-					  atomLocalProperty,
-					  0,
-					  ulReturnBytesLeft,
-					  False,
-					  AnyPropertyType,
-					  &xtpText.encoding,
-					  &xtpText.format,
-					  &xtpText.nitems,
-					  &ulReturnBytesLeft,
-					  &xtpText.value);
+	  iReturn = XGetWindowProperty (pDisplay,
+					iWindow,
+					atomLocalProperty,
+					0,
+					ulReturnBytesLeft,
+					False,
+					AnyPropertyType,
+					&xtpText.encoding,
+					&xtpText.format,
+					&xtpText.nitems,
+					&ulReturnBytesLeft,
+					&xtpText.value);
 	  if (iReturn != Success)
 	    {
 	      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
@@ -516,7 +491,7 @@ winClipboardFlushXEvents (HWND hwnd,
 	      pszAtomName = NULL;
 	    }
 #endif
-	      
+
 	  if (fUnicodeSupport)
 	    {
 	      /* Convert the text property to a text list */
@@ -528,9 +503,9 @@ winClipboardFlushXEvents (HWND hwnd,
 	  else
 	    {
 	      iReturn = XmbTextPropertyToTextList (pDisplay,
-					   &xtpText,
-					   &ppszTextList,
-					   &iCount);
+						   &xtpText,
+						   &ppszTextList,
+						   &iCount);
 	    }
 	  if (iReturn == Success || iReturn > 0)
 	    {
@@ -544,7 +519,7 @@ winClipboardFlushXEvents (HWND hwnd,
 		  pszReturnData = malloc (iReturnDataLen + 1);
 		  pszReturnData[0] = '\0';
 		  for (i = 0; i < iCount; i++)
-		{
+		    {
 		      strcat (pszReturnData, ppszTextList[i]);
 		    }
 		}
@@ -561,23 +536,26 @@ winClipboardFlushXEvents (HWND hwnd,
 	      switch (iReturn)
 		{
 		case XNoMemory:
-		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - XNoMemory\n");
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
+			  "XNoMemory\n");
 		  break;
 		case XConverterNotFound:
-		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - XConverterNotFound\n");
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
+			  "XConverterNotFound\n");
 		  break;
 		default:
-		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - Unknown Error\n");
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
+			  "Unknown Error\n");
 		  break;
 		}
 	      pszReturnData = malloc (1);
 	      pszReturnData[0] = '\0';
-		}
-	      
-	      /* Free the data returned from XGetWindowProperty */
-	      XFreeStringList (ppszTextList);
-	      XFree (xtpText.value);
-	      
+	    }
+
+	  /* Free the data returned from XGetWindowProperty */
+	  XFreeStringList (ppszTextList);
+	  XFree (xtpText.value);
+
 	  /* Convert the X clipboard string to DOS format */
 	  winClipboardUNIXtoDOS (&pszReturnData, strlen (pszReturnData));
 
@@ -590,11 +568,11 @@ winClipboardFlushXEvents (HWND hwnd,
 						 -1,
 						 NULL,
 						 0);
-	      
+
 	      /* Allocate memory for the Unicode string */
 	      pwszUnicodeStr
 		= (wchar_t*) malloc (sizeof (wchar_t) * (iUnicodeLen + 1));
-	      
+
 	      /* Do the actual conversion */
 	      MultiByteToWideChar (CP_UTF8,
 				   0,
@@ -607,22 +585,6 @@ winClipboardFlushXEvents (HWND hwnd,
 	    {
 	      pszConvertData = strdup (pszReturnData);
 	      iConvertDataLen = strlen (pszConvertData) + 1;
-	    }
-
-	  /* Access the Windows clipboard */
-	  if (!OpenClipboard (hwnd))
-	    {
-	      ErrorF ("winClipboardFlushXEvents - OpenClipboard () failed: "
-		      "%08x\n", GetLastError ());
-	      pthread_exit (NULL);
-	    }
-
-	  /* Take ownership of the Window clipboard */
-	  if (!EmptyClipboard ())
-	    {
-	      ErrorF ("winClipboardFlushXEvents - EmptyClipboard () failed: "
-		      "%08x\n", GetLastError ());
-	      pthread_exit (NULL);
 	    }
 
 	  /* Allocate global memory for the X clipboard data */
@@ -669,77 +631,13 @@ winClipboardFlushXEvents (HWND hwnd,
 	  if (fUnicodeSupport)
 	    SetClipboardData (CF_UNICODETEXT, hGlobal);
 	  else
-	  SetClipboardData (CF_TEXT, hGlobal);	    
+	    SetClipboardData (CF_TEXT, hGlobal);
 
 	  /*
 	   * NOTE: Do not try to free pszGlobalData, it is owned by
 	   * Windows after the call to SetClipboardData ().
 	   */
-
-	  /* Release the clipboard */
-	  if (!CloseClipboard ())
-	    {
-	      ErrorF ("winClipboardFlushXEvents - CloseClipboard () failed: "
-		      "%08x\n",
-		      GetLastError ());
-	      pthread_exit (NULL);
-	    }
-
-	  /* Reassert ownership of the selection */	  
-	  iReturn = XSetSelectionOwner (pDisplay,
-					event.xselection.selection,
-					iWindow, CurrentTime);
-	  if (iReturn == BadAtom || iReturn == BadWindow)
-	    {
-	      char		*pszAtomName = NULL;
-
-	      pszAtomName = XGetAtomName (pDisplay,
-					  event.xselection.selection);
-	      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-		      "Could not reassert ownership of selection ATOM: %s\n",
-		      pszAtomName);
-	      XFree (pszAtomName);
-	      pszAtomName = NULL;
-	      pthread_exit (NULL);
-	    }
-	  else
-	    {
-#if 0
-	      char		*pszAtomName = NULL;
-
-	      pszAtomName = XGetAtomName (pDisplay,
-					  event.xselection.selection);
-	      ErrorF ("SelectionNotify - Reasserted ownership of ATOM: %s\n",
-		      pszAtomName);
-	      XFree (pszAtomName);
-	      pszAtomName = NULL;
-#endif
-	    }
-#if 0
-	  /* Reassert ownership of the CLIPBOARD */	  
-	  iReturn = XSetSelectionOwner (pDisplay,
-					atomClipboard,
-					iWindow, CurrentTime);
-	  if (iReturn == BadAtom || iReturn == BadWindow)
-	    {
-	      ErrorF ("winClipboardFlushXEvents - Could not reassert "
-		      "ownership of selection\n");
-	      pthread_exit (NULL);
-	    }
-#endif
 	  break;
-
-#if 0
-	case CreateNotify:
-	  ErrorF ("FlushXEvents - CreateNotify parent: %ld\twindow: %ld\n",
-		  event.xcreatewindow.parent, event.xcreatewindow.window);
-	  break;
-
-	case DestroyNotify:
-	  ErrorF ("FlushXEvents - DestroyNotify window: %ld\tevent: %ld\n",
-		  event.xdestroywindow.window, event.xdestroywindow.event);
-	  break;
-#endif
 
 	default:
 	  break;

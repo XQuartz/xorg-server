@@ -64,6 +64,15 @@ winWin32RootlessProcs = {
 
 
 /*
+ * References to external symbols
+ */
+
+extern winScreenInfo		g_ScreenInfo[];
+extern miPointerScreenFuncRec	g_winPointerCursorFuncs;
+extern int			g_iScreenPrivateIndex;
+
+
+/*
  * Determine what type of screen we are initializing
  * and call the appropriate procedure to intiailize
  * that type of screen.
@@ -78,8 +87,8 @@ winScreenInit (int index,
   winPrivScreenPtr	pScreenPriv;
   HDC			hdc;
 
-#if CYGDEBUG
-  ErrorF ("winScreenInit - dwWidth: %d dwHeight: %d\n",
+#if CYGDEBUG || YES
+  ErrorF ("winScreenInit - dwWidth: %ld dwHeight: %ld\n",
 	  pScreenInfo->dwWidth, pScreenInfo->dwHeight);
 #endif
 
@@ -552,7 +561,7 @@ winFinishScreenInitFB (int index,
   pScreenPriv->CloseScreen = pScreen->CloseScreen;
   pScreen->CloseScreen = pScreenPriv->pwinCloseScreen;
 
-  /* Create a mutex for modules in seperate threads to wait for */
+  /* Create a mutex for modules in separate threads to wait for */
   iReturn = pthread_mutex_init (&pScreenPriv->pmServerStarted, NULL);
   if (iReturn != 0)
     {
@@ -561,7 +570,7 @@ winFinishScreenInitFB (int index,
       return FALSE;
     }
 
-  /* Own the mutex for modules in seperate threads */
+  /* Own the mutex for modules in separate threads */
   iReturn = pthread_mutex_lock (&pScreenPriv->pmServerStarted);
   if (iReturn != 0)
     {
@@ -592,21 +601,6 @@ winFinishScreenInitFB (int index,
 		     pScreenInfo->dwScreen))
     {
       ErrorF ("winFinishScreenInitFB - winInitWM () failed.\n");
-      return FALSE;
-    }
-
-#if CYGDEBUG || YES
-  if (pScreenInfo->fClipboard)
-    ErrorF ("winFinishScreenInitFB - Calling winInitClipboard.\n");
-#endif
-
-  /* Initialize the clipboard manager */
-  if (pScreenInfo->fClipboard
-      && !winInitClipboard (&pScreenPriv->ptClipboardProc,
-			    &pScreenPriv->pmServerStarted,
-			    pScreenInfo->dwScreen))
-    {
-      ErrorF ("winFinishScreenInitFB - winClipboardInit () failed.\n");
       return FALSE;
     }
 

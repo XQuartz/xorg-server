@@ -32,6 +32,15 @@
 
 #include "win.h"
 
+
+/*
+ * References to external symbols
+ */
+
+extern int			g_iScreenPrivateIndex;
+extern int			g_iWindowPrivateIndex;
+
+
 /*
  * Prototypes for local functions
  */

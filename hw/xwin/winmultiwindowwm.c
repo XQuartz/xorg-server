@@ -115,7 +115,6 @@ typedef struct _XMsgProcArgRec {
 extern char *display;
 extern void ErrorF (const char* /*f*/, ...);
 extern Bool g_fCalledSetLocale;
-extern Bool g_fCalledXInitThreads;
 
 
 /*
@@ -144,16 +143,22 @@ static void*
 winMultiWindowWMProc (void* pArg);
 
 static int
-winMultiWindowWMErrorHandler (Display *pDisp, XErrorEvent *e);
+winMultiWindowWMErrorHandler (Display *pDisplay, XErrorEvent *pErr);
+
+static int
+winMutliWindowWMIOErrorHandler (Display *pDisplay);
 
 static void *
 winMultiWindowXMsgProc (void *pArg);
 
-static void
-winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg);
+static int
+winMultiWindowXMsgProcErrorHandler (Display *pDisplay, XErrorEvent *pErr);
 
 static int
-winMutliWindowWMIOErrorHandler (Display *pDisplay);
+winMutliWindowXMsgProcIOErrorHandler (Display *pDisplay);
+
+static void
+winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg);
 
 
 /*
@@ -161,7 +166,8 @@ winMutliWindowWMIOErrorHandler (Display *pDisplay);
  */
 
 static int			g_nQueueSize;
-static jmp_buf			g_jmpEntry;
+static jmp_buf			g_jmpWMEntry;
+static jmp_buf			g_jmpXMsgProcEntry;
 static Bool                     g_shutdown = FALSE;
 
 
@@ -684,49 +690,9 @@ winMultiWindowWMProc (void *pArg)
 }
 
 
-/*
- * winMultiWindowWMErrorHandler - Our application specific error handler
- */
-
-static int
-winMultiWindowWMErrorHandler (Display *pDisplay, XErrorEvent *pErr)
-{
-  char pszErrorMsg[100];
-
-  if (pErr->request_code == X_ChangeWindowAttributes
-      && pErr->error_code == BadAccess)
-    {
-      ErrorF ("winMultiWindowWMErrorHandler - ChangeWindowAttributes "
-	      "BadAccess.\n");
-#if 0
-      pthread_exit (NULL);
-#endif
-      return 0;
-    }
-  
-  XGetErrorText (pDisplay,
-		 pErr->error_code,
-		 pszErrorMsg,
-		 sizeof (pszErrorMsg));
-  ErrorF ("winMultiWindowWMErrorHandler - ERROR: %s\n", pszErrorMsg);
-
-  if (pErr->error_code == BadWindow
-      || pErr->error_code == BadMatch
-      || pErr->error_code == BadDrawable)
-    {
-#if 0
-      pthread_exit (NULL);
-#endif
-      return 0;
-    }
-
-  pthread_exit (NULL);
-  return 0;
-}
-
 
 /*
- *
+ * X message procedure
  */
 
 static void *
@@ -765,26 +731,39 @@ winMultiWindowXMsgProc (void *pArg)
 
   ErrorF ("winMultiWindowXMsgProc - pthread_mutex_lock () returned.\n");
 
-  /* Only call XInitThreads once for the whole process */
-  if (!g_fCalledXInitThreads)
+  /* Allow multiple threads to access Xlib */
+  if (XInitThreads () == 0)
     {
-      /* Allow multiple threads to access Xlib */
-      if (XInitThreads () == 0)
-	{
-	  ErrorF ("winMultiWindowXMsgProc - XInitThreads () failed.\n");
-	  pthread_exit (NULL);
-	}
-      
-      /* Flag that XInitThreads has been called */
-      g_fCalledXInitThreads = TRUE;
-
-      ErrorF ("winMultiWindowXMsgProc - XInitThreads () returned.\n");
+      ErrorF ("winMultiWindowXMsgProc - XInitThreads () failed.\n");
+      pthread_exit (NULL);
     }
-
+  
   /* Release the server started mutex */
   pthread_mutex_unlock (pProcArg->ppmServerStarted);
 
   ErrorF ("winMultiWindowXMsgProc - pthread_mutex_unlock () returned.\n");
+
+  /* Set jump point for IO Error exits */
+  iReturn = setjmp (g_jmpXMsgProcEntry);
+  
+  /* Check if we should continue operations */
+  if (iReturn != WIN_JMP_ERROR_IO
+      && iReturn != WIN_JMP_OKAY)
+    {
+      /* setjmp returned an unknown value, exit */
+      ErrorF ("winInitMultiWindowXMsgProc - setjmp returned: %d exiting\n",
+	      iReturn);
+      pthread_exit (NULL);
+    }
+  else if (iReturn == WIN_JMP_ERROR_IO)
+    {
+      ErrorF ("winInitMultiWindowXMsgProc - Caught IO Error, shutting down\n");
+      pthread_exit (NULL);
+    }
+
+  /* Install our error handler */
+  XSetErrorHandler (winMultiWindowXMsgProcErrorHandler);
+  XSetIOErrorHandler (winMutliWindowXMsgProcIOErrorHandler);
 
   /* Setup the display connection string x */
   snprintf (pszDisplay,
@@ -793,6 +772,7 @@ winMultiWindowXMsgProc (void *pArg)
   /* Print the display connection string */
   ErrorF ("winMultiWindowXMsgProc - DISPLAY=%s\n", pszDisplay);
   
+  /* Initialize retry count */
   iRetries = 0;
 
   /* Open the X display */
@@ -824,10 +804,6 @@ winMultiWindowXMsgProc (void *pArg)
 
   ErrorF ("winMultiWindowXMsgProc - XOpenDisplay () returned and "
 	  "successfully opened the display.\n");
-  
-  /* Install our error handler */
-  XSetErrorHandler (winMultiWindowWMErrorHandler);
-  XSetIOErrorHandler (winMutliWindowWMIOErrorHandler);
 
   XSelectInput (pProcArg->pDisplay,
 		RootWindow(pProcArg->pDisplay, pProcArg->dwScreen),
@@ -976,7 +952,7 @@ winInitWM (void **ppWMInfo,
 
 
 /*
- * winInitMultiWindowWM - 
+ * Window manager thread - setup
  */
 
 static void
@@ -1030,20 +1006,11 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
   /* Flag that we have called setlocale */
   g_fCalledSetLocale = TRUE;
   
-  /* Only call XInitThreads once for the whole process */
-  if (!g_fCalledXInitThreads)
+  /* Allow multiple threads to access Xlib */
+  if (XInitThreads () == 0)
     {
-      /* Allow multiple threads to access Xlib */
-      if (XInitThreads () == 0)
-	{
-	  ErrorF ("winInitMultiWindowWM - XInitThreads () failed.\n");
-	  pthread_exit (NULL);
-	}
-      
-      /* Flag that XInitThreads has been called */
-      g_fCalledXInitThreads = TRUE;
-
-      ErrorF ("winInitMultiWindowWM - XInitThreads () returned.\n");
+      ErrorF ("winInitMultiWindowWM - XInitThreads () failed.\n");
+      pthread_exit (NULL);
     }
 
   /* Release the server started mutex */
@@ -1052,7 +1019,7 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
   ErrorF ("winInitMultiWindowWM - pthread_mutex_unlock () returned.\n");
 
   /* Set jump point for IO Error exits */
-  iReturn = setjmp (g_jmpEntry);
+  iReturn = setjmp (g_jmpWMEntry);
   
   /* Check if we should continue operations */
   if (iReturn != WIN_JMP_ERROR_IO
@@ -1063,16 +1030,15 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
 	      iReturn);
       pthread_exit (NULL);
     }
-  else if (g_shutdown)
-    {
-      /* Shutting down, the X server severed out connection! */
-      ErrorF ("winInitMultiWindowWM - Detected shutdown in progress\n");
-      pthread_exit (NULL);
-    }
   else if (iReturn == WIN_JMP_ERROR_IO)
     {
-      ErrorF ("winInitMultiWindowWM - setjmp returned WIN_JMP_ERROR_IO\n");
+      ErrorF ("winInitMultiWindowWM - Caught IO Error, shutting down\n");
+      pthread_exit (NULL);
     }
+
+  /* Install our error handler */
+  XSetErrorHandler (winMultiWindowWMErrorHandler);
+  XSetIOErrorHandler (winMutliWindowWMIOErrorHandler);
 
   /* Setup the display connection string x */
   snprintf (pszDisplay,
@@ -1114,9 +1080,6 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
   ErrorF ("winInitMultiWindowWM - XOpenDisplay () returned and "
 	  "successfully opened the display.\n");
   
-  /* Install our error handler */
-  XSetErrorHandler (winMultiWindowWMErrorHandler);
-  XSetIOErrorHandler (winMutliWindowWMIOErrorHandler);
 
   /* Create some atoms */
   pWMInfo->atmWmProtos = XInternAtom (pWMInfo->pDisplay,
@@ -1154,7 +1117,34 @@ winSendMessageToWM (void *pWMInfo, winWMMessagePtr pMsg)
 
 
 /*
- * winMutliWindowWMIOErrorHandler - Our application specific IO error handler
+ * Window manager error handler
+ */
+
+static int
+winMultiWindowWMErrorHandler (Display *pDisplay, XErrorEvent *pErr)
+{
+  char pszErrorMsg[100];
+
+  if (pErr->request_code == X_ChangeWindowAttributes
+      && pErr->error_code == BadAccess)
+    {
+      ErrorF ("winMultiWindowWMErrorHandler - ChangeWindowAttributes "
+	      "BadAccess.\n");
+      return 0;
+    }
+  
+  XGetErrorText (pDisplay,
+		 pErr->error_code,
+		 pszErrorMsg,
+		 sizeof (pszErrorMsg));
+  ErrorF ("winMultiWindowWMErrorHandler - ERROR: %s\n", pszErrorMsg);
+
+  return 0;
+}
+
+
+/*
+ * Window manager IO error handler
  */
 
 static int
@@ -1163,7 +1153,42 @@ winMutliWindowWMIOErrorHandler (Display *pDisplay)
   printf ("\nwinMutliWindowWMIOErrorHandler!\n\n");
 
   /* Restart at the main entry point */
-  longjmp (g_jmpEntry, WIN_JMP_ERROR_IO);
+  longjmp (g_jmpWMEntry, WIN_JMP_ERROR_IO);
+  
+  return 0;
+}
+
+
+/*
+ * X message procedure error handler
+ */
+
+static int
+winMultiWindowXMsgProcErrorHandler (Display *pDisplay, XErrorEvent *pErr)
+{
+  char pszErrorMsg[100];
+  
+  XGetErrorText (pDisplay,
+		 pErr->error_code,
+		 pszErrorMsg,
+		 sizeof (pszErrorMsg));
+  ErrorF ("winMultiWindowXMsgProcErrorHandler - ERROR: %s\n", pszErrorMsg);
+  
+  return 0;
+}
+
+
+/*
+ * X message procedure IO error handler
+ */
+
+static int
+winMutliWindowXMsgProcIOErrorHandler (Display *pDisplay)
+{
+  printf ("\nwinMutliWindowXMsgProcIOErrorHandler!\n\n");
+
+  /* Restart at the main entry point */
+  longjmp (g_jmpXMsgProcEntry, WIN_JMP_ERROR_IO);
   
   return 0;
 }

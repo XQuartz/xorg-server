@@ -32,6 +32,15 @@
 
 #include "win.h"
 
+
+/*
+ * References to external symbols
+ */
+
+extern int			g_iScreenPrivateIndex;
+extern int			g_iPixmapPrivateIndex;
+
+
 /* See Porting Layer Definition - p. 55 */
 void
 winGetSpansNativeGDI (DrawablePtr	pDrawable, 

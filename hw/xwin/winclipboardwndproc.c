@@ -33,6 +33,42 @@
 
 
 /*
+ * Constants
+ */
+
+#define WIN_CLIPBOARD_PROP	"cyg_clipboard_prop"
+
+
+/*
+ * References to external symbols
+ */
+
+extern Bool		g_fUnicodeSupport;
+
+
+/* 
+ * Local function prototypes
+ */
+
+static Bool
+winLookForSelectionNotify (Display *pDisplay, XEvent *pEvent, XPointer pArg);
+
+
+/*
+ * Signal that we found a SelectionNotify event
+ */
+
+static Bool
+winLookForSelectionNotify (Display *pDisplay, XEvent *pEvent, XPointer pArg)
+{
+  if (pEvent->type == SelectionNotify)
+    return TRUE;
+  
+  return FALSE;
+}
+
+
+/*
  * Process a given Windows message
  */
 
@@ -40,18 +76,231 @@ LRESULT CALLBACK
 winClipboardWindowProc (HWND hwnd, UINT message, 
 			WPARAM wParam, LPARAM lParam)
 {
+  ClipboardWindowPropPtr	pWindowProp = GetProp (hwnd,
+						       WIN_CLIPBOARD_PROP);
+
   /* Branch on message type */
   switch (message)
     {
     case WM_DESTROY:
-      PostQuitMessage (0);
+      {
+	ErrorF ("winClipboardWindowProc - WM_DESTROY\n");
+
+	HWND	*phwndNextViewer = pWindowProp->phwndClipboardNextViewer;
+	
+	/* Remove ourselves from the clipboard chain */
+	ChangeClipboardChain (hwnd, *phwndNextViewer);
+	
+	*phwndNextViewer = NULL;
+	
+	/* Free the window property data */
+	free (pWindowProp);
+	pWindowProp = NULL;
+	SetProp (hwnd, WIN_CLIPBOARD_PROP, NULL);
+
+	PostQuitMessage (0);
+      }
       return 0;
 
+
     case WM_CREATE:
-#if 0
-      ErrorF ("WindowProc - WM_CREATE\n");
-#endif
+      {
+	ErrorF ("winClipboardWindowProc - WM_CREATE\n");
+	
+	/* Fetch window data from creation data */
+	pWindowProp = ((LPCREATESTRUCT) lParam)->lpCreateParams;
+	
+	/* Save data as a window property */
+	SetProp (hwnd, WIN_CLIPBOARD_PROP, pWindowProp);
+
+	/* Add ourselves to the clipboard viewer chain */
+	*(pWindowProp->phwndClipboardNextViewer) = SetClipboardViewer (hwnd);
+      }
       return 0;
+
+
+    case WM_CHANGECBCHAIN:
+      {
+	HWND	*phwndNextViewer = pWindowProp->phwndClipboardNextViewer;
+
+	if ((HWND) wParam == *phwndNextViewer)
+	  *phwndNextViewer = (HWND) lParam;
+	else if (*phwndNextViewer)
+	  SendMessage (*phwndNextViewer, message, wParam, lParam);
+      }
+      return 0;
+
+
+    case WM_DRAWCLIPBOARD:
+      {
+	HWND	*phwndNextViewer = pWindowProp->phwndClipboardNextViewer;
+	Bool	*pfCBCInitialized = pWindowProp->pfCBCInitialized;
+	Display *pDisplay = *(pWindowProp->ppClipboardDisplay);
+	Window	iWindow = *(pWindowProp->piClipboardWindow);
+	int	iReturn;
+
+	/* Pass the message on the next window in the clipboard viewer chain */
+	if (*phwndNextViewer)
+	  SendMessage (*phwndNextViewer, message, 0, 0);
+	
+	/* Bail on first message */
+	if (!*pfCBCInitialized)
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+		    "Initializing - Returning.\n");
+	    *pfCBCInitialized = TRUE;
+	    return 0;
+	  }
+	
+	/* Bail when clipboard is unowned */
+	if (NULL == GetClipboardOwner ())
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+		    "Clipboard is unowned.\n");
+	    return 0;
+	  }
+	
+	/* Bail when we still own the clipboard */
+	if (hwnd == GetClipboardOwner ())
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+		    "We own the clipboard, returning.\n");
+	    return 0;
+	  }
+
+	/* Reassert ownership of PRIMARY */	  
+	iReturn = XSetSelectionOwner (pDisplay,
+				      XA_PRIMARY,
+				      iWindow,
+				      CurrentTime);
+	if (iReturn == BadAtom || iReturn == BadWindow)
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+		    "Could not reassert ownership of PRIMARY\n");
+	  }
+	else
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+		    "Reasserted ownership of PRIMARY\n");
+	  }
+	
+	/* Reassert ownership of the CLIPBOARD */	  
+	iReturn = XSetSelectionOwner (pDisplay,
+				      XInternAtom (pDisplay,
+						   "CLIPBOARD",
+						   FALSE),
+				      iWindow,
+				      CurrentTime);
+	if (iReturn == BadAtom || iReturn == BadWindow)
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+		    "Could not reassert ownership of CLIPBOARD\n");
+	  }
+	else
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+		    "Reasserted ownership of CLIPBOARD\n");
+	  }
+	
+	/* Flush the pending SetSelectionOwner event now */
+	XFlush (pDisplay);
+      }
+      return 0;
+
+
+    case WM_RENDERFORMAT:
+    case WM_RENDERALLFORMATS:
+      {
+	XEvent	event;
+	int	iReturn;
+	Display *pDisplay = *(pWindowProp->ppClipboardDisplay);
+	Window	iWindow = *(pWindowProp->piClipboardWindow);
+
+#if 0
+	ErrorF ("winClipboardWindowProc - WM_RENDER*FORMAT - Hello.\n");
+#endif
+
+	/* Request the selection contents */
+	iReturn = XConvertSelection (pDisplay,
+				     *(pWindowProp->patomLastOwnedSelection),
+				     XInternAtom (pDisplay,
+						  "COMPOUND_TEXT", False),
+				     XInternAtom (pDisplay,
+						  "CYGX_CUT_BUFFER", False),
+				     iWindow,
+				     CurrentTime);
+	if (iReturn == BadAtom || iReturn == BadWindow)
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_RENDER*FORMAT - "
+		    "XConvertSelection () failed\n");
+	    break;
+	  }
+
+	/* Wait for the SelectionNotify event */
+	XPeekIfEvent (pDisplay, &event, winLookForSelectionNotify, NULL);
+
+	/* Special handling for WM_RENDERALLFORMATS */
+	if (message == WM_RENDERALLFORMATS)
+	  {
+	    /* We must open and empty the clipboard */
+	    
+	    if (!OpenClipboard (hwnd))
+	      {
+		ErrorF ("winClipboardWindowProc - WM_RENDER*FORMATS - "
+			"OpenClipboard () failed: %08x\n",
+			GetLastError ());
+		break;
+	      }
+	    
+	    if (!EmptyClipboard ())
+	      {
+		ErrorF ("winClipboardWindowProc - WM_RENDER*FORMATS - "
+			"EmptyClipboard () failed: %08x\n",
+		      GetLastError ());
+		break;
+	      }
+	  }
+	
+	/* Process the SelectionNotify event */
+	if (!winClipboardFlushXEvents (hwnd,
+				       iWindow,
+				       pDisplay,
+				       g_fUnicodeSupport))
+	  {
+	    /*
+	     * The selection was offered for conversion first, so we have
+	     * to process a second SelectionNotify event to get the actual
+	     * data in the selection.
+	     */
+	    
+	    /* Wait for the second SelectionNotify event */
+	    XPeekIfEvent (pDisplay, &event, winLookForSelectionNotify, NULL);
+	    
+	    winClipboardFlushXEvents (hwnd,
+				      iWindow,
+				      pDisplay,
+				      g_fUnicodeSupport);
+	  }
+
+	/* Special handling for WM_RENDERALLFORMATS */
+	if (message == WM_RENDERALLFORMATS)
+	  {
+	    /* We must close the clipboard */
+	    
+	    if (!CloseClipboard ())
+	      {
+	      ErrorF ("winClipboardWindowProc - WM_RENDERALLFORMATS - "
+		      "CloseClipboard () failed: %08x\n",
+		      GetLastError ());
+	      break;
+	      }
+	  }
+
+#if 0
+	ErrorF ("winClipboardWindowProc - WM_RENDER*FORMAT - Returning.\n");
+#endif
+	return 0;
+      }
     }
 
   /* Let Windows perform default processing for unhandled messages */

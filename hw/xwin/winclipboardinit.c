@@ -29,7 +29,19 @@
  */
 /* $XFree86: xc/programs/Xserver/hw/xwin/winclipboardinit.c,v 1.2 2003/07/29 21:25:16 dawes Exp $ */
 
+#include "dixstruct.h"
+
 #include "winclipboard.h"
+
+/*
+ * Local typedefs
+ */
+
+typedef int (*winDispatchProcPtr) (ClientPtr);
+
+DISPATCH_PROC(winProcSetSelectionOwner);
+
+extern winDispatchProcPtr	winProcSetSelectionOwnerOrig;
 
 
 /*
@@ -38,7 +50,13 @@
 
 Bool
 winInitClipboard (pthread_t *ptClipboardProc,
-		  pthread_mutex_t *ppmServerStarted,
+		  Bool *pfClipboardStarted,
+		  HWND *phwndClipboard,
+		  void **ppClipboardDisplay,
+		  Window *piClipboardWindow,
+		  HWND *phwndClipboardNextViewer,
+		  Bool *pfCBCInitialized,
+		  Atom *patomLastOwnedSelection,
 		  DWORD dwScreen)
 {
   ClipboardProcArgPtr		pArg;
@@ -52,10 +70,23 @@ winInitClipboard (pthread_t *ptClipboardProc,
       ErrorF ("winInitClipboard - malloc for ClipboardProcArgRec failed.\n");
       return FALSE;
     }
+
+  /* Wrap some internal server functions */
+  if (ProcVector[X_SetSelectionOwner] != winProcSetSelectionOwner)
+    {
+      winProcSetSelectionOwnerOrig = ProcVector[X_SetSelectionOwner];
+      ProcVector[X_SetSelectionOwner] = winProcSetSelectionOwner;
+    }
   
   /* Setup the argument structure for the thread function */
   pArg->dwScreen = dwScreen;
-  pArg->ppmServerStarted = ppmServerStarted;
+  pArg->pfClipboardStarted = pfClipboardStarted;
+  pArg->phwndClipboard = phwndClipboard;
+  pArg->ppClipboardDisplay = ppClipboardDisplay;
+  pArg->piClipboardWindow = piClipboardWindow;
+  pArg->phwndClipboardNextViewer = phwndClipboardNextViewer;
+  pArg->patomLastOwnedSelection = patomLastOwnedSelection;
+  pArg->pfCBCInitialized = pfCBCInitialized;
 
   /* Spawn a thread for the Clipboard module */
   if (pthread_create (ptClipboardProc, NULL, winClipboardProc, pArg))
@@ -74,10 +105,11 @@ winInitClipboard (pthread_t *ptClipboardProc,
  */
 
 HWND
-winClipboardCreateMessagingWindow (void)
+winClipboardCreateMessagingWindow (ClipboardProcArgPtr pProcArg)
 {
-  WNDCLASS		wc;
-  HWND			hwnd;
+  WNDCLASS			wc;
+  HWND				hwnd;
+  ClipboardWindowPropPtr	pWindowProp = NULL;
 
   /* Setup our window class */
   wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -92,6 +124,19 @@ winClipboardCreateMessagingWindow (void)
   wc.lpszClassName = WIN_CLIPBOARD_WINDOW_CLASS;
   RegisterClass (&wc);
 
+  /* Allocate and setup window property structure */
+  pWindowProp = malloc (sizeof (ClipboardWindowPropRec));
+  if (pWindowProp == NULL)
+    {
+      ErrorF ("winClipboardCreateMessagingWindow - malloc failed!\n");
+      pthread_exit (NULL);
+    }
+  pWindowProp->ppClipboardDisplay = pProcArg->ppClipboardDisplay;
+  pWindowProp->piClipboardWindow = pProcArg->piClipboardWindow;
+  pWindowProp->phwndClipboardNextViewer = pProcArg->phwndClipboardNextViewer;
+  pWindowProp->pfCBCInitialized = pProcArg->pfCBCInitialized;
+  pWindowProp->patomLastOwnedSelection = pProcArg->patomLastOwnedSelection;
+
   /* Create the window */
   hwnd = CreateWindowExA (0,			/* Extended styles */
 			  WIN_CLIPBOARD_WINDOW_CLASS,/* Class name */
@@ -104,7 +149,7 @@ winClipboardCreateMessagingWindow (void)
 			  (HWND) NULL,		/* No parent or owner window */
 			  (HMENU) NULL,		/* No menu */
 			  GetModuleHandle (NULL),/* Instance handle */
-			  NULL);		/* ScreenPrivates */
+			  pWindowProp);		/* Creation data */
   assert (hwnd != NULL);
 
   /* I'm not sure, but we may need to call this to start message processing */

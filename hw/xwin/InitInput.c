@@ -30,8 +30,33 @@
 
 #include "win.h"
 #include "../../Xext/xf86miscproc.h"
+#include "dixstruct.h"
 
-CARD32		g_c32LastInputEventTime = 0;
+
+/*
+ * Local function prototypes
+ */
+
+DISPATCH_PROC(winProcEstablishConnection);
+DISPATCH_PROC(winProcQueryTree);
+DISPATCH_PROC(winProcSetSelectionOwner);
+
+
+/*
+ * Local global declarations
+ */
+
+CARD32			g_c32LastInputEventTime = 0;
+
+
+/*
+ * References to external symbols
+ */
+
+extern int			g_fdMessageQueue;
+extern Bool			g_fXdmcpEnabled;
+extern winDispatchProcPtr	winProcEstablishConnectionOrig;
+extern winDispatchProcPtr	winProcQueryTreeOrig;
 
 
 /* Called from dix/devices.c */
@@ -90,6 +115,21 @@ InitInput (int argc, char *argv[])
   ErrorF ("InitInput\n");
 #endif
 
+  /*
+   * Wrap some functions at every generation of the server.
+   */
+  if (InitialVector[2] != winProcEstablishConnection)
+    {
+      winProcEstablishConnectionOrig = InitialVector[2];
+      InitialVector[2] = winProcEstablishConnection;
+    }
+  if (g_fXdmcpEnabled
+      && ProcVector[X_QueryTree] != winProcQueryTree)
+    {
+      winProcQueryTreeOrig = ProcVector[X_QueryTree];
+      ProcVector[X_QueryTree] = winProcQueryTree;
+    }
+
   pMouse = AddInputDevice (winMouseProc, TRUE);
   pKeyboard = AddInputDevice (winKeybdProc, TRUE);
   
@@ -117,34 +157,6 @@ InitInput (int argc, char *argv[])
       /* Add the message queue as a device to wait for in WaitForSomething */
       AddEnabledDevice (g_fdMessageQueue);
     }
-
-#if 0
-  {
-    MiscExtReturn ret;
-    pointer kbd;
-    
-#if 0
-    if ((kbd = MiscExtCreateStruct(MISC_KEYBOARD)) == (pointer) 0)
-      return BadAlloc;
-#else
-    kbd = MiscExtCreateStruct (MISC_KEYBOARD);
-#endif
-    
-    MiscExtSetKbdValue(kbd, MISC_KBD_TYPE,	        0);
-    MiscExtSetKbdValue(kbd, MISC_KBD_RATE,		0);
-    MiscExtSetKbdValue(kbd, MISC_KBD_DELAY,		0);
-    MiscExtSetKbdValue(kbd, MISC_KBD_SERVNUMLOCK,	0);
-    
-    switch ((ret = MiscExtApply (kbd, MISC_KEYBOARD)))
-      {
-      case MISC_RET_SUCCESS:      break;
-      case MISC_RET_BADVAL:
-      case MISC_RET_BADKBDTYPE:
-      default:
-	ErrorF ("Unexpected return from MiscExtApply(KEYBOARD) = %d\n", ret);
-      }
-  }
-#endif
 
 #if CYGDEBUG
   ErrorF ("InitInput - returning\n");

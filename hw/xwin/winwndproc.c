@@ -1051,15 +1051,16 @@ winWindowProc (HWND hwnd, UINT message,
 	default:
 	  /* It's probably one of the custom menus... */
 	  return HandleCustomWM_COMMAND (0, LOWORD (wParam));
-	  
 	}
       break;
 
     case WM_ENDSESSION:
     case WM_GIVEUP:
-       /* Tell X that we are giving up */
-      winDeinitClipboard ();
-      winDeinitMultiWindowWM ();
+      /* Tell X that we are giving up */
+      if (s_pScreenInfo->fClipboard)
+	winDeinitClipboard ();
+      if (s_pScreenInfo->fMultiWindow)
+	winDeinitMultiWindowWM ();
       GiveUp (0);
       return 0;
 

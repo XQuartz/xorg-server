@@ -31,6 +31,16 @@
 
 #include "win.h"
 
+
+/*
+ * References to external symbols
+ */
+
+extern int			g_iScreenPrivateIndex;
+extern HWND			g_hDlgDepthChange;
+extern HWND			g_hDlgExit;
+
+
 /* See Porting Layer Definition - p. 6 */
 void
 winBlockHandler (int nScreen,

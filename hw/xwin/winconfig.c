@@ -265,7 +265,6 @@ winConfigKeyboard (DeviceIntPtr pDevice)
   g_winInfo.xkb.options = NULL;
 # endif	/* PC98 */
 
-#ifdef XKB
   /*
    * Query the windows autorepeat settings and change the xserver defaults.   
    * If XKB is disabled then windows handles the autorepeat and the special 
@@ -273,7 +272,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
    */
   {
     int kbd_delay;
-    DWORD kbd_speed;  
+    DWORD kbd_speed;
     if (SystemParametersInfo(SPI_GETKEYBOARDDELAY, 0, &kbd_delay, 0) &&
         SystemParametersInfo(SPI_GETKEYBOARDSPEED, 0, &kbd_speed, 0))
       {
@@ -282,7 +281,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
             case 0:  g_winInfo.keyboard.delay = 250; break;
             case 1:  g_winInfo.keyboard.delay = 500; break;
             case 2:  g_winInfo.keyboard.delay = 750; break;
-            default:         
+            default:
             case 3:  g_winInfo.keyboard.delay = 1000; break;
           }
         g_winInfo.keyboard.rate = max(1,kbd_speed);
@@ -290,7 +289,6 @@ winConfigKeyboard (DeviceIntPtr pDevice)
                 g_winInfo.keyboard.delay, g_winInfo.keyboard.rate);
       }
   }       
-#endif  
   
 
   keyboardType = GetKeyboardType (0);

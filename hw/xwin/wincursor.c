@@ -34,6 +34,14 @@
 
 #include "win.h"
 
+
+/*
+ * References to external symbols
+ */
+
+extern int			g_iScreenPrivateIndex;
+
+
 miPointerScreenFuncRec g_winPointerCursorFuncs =
 {
   winCursorOffScreen,

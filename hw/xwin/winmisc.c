@@ -32,6 +32,13 @@
 #include "win.h"
 
 
+/*
+ * References to external symbols
+ */
+
+extern int			g_iScreenPrivateIndex;
+
+
 /* See Porting Layer Definition - p. 33 */
 /*
  * Called by clients, returns the best size for a cursor, tile, or

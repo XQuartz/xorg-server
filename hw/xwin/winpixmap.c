@@ -32,6 +32,14 @@
 
 #include "win.h"
 
+
+/*
+ * References to external symbols
+ */
+
+extern int			g_iPixmapPrivateIndex;
+
+
 /* See Porting Layer Definition - p. 34 */
 /* See mfb/mfbpixmap.c - mfbCreatePixmap() */
 PixmapPtr

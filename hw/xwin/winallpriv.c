@@ -33,6 +33,17 @@
 #include "win.h"
 
 
+/*
+ * References to external symbols
+ */
+
+extern int			g_iScreenPrivateIndex;
+extern int			g_iCmapPrivateIndex;
+extern int			g_iGCPrivateIndex;
+extern int			g_iPixmapPrivateIndex;
+extern int			g_iWindowPrivateIndex;
+extern unsigned long		g_ulServerGeneration;
+
 
 /* See Porting Layer Definition - p. 58 */
 /*

@@ -52,6 +52,7 @@
 #define WIN_EMULATE_PSEUDO_SUPPORT		YES
 #define WIN_UPDATE_STATS			NO
 
+
 /* Turn debug messages on or off */
 #define CYGDEBUG				NO
 
@@ -311,6 +312,10 @@ typedef Bool (*winReleasePrimarySurfaceProcPtr)(ScreenPtr);
 typedef Bool (*winFinishCreateWindowsWindowProcPtr)(WindowPtr pWin);
 
 
+/* Typedef for DIX wrapper functions */
+typedef int (*winDispatchProcPtr) (ClientPtr);
+
+
 /*
  * GC (graphics context) privates
  */
@@ -441,12 +446,13 @@ typedef struct _winPrivScreenRec
 
   /* Clipboard support */
   pthread_t		ptClipboardProc;
-
-#if 0
-  HWND			hwndNextViewer;
-  void			*display;
-  int			window;
-#endif
+  Bool			fClipboardStarted;
+  HWND			hwndClipboard;
+  void			*pClipboardDisplay;
+  Window		iClipboardWindow;
+  HWND			hwndClipboardNextViewer;
+  Bool			fCBCInitialized;
+  Atom			atomLastOwnedSelection;
 
   /* Last width, height, and depth of the Windows display */
   DWORD			dwLastWindowsWidth;
@@ -737,6 +743,14 @@ winAllocateCmapPrivates (ColormapPtr pCmap);
 
 
 /*
+ * winauth.c
+ */
+
+Bool
+winGenerateAuthorization ();
+
+
+/*
  * winblock.c
  */
 
@@ -761,7 +775,13 @@ winPixmapToRegionNativeGDI (PixmapPtr pPix);
 
 Bool
 winInitClipboard (pthread_t *ptClipboardProc,
-		  pthread_mutex_t *ppmServerStarted,
+		  Bool *pfClipboardStarted,
+		  HWND *phwndClipboard,
+		  void **ppClipboardDisplay,
+		  Window *piClipboardWindow,
+		  HWND *phwndClipboardNextViewer,
+		  Bool *pfCBCInitialized,
+		  Atom *patomLastOwnedSelection,
 		  DWORD dwScreen);
 
 /*
@@ -942,6 +962,14 @@ winGetSpansNativeGDI (DrawablePtr	pDrawable,
 		      int		*pWidths, 
 		      int		nSpans, 
 		      char		*pDst);
+
+
+/*
+ * winglobals.c
+ */
+
+void
+winInitializeGlobals ();
 
 
 /*

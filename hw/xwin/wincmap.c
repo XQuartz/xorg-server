@@ -35,6 +35,14 @@
 #include "win.h"
 
 
+/*
+ * References to external symbols
+ */
+
+extern int			g_iCmapPrivateIndex;
+extern int			g_iScreenPrivateIndex;
+
+
 /* See Porting Layer Definition - p. 30 */
 /*
  * Walk the list of installed colormaps, filling the pmaps list

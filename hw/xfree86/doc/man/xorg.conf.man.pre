@@ -1,4 +1,4 @@
-.\" $XdotOrg: $
+.\" $XdotOrg: xc/programs/Xserver/hw/xfree86/xorg.conf.man,v 1.1.2.1 2004/03/27 17:01:11 keithp Exp $
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 .TH __xconfigfile__ __filemansuffix__ __vendorversion__
@@ -650,7 +650,7 @@ disabled by using the following entry:
 .RS 4
 .nf
 .B "SubSection \*qextmod\*q"
-.B "   Option  \*qomit __xservername__-DGA\*q"
+.B "   Option  \*qomit XFree86-DGA\*q"
 .B EndSubSection
 .fi
 .RE
@@ -1353,7 +1353,8 @@ described here.
 .TP 7
 .BI "Option \*qAccel\*q"
 Enables XAA (X Acceleration Architecture), a mechanism that makes video
-cards' 2D hardware acceleration available to the __xservername__ server.  This
+cards' 2D hardware acceleration available to the 
+__xservername__ server.  This
 option is on by default, but it may be necessary to turn it off if there
 are bugs in the driver.  There are many options to disable specific
 accelerated operations, listed below.  Note that disabling an operation

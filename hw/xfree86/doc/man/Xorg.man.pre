@@ -13,10 +13,10 @@ is a full featured X server that was originally designed for UNIX and
 UNIX-like operating systems running on Intel x86 hardware.  It now runs
 on a wider range of hardware and OS platforms.
 .PP
-This work was originally derived from
+This work was derived from
 .I "XFree86\ 4.4rc2"
-by The XFree86 Project, Inc.
-That project was originally derived from
+by the X.Org Foundation.
+The XFree86 4.4rc2 release was originally derived from
 .I "X386\ 1.2"
 by Thomas Roell which was contributed to X11R5 by Snitily Graphics
 Consulting Service.  The

@@ -33,28 +33,28 @@
 xorgcfg - Graphical configuration tool for __xservername__
 .SH SYNOPSIS
 .B xorgcfg
-[-config \fI__xconfigfile__\fP] [-modulepath \fImoduledir\fP] 
+[-config\fI __xconfigfile__\fP] [-modulepath \fImoduledir\fP] 
 [-fontpath \fIfontsdir\fP] [-toolkitoption ...]
 .SH DESCRIPTION
 .I Xorgcfg
-is a tool to configure \fI__xservername__\fP, and can be used to either write the
+is a tool to configure\fI __xservername__\fP, and can be used to either write the
 initial configuration file or make customizations to the current configuration.
 .PP
 When the \fBDISPLAY\fP environment variable is not set, xorgcfg will run
-the command \fI__xservername__ -configure\fP to allow the xserver detect the
-hardware in the computer, and write an initial \fI__xconfigfile__\fP file
-in the user's home directory. Then, it will start __xservername__ and allow
-customizations.
+the command\fI __xservername__ -configure\fP to allow the xserver detect the
+hardware in the computer, and write an initial\fI __xconfigfile__\fP file
+in the user's home directory. Then, it will start 
+__xservername__ and allow customizations.
 .br
 If the \fBDISPLAY\fP environment variable is set, xorgcfg will read the
-default \fI__xconfigfile__\fP, that may not be the same being used by the current
+default\fI __xconfigfile__\fP, that may not be the same being used by the current
 server, and allow customizations.
 .PP
 To use an alternative location for modules or fonts the respective search
 paths may be specified.
 .PP
 Unless there is an \fBApply\fP button in the current xorgcfg dialog, the
-changes made will take place the next time \fI__xservername__\fP is started.
+changes made will take place the next time\fI __xservername__\fP is started.
 
 .PP
 Xorgcfg allows addition and configuration of new devices, such as video cards,

@@ -6,10 +6,10 @@ getconfig - meta configuration files for getconfig(1)
 .SH DESCRIPTION
 .B getconfig
 is a programatic interface that is used by the
-.B __XSERVERNAME__
+.B __xservername__
 server to get configuration information about video hardware when
 operating without an
-.B __XCONFIGFILE__
+.B __xconfigfile__
 file.
 .PP
 This implementation of
@@ -43,10 +43,10 @@ continuation convention ('\e' at the end of the line).  The first logical
 line of each rule is a perl expression.  It may be any valid perl
 expression whose evaluated (with 'eval') result may be used as the
 argument to a perl 'if' statement.  The second logical line should be
-the name of the __XSERVERNAME__ video driver to use when the rule is true, and
+the name of the __xservername__ video driver to use when the rule is true, and
 subsequent logical lines of each rule, if present, are additional
 configuration output for the video device's
-.B __XCONFIGFILE__
+.B __xconfigfile__
 .B Device
 section.  The driver name and additional lines of configuration information
 are written to standard output when the rule is chosen as the successful
@@ -98,7 +98,7 @@ rule that evaluates to true.
 .I .cfg
 files located in the search path.  The search path typically specified
 by the
-.B __XSERVERNAME__
+.B __xservername__
 server is:
 .PP
 .RS 4
@@ -113,11 +113,11 @@ server is:
 where
 .I <modulepath>
 is the
-.B __XSERVERNAME__
+.B __xservername__
 server's module search path.
 .PP
 .TP 30
-.I __projectroot__/lib/X11/getconfig/xfree86.cfg
+.I __projectroot__/lib/X11/getconfig/xorg.cfg
 Default rules file that gets installed.  This file doesn't contain any
 rules by default.
 .TP 30
@@ -127,11 +127,11 @@ appear in rules files.
 
 .SH "SEE ALSO"
 getconfig(1),
-__XSERVERNAME__(1),
-__XCONFIGFILE__(__filemansuffix__).
+__xservername__(__appmansuffix__),
+__xconfigfile__(__filemansuffix__).
 
 .SH AUTHORS
-The __XSERVERNAME__ automatic configuration support and the
+The __xservername__ automatic configuration support and the
 .B getconfig
 interface was written by David H. Dawes, with the support of X-Oz
 Technologies for XFree86.

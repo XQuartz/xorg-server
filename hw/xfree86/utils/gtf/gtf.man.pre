@@ -1,5 +1,5 @@
 .\" $XFree86$
-.\" $XdotOrg: xc/programs/Xserver/hw/xfree86/etc/gtf.man,v 1.1.10.1.4.1 2004/03/19 17:09:00 eich Exp $ 
+.\" $XdotOrg: xc/programs/Xserver/hw/xfree86/etc/gtf.man,v 1.1.10.1.4.2 2004/03/27 16:56:43 keithp Exp $ 
 .TH GTF 1 __vendorversion__
 .SH NAME
 gtf - calculate VESA GTF mode lines
@@ -28,7 +28,7 @@ utility.
 Enable verbose printouts  This shows a trace for each step of the
 computation.
 .TP 8
-.BR \-x | \-\-xf86mode
+.BR \-x | \-\-xorgmode
 Print the mode parameters as __xservername__-style mode lines.  This is the
 default format.
 .TP 8

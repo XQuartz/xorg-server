@@ -94,4 +94,4 @@ __XCONFIGFILE__(__filemansuffix__).
 The __XSERVERNAME__ automatic configuration support and the
 .B getconfig
 interface was written by David H. Dawes, with the support of X-Oz
-Technologies.
+Technologies for XFree86.

@@ -28,7 +28,7 @@ the file format version number.  The signature string is
 .PP
 .RS 4
 .nf
-"XFree86 getconfig rules file.\ \ Version: "
+"Xorg getconfig rules file.\ \ Version: "
 .fi
 .RE
 .PP
@@ -69,12 +69,12 @@ They include:
 .BR "$subsys                 " "PCI subsystem ID"
 .BR "$subsysVendor           " "PCI subsystem vendor ID"
 .BR "$class                  " "PCI class"
-.BR "$XFree86Version         " "XFree86 version, as a 'v' string"
-.BR "$XFree86VersionNumeric  " "XFree86 numeric version"
-.BR "$XFree86VersionMajor    " "XFree86 major version"
-.BR "$XFree86VersionMinor    " "XFree86 minor version"
-.BR "$XFree86VersionPatch    " "XFree86 patch version"
-.BR "$XFree86VersionSnap     " "XFree86 snap version"
+.BR "$XorgVersion         " "Xorg version, as a 'v' string"
+.BR "$XorgVersionNumeric  " "Xorg numeric version"
+.BR "$XorgVersionMajor    " "Xorg major version"
+.BR "$XorgVersionMinor    " "Xorg minor version"
+.BR "$XorgVersionPatch    " "Xorg patch version"
+.BR "$XorgVersionSnap     " "Xorg snap version"
 .BR "$weight                 " "current rule weight"
 .fi
 .RE
@@ -134,4 +134,4 @@ __XCONFIGFILE__(__filemansuffix__).
 The __XSERVERNAME__ automatic configuration support and the
 .B getconfig
 interface was written by David H. Dawes, with the support of X-Oz
-Technologies.
+Technologies for XFree86.

@@ -898,15 +898,19 @@ winBltExposedRegionsShadowGDI (ScreenPtr pScreen)
 static Bool
 winActivateAppShadowGDI (ScreenPtr pScreen)
 {
-  /*
-   * 2004/04/10 - Harold - We don't seem to ned to do anything here
-   * since our window should be z-ordered correctly in fullscreen mode.
-   */
-  return TRUE;
-
-#if 0
   winScreenPriv(pScreen);
   winScreenInfo		*pScreenInfo = pScreenPriv->pScreenInfo;
+
+  /*
+   * 2004/04/12 - Harold - We perform the restoring or minimizing
+   * manually for ShadowGDI in fullscreen modes so that this engine
+   * will perform just like ShadowDD and ShadowDDNL in fullscreen mode;
+   * if we do not do this then our fullscreen window will appear in the
+   * z-order when it is deactivated and it can be uncovered by resizing
+   * or minimizing another window that is on top of it, which is not how
+   * the DirectDraw engines work.  Therefore we keep this code here to
+   * make sure that all engines work the same in fullscreen mode.
+   */
 
   /*
    * Are we active?
@@ -930,7 +934,6 @@ winActivateAppShadowGDI (ScreenPtr pScreen)
        */
       ShowWindow (pScreenPriv->hwndScreen, SW_MINIMIZE);
     }
-#endif
 
   return TRUE;
 }

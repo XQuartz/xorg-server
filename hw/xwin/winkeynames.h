@@ -1,3 +1,5 @@
+#ifndef _WINKEYNAMES_H
+#define _WINKEYNAMES_H
 /* $XFree86: xc/programs/Xserver/hw/xfree86/common/atKeynames.h,v 3.18 2001/09/29 20:40:30 herrb Exp $ */
 /*
  * Copyright 1990,91 by Thomas Roell, Dinkelscherben, Germany.
@@ -22,9 +24,6 @@
  *
  */
 /* $XConsortium: atKeynames.h /main/11 1996/03/09 11:17:41 kaleb $ */
-
-#ifndef _ATKEYNAMES_H
-#define _ATKEYNAMES_H
 
 #define XK_TECHNICAL
 #define	XK_KATAKANA
@@ -202,4 +201,4 @@
 #define KEY_NOTUSED	  0
 #define KEY_UNKNOWN	255
 
-#endif /* _ATKEYNAMES_H */
+#endif /* _WINKEYNAMES_H */

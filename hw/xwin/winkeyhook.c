@@ -69,12 +69,16 @@ winKeyboardMessageHookLL (int iCode, WPARAM wParam, LPARAM lParam)
   /* Pass keystrokes on to our main message loop */
   if (iCode == HC_ACTION)
     {
+#if 0
+      ErrorF ("vkCode: %08x\tscanCode: %08x\n", p->vkCode, p->scanCode);
+#endif
+
       switch (wParam)
 	{
 	case WM_KEYDOWN:  case WM_SYSKEYDOWN:
 	case WM_KEYUP:    case WM_SYSKEYUP: 
 	  fPassKeystroke = 
-	    (p->vkCode == VK_TAB) && ((p->flags & LLKHF_ALTDOWN) != 0)
+	    ((p->vkCode == VK_TAB) && ((p->flags & LLKHF_ALTDOWN) != 0))
 	    || (p->vkCode == VK_LWIN) || (p->vkCode == VK_RWIN);
 	  break;
 	}

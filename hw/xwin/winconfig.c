@@ -354,12 +354,12 @@ winConfigKeyboard (DeviceIntPtr pDevice)
     
     if (!bfound)
       {
-        HKEY                regkey;
-        const char          regtempl = 
+        HKEY                regkey = NULL;
+        const char          regtempl[] = 
           "SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
         char                *regpath;
         char                lname[256];
-        unsigned short      namesize = sizeof(lname);
+        DWORD               namesize = sizeof(lname);
 
         regpath = alloca(sizeof(regtempl) + KL_NAMELENGTH + 1);
         strcpy(regpath, regtempl);
@@ -371,6 +371,10 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	    winMsg (X_ERROR,
 		"Keyboardlayout \"%s\" (%s) is unknown\n", lname, layoutName);
           }
+
+	/* Close registry key */
+	if (regkey)
+	  RegCloseKey (regkey);
       }
   }  
   

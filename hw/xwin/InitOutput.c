@@ -136,12 +136,24 @@ winClipboardShutdown (void)
     {
       /* Synchronously destroy the clipboard window */
       if (g_hwndClipboard != NULL)
-	SendMessage (g_hwndClipboard, WM_DESTROY, 0, 0);
+	{
+	  SendMessage (g_hwndClipboard, WM_DESTROY, 0, 0);
+	  /* NOTE: g_hwndClipboard is set to NULL in winclipboardthread.c */
+	}
       else
 	return;
       
       /* Wait for the clipboard thread to exit */
-      pthread_join (g_ptClipboardProc, NULL);
+      if (g_ptClipboardProc)
+	{
+	  pthread_join (g_ptClipboardProc, NULL);
+	  g_ptClipboardProc = 0;
+	}
+      else
+	return;
+
+      g_fClipboardLaunched = FALSE;
+      g_fClipboardStarted = FALSE;
 
       ErrorF ("ddxBeforeReset - Clipboard thread has exited.\n");
     }
@@ -181,7 +193,7 @@ ddxGiveUp (void)
   for (i = 0; i < g_iNumScreens; ++i)
     {
       /* Delete the tray icon */
-      if (!g_ScreenInfo[i].fNoTrayIcon)
+      if (!g_ScreenInfo[i].fNoTrayIcon && g_ScreenInfo[i].pScreen)
  	winDeleteNotifyIcon (winGetScreenPriv (g_ScreenInfo[i].pScreen));
     }
 

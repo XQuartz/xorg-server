@@ -94,11 +94,11 @@ Bool			g_fUnicodeClipboard = TRUE;
 Bool			g_fClipboard = FALSE;
 Bool			g_fClipboardLaunched = FALSE;
 Bool			g_fClipboardStarted = FALSE;
-pthread_t		g_ptClipboardProc;
-HWND			g_hwndClipboard;
-void			*g_pClipboardDisplay;
-Window			g_iClipboardWindow;
-Atom			g_atomLastOwnedSelection;
+pthread_t		g_ptClipboardProc = 0;
+HWND			g_hwndClipboard = NULL;
+void			*g_pClipboardDisplay = NULL;
+Window			g_iClipboardWindow = None;
+Atom			g_atomLastOwnedSelection = None;
 #endif
 
 
@@ -120,5 +120,6 @@ winInitializeGlobals (void)
   g_pClipboardDisplay = NULL;
   g_atomLastOwnedSelection = None;
   g_hwndClipboard = NULL;
+  g_ptClipboardProc = 0;
 #endif
 }

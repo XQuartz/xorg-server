@@ -761,6 +761,7 @@ winReorderWindowsMultiWindow (ScreenPtr pScreen)
   WindowPtr pWinSib = NULL;
   DWORD dwCurrentProcessID = GetCurrentProcessId ();
   DWORD dwWindowProcessID = 0;
+  XID vlist[2];
 
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winReorderWindowsMultiWindow\n");
@@ -771,7 +772,7 @@ winReorderWindowsMultiWindow (ScreenPtr pScreen)
   if (pScreenPriv->fWindowOrderChanged)
     {
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winOrderWindowsMultiWindow - Need to restack\n");
+      ErrorF ("winReorderWindowsMultiWindow - Need to restack\n");
 #endif
       hwnd = GetTopWindow (NULL);
 
@@ -786,24 +787,19 @@ winReorderWindowsMultiWindow (ScreenPtr pScreen)
 	      pWinSib = pWin;
 	      pWin = GetProp (hwnd, WIN_WINDOW_PROP);
 	      
-	      if (pWinSib)
-		{
-		  XID *vlist = malloc (sizeof(long) * 2);
+	      if (!pWinSib)
+		{ /* 1st window - raise to the top */
+		  vlist[0] = Above;
 		  
-		  if (vlist == NULL)
-		    {
-		      ErrorF ("winOrderWindowsMultiWindow - malloc () "
-			      "failed\n");
-		      return;
-		    }
-		  
-		  ((long*)vlist)[0] = winGetWindowID (pWinSib);
-		  ((long*)vlist)[1] = Below;
+		  ConfigureWindow (pWin, CWStackMode, vlist, wClient(pWin));
+		}
+	      else
+		{ /* 2nd or deeper windows - just below the previous one */
+		  vlist[0] = winGetWindowID (pWinSib);
+		  vlist[1] = Below;
 
 		  ConfigureWindow (pWin, CWSibling | CWStackMode,
 				   vlist, wClient(pWin));
-		  
-		  free (vlist);
 		}
 	    }
 	  hwnd = GetNextWindow (hwnd, GW_HWNDNEXT);

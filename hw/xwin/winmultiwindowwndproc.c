@@ -207,7 +207,6 @@ ValidateSizing (HWND hwnd, WindowPtr pWin,
   WinXSizeHints sizeHints;
   RECT *rect;
   int iWidth, iHeight;
-  POINT pt;
 
   /* Invalid input checking */
   if (pWin==NULL || lParam==0)

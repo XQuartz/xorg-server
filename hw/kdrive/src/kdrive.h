@@ -219,6 +219,7 @@ extern KdMouseInfo	*kdMouseInfo;
 extern int KdCurScreen;
 
 KdMouseInfo *KdMouseInfoAdd (void);
+void	    KdMouseInfoDispose (KdMouseInfo *mi);
 void	    KdParseMouse (char *);
 
 typedef struct _KdMouseFuncs {
@@ -698,7 +699,7 @@ void
 KdEnableInput (void);
 
 void
-ProcessInputEvents ();
+ProcessInputEvents (void);
 
 extern KdMouseFuncs	LinuxMouseFuncs;
 extern KdMouseFuncs	Ps2MouseFuncs;

@@ -199,6 +199,18 @@ void
 smiUnmapReg (KdCardInfo *card, SmiCardInfo *smic);
 
 void
+smiOutb (CARD16 port, CARD8 val);
+
+CARD8
+smiInb (CARD16 port);
+
+CARD8
+smiGetIndex (SmiCardInfo *smic, CARD16 addr, CARD16 data, CARD8 id);
+
+void
+smiSetIndex (SmiCardInfo *smic, CARD16 addr, CARD16 data, CARD8 id, CARD8 val);
+
+void
 smiSetMMIO (KdCardInfo *card, SmiCardInfo *smic);
 
 void

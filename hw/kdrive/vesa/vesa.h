@@ -108,6 +108,82 @@ extern int vesa_video_mode;
 extern Bool vesa_force_mode;
 
 void
+vesaReportMode (VesaModePtr mode);
+
+VesaModePtr
+vesaGetModes (Vm86InfoPtr vi, int *ret_nmode);
+
+void
+vesaTestMode (void);
+
+void *
+vesaSetWindowPlanar(ScreenPtr pScreen,
+		  CARD32    row,
+		  CARD32    offset,
+		  int	    mode,
+		  CARD32    *size);
+
+void *
+vesaSetWindowLinear (ScreenPtr	pScreen,
+		     CARD32	row,
+		     CARD32	offset,
+		     int	mode,
+		     CARD32	*size);
+
+void *
+vesaSetWindowWindowed (ScreenPtr    pScreen,
+		       CARD32	    row,
+		       CARD32	    offset,
+		       int	    mode,
+		       CARD32	    *size);
+
+void *
+vesaWindowPlanar (ScreenPtr pScreen,
+		  CARD32    row,
+		  CARD32    offset,
+		  int	    mode,
+		  CARD32    *size,
+		  void	    *closure);
+
+void *
+vesaWindowLinear (ScreenPtr pScreen,
+		  CARD32    row,
+		  CARD32    offset,
+		  int	    mode,
+		  CARD32    *size,
+		  void	    *closure);
+
+void *
+vesaWindowWindowed (ScreenPtr	pScreen,
+		    CARD32	row,
+		    CARD32	offset,
+		    int		mode,
+		    CARD32	*size,
+		    void	*closure);
+
+void *
+vesaWindowCga (ScreenPtr    pScreen,
+	       CARD32	    row,
+	       CARD32	    offset,
+	       int	    mode,
+	       CARD32	    *size,
+	       void	    *closure);
+
+void
+vesaUpdateMono (ScreenPtr	pScreen,
+		shadowBufPtr	pBuf);
+
+Bool
+vesaCreateColormap16 (ColormapPtr pmap);
+
+void
+vesaSetScreenSizes (ScreenPtr pScreen);
+
+Bool
+vesaSetShadow (ScreenPtr pScreen);
+
+
+void
 vesaListModes(void);
 
 Bool
@@ -150,6 +226,9 @@ vesaGetPixmap (ScreenPtr pScreen);
 Bool
 vesaMapFramebuffer (KdScreenInfo    *screen);
 
+void
+vesaUnmapFramebuffer (KdScreenInfo  *screen);
+
 Bool
 vesaInitScreen(ScreenPtr pScreen);
 
@@ -184,6 +263,12 @@ vesaCardFini(KdCardInfo *card);
 void
 vesaScreenFini(KdScreenInfo *screen);
 
+int 
+vesaSetPalette(VesaCardPrivPtr priv, int first, int number, U8 *entries);
+
+int 
+vesaGetPalette(VesaCardPrivPtr priv, int first, int number, U8 *entries);
+
 void
 vesaPutColors (ScreenPtr pScreen, int fb, int n, xColorItem *pdefs);
 
@@ -195,10 +280,19 @@ vesaProcessArgument (int argc, char **argv, int i);
 
 #ifdef RANDR
 Bool
+vesaRandRGetInfo (ScreenPtr pScreen, Rotation *rotations);
+
+Bool
 vesaRandRSetConfig (ScreenPtr		pScreen,
 		    Rotation		randr,
 		    int			rate,
 		    RRScreenSizePtr	pSize);
+Bool
+vesaRandRInit (ScreenPtr pScreen);
+
 #endif
+
+Bool
+toshibaDPMS (ScreenPtr pScreen, int mode);
 
 #endif /* _VESA_H_ */

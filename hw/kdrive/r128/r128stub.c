@@ -26,6 +26,7 @@
 #include <config.h>
 #endif
 #include "r128.h"
+#include "klinux.h"
 
 void
 InitCard (char *name)

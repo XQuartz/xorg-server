@@ -27,7 +27,7 @@
 #include "mach64.h"
 #include <sys/io.h>
 
-Bool
+static Bool
 mach64CardInit (KdCardInfo *card)
 {
     Mach64CardInfo	*mach64c;
@@ -50,7 +50,7 @@ mach64CardInit (KdCardInfo *card)
     return TRUE;
 }
 
-Bool
+static Bool
 mach64ScreenInit (KdScreenInfo *screen)
 {
     Mach64CardInfo	*mach64c = screen->card->driver;
@@ -88,7 +88,7 @@ mach64ScreenInit (KdScreenInfo *screen)
     return TRUE;
 }
 
-Bool
+static Bool
 mach64InitScreen (ScreenPtr pScreen)
 {
 #ifdef XV
@@ -98,7 +98,7 @@ mach64InitScreen (ScreenPtr pScreen)
 }
 
 #ifdef RANDR
-Bool
+static Bool
 mach64RandRSetConfig (ScreenPtr		pScreen,
 		      Rotation		rotation,
 		      int		rate,
@@ -112,7 +112,7 @@ mach64RandRSetConfig (ScreenPtr		pScreen,
     return TRUE;
 }
 
-void
+static void
 mach64RandRInit (ScreenPtr pScreen)
 {
     rrScrPriv(pScreen);
@@ -121,7 +121,7 @@ mach64RandRInit (ScreenPtr pScreen)
 }
 #endif
 
-Bool
+static Bool
 mach64FinishInitScreen (ScreenPtr pScreen)
 {
     Bool    ret;
@@ -132,7 +132,7 @@ mach64FinishInitScreen (ScreenPtr pScreen)
     return ret;
 }
 
-Bool
+static Bool
 mach64CreateResources (ScreenPtr pScreen)
 {
     return vesaCreateResources (pScreen);
@@ -362,7 +362,7 @@ mach64DPMS (ScreenPtr pScreen, int mode)
     return TRUE;
 }
 
-void
+static void
 mach64Restore (KdCardInfo *card)
 {
     Mach64CardInfo	*mach64c = card->driver;
@@ -376,7 +376,7 @@ mach64Restore (KdCardInfo *card)
     vesaRestore (card);
 }
 
-void
+static void
 mach64ScreenFini (KdScreenInfo *screen)
 {
     Mach64ScreenInfo	*mach64s = (Mach64ScreenInfo *) screen->driver;
@@ -388,7 +388,7 @@ mach64ScreenFini (KdScreenInfo *screen)
     screen->driver = 0;
 }
 
-void
+static void
 mach64CardFini (KdCardInfo *card)
 {
     Mach64CardInfo	*mach64c = card->driver;

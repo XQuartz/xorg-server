@@ -292,6 +292,7 @@ Bool
 fbdevUnmapFramebuffer (KdScreenInfo *screen)
 {
     KdShadowFbFree (screen, 0);
+    return TRUE;
 }
 
 Bool
@@ -361,7 +362,6 @@ fbdevRandRSetConfig (ScreenPtr		pScreen,
     int			oldmmwidth;
     int			oldmmheight;
     int			newwidth, newheight;
-    PixmapPtr		pPixmap;
 
     if (screen->randr & (RR_Rotate_0|RR_Rotate_180))
     {

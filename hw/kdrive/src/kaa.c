@@ -334,7 +334,7 @@ kaaDrawableIsOffscreen (DrawablePtr pDrawable)
     return kaaPixmapIsOffscreen (pPixmap);
 }
 
-void
+static void
 kaaFillSpans(DrawablePtr pDrawable, GCPtr pGC, int n, 
 	     DDXPointPtr ppt, int *pwidth, int fSorted)
 {
@@ -416,7 +416,7 @@ kaaFillSpans(DrawablePtr pDrawable, GCPtr pGC, int n,
     KdMarkSync(pDrawable->pScreen);
 }
 
-void
+static void
 kaaCopyNtoN (DrawablePtr    pSrcDrawable,
 	     DrawablePtr    pDstDrawable,
 	     GCPtr	    pGC,
@@ -471,7 +471,7 @@ kaaCopyNtoN (DrawablePtr    pSrcDrawable,
     }
 }
 
-RegionPtr
+static RegionPtr
 kaaCopyArea(DrawablePtr pSrcDrawable, DrawablePtr pDstDrawable, GCPtr pGC,
 	    int srcx, int srcy, int width, int height, int dstx, int dsty)
 {
@@ -480,7 +480,7 @@ kaaCopyArea(DrawablePtr pSrcDrawable, DrawablePtr pDstDrawable, GCPtr pGC,
 		     dstx, dsty, kaaCopyNtoN, 0, 0);
 }
 
-void
+static void
 kaaPolyFillRect(DrawablePtr pDrawable, 
 		GCPtr	    pGC, 
 		int	    nrect,
@@ -576,7 +576,7 @@ kaaPolyFillRect(DrawablePtr pDrawable,
     KdMarkSync(pDrawable->pScreen);
 }
     
-void
+static void
 kaaSolidBoxClipped (DrawablePtr	pDrawable,
 		    RegionPtr	pClip,
 		    FbBits	pm,
@@ -636,7 +636,7 @@ kaaSolidBoxClipped (DrawablePtr	pDrawable,
     KdMarkSync(pDrawable->pScreen);
 }
 
-void
+static void
 kaaImageGlyphBlt (DrawablePtr	pDrawable,
 		  GCPtr		pGC,
 		  int		x, 
@@ -793,7 +793,7 @@ static const GCOps	kaaOps = {
 #endif
 };
 
-void
+static void
 kaaValidateGC (GCPtr pGC, Mask changes, DrawablePtr pDrawable)
 {
     fbValidateGC (pGC, changes, pDrawable);
@@ -814,7 +814,7 @@ GCFuncs	kaaGCFuncs = {
     miCopyClip
 };
 
-int
+static int
 kaaCreateGC (GCPtr pGC)
 {
     if (!fbCreateGC (pGC))
@@ -826,7 +826,7 @@ kaaCreateGC (GCPtr pGC)
 }
 
 
-void
+static void
 kaaCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
 {
     RegionRec	rgnDst;
@@ -850,7 +850,7 @@ kaaCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
     REGION_UNINIT(pWin->drawable.pScreen, &rgnDst);
 }
 
-void
+static void
 kaaFillRegionSolid (DrawablePtr	pDrawable,
 		    RegionPtr	pRegion,
 		    Pixel	pixel)
@@ -882,7 +882,7 @@ kaaFillRegionSolid (DrawablePtr	pDrawable,
     }
 }
 
-void
+static void
 kaaPaintWindow(WindowPtr pWin, RegionPtr pRegion, int what)
 {
 

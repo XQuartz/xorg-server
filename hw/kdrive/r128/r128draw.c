@@ -69,11 +69,9 @@ int copydx, copydy;
 int fifo_size;
 char *mmio;
 
-void
+static void
 r128WaitAvail (int n)
 {
-    int i;
-
     if (fifo_size < n)
     {
 	while ((fifo_size = R128_IN32 (mmio, R128_REG_GUI_STAT) & 0xfff) < n)
@@ -83,7 +81,7 @@ r128WaitAvail (int n)
     fifo_size -= n;
 }
 
-void
+static void
 r128WaitIdle (void)
 {
     int tries;
@@ -126,10 +124,10 @@ r128Setup (ScreenPtr pScreen, int wait)
   r128WaitAvail (2);
   R128_OUT32 (mmio, R128_REG_DEFAULT_OFFSET, 0);
   R128_OUT32 (mmio, R128_REG_DEFAULT_PITCH, r128s->pitch);
-
+  return TRUE;
 }
 
-Bool
+static Bool
 r128PrepareSolid (PixmapPtr pPixmap, int alu, Pixel pm, Pixel fg)
 {
     KdScreenPriv (pPixmap->drawable.pScreen);
@@ -148,7 +146,7 @@ r128PrepareSolid (PixmapPtr pPixmap, int alu, Pixel pm, Pixel fg)
     return TRUE;
 }
 
-void
+static void
 r128Solid (int x1, int y1, int x2, int y2)
 {
     r128WaitAvail (2);
@@ -157,12 +155,12 @@ r128Solid (int x1, int y1, int x2, int y2)
     
 }
 
-void
+static void
 r128DoneSolid (void)
 {
 }
 
-Bool
+static Bool
 r128PrepareCopy (PixmapPtr pSrc, PixmapPtr pDst, int dx, int dy, int alu, Pixel pm)
 {
     KdScreenPriv (pSrc->drawable.pScreen);
@@ -186,7 +184,7 @@ r128PrepareCopy (PixmapPtr pSrc, PixmapPtr pDst, int dx, int dy, int alu, Pixel 
     return TRUE;
 }
 
-void
+static void
 r128Copy (int srcX, int srcY, int dstX, int dstY, int w, int h)
 {
     if (copydx < 0)
@@ -207,7 +205,7 @@ r128Copy (int srcX, int srcY, int dstX, int dstY, int w, int h)
     R128_OUT32 (mmio, R128_REG_DST_HEIGHT_WIDTH, (h << 16) | w);
 }
 
-void
+static void
 r128DoneCopy (void)
 {
 }
@@ -225,8 +223,6 @@ KaaScreenInfoRec r128Kaa = {
 Bool
 r128DrawInit (ScreenPtr pScreen)
 {
-    KdScreenPriv(pScreen);
-
     if (!kaaDrawInit (pScreen, &r128Kaa))
 	return FALSE;
 

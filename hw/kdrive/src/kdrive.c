@@ -225,7 +225,7 @@ KdDisableScreen (ScreenPtr pScreen)
     (*pScreenPriv->card->cfuncs->disable) (pScreen);
 }
 
-void
+static void
 KdDoSwitchCmd (char *reason)
 {
     if (kdSwitchCmd)
@@ -382,7 +382,7 @@ ddxGiveUp ()
 Bool	kdDumbDriver;
 Bool	kdSoftCursor;
 
-char *
+static char *
 KdParseFindNext (char *cur, char *delim, char *save, char *last)
 {
     while (*cur && !strchr (delim, *cur))
@@ -836,7 +836,6 @@ Bool
 KdCreateScreenResources (ScreenPtr pScreen)
 {
     KdScreenPriv(pScreen);
-    KdScreenInfo    *screen = pScreenPriv->screen;
     KdCardInfo	    *card = pScreenPriv->card;
     Bool ret;
 
@@ -947,7 +946,7 @@ KdSaveScreen (ScreenPtr pScreen, int on)
     return TRUE;
 }
 
-Bool
+static Bool
 KdCreateWindow (WindowPtr pWin)
 {
 #ifndef PHOENIX
@@ -1263,7 +1262,7 @@ KdInitScreen (ScreenInfo    *pScreenInfo,
 	screen->softCursor = TRUE;
 }
 
-Bool
+static Bool
 KdSetPixmapFormats (ScreenInfo	*pScreenInfo)
 {
     CARD8	    depthToBpp[33];	/* depth -> bpp map */
@@ -1328,7 +1327,7 @@ KdSetPixmapFormats (ScreenInfo	*pScreenInfo)
     return TRUE;
 }
 
-void
+static void
 KdAddScreen (ScreenInfo	    *pScreenInfo,
 	     KdScreenInfo   *screen,
 	     int	    argc,

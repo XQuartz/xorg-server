@@ -227,6 +227,9 @@ Enable or disable the \fIAlt-F4\fP key combination as a signal to exit the
 X Server.
 The \fIAlt-F4\fP key combination is enabled by default.
 .TP 8
+.B \-swcursor
+Disable the usage of the windows cursor and use the X11 software cursor instead.
+.TP 8
 .B "\-xkblayout \fIlayout\fP"
 .TP 8
 .B "\-xkbmodel \fImodel\fP"

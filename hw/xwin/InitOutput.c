@@ -451,15 +451,19 @@ winUseMsg (void)
 
   ErrorF ("-logverbose verbosity\n"
 	  "\tSet the verbosity of logmessages. [NOTE: Only a few messages\n"
-      "\trespect the settings yet]\n"
-      "\t\t0 - only print fatal error.\n"
-      "\t\t1 - print additional configuration information.\n"
-      "\t\t2 - print additional runtime information [default].\n"
-      "\t\t3 - print debugging and tracing information.\n");
+	  "\trespect the settings yet]\n"
+	  "\t\t0 - only print fatal error.\n"
+	  "\t\t1 - print additional configuration information.\n"
+	  "\t\t2 - print additional runtime information [default].\n"
+	  "\t\t3 - print debugging and tracing information.\n");
 
   ErrorF ("-[no]keyhook\n"
-      "\tGrab special windows key combinations like Alt-Tab or the Menu key.\n" 
-      "\tThese keys are discarded by default.\n");
+	  "\tGrab special windows key combinations like Alt-Tab or the Menu "
+          "key.\n These keys are discarded by default.\n");
+
+  ErrorF ("-swcursor\n"
+	  "\tDisable the usage of the windows cursor and use the X11 software "
+	  "cursor instead\n");
 }
 
 /* See Porting Layer Definition - p. 57 */

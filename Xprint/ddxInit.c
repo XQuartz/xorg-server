@@ -216,7 +216,7 @@ OsVendorFatalError(void)
 #endif
 
 void
-BeforeReset(void)
+ddxBeforeReset(void)
 {
     return;
 }

@@ -1,3 +1,10 @@
+2004-12-08  Alexander Gottwald  <ago at freedesktop dot org>
+
+	* InitOutput.c:
+	* winprocarg.c:
+	Added support for placing the main window with the @<monitor#>.
+	Patch by Mark Fisher, small changes by Alexander Gottwald
+	
 2004-12-04  Earle Philhower
 
 	* InitOutput.c:

@@ -161,7 +161,7 @@ winWin32RootlessMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h)
 
 /*
  * winWin32RootlessUpdateIcon
- * Change the Windows window icon 
+ * Change the Windows window icon
  */
 
 void

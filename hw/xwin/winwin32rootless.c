@@ -39,6 +39,7 @@
 #include "dixevents.h"
 #include "winmultiwindowclass.h"
 #include "winprefs.h"
+#include "Xatom.h"
 
 
 /*
@@ -51,6 +52,15 @@
 #define ULW_ALPHA	0x00000002
 #define ULW_OPAQUE	0x00000004
 #define AC_SRC_ALPHA	0x01
+
+
+/*
+ * Local function
+ */
+
+DEFINE_ATOM_HELPER(AtmWindowsWmNativeHwnd, WINDOWSWM_NATIVE_HWND)
+static void
+winWin32RootlessSetNativeProperty (RootlessWindowPtr pFrame);
 
 /*
  * Global variables
@@ -215,8 +225,8 @@ winWin32RootlessCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
   Bool				fResult = TRUE;
   win32RootlessWindowPtr	pRLWinPriv;
   WNDCLASS			wc;
-  char                  	pszClass[CLASS_NAME_LENGTH], pszWindowID[12];
-  HICON                	 	hIcon;
+  char				pszClass[CLASS_NAME_LENGTH], pszWindowID[12];
+  HICON				hIcon;
   char				*res_name, *res_class, *res_role;
   static int			s_iWindowID = 0;
  
@@ -269,7 +279,7 @@ winWin32RootlessCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
        * if not use the WM_CLASS information.
        * For further information see:
        * http://tronche.com/gui/x/icccm/sec-5.html
-       */ 
+       */
       if (winMultiWindowGetWindowRole (pFrame->win, &res_role) )
 	{
 	  strcat (pszClass, "-");
@@ -357,6 +367,9 @@ winWin32RootlessCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
  }
 #endif
 #endif
+
+  winWin32RootlessSetNativeProperty (pFrame);
+
   return fResult;
 }
 
@@ -834,6 +847,8 @@ winWin32RootlessRootlessSwitchWindow (RootlessWindowPtr pFrame, WindowPtr oldWin
   pRLWinPriv->pFrame = pFrame;
   pRLWinPriv->fResized = TRUE;
 
+  DeleteProperty (oldWin, AtmWindowsWmNativeHwnd ());
+  winWin32RootlessSetNativeProperty (pFrame);
 #if CYGMULTIWINDOW_DEBUG
 #if 0
  {
@@ -932,4 +947,22 @@ winWin32RootlessCopyWindow (RootlessFrameID wid, int nDstRects, const BoxRec *pD
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winWin32RootlessCopyWindow - done\n");
 #endif
+}
+
+
+/*
+ * winWin32RootlessSetNativeProperty
+ */
+
+static void
+winWin32RootlessSetNativeProperty (RootlessWindowPtr pFrame)
+{
+  win32RootlessWindowPtr pRLWinPriv = (win32RootlessWindowPtr) pFrame->wid;
+  long lData;
+
+  /* FIXME: move this to WindowsWM extension */
+
+  lData = pRLWinPriv->hWnd;
+  ChangeWindowProperty (pFrame->win, AtmWindowsWmNativeHwnd (),
+			XA_INTEGER, 32, PropModeReplace, 1, &lData, TRUE);
 }

@@ -736,7 +736,7 @@ winAllocateCmapPrivates (ColormapPtr pCmap);
  */
 
 Bool
-winGenerateAuthorization ();
+winGenerateAuthorization (void);
 
 
 /*
@@ -763,7 +763,7 @@ winPixmapToRegionNativeGDI (PixmapPtr pPix);
  */
 
 Bool
-winInitClipboard ();
+winInitClipboard (void);
 
 
 /*
@@ -943,7 +943,7 @@ winGetSpansNativeGDI (DrawablePtr	pDrawable,
  */
 
 void
-winInitializeGlobals ();
+winInitializeGlobals (void);
 
 
 /*

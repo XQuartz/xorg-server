@@ -54,7 +54,7 @@ extern Bool			g_fClipboard;
 extern HWND			g_hDlgDepthChange;
 extern Bool			g_fKeyboardHookLL;
 extern HWND			g_hwndKeyboardFocus;
-
+extern Bool                     g_fSoftwareCursor;
 
 /*
  * Called by winWakeupHandler
@@ -1161,6 +1161,14 @@ winWindowProc (HWND hwnd, UINT message,
       /* Display Exit dialog */
       winDisplayExitDialog (s_pScreenPriv);
       return 0;
+
+    case WM_SETCURSOR:
+      if (LOWORD(lParam) == HTCLIENT)
+	{
+	  if (!g_fSoftwareCursor) SetCursor (s_pScreenPriv->cursor.handle);
+	  return TRUE;
+	}
+      break;
 
     default:
       if(message == s_uTaskbarRestart)

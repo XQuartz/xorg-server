@@ -304,14 +304,48 @@ winUnrealizeCursor(ScreenPtr pScreen, CursorPtr pCursor)
 static void
 winSetCursor (ScreenPtr pScreen, CursorPtr pCursor, int x, int y)
 {
+  POINT ptCurPos, ptTemp;
+  HWND  hwnd;
+  RECT  rcClient;
+  BOOL  bInhibit;
   winScreenPriv(pScreen);
   WIN_DEBUG_MSG("winSetCursor: cursor=%p\n", pCursor); 
   
+  /* Inhibit changing the cursor if the mouse is not in a client area */
+  bInhibit = FALSE;
+  if (GetCursorPos (&ptCurPos))
+    {
+      hwnd = WindowFromPoint (ptCurPos);
+      if (hwnd)
+	{
+	  if (GetClientRect (hwnd, &rcClient))
+	    {
+	      ptTemp.x = rcClient.left;
+	      ptTemp.y = rcClient.top;
+	      if (ClientToScreen (hwnd, &ptTemp))
+		{
+		  rcClient.left = ptTemp.x;
+		  rcClient.top = ptTemp.y;
+		  ptTemp.x = rcClient.right;
+		  ptTemp.y = rcClient.bottom;
+		  if (ClientToScreen (hwnd, &ptTemp))
+		    {
+		      rcClient.right = ptTemp.x;
+		      rcClient.bottom = ptTemp.y;
+		      if (!PtInRect (&rcClient, ptCurPos))
+			bInhibit = TRUE;
+		    }
+		}
+	    }
+	}
+    }
+
   if (pCursor == NULL)
     {
       if (pScreenPriv->cursor.visible)
 	{
-	  ShowCursor (FALSE);
+	  if (!bInhibit)
+	    ShowCursor (FALSE);
 	  pScreenPriv->cursor.visible = FALSE;
 	}
     }
@@ -319,17 +353,22 @@ winSetCursor (ScreenPtr pScreen, CursorPtr pCursor, int x, int y)
     {
       if (pScreenPriv->cursor.handle)
 	{
-	  SetCursor (NULL);
+	  if (!bInhibit)
+	    SetCursor (NULL);
 	  DestroyCursor (pScreenPriv->cursor.handle);
 	  pScreenPriv->cursor.handle = NULL;
 	}
-      pScreenPriv->cursor.handle = winLoadCursor (pScreen, pCursor, pScreen->myNum);
+      pScreenPriv->cursor.handle =
+	winLoadCursor (pScreen, pCursor, pScreen->myNum);
       WIN_DEBUG_MSG("winSetCursor: handle=%p\n", pScreenPriv->cursor.handle); 
-      SetCursor (pScreenPriv->cursor.handle);
+
+      if (!bInhibit)
+	SetCursor (pScreenPriv->cursor.handle);
 
       if (!pScreenPriv->cursor.visible)
 	{
-	  ShowCursor (TRUE);
+	  if (!bInhibit)
+	    ShowCursor (TRUE);
 	  pScreenPriv->cursor.visible = TRUE;
 	}
     }

@@ -59,7 +59,6 @@ Bool		g_fLogInited = FALSE;
 char *		g_pszCommandLine = NULL;
 Bool		g_fUseMsg = FALSE;
 #ifdef XWIN_MULTIWINDOW
-DWORD		g_dwCurrentProcessID = 0;
 DWORD		g_dwCurrentThreadID = 0;
 #endif
 
@@ -111,7 +110,6 @@ void
 winInitializeGlobals (void)
 {
 #ifdef XWIN_MULTIWINDOW
-  g_dwCurrentProcessID = GetCurrentProcessId ();
   g_dwCurrentThreadID = GetCurrentThreadId ();
 #endif
 #ifdef XWIN_CLIPBOARD

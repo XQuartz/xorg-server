@@ -65,11 +65,6 @@ winWakeupHandler (int nScreen,
 	}
     }
 
-#ifdef XWIN_MULTIWINDOW
-  if (pScreenPriv->pScreenInfo->fMultiWindow)
-    winReorderWindowsMultiWindow ((ScreenPtr)pWakeupData);
-#endif
-
 #ifdef XWIN_MULTIWINDOWEXTWM
   if (pScreenPriv->pScreenInfo->fMWExtWM)
     winMWExtWMReorderWindows ((ScreenPtr)pWakeupData);

@@ -42,7 +42,6 @@
  */
 
 extern HICON		g_hiconX;
-extern DWORD		g_dwCurrentProcessID;
 
 
 /*
@@ -391,9 +390,6 @@ winRestackWindowMultiWindow (WindowPtr pWin, WindowPtr pOldNextSib)
     winGetScreenPriv(pWin->drawable.pScreen)->RestackWindow (pWin,
 							     pOldNextSib);
   
-  if (winGetScreenPriv(pWin->drawable.pScreen)->fRestacking)
-    return;
-
   /* Bail out if no window privates or window handle is invalid */
   if (!pWinPriv || !pWinPriv->hWnd)
     return;
@@ -728,70 +724,6 @@ winFindWindow (pointer value, XID id, pointer cdata)
     {
       wi->id = id;
     }
-}
-
-
-/*
- * winReorderWindowsMultiWindow - 
- */
-
-void
-winReorderWindowsMultiWindow (ScreenPtr pScreen)
-{
-  winScreenPriv(pScreen);
-  HWND hwnd = NULL;
-  WindowPtr pWin = NULL;
-  WindowPtr pWinSib = NULL;
-  DWORD dwWindowProcessID = 0;
-  XID vlist[2];
-
-#if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winReorderWindowsMultiWindow\n");
-#endif
-#if 0
-  PROFILEPOINT (winReorderWindowsMultiWindow,100);
-#endif
-  pScreenPriv->fRestacking = TRUE;
-
-  if (pScreenPriv->fWindowOrderChanged)
-    {
-#if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winReorderWindowsMultiWindow - Need to restack\n");
-#endif
-      hwnd = GetTopWindow (NULL);
-
-      while (hwnd)
-	{
-	  GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
-
-	  if ( (dwWindowProcessID == g_dwCurrentProcessID)
-	       && GetProp (hwnd, WIN_WINDOW_PROP)
-	       && !IsIconic (hwnd) ) /* ignore minimized windows */
-	    {
-	      pWinSib = pWin;
-	      pWin = GetProp (hwnd, WIN_WINDOW_PROP);
-	      
-	      if (!pWinSib)
-		{ /* 1st window - raise to the top */
-		  vlist[0] = Above;
-		  
-		  ConfigureWindow (pWin, CWStackMode, vlist, wClient(pWin));
-		}
-	      else
-		{ /* 2nd or deeper windows - just below the previous one */
-		  vlist[0] = winGetWindowID (pWinSib);
-		  vlist[1] = Below;
-
-		  ConfigureWindow (pWin, CWSibling | CWStackMode,
-				   vlist, wClient(pWin));
-		}
-	    }
-	  hwnd = GetNextWindow (hwnd, GW_HWNDNEXT);
-	}
-    }
-
-  pScreenPriv->fRestacking = FALSE;
-  pScreenPriv->fWindowOrderChanged = FALSE;
 }
 
 

@@ -596,7 +596,7 @@ winFinishScreenInitFB (int index,
   pScreenPriv->fServerStarted = FALSE;
 #endif
 
-#ifdef XWIN_MULTIWINDOW
+#ifdef XWIN_MULTIWINDOWEXTWM
   /* Set the WindowOrderChanged flag to false */
   pScreenPriv->fWindowOrderChanged = FALSE;
 

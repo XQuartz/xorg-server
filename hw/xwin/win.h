@@ -504,6 +504,8 @@ typedef struct _winPrivScreenRec
   Bool			fCursorVisible;
   int			nCX;
   int			nCY;
+  Bool                  fRestacking;
+  Bool                  fWindowOrderChanged;
 #endif
 
 #ifdef XWIN_MULTIWINDOW
@@ -513,10 +515,10 @@ typedef struct _winPrivScreenRec
   void			*pWMInfo;
 #endif
 
+#if defined(XWIN_MULTIWINDOW) || defined(XWIN_MULTIWINDOWEXTWM)
   /* Privates used by both multi-window and rootless */
   Bool			fRootWindowShown;
-  Bool                  fRestacking;
-  Bool                  fWindowOrderChanged;
+#endif
 
 #if defined(XWIN_CLIPBOARD) || defined(XWIN_MULTIWINDOW)
   /* Privates used for any module running in a seperate thread */
@@ -1520,9 +1522,6 @@ winReparentWindowMultiWindow (WindowPtr pWin, WindowPtr pPriorParent);
 
 void
 winRestackWindowMultiWindow (WindowPtr pWin, WindowPtr pOldNextSib);
-
-void
-winReorderWindowsMultiWindow (ScreenPtr pScreen);
 
 void
 winResizeWindowMultiWindow (WindowPtr pWin, int x, int y, unsigned int w,

@@ -35,7 +35,6 @@
  * External global variables
  */
 #ifdef XWIN_MULTIWINDOW
-extern DWORD		g_dwCurrentProcessID;
 extern DWORD		g_dwCurrentThreadID;
 #endif
 
@@ -47,7 +46,7 @@ extern DWORD		g_dwCurrentThreadID;
 BOOL CALLBACK
 winRedrawAllProcShadowGDI (HWND hwnd, LPARAM lParam);
 
-BOOL CALLBACK
+static BOOL CALLBACK
 winRedrawDamagedWindowShadowGDI (HWND hwnd, LPARAM lParam);
 #endif
 
@@ -229,21 +228,12 @@ winQueryRGBBitsAndMasks (ScreenPtr pScreen)
 BOOL CALLBACK
 winRedrawAllProcShadowGDI (HWND hwnd, LPARAM lParam)
 {
-  DWORD dwWindowProcessID;
-
-#if 0
-  PROFILEPOINT(winRedrawAllProcShadowGDI,10);
-#endif
-  GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
-  if (dwWindowProcessID == g_dwCurrentProcessID)
-    {
-      InvalidateRect (hwnd, NULL, FALSE);
-      UpdateWindow (hwnd);
-    }
+  InvalidateRect (hwnd, NULL, FALSE);
+  UpdateWindow (hwnd);
   return TRUE;
 }
 
-BOOL CALLBACK
+static BOOL CALLBACK
 winRedrawDamagedWindowShadowGDI (HWND hwnd, LPARAM lParam)
 {
   BoxPtr pDamage = (BoxPtr)lParam;
@@ -270,20 +260,6 @@ winRedrawDamagedWindowShadowGDI (HWND hwnd, LPARAM lParam)
     {
       InvalidateRect (hwnd, &rcRedraw, FALSE);
       UpdateWindow (hwnd);
-#ifdef XWIN_UPDATESTATS
-#define DIMENSION(r) ( (r.right-r.left) * (r.bottom-r.top) )
-      {
-	static unsigned int called = 0;
-	static unsigned int pix = 0;
-
-	called++;
-	pix += DIMENSION(rcClient) - DIMENSION(rcRedraw);
-	if (called % 100 == 0)
-	  ErrorF ("winRedrawDamagedWindowShadowGDI - "
-		  "%u pixels have been saved in %d calls\n", pix, called);
-      }
-#undef DIMENSION
-#endif
     }
   return TRUE;
 }

@@ -70,6 +70,9 @@
 #define WIN_JMP_OKAY				0
 #define WIN_JMP_ERROR_IO			2
 #define WIN_LOCAL_PROPERTY			"CYGX_CUT_BUFFER"
+#define WIN_XEVENTS_SUCCESS			0
+#define WIN_XEVENTS_SHUTDOWN			1
+#define WIN_XEVENTS_CONVERT			2
 
 
 /*
@@ -174,7 +177,7 @@ winClipboardWindowProc (HWND hwnd, UINT message,
  * winclipboardxevents.c
  */
 
-Bool
+int
 winClipboardFlushXEvents (HWND hwnd,
 			  int iWindow,
 			  Display *pDisplay,

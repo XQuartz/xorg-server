@@ -262,10 +262,11 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	  }
 	
 	/* Process the SelectionNotify event */
-	if (!winClipboardFlushXEvents (hwnd,
-				       iWindow,
-				       pDisplay,
-				       g_fUnicodeSupport))
+	iReturn = winClipboardFlushXEvents (hwnd,
+					    iWindow,
+					    pDisplay,
+					    g_fUnicodeSupport);
+	if (WIN_XEVENTS_CONVERT == iReturn)
 	  {
 	    /*
 	     * The selection was offered for conversion first, so we have

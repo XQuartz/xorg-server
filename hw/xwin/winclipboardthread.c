@@ -350,11 +350,11 @@ winClipboardProc (void *pArg)
 
 	  /* Process X events */
 	  /* Exit when we see that server is shutting down */
-	  fReturn = winClipboardFlushXEvents (hwnd,
+	  iReturn = winClipboardFlushXEvents (hwnd,
 					      iWindow,
 					      pDisplay,
 					      fUnicodeSupport);
-	  if (!fReturn)
+	  if (WIN_XEVENTS_SHUTDOWN == iReturn)
 	    {
 	      ErrorF ("winClipboardProc - winClipboardFlushXEvents "
 		      "trapped shutdown event, exiting main loop.\n");

@@ -36,7 +36,7 @@
  * Process any pending X events
  */
 
-Bool
+int
 winClipboardFlushXEvents (HWND hwnd,
 			  int iWindow,
 			  Display *pDisplay,
@@ -50,7 +50,6 @@ winClipboardFlushXEvents (HWND hwnd,
   char			*pszGlobalData = NULL;
   int			iReturn;
   HGLOBAL		hGlobal;
-  Bool			fReturn = TRUE;
   XICCEncodingStyle	xiccesStyle;
   int			iConvertDataLen = 0;
   char			*pszConvertData = NULL;
@@ -400,7 +399,7 @@ winClipboardFlushXEvents (HWND hwnd,
 
 		  /* Process the ConvertSelection event */
 		  XFlush (pDisplay);
-		  break;
+		  return WIN_XEVENTS_CONVERT;
 		}
 	      else if (event.xselection.target == atomCompoundText)
 		{
@@ -423,7 +422,7 @@ winClipboardFlushXEvents (HWND hwnd,
 
 		  /* Process the ConvertSelection event */
 		  XFlush (pDisplay);
-		  break;
+		  return WIN_XEVENTS_CONVERT;
 		}
 	      else
 		{
@@ -644,5 +643,5 @@ winClipboardFlushXEvents (HWND hwnd,
 	}
     }
 
-  return fReturn;
+  return WIN_XEVENTS_SUCCESS;
 }

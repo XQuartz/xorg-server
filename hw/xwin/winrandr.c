@@ -61,7 +61,7 @@ winRandRGetInfo (ScreenPtr pScreen, Rotation *pRotations)
   Rotation			rotateKind;
   RRScreenSizePtr		pSize;
 
-  ErrorF ("winRandRGetInfo ()\n");
+  winDebug ("winRandRGetInfo ()\n");
 
   /* Don't support rotations, yet */
   *pRotations = RR_Rotate_0;
@@ -106,7 +106,7 @@ winRandRSetConfig (ScreenPtr		pScreen,
 		   int			rate,
 		   RRScreenSizePtr	pSize)
 {
-  ErrorF ("winRandRSetConfig ()\n");
+  winDebug ("winRandRSetConfig ()\n");
 
   return TRUE;
 }
@@ -121,7 +121,7 @@ winRandRInit (ScreenPtr pScreen)
 {
   rrScrPrivPtr		pRRScrPriv;
 
-  ErrorF ("winRandRInit ()\n");
+  winDebug ("winRandRInit ()\n");
 
   if (!RRScreenInit (pScreen))
     {

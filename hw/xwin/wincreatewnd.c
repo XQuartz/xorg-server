@@ -31,6 +31,9 @@
 #include "win.h"
 #include "shellapi.h"
 
+#ifndef ABS_AUTOHIDE
+#define ABS_AUTOHIDE 1
+#endif
 
 /*
  * Local function prototypes
@@ -59,7 +62,7 @@ winCreateBoundingWindowFullScreen (ScreenPtr pScreen)
   char			szTitle[256];
 
 #if CYGDEBUG
-  ErrorF ("winCreateBoundingWindowFullScreen\n");
+  winDebug ("winCreateBoundingWindowFullScreen\n");
 #endif
 
   /* Setup our window class */
@@ -145,9 +148,9 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   DWORD			dwWindowStyle;
   char			szTitle[256];
   
-  ErrorF ("winCreateBoundingWindowWindowed - User w: %d h: %d\n",
+  winDebug ("winCreateBoundingWindowWindowed - User w: %d h: %d\n",
 	  (int) pScreenInfo->dwUserWidth, (int) pScreenInfo->dwUserHeight);
-  ErrorF ("winCreateBoundingWindowWindowed - Current w: %d h: %d\n",
+  winDebug ("winCreateBoundingWindowWindowed - Current w: %d h: %d\n",
 	  (int) pScreenInfo->dwWidth, (int) pScreenInfo->dwHeight);
 
   /* Set the common window style flags */
@@ -195,7 +198,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
     {
       /* User gave a desired height and width, try to accomodate */
 #if CYGDEBUG
-      ErrorF ("winCreateBoundingWindowWindowed - User gave height "
+      winDebug ("winCreateBoundingWindowWindowed - User gave height "
 	      "and width\n");
 #endif
       
@@ -211,13 +214,13 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
 	  )
 	{
 #if CYGDEBUG
-	  ErrorF ("winCreateBoundingWindowWindowed - Window has decoration\n");
+	  winDebug ("winCreateBoundingWindowWindowed - Window has decoration\n");
 #endif
 	  /* Are we using scrollbars? */
 	  if (pScreenInfo->fScrollbars)
 	    {
 #if CYGDEBUG
-	      ErrorF ("winCreateBoundingWindowWindowed - Window has "
+	      winDebug ("winCreateBoundingWindowWindowed - Window has "
 		      "scrollbars\n");
 #endif
 
@@ -228,7 +231,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
 	  else
 	    {
 #if CYGDEBUG
-	      ErrorF ("winCreateBoundingWindowWindowed - Window does not have "
+	      winDebug ("winCreateBoundingWindowWindowed - Window does not have "
 		      "scrollbars\n");
 #endif
 
@@ -260,7 +263,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
     {
       /* By default, we are creating a window that is as large as possible */
 #if CYGDEBUG
-      ErrorF ("winCreateBoundingWindowWindowed - User did not give "
+      winDebug ("winCreateBoundingWindowWindowed - User did not give "
 	      "height and width\n");
 #endif
       /* Defaults are wrong if we have multiple monitors */
@@ -296,7 +299,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
     iHeight = rcWorkArea.bottom - rcWorkArea.top;
   
 #if CYGDEBUG
-  ErrorF ("winCreateBoundingWindowWindowed - Adjusted width: %d "\
+  winDebug ("winCreateBoundingWindowWindowed - Adjusted width: %d "\
 	  "height: %d\n",
 	  iWidth, iHeight);
 #endif
@@ -334,7 +337,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winCreateBoundingWindowWindowed - CreateWindowEx () returned\n");
+  winDebug ("winCreateBoundingWindowWindowed - CreateWindowEx () returned\n");
 #endif
 
   /* Get the client area coordinates */
@@ -345,7 +348,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
       return FALSE;
     }
 
-  ErrorF ("winCreateBoundingWindowWindowed - WindowClient "
+  winDebug ("winCreateBoundingWindowWindowed - WindowClient "
 	  "w %ld h %ld r %ld l %ld b %ld t %ld\n",
 	  rcClient.right - rcClient.left,
 	  rcClient.bottom - rcClient.top,
@@ -401,14 +404,14 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
       /* Setup the width range and page size */
       si.nMax = pScreenInfo->dwWidth - 1;
       si.nPage = rcClient.right - rcClient.left;
-      ErrorF ("winCreateBoundingWindowWindowed - HORZ nMax: %d nPage :%d\n",
+      winDebug ("winCreateBoundingWindowWindowed - HORZ nMax: %d nPage :%d\n",
 	      si.nMax, si.nPage);
       SetScrollInfo (*phwnd, SB_HORZ, &si, TRUE);
       
       /* Setup the height range and page size */
       si.nMax = pScreenInfo->dwHeight - 1;
       si.nPage = rcClient.bottom - rcClient.top;
-      ErrorF ("winCreateBoundingWindowWindowed - VERT nMax: %d nPage :%d\n",
+      winDebug ("winCreateBoundingWindowWindowed - VERT nMax: %d nPage :%d\n",
 	      si.nMax, si.nPage);
       SetScrollInfo (*phwnd, SB_VERT, &si, TRUE);
     }
@@ -460,7 +463,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
     winPaintBackground (*phwnd, RGB (0x00, 0x00, 0xFF));
 #endif
 
-  ErrorF ("winCreateBoundingWindowWindowed -  Returning\n");
+  winDebug ("winCreateBoundingWindowWindowed -  Returning\n");
 
   return TRUE;
 }
@@ -485,7 +488,7 @@ winGetWorkArea (RECT *prcWorkArea, winScreenInfo *pScreenInfo)
   if (!pScreenInfo->fMultipleMonitors)
     return TRUE;
   
-  ErrorF ("winGetWorkArea - Original WorkArea: %d %d %d %d\n",
+  winDebug ("winGetWorkArea - Original WorkArea: %d %d %d %d\n",
 	  (int) prcWorkArea->top, (int) prcWorkArea->left,
 	  (int) prcWorkArea->bottom, (int) prcWorkArea->right);
 
@@ -493,19 +496,19 @@ winGetWorkArea (RECT *prcWorkArea, winScreenInfo *pScreenInfo)
   iWidth = GetSystemMetrics (SM_CXVIRTUALSCREEN);
   iHeight = GetSystemMetrics (SM_CYVIRTUALSCREEN);
 
-  ErrorF ("winGetWorkArea - Virtual screen is %d x %d\n", iWidth, iHeight);
+  winDebug ("winGetWorkArea - Virtual screen is %d x %d\n", iWidth, iHeight);
 
   /* Get origin of full virtual screen */
   iLeft = GetSystemMetrics (SM_XVIRTUALSCREEN);
   iTop = GetSystemMetrics (SM_YVIRTUALSCREEN);
 
-  ErrorF ("winGetWorkArea - Virtual screen origin is %d, %d\n", iLeft, iTop);
+  winDebug ("winGetWorkArea - Virtual screen origin is %d, %d\n", iLeft, iTop);
   
   /* Get size of primary screen */
   iPrimaryWidth = GetSystemMetrics (SM_CXSCREEN);
   iPrimaryHeight = GetSystemMetrics (SM_CYSCREEN);
 
-  ErrorF ("winGetWorkArea - Primary screen is %d x %d\n",
+  winDebug ("winGetWorkArea - Primary screen is %d x %d\n",
 	 iPrimaryWidth, iPrimaryHeight);
   
   /* Work out how much of the primary screen we aren't using */
@@ -528,7 +531,7 @@ winGetWorkArea (RECT *prcWorkArea, winScreenInfo *pScreenInfo)
   prcWorkArea->bottom = prcWorkArea->top + iHeight -
     iPrimaryNonWorkAreaHeight;
   
-  ErrorF ("winGetWorkArea - Adjusted WorkArea for multiple "
+  winDebug ("winGetWorkArea - Adjusted WorkArea for multiple "
 	  "monitors: %d %d %d %d\n",
 	  (int) prcWorkArea->top, (int) prcWorkArea->left,
 	  (int) prcWorkArea->bottom, (int) prcWorkArea->right);
@@ -548,7 +551,7 @@ winAdjustForAutoHide (RECT *prcWorkArea)
   APPBARDATA		abd;
   HWND			hwndAutoHide;
 
-  ErrorF ("winAdjustForAutoHide - Original WorkArea: %d %d %d %d\n",
+  winDebug ("winAdjustForAutoHide - Original WorkArea: %d %d %d %d\n",
 	  (int) prcWorkArea->top, (int) prcWorkArea->left,
 	  (int) prcWorkArea->bottom, (int) prcWorkArea->right);
 
@@ -556,14 +559,14 @@ winAdjustForAutoHide (RECT *prcWorkArea)
   ZeroMemory (&abd, sizeof (abd));
   abd.cbSize = sizeof (abd);
   if (SHAppBarMessage (ABM_GETSTATE, &abd) & ABS_AUTOHIDE)
-    ErrorF ("winAdjustForAutoHide - Taskbar is auto hide\n");
+    winDebug ("winAdjustForAutoHide - Taskbar is auto hide\n");
 
   /* Look for a TOP auto-hide taskbar */
   abd.uEdge = ABE_TOP;
   hwndAutoHide = (HWND) SHAppBarMessage (ABM_GETAUTOHIDEBAR, &abd);
   if (hwndAutoHide != NULL)
     {
-      ErrorF ("winAdjustForAutoHide - Found TOP auto-hide taskbar\n");
+      winDebug ("winAdjustForAutoHide - Found TOP auto-hide taskbar\n");
       prcWorkArea->top += 1;
     }
 
@@ -572,7 +575,7 @@ winAdjustForAutoHide (RECT *prcWorkArea)
   hwndAutoHide = (HWND) SHAppBarMessage (ABM_GETAUTOHIDEBAR, &abd);
   if (hwndAutoHide != NULL)
     {
-      ErrorF ("winAdjustForAutoHide - Found LEFT auto-hide taskbar\n");
+      winDebug ("winAdjustForAutoHide - Found LEFT auto-hide taskbar\n");
       prcWorkArea->left += 1;
     }
 
@@ -581,7 +584,7 @@ winAdjustForAutoHide (RECT *prcWorkArea)
   hwndAutoHide = (HWND) SHAppBarMessage (ABM_GETAUTOHIDEBAR, &abd);
   if (hwndAutoHide != NULL)
     {
-      ErrorF ("winAdjustForAutoHide - Found BOTTOM auto-hide taskbar\n");
+      winDebug ("winAdjustForAutoHide - Found BOTTOM auto-hide taskbar\n");
       prcWorkArea->bottom -= 1;
     }
 
@@ -590,11 +593,11 @@ winAdjustForAutoHide (RECT *prcWorkArea)
   hwndAutoHide = (HWND) SHAppBarMessage (ABM_GETAUTOHIDEBAR, &abd);
   if (hwndAutoHide != NULL)
     {
-      ErrorF ("winAdjustForAutoHide - Found RIGHT auto-hide taskbar\n");
+      winDebug ("winAdjustForAutoHide - Found RIGHT auto-hide taskbar\n");
       prcWorkArea->right -= 1;
     }
 
-  ErrorF ("winAdjustForAutoHide - Adjusted WorkArea: %d %d %d %d\n",
+  winDebug ("winAdjustForAutoHide - Adjusted WorkArea: %d %d %d %d\n",
 	  (int) prcWorkArea->top, (int) prcWorkArea->left,
 	  (int) prcWorkArea->bottom, (int) prcWorkArea->right);
   
@@ -602,7 +605,7 @@ winAdjustForAutoHide (RECT *prcWorkArea)
   /* Obtain the task bar window dimensions */
   abd.hWnd = hwndAutoHide;
   hwndAutoHide = (HWND) SHAppBarMessage (ABM_GETTASKBARPOS, &abd);
-  ErrorF ("hwndAutoHide %08x abd.hWnd %08x %d %d %d %d\n",
+  winDebug ("hwndAutoHide %08x abd.hWnd %08x %d %d %d %d\n",
 	  hwndAutoHide, abd.hWnd,
 	  abd.rc.top, abd.rc.left, abd.rc.bottom, abd.rc.right);
 #endif

@@ -159,7 +159,7 @@ winClipboardShutdown (void)
       g_fClipboardLaunched = FALSE;
       g_fClipboardStarted = FALSE;
 
-      ErrorF ("ddxBeforeReset - Clipboard thread has exited.\n");
+      winDebug ("winClipboardShutdown - Clipboard thread has exited.\n");
     }
 }
 #endif
@@ -174,7 +174,7 @@ winClipboardShutdown (void)
 void
 ddxBeforeReset (void)
 {
-  ErrorF ("ddxBeforeReset - Hello\n");
+  winDebug ("ddxBeforeReset - Hello\n");
 
 #ifdef XWIN_CLIPBOARD
   winClipboardShutdown ();
@@ -190,7 +190,7 @@ ddxGiveUp (void)
   int		i;
 
 #if CYGDEBUG
-  winErrorFVerb (2, "ddxGiveUp\n");
+  winDebug ("ddxGiveUp\n");
 #endif
 
   /* Perform per-screen deinitialization */
@@ -262,7 +262,7 @@ void
 AbortDDX (void)
 {
 #if CYGDEBUG
-  winErrorFVerb (2, "AbortDDX\n");
+  winDebug ("AbortDDX\n");
 #endif
   ddxGiveUp ();
 }
@@ -298,7 +298,7 @@ OsVendorInit (void)
   /* Add a default screen if no screens were specified */
   if (g_iNumScreens == 0)
     {
-      winErrorFVerb (2, "OsVendorInit - Creating bogus screen 0\n");
+      winDebug ("OsVendorInit - Creating bogus screen 0\n");
 
       /* 
        * We need to initialize default screens if no arguments
@@ -516,7 +516,7 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   winLogCommandLine (argc, argv);
 
 #if CYGDEBUG
-  winErrorFVerb (2, "InitOutput\n");
+  winDebug ("InitOutput\n");
 #endif
 
   /* Validate command-line arguments */
@@ -619,7 +619,7 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
 #endif
 
 #if CYGDEBUG || YES
-  winErrorFVerb (2, "InitOutput - Returning.\n");
+  winDebug ("InitOutput - Returning.\n");
 #endif
 }
 

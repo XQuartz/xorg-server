@@ -29,6 +29,7 @@
  */
 
 #include "win.h"
+#include "winmsg.h"
 
 
 /*
@@ -56,7 +57,7 @@ winBlockHandler (int nScreen,
     {
       int		iReturn;
       
-      ErrorF ("winBlockHandler - Releasing pmServerStarted\n");
+      winDebug ("winBlockHandler - Releasing pmServerStarted\n");
 
       /* Flag that modules are to be started */
       pScreenPriv->fServerStarted = TRUE;
@@ -70,7 +71,7 @@ winBlockHandler (int nScreen,
 	  goto winBlockHandler_ProcessMessages; 
 	}
 
-      ErrorF ("winBlockHandler - pthread_mutex_unlock () returned\n");
+      winDebug ("winBlockHandler - pthread_mutex_unlock () returned\n");
     }
 
 winBlockHandler_ProcessMessages:

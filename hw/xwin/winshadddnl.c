@@ -128,7 +128,7 @@ winCreatePrimarySurfaceShadowDDNL (ScreenPtr pScreen)
   HRESULT		ddrval = DD_OK;
   DDSURFACEDESC2	ddsd;
 
-  ErrorF ("winCreatePrimarySurfaceShadowDDNL - Creating primary surface\n");
+  winDebug ("winCreatePrimarySurfaceShadowDDNL - Creating primary surface\n");
 
   /* Describe the primary surface */
   ZeroMemory (&ddsd, sizeof (ddsd));
@@ -150,7 +150,7 @@ winCreatePrimarySurfaceShadowDDNL (ScreenPtr pScreen)
     }
   
 #if 1
-  ErrorF ("winCreatePrimarySurfaceShadowDDNL - Created primary surface\n");
+  winDebug ("winCreatePrimarySurfaceShadowDDNL - Created primary surface\n");
 #endif
 
   /* Attach our clipper to our primary surface handle */
@@ -165,7 +165,7 @@ winCreatePrimarySurfaceShadowDDNL (ScreenPtr pScreen)
     }
 
 #if 1
-  ErrorF ("winCreatePrimarySurfaceShadowDDNL - Attached clipper to primary "
+  winDebug ("winCreatePrimarySurfaceShadowDDNL - Attached clipper to primary "
 	  "surface\n");
 #endif
 
@@ -184,7 +184,7 @@ winReleasePrimarySurfaceShadowDDNL (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
 
-  ErrorF ("winReleasePrimarySurfaceShadowDDNL - Hello\n");
+  winDebug ("winReleasePrimarySurfaceShadowDDNL - Hello\n");
 
   /* Release the primary surface and clipper, if they exist */
   if (pScreenPriv->pddsPrimary4)
@@ -196,14 +196,14 @@ winReleasePrimarySurfaceShadowDDNL (ScreenPtr pScreen)
       IDirectDrawSurface4_SetClipper (pScreenPriv->pddsPrimary4,
 				      NULL);
   
-      ErrorF ("winReleasePrimarySurfaceShadowDDNL - Detached clipper\n");
+      winDebug ("winReleasePrimarySurfaceShadowDDNL - Detached clipper\n");
 
       /* Release the primary surface */
       IDirectDrawSurface4_Release (pScreenPriv->pddsPrimary4);
       pScreenPriv->pddsPrimary4 = NULL;
     }
 
-  ErrorF ("winReleasePrimarySurfaceShadowDDNL - Released primary surface\n");
+  winDebug ("winReleasePrimarySurfaceShadowDDNL - Released primary surface\n");
   
   return TRUE;
 }
@@ -228,7 +228,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
   DDPIXELFORMAT		ddpfPrimary;
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDDNL - w %d h %d d %d\n",
+  winDebug ("winAllocateFBShadowDDNL - w %d h %d d %d\n",
 	  pScreenInfo->dwWidth, pScreenInfo->dwHeight, pScreenInfo->dwDepth);
 #endif
 
@@ -258,7 +258,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDDNL - Created a clipper\n");
+  winDebug ("winAllocateFBShadowDDNL - Created a clipper\n");
 #endif
 
   /* Get a device context for the screen  */
@@ -277,7 +277,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDDNL - Attached clipper to window\n");
+  winDebug ("winAllocateFBShadowDDNL - Attached clipper to window\n");
 #endif
 
   /* Create a DirectDraw object, store the address at lpdd */
@@ -293,7 +293,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDDNL - Created and initialized DD\n");
+  winDebug ("winAllocateFBShadowDDNL - Created and initialized DD\n");
 #endif
 
   /* Get a DirectDraw4 interface pointer */
@@ -377,7 +377,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
 	      || pScreenInfo->dwBPP != GetDeviceCaps (hdc, BITSPIXEL)
 	      || pScreenInfo->dwRefreshRate != 0))
 	{
-	  ErrorF ("winAllocateFBShadowDDNL - Changing video mode\n");
+	  winDebug ("winAllocateFBShadowDDNL - Changing video mode\n");
 
 	  /* Change the video mode to the mode requested */
 	  ddrval = IDirectDraw4_SetDisplayMode (pScreenPriv->pdd4,
@@ -396,7 +396,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
 	}
       else
 	{
-	  ErrorF ("winAllocateFBShadowDDNL - Not changing video mode\n");
+	  winDebug ("winAllocateFBShadowDDNL - Not changing video mode\n");
 	}
 
       /* Release our DC */
@@ -440,7 +440,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDDNL - Primary masks: %08x %08x %08x "
+  winDebug ("winAllocateFBShadowDDNL - Primary masks: %08x %08x %08x "
 	  "dwRGBBitCount: %d\n",
 	  ddpfPrimary.u2.dwRBitMask,
 	  ddpfPrimary.u3.dwGBitMask,
@@ -468,7 +468,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
   ddsdShadow.lpSurface = lpSurface;
   ddsdShadow.u4.ddpfPixelFormat = ddpfPrimary;
   
-  ErrorF ("winAllocateFBShadowDDNL - lPitch: %d\n",
+  winDebug ("winAllocateFBShadowDDNL - lPitch: %d\n",
 	  (int) pScreenInfo->dwPaddedWidth);
 
   /* Create the shadow surface */
@@ -484,7 +484,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
     }
   
 #if CYGDEBUG || YES
-  ErrorF ("winAllocateFBShadowDDNL - Created shadow pitch: %d\n",
+  winDebug ("winAllocateFBShadowDDNL - Created shadow pitch: %d\n",
 	  (int) ddsdShadow.u1.lPitch);
 #endif
 
@@ -493,7 +493,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
     / pScreenInfo->dwBPP;
 
 #if CYGDEBUG || YES
-  ErrorF ("winAllocateFBShadowDDNL - Created shadow stride: %d\n",
+  winDebug ("winAllocateFBShadowDDNL - Created shadow stride: %d\n",
 	  (int) pScreenInfo->dwStride);
 #endif
 
@@ -506,7 +506,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
   pScreenPriv->dwBlueMask = ddsdShadow.u4.ddpfPixelFormat.u4.dwBBitMask;
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDDNL - Returning\n");
+  winDebug ("winAllocateFBShadowDDNL - Returning\n");
 #endif
 
   return TRUE;
@@ -528,7 +528,7 @@ winFinishCreateWindowsWindowDDNL (WindowPtr pWin)
   int			iWidth, iHeight;
   int			iX, iY;
 
-  ErrorF ("\nwinFinishCreateWindowsWindowDDNL!\n\n");
+  winDebug ("\nwinFinishCreateWindowsWindowDDNL!\n\n");
 
   iX = pWin->drawable.x + GetSystemMetrics (SM_XVIRTUALSCREEN);
   iY = pWin->drawable.y + GetSystemMetrics (SM_YVIRTUALSCREEN);
@@ -670,7 +670,7 @@ winShadowUpdateDDNL (ScreenPtr pScreen,
       hrgnCombined = NULL;
 
 #if CYGDEBUG
-      ErrorF ("winShadowUpdateDDNL - be x1 %d y1 %d x2 %d y2 %d\n",
+      winDebug ("winShadowUpdateDDNL - be x1 %d y1 %d x2 %d y2 %d\n",
 	      pBoxExtents->x1, pBoxExtents->y1,
 	      pBoxExtents->x2, pBoxExtents->y2);
 #endif
@@ -715,7 +715,7 @@ winCloseScreenShadowDDNL (int nIndex, ScreenPtr pScreen)
   Bool			fReturn;
 
 #if CYGDEBUG
-  ErrorF ("winCloseScreenShadowDDNL - Freeing screen resources\n");
+  winDebug ("winCloseScreenShadowDDNL - Freeing screen resources\n");
 #endif
 
   /* Flag that the screen is closed */
@@ -841,7 +841,7 @@ winInitVisualsShadowDDNL (ScreenPtr pScreen)
   else
     pScreenPriv->dwBitsPerRGB = dwBlueBits;
 
-  ErrorF ("winInitVisualsShadowDDNL - Masks %08x %08x %08x BPRGB %d d %d "
+  winDebug ("winInitVisualsShadowDDNL - Masks %08x %08x %08x BPRGB %d d %d "
 	  "bpp %d\n",
 	  (unsigned int) pScreenPriv->dwRedMask,
 	  (unsigned int) pScreenPriv->dwGreenMask,
@@ -961,7 +961,7 @@ winInitVisualsShadowDDNL (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winInitVisualsShadowDDNL - Returning\n");
+  winDebug ("winInitVisualsShadowDDNL - Returning\n");
 #endif
 
   return TRUE;
@@ -995,7 +995,7 @@ winAdjustVideoModeShadowDDNL (ScreenPtr pScreen)
   if (pScreenInfo->dwBPP == WIN_DEFAULT_BPP)
     {
       /* No -depth parameter passed, let the user know the depth being used */
-      ErrorF ("winAdjustVideoModeShadowDDNL - Using Windows display "
+      winErrorFVerb (2, "winAdjustVideoModeShadowDDNL - Using Windows display "
 	      "depth of %d bits per pixel\n", (int) dwBPP);
 
       /* Use GDI's depth */
@@ -1005,13 +1005,13 @@ winAdjustVideoModeShadowDDNL (ScreenPtr pScreen)
 	   && pScreenInfo->dwBPP != dwBPP)
     {
       /* FullScreen, and GDI depth differs from -depth parameter */
-      ErrorF ("winAdjustVideoModeShadowDDNL - FullScreen, using command "
+      winErrorFVerb (2, "winAdjustVideoModeShadowDDNL - FullScreen, using command "
 	      "line bpp: %d\n", (int) pScreenInfo->dwBPP);
     }
   else if (dwBPP != pScreenInfo->dwBPP)
     {
       /* Windowed, and GDI depth differs from -depth parameter */
-      ErrorF ("winAdjustVideoModeShadowDDNL - Windowed, command line "
+      winErrorFVerb (2, "winAdjustVideoModeShadowDDNL - Windowed, command line "
 	      "bpp: %d, using bpp: %d\n",
 	      (int) pScreenInfo->dwBPP, (int) dwBPP);
 
@@ -1023,7 +1023,7 @@ winAdjustVideoModeShadowDDNL (ScreenPtr pScreen)
   if (pScreenInfo->dwWidth * pScreenInfo->dwHeight * pScreenInfo->dwBPP
       >= WIN_DIB_MAXIMUM_SIZE)
     {
-      ErrorF ("winAdjustVideoModeShadowDDNL - Requested DirectDraw surface "
+      winErrorFVerb (1, "winAdjustVideoModeShadowDDNL - Requested DirectDraw surface "
 	      "will be larger than %d MB.  The surface may fail to be "
 	      "allocated on Windows 95, 98, or Me, due to a %d MB limit in "
 	      "DIB size.  This limit does not apply to Windows NT/2000, and "
@@ -1096,29 +1096,29 @@ winBltExposedRegionsShadowDDNL (ScreenPtr pScreen)
       if (ddrval == DDERR_SURFACELOST)
 	{
 	  /* Surface was lost */
-	  ErrorF ("winBltExposedRegionsShadowDDNL - IDirectDrawSurface4_Blt "
-		  "reported that the primary surface was lost, "
-		  "trying to restore, retry: %d\n", i + 1);
+	  winErrorFVerb (1, "winBltExposedRegionsShadowDDNL - "
+          "IDirectDrawSurface4_Blt reported that the primary "
+          "surface was lost, trying to restore, retry: %d\n", i + 1);
 
 	  /* Try to restore the surface, once */
 	  
 	  ddrval = IDirectDrawSurface4_Restore (pScreenPriv->pddsPrimary4);
-	  ErrorF ("winBltExposedRegionsShadowDDNL - "
+	  winDebug ("winBltExposedRegionsShadowDDNL - "
 		  "IDirectDrawSurface4_Restore returned: ");
 	  if (ddrval == DD_OK)
-	    ErrorF ("DD_OK\n");
+	    winDebug ("DD_OK\n");
 	  else if (ddrval == DDERR_WRONGMODE)
-	    ErrorF ("DDERR_WRONGMODE\n");
+	    winDebug ("DDERR_WRONGMODE\n");
 	  else if (ddrval == DDERR_INCOMPATIBLEPRIMARY)
-	    ErrorF ("DDERR_INCOMPATIBLEPRIMARY\n");
+	    winDebug ("DDERR_INCOMPATIBLEPRIMARY\n");
 	  else if (ddrval == DDERR_UNSUPPORTED)
-	    ErrorF ("DDERR_UNSUPPORTED\n");
+	    winDebug ("DDERR_UNSUPPORTED\n");
 	  else if (ddrval == DDERR_INVALIDPARAMS)
-	    ErrorF ("DDERR_INVALIDPARAMS\n");
+	    winDebug ("DDERR_INVALIDPARAMS\n");
 	  else if (ddrval == DDERR_INVALIDOBJECT)
-	    ErrorF ("DDERR_INVALIDOBJECT\n");
+	    winDebug ("DDERR_INVALIDOBJECT\n");
 	  else
-	    ErrorF ("unknown error: %08x\n", (unsigned int) ddrval);
+	    winDebug ("unknown error: %08x\n", (unsigned int) ddrval);
 	  
 	  /* Loop around to try the blit one more time */
 	  continue;
@@ -1126,8 +1126,9 @@ winBltExposedRegionsShadowDDNL (ScreenPtr pScreen)
       else if (FAILED (ddrval))
 	{
 	  fReturn = FALSE;
-	  ErrorF ("winBltExposedRegionsShadowDDNL - IDirectDrawSurface4_Blt "
-		  "failed, but surface not lost: %08x %d\n",
+	  winErrorFVerb (1, "winBltExposedRegionsShadowDDNL - "
+		  "IDirectDrawSurface4_Blt failed, but surface not "
+		  "lost: %08x %d\n",
 		  (unsigned int) ddrval, (int) ddrval);
 	  goto winBltExposedRegionsShadowDDNL_Exit;
 	}
@@ -1354,8 +1355,7 @@ winDestroyColormapShadowDDNL (ColormapPtr pColormap)
   if (pColormap->flags & IsDefault)
     {
 #if CYGDEBUG
-      ErrorF ("winDestroyColormapShadowDDNL - Destroying default "
-	      "colormap\n");
+      winDebug ("winDestroyColormapShadowDDNL - Destroying default colormap\n");
 #endif
       
       /*

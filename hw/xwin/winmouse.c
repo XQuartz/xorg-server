@@ -83,6 +83,9 @@ winMouseProc (DeviceIntPtr pDeviceInt, int iState)
       break;
 
     case DEVICE_CLOSE:
+#if defined(XFree86Server) && defined(XINPUT)
+      g_winMouseButtonMap = NULL;
+#endif
     case DEVICE_OFF:
       pDevice->on = FALSE;
       break;

@@ -80,6 +80,7 @@ void OsVendorVErrorF (const char *pszFormat, va_list va_args);
 #endif
 
 void winInitializeDefaultScreens (void);
+
 static Bool winCheckDisplayNumber (void);
 
 
@@ -207,7 +208,6 @@ AbortDDX (void)
 void
 OsVendorInit (void)
 {
-
   if (serverGeneration == 1 && !winCheckDisplayNumber ())
     {
       FatalError ("Duplicate invocation of Cygwin/X");
@@ -515,6 +515,7 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
 #endif
 }
 
+
 /*
  * winCheckDisplayNumber - Check if another instance of Cygwin/X is
  * already running on the same display number.  If no one exists,
@@ -526,28 +527,36 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
 static Bool
 winCheckDisplayNumber ()
 {
-  int disp;
-  HANDLE mutex;
-  char name[MAX_PATH]; /* can be shorter */
-  int n;
+  int			nDisp;
+  HANDLE		mutex;
+  char			name[MAX_PATH];
+  char *		pszPrefix = '\0';
+  OSVERSIONINFO		osvi = {0};
 
-  disp = atoi (display);
-  if (disp < 0 || disp > 65535)
+  /* Check display range */
+  nDisp = atoi (display);
+  if (nDisp < 0 || nDisp > 65535)
     {
-      ErrorF ("winCheckDisplayNumber - Bad display number: %d\n", disp);
+      ErrorF ("winCheckDisplayNumber - Bad display number: %d\n", nDisp);
       return FALSE;
     }
-  n = snprintf (name, sizeof(name), "Cygwin/X server mutex on disp. %d", disp);
-  if (n >= sizeof(name))
+
+  /* Set first character of mutex name to null */
+  name[0] = '\0';
+
+  /* Get operating system version information */
+  osvi.dwOSVersionInfoSize = sizeof (osvi);
+  GetVersionEx (&osvi);
+
+  /* Want a mutex shared among all terminals on NT > 4.0 */
+  if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT
+      && osvi.dwMajorVersion >= 5)
     {
-      ErrorF ("winCheckDisplayNumber - Mutex name overflows\n");
-      return FALSE;
+      pszPrefix = "Global\\";
     }
-  else if (n < 0)
-    {
-      Error ("winCheckDisplayNumber");
-      return FALSE;
-    }
+
+  /* Setup Cygwin/X specific part of name */
+  sprintf (name, "%sCYGWINX_DISPLAY:%d", pszPrefix, nDisp);
 
   /* Windows automatically releases the mutex when this process exits */
   mutex = CreateMutex (NULL, FALSE, name);
@@ -574,7 +583,7 @@ winCheckDisplayNumber ()
     {
       ErrorF ("winCheckDisplayNumber - "
 	      "Cygwin/X is already running on display %d\n",
-	      disp);
+	      nDisp);
       return FALSE;
     }
 

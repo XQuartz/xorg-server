@@ -50,10 +50,9 @@ Bool
 winClipboardDetectUnicodeSupport (void)
 {
   Bool			fReturn = FALSE;
-  OSVERSIONINFO		osvi;
+  OSVERSIONINFO		osvi = {0};
   
   /* Get operating system version information */
-  ZeroMemory (&osvi, sizeof (osvi));
   osvi.dwOSVersionInfoSize = sizeof (osvi);
   GetVersionEx (&osvi);
 

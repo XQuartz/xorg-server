@@ -417,7 +417,7 @@ static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
 
 static GLboolean glWinLoseCurrent(__GLcontext *gc)
 {
-    //GLWIN_DEBUG_MSG("glWinLoseCurrent (ctx %p)\n", gc->ctx);
+    /*GLWIN_DEBUG_MSG("glWinLoseCurrent (ctx %p)\n", gc->ctx);*/
 
     __glXLastContext = NULL; /* Mesa does this; why? */
 
@@ -447,14 +447,14 @@ static GLboolean glWinMakeCurrent(__GLcontext *gc)
     BOOL ret;
     HDC dc;
 
-    //GLWIN_DEBUG_MSG("glWinMakeCurrent (ctx %p)\n", gc->ctx);
+    /*GLWIN_DEBUG_MSG("glWinMakeCurrent (ctx %p)\n", gc->ctx);*/
 
     if (!gc->isAttached)
         attach(gc, glPriv);
 
     dc = glWinMakeDC(gc);
-    //if (debugSettings.dumpDC)
-    //    GLWIN_DEBUG_MSG("Got HDC %p\n", dc);
+    /*if (debugSettings.dumpDC)*/
+    /*    GLWIN_DEBUG_MSG("Got HDC %p\n", dc);*/
     ret = wglMakeCurrent(dc, gc->ctx);
     if (!ret)
         ErrorF("glMakeCurrent error: %s\n", winErrorMessage());
@@ -624,6 +624,7 @@ static int makeFormat(__GLcontextModes *mode, PIXELFORMATDESCRIPTOR *pfdret)
     /* disable anything but rgba. must get rgba to work first */
     if (!mode->rgbMode) 
         return -1; 
+    
     if (mode->stereoMode) {
         result->dwFlags |= PFD_STEREO;
     }

@@ -729,6 +729,9 @@ winMultiWindowWMProc (void *pArg)
 			  pNode->msg.iWindow,
 			  RevertToPointerRoot,
 			  CurrentTime);
+
+          /* Restack the X windows, the Win32 order has changed */
+          winReorderWindowsMultiWindow();
 	  break;
 
 	case WM_WM_NAME_EVENT:

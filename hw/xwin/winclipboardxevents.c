@@ -461,7 +461,7 @@ winClipboardFlushXEvents (HWND hwnd,
 		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
 			  "XA_STRING\n");
 #endif
-		  break;
+		  return WIN_XEVENTS_CONVERT;
 		}
 	      else if (event.xselection.target == atomUTF8String)
 		{
@@ -478,7 +478,8 @@ winClipboardFlushXEvents (HWND hwnd,
 		  if (iReturn != Success)
 		    {
 		      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-			      "XConvertSelection () failed, aborting: %d\n",
+			      "XConvertSelection () failed for UTF8String, "
+			      "aborting: %d\n",
 			      iReturn);
 		      break;
 		    }
@@ -503,7 +504,8 @@ winClipboardFlushXEvents (HWND hwnd,
 		  if (iReturn != Success)
 		    {
 		      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-			      "XConvertSelection () failed, aborting: %d\n",
+			      "XConvertSelection () failed for CompoundText, "
+			      "aborting: %d\n",
 			      iReturn);
 		      break;
 		    }
@@ -772,7 +774,7 @@ winClipboardFlushXEvents (HWND hwnd,
 	    SetClipboardData (CF_UNICODETEXT, NULL);
 	  if (fSetClipboardData && !fUnicodeSupport)
 	    SetClipboardData (CF_TEXT, NULL);
-	  break;
+	  return WIN_XEVENTS_NOTIFY;
 
 	default:
 	  break;

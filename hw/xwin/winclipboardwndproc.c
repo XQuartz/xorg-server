@@ -36,6 +36,7 @@
  */
 
 #define WIN_CLIPBOARD_PROP	"cyg_clipboard_prop"
+#define WIN_POLL_TIMEOUT	2
 
 
 /*
@@ -53,20 +54,78 @@ extern Atom		g_atomLastOwnedSelection;
  */
 
 static Bool
-winLookForSelectionNotify (Display *pDisplay, XEvent *pEvent, XPointer pArg);
+winProcessXEventsTimeout (HWND hwnd, int iWindow, Display *pDisplay,
+			  Bool fUnicodeSupport, int iTimeoutSec);
 
 
 /*
- * Signal that we found a SelectionNotify event
+ * Process X events up to specified timeout
  */
 
-static Bool
-winLookForSelectionNotify (Display *pDisplay, XEvent *pEvent, XPointer pArg)
+static int
+winProcessXEventsTimeout (HWND hwnd, int iWindow, Display *pDisplay,
+			  Bool fUnicodeSupport, int iTimeoutSec)
 {
-  if (pEvent->type == SelectionNotify)
-    return TRUE;
-  
-  return FALSE;
+  int			iConnNumber;
+  struct timeval	tv;
+  int			iReturn;
+  DWORD			dwStopTime = (GetTickCount () / 1000) + iTimeoutSec;
+
+  /* We need to ensure that all pending events are processed */
+  XSync (pDisplay, FALSE);
+
+  /* Get our connection number */
+  iConnNumber = ConnectionNumber (pDisplay);
+
+  /* Loop for X events */
+  while (1)
+    {
+      fd_set		fdsRead;
+
+      /* Setup the file descriptor set */
+      FD_ZERO (&fdsRead);
+      FD_SET (iConnNumber, &fdsRead);
+
+      /* Adjust timeout */
+      tv.tv_sec = dwStopTime - (GetTickCount () / 1000);
+      tv.tv_usec = 0;
+
+      /* Break out if no time left */
+      if (tv.tv_sec < 0)
+	return WIN_XEVENTS_SUCCESS;
+
+      /* Wait for a Windows event or an X event */
+      iReturn = select (iConnNumber + 1,/* Highest fds number */
+			&fdsRead,	/* Read mask */
+			NULL,		/* No write mask */
+			NULL,		/* No exception mask */
+			&tv);		/* No timeout */
+      if (iReturn <= 0)
+	{
+	  ErrorF ("winProcessXEventsTimeout - Call to select () failed: %d.  "
+		  "Bailing.\n", iReturn);
+	  break;
+	}
+
+      /* Branch on which descriptor became active */
+      if (FD_ISSET (iConnNumber, &fdsRead))
+	{
+	  /* Process X events */
+	  /* Exit when we see that server is shutting down */
+	  iReturn = winClipboardFlushXEvents (hwnd,
+					      iWindow,
+					      pDisplay,
+					      fUnicodeSupport);
+	  if (WIN_XEVENTS_NOTIFY == iReturn
+	      || WIN_XEVENTS_CONVERT == iReturn)
+	    {
+	      /* Bail out if convert or notify processed */
+	      return iReturn;
+	    }
+	}
+    }
+
+  return WIN_XEVENTS_SUCCESS;
 }
 
 
@@ -283,7 +342,6 @@ winClipboardWindowProc (HWND hwnd, UINT message,
     case WM_RENDERFORMAT:
     case WM_RENDERALLFORMATS:
       {
-	XEvent	event;
 	int	iReturn;
 	Display *pDisplay = g_pClipboardDisplay;
 	Window	iWindow = g_iClipboardWindow;
@@ -315,9 +373,6 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	    break;
 	  }
 
-	/* Wait for the SelectionNotify event */
-	XPeekIfEvent (pDisplay, &event, winLookForSelectionNotify, NULL);
-
 	/* Special handling for WM_RENDERALLFORMATS */
 	if (message == WM_RENDERALLFORMATS)
 	  {
@@ -345,12 +400,13 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 		break;
 	      }
 	  }
-	
+
 	/* Process the SelectionNotify event */
-	iReturn = winClipboardFlushXEvents (hwnd,
+	iReturn = winProcessXEventsTimeout (hwnd,
 					    iWindow,
 					    pDisplay,
-					    fConvertToUnicode);
+					    fConvertToUnicode,
+					    WIN_POLL_TIMEOUT);
 	if (WIN_XEVENTS_CONVERT == iReturn)
 	  {
 	    /*
@@ -358,14 +414,27 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	     * to process a second SelectionNotify event to get the actual
 	     * data in the selection.
 	     */
-	    
-	    /* Wait for the second SelectionNotify event */
-	    XPeekIfEvent (pDisplay, &event, winLookForSelectionNotify, NULL);
-	    
-	    winClipboardFlushXEvents (hwnd,
-				      iWindow,
-				      pDisplay,
-				      fConvertToUnicode);
+	    iReturn = winProcessXEventsTimeout (hwnd,
+						iWindow,
+						pDisplay,
+						fConvertToUnicode,
+						WIN_POLL_TIMEOUT);
+	  }
+	
+	/*
+	 * The last of the up-to two calls to winProcessXEventsTimeout
+	 * from above had better have seen a notify event, or else we
+	 * are dealing with a buggy or old X11 app.  In these cases we
+	 * have to paste some fake data to the Win32 clipboard to
+	 * satisfy the requirement that we write something to it.
+	 */
+	if (WIN_XEVENTS_NOTIFY != iReturn)
+	  {
+	    /* Paste no data, to satisfy required call to SetClipboardData */
+	    if (fConvertToUnicode)
+	      SetClipboardData (CF_UNICODETEXT, NULL);
+	    else
+	      SetClipboardData (CF_TEXT, NULL);
 	  }
 
 	/* Special handling for WM_RENDERALLFORMATS */

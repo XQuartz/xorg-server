@@ -173,7 +173,7 @@ winValidateArgs (void)
 	}
     }
 
-  ErrorF ("winValidateArgs - Returning.\n");
+  winDebug ("winValidateArgs - Returning.\n");
 
   return TRUE;
 }

@@ -175,7 +175,7 @@ winSetEngine (ScreenPtr pScreen)
   /* ShadowGDI is the only engine that supports windowed PseudoColor */
   if (dwBPP == 8 && !pScreenInfo->fFullScreen)
     {
-      ErrorF ("winSetEngine - Windowed && PseudoColor => ShadowGDI\n");
+      winErrorFVerb (2, "winSetEngine - Windowed && PseudoColor => ShadowGDI\n");
       pScreenInfo->dwEngine = WIN_SERVER_SHADOW_GDI;
 
       /* Set engine function pointers */
@@ -197,7 +197,7 @@ winSetEngine (ScreenPtr pScreen)
 #endif
       )
     {
-      ErrorF ("winSetEngine - Multi Window or Rootless => ShadowGDI\n");
+      winErrorFVerb (2, "winSetEngine - Multi Window or Rootless => ShadowGDI\n");
       pScreenInfo->dwEngine = WIN_SERVER_SHADOW_GDI;
 
       /* Set engine function pointers */
@@ -208,7 +208,7 @@ winSetEngine (ScreenPtr pScreen)
   /* If the user's choice is supported, we'll use that */
   if (g_dwEnginesSupported & pScreenInfo->dwEnginePreferred)
     {
-      ErrorF ("winSetEngine - Using user's preference: %d\n",
+      winErrorFVerb (2, "winSetEngine - Using user's preference: %d\n",
 	      (int) pScreenInfo->dwEnginePreferred);
       pScreenInfo->dwEngine = pScreenInfo->dwEnginePreferred;
 
@@ -243,7 +243,7 @@ winSetEngine (ScreenPtr pScreen)
   /* ShadowDDNL has good performance, so why not */
   if (g_dwEnginesSupported & WIN_SERVER_SHADOW_DDNL)
     {
-      ErrorF ("winSetEngine - Using Shadow DirectDraw NonLocking\n");
+      winErrorFVerb (2, "winSetEngine - Using Shadow DirectDraw NonLocking\n");
       pScreenInfo->dwEngine = WIN_SERVER_SHADOW_DDNL;
 
       /* Set engine function pointers */
@@ -254,7 +254,7 @@ winSetEngine (ScreenPtr pScreen)
   /* ShadowDD is next in line */
   if (g_dwEnginesSupported & WIN_SERVER_SHADOW_DD)
     {
-      ErrorF ("winSetEngine - Using Shadow DirectDraw\n");
+      winErrorFVerb (2, "winSetEngine - Using Shadow DirectDraw\n");
       pScreenInfo->dwEngine = WIN_SERVER_SHADOW_DD;
 
       /* Set engine function pointers */
@@ -265,7 +265,7 @@ winSetEngine (ScreenPtr pScreen)
   /* ShadowGDI is next in line */
   if (g_dwEnginesSupported & WIN_SERVER_SHADOW_GDI)
     {
-      ErrorF ("winSetEngine - Using Shadow GDI DIB\n");
+      winErrorFVerb (2, "winSetEngine - Using Shadow GDI DIB\n");
       pScreenInfo->dwEngine = WIN_SERVER_SHADOW_GDI;
 
       /* Set engine function pointers */

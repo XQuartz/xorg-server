@@ -1,3 +1,7 @@
+2004-05-24  Alexander Gottwald  <ago@freedesktop.org>
+
+	* InitOutput.c: Check for textmode mounted /tmp and print a warning
+
 2004-05-27  Alexander Gottwald  <ago@freedesktop.org>
 
 	* winpriv.c: Create win32 window if not already created

@@ -742,7 +742,8 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	  /* Tell our Window Manager thread to activate the window */
 	  wmMsg.msg = WM_WM_ACTIVATE;
 	  if (fWMMsgInitialized)
-	    winSendMessageToWM (s_pScreenPriv->pWMInfo, &wmMsg);
+	    if (!pWin || !pWin->overrideRedirect) /* for OOo menus */
+	      winSendMessageToWM (s_pScreenPriv->pWMInfo, &wmMsg);
 	}
       return 0;
 

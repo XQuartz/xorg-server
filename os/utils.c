@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.6 2004/08/11 22:27:50 kem Exp $ */
+/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.1.4.3.2.4 2004/09/15 16:34:15 ago Exp $ */
 /* $Xorg: utils.c,v 1.5 2001/02/09 02:05:24 xorgcvs Exp $ */
 /*
 
@@ -1934,9 +1934,17 @@ CheckUserParameters(int argc, char **argv, char **envp)
     {
 	/* Check each argv[] */
 	for (i = 1; i < argc; i++) {
-	    if (strlen(argv[i]) > MAX_ARG_LENGTH) {
-		bad = ArgTooLong;
-		break;
+	    if (strcmp(argv[i], "-fp") == 0)
+	    {
+		i++; /* continue with next argument. skip the length check */
+		if (i >= argc)
+		    break;
+	    } else
+	    {
+		if (strlen(argv[i]) > MAX_ARG_LENGTH) {
+		    bad = ArgTooLong;
+		    break;
+		}
 	    }
 	    a = argv[i];
 	    while (*a) {

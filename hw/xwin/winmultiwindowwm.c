@@ -55,6 +55,7 @@
 #include "ddraw.h"
 #include "winwindow.h"
 
+extern void winDebug(const char *format, ...);
 
 #ifndef CYGDEBUG 
 #define CYGDEBUG NO

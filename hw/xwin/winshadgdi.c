@@ -226,27 +226,53 @@ winQueryRGBBitsAndMasks (ScreenPtr pScreen)
       pdw = (DWORD*) ((CARD8*)pbmih + sizeof (BITMAPINFOHEADER));
       
 #if CYGDEBUG
-      ErrorF ("winQueryRGBBitsAndMasks - Masks: %08x %08x %08x\n",
+      ErrorF ("%s - Masks: %08x %08x %08x\n", __FUNCTION__,
 	      pdw[0], pdw[1], pdw[2]);
+      ErrorF ("%s - Bitmap: %dx%d %d bpp %d planes\n", __FUNCTION__,
+              pbmih->biWidth, pbmih->biHeight, pbmih->biBitCount, pbmih->biPlanes);
+      ErrorF ("%s - Compression: %d %s\n", __FUNCTION__,
+              pbmih->biCompression,
+              (pbmih->biCompression == BI_RGB?"(BI_RGB)":
+               (pbmih->biCompression == BI_RLE8?"(BI_RLE8)":
+                (pbmih->biCompression == BI_RLE4?"(BI_RLE4)":
+                 (pbmih->biCompression == BI_BITFIELDS?"(BI_BITFIELDS)":""
+                 )))));
 #endif
 
-      /* Count the number of bits in each mask */
-      dwRedBits = winCountBits (pdw[0]);
-      dwGreenBits = winCountBits (pdw[1]);
-      dwBlueBits = winCountBits (pdw[2]);
+      /* Wine returns this */
+      if (pbmih->biCompression == BI_RGB)
+        {
+          dwRedBits = 15;
+          dwGreenBits = 10;
+          dwBlueBits = 5;
 
-      /* Find maximum bits per red, green, blue */
-      if (dwRedBits > dwGreenBits && dwRedBits > dwBlueBits)
-	pScreenPriv->dwBitsPerRGB = dwRedBits;
-      else if (dwGreenBits > dwRedBits && dwGreenBits > dwBlueBits)
-	pScreenPriv->dwBitsPerRGB = dwGreenBits;
-      else
-	pScreenPriv->dwBitsPerRGB = dwBlueBits;
+       	  pScreenPriv->dwBitsPerRGB = 15;
+	  
+	  /* Set screen privates masks */
+	  pScreenPriv->dwRedMask = 0x7c00;
+	  pScreenPriv->dwGreenMask = 0x03e0;
+	  pScreenPriv->dwBlueMask = 0x001f;
+        }
+      else 
+        {
+          /* Count the number of bits in each mask */
+          dwRedBits = winCountBits (pdw[0]);
+          dwGreenBits = winCountBits (pdw[1]);
+          dwBlueBits = winCountBits (pdw[2]);
 
-      /* Set screen privates masks */
-      pScreenPriv->dwRedMask = pdw[0];
-      pScreenPriv->dwGreenMask = pdw[1];
-      pScreenPriv->dwBlueMask = pdw[2];
+	  /* Find maximum bits per red, green, blue */
+	  if (dwRedBits > dwGreenBits && dwRedBits > dwBlueBits)
+	    pScreenPriv->dwBitsPerRGB = dwRedBits;
+	  else if (dwGreenBits > dwRedBits && dwGreenBits > dwBlueBits)
+	    pScreenPriv->dwBitsPerRGB = dwGreenBits;
+	  else
+	    pScreenPriv->dwBitsPerRGB = dwBlueBits;
+
+	  /* Set screen privates masks */
+	  pScreenPriv->dwRedMask = pdw[0];
+	  pScreenPriv->dwGreenMask = pdw[1];
+	  pScreenPriv->dwBlueMask = pdw[2];
+	}
     }
   else
     {
@@ -356,7 +382,7 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
 					      0);
   if (pScreenPriv->hbmpShadow == NULL || pScreenInfo->pfb == NULL)
     {
-      ErrorF ("winAllocateFBShadowGDI - CreateDIBSection failed\n");
+      winW32Error (2, "winAllocateFBShadowGDI - CreateDIBSection failed:");
       return FALSE;
     }
   else
@@ -403,8 +429,15 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
     }
   else
     {
-      ErrorF ("winAllocateFBShadowGDI - Shadow blit failure\n");
+      winW32Error (2, "winAllocateFBShadowGDI - Shadow blit failure\n");
+      /* ago: ignore this error. The blit fails with wine, but does not 
+       * cause any problems later. */
+
+#if 0      
       return FALSE;
+#else 
+      fReturn = TRUE;
+#endif      
     }
 
   /* Look for height weirdness */

@@ -396,7 +396,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
 #endif
 
   /* Show the window */
-  if (pScreenInfo->fMultiWindow)
+  if (pScreenInfo->fMultiWindow || pScreenInfo->fRootless)
     {
       pScreenPriv->fRootWindowShown = FALSE;
       ShowWindow (*phwnd, SW_HIDE);

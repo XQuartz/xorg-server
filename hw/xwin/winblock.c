@@ -76,5 +76,10 @@ winBlockHandler_ProcessMessages:
 	  DispatchMessage (&msg);
 	}
     }
+
+  if (pScreenPriv->pScreenInfo->fMultiWindow)
     winReorderWindowsMultiWindow ((ScreenPtr)pBlockData);
+
+  if (pScreenPriv->pScreenInfo->fRootless)
+    winWin32RootlessReorderWindows ((ScreenPtr)pBlockData);
 }

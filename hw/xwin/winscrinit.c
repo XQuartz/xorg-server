@@ -34,6 +34,32 @@
 /* $XFree86: xc/programs/Xserver/hw/xwin/winscrinit.c,v 1.28 2003/08/07 23:47:58 alanh Exp $ */
 
 #include "win.h"
+#include "safeAlpha.h"
+
+
+static RootlessFrameProcsRec winWin32RootlessProcs = {
+    winWin32RootlessCreateFrame,
+    winWin32RootlessDestroyFrame,
+
+    winWin32RootlessMoveFrame,
+    winWin32RootlessResizeFrame,
+    winWin32RootlessRestackFrame,
+    winWin32RootlessReshapeFrame,
+    winWin32RootlessUnmapFrame,
+
+    winWin32RootlessStartDrawing,
+    winWin32RootlessStopDrawing,
+    winWin32RootlessUpdateRegion,
+#ifndef ROOTLESS_TRACK_DAMAGE
+    winWin32RootlessDamageRects,
+#endif
+    winWin32RootlessRootlessSwitchWindow,
+
+    NULL,//winWin32RootlessCopyBytes,
+    NULL,//winWin32RootlessFillBytes,
+    NULL,//winWin32RootlessCompositePixels,
+    winWin32RootlessCopyWindow
+};
 
 
 /*
@@ -389,9 +415,10 @@ winFinishScreenInitFB (int index,
 
 #if !WIN_LAYER_SUPPORT
   /* Initialize the shadow framebuffer layer */
-  if (pScreenInfo->dwEngine == WIN_SERVER_SHADOW_GDI
-      || pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD
-      || pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL)
+  if ((pScreenInfo->dwEngine == WIN_SERVER_SHADOW_GDI
+       || pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD
+       || pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL)
+      &&(!pScreenInfo->fRootless))
     {
 #if CYGDEBUG
       ErrorF ("winFinishScreenInitFB - Calling shadowInit ()\n");
@@ -410,39 +437,22 @@ winFinishScreenInitFB (int index,
   /* Handle pseudo-rootless mode */
   if (pScreenInfo->fRootless)
     {
-      /* Define the WRAP macro temporarily for local use */
-#define WRAP(a) \
-    if (pScreen->a) { \
-        pScreenPriv->a = pScreen->a; \
-    } else { \
-        ErrorF("null screen fn " #a "\n"); \
-        pScreenPriv->a = NULL; \
-    }
+      ErrorF ("winScreenInit - RootlessInit\n");
+      
+      RootlessInit(pScreen, &winWin32RootlessProcs);
+      
+      ErrorF ("winScreenInit - RootlessInit - done\n");
+      
+      rootless_CopyBytes_threshold = 0;
+      rootless_FillBytes_threshold = 0;
+      rootless_CompositePixels_threshold = 0;
+      rootless_CopyWindow_threshold = 1;/* FIXME: How many? Profiling needed? */
 
-      /* Save a pointer to each lower-level window procedure */
-      WRAP(CreateWindow);
-      WRAP(DestroyWindow);
-      WRAP(RealizeWindow);
-      WRAP(UnrealizeWindow);
-      WRAP(PositionWindow);
-      WRAP(ChangeWindowAttributes);
-#ifdef SHAPE
-      WRAP(SetShape);
-#endif
-
-      /* Assign pseudo-rootless window procedures to be top level procedures */
-      pScreen->CreateWindow = winCreateWindowPRootless;
-      pScreen->DestroyWindow = winDestroyWindowPRootless;
-      pScreen->PositionWindow = winPositionWindowPRootless;
-      pScreen->ChangeWindowAttributes = winChangeWindowAttributesPRootless;
-      pScreen->RealizeWindow = winMapWindowPRootless;
-      pScreen->UnrealizeWindow = winUnmapWindowPRootless;
-#ifdef SHAPE
-      pScreen->SetShape = winSetShapePRootless;
-#endif
-
-      /* Undefine the WRAP macro, as it is not needed elsewhere */
-#undef WRAP
+      if (!winWin32RootlessInitCursor (pScreen))
+	{
+	  return FALSE;
+	}
+      winWindowsWMExtensionInit ();
     }
   /* Handle multi window mode */
   else if (pScreenInfo->fMultiWindow)

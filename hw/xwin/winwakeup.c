@@ -41,9 +41,7 @@ winWakeupHandler (int nScreen,
 		  unsigned long ulResult,
 		  pointer pReadmask)
 {
-#if 0
   winScreenPriv((ScreenPtr)pWakeupData);
-#endif
   MSG			msg;
 
   /* Process all messages on our queue */
@@ -57,7 +55,12 @@ winWakeupHandler (int nScreen,
 	  DispatchMessage (&msg);
 	}
     }
-  winReorderWindowsMultiWindow ((ScreenPtr)pWakeupData);
+
+  if (pScreenPriv->pScreenInfo->fMultiWindow)
+    winReorderWindowsMultiWindow ((ScreenPtr)pWakeupData);
+
+  if (pScreenPriv->pScreenInfo->fRootless)
+    winWin32RootlessReorderWindows ((ScreenPtr)pWakeupData);
 }
 
 

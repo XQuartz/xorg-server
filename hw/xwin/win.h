@@ -172,6 +172,7 @@
 #include "shadow.h"
 #include "fb.h"
 #include "layer.h"
+#include "rootless.h"
 
 #ifdef RENDER
 #include "mipict.h"
@@ -498,6 +499,16 @@ typedef struct _winPrivScreenRec
   /* Privates used by both shadow fb DirectDraw servers */
   LPDIRECTDRAWCLIPPER	pddcPrimary;
 
+  /* Privates used by rootless server */
+  RootlessFrameID      widTop;
+  QueryBestSizeProcPtr         QueryBestSize;
+  miPointerSpriteFuncPtr       spriteFuncs;
+  HCURSOR                      hCursor;
+  Bool                         fCursorVisible;
+  int                          nCX;
+  int                          nCY;
+
+
   /* Privates used by multi-window server */
   pthread_t		ptWMProc;
   pthread_t		ptXMsgProc;
@@ -551,6 +562,22 @@ typedef struct _winPrivScreenRec
   SetShapeProcPtr			SetShape;
 #endif
 } winPrivScreenRec;
+
+
+ typedef struct {
+  RootlessWindowPtr	pFrame;
+  HWND			hWnd;
+  int			dwWidthBytes;
+  BITMAPINFOHEADER	*pbmihShadow;
+  HBITMAP		hbmpShadow;
+  HDC			hdcShadow;
+  HDC			hdcScreen;
+  BOOL			fResized;
+  BOOL			fRestackingNow;
+  BOOL			fClose;
+  BOOL			fDestroyed;//for debug
+  char			*pfb;
+} win32RootlessWindowRec, *win32RootlessWindowPtr;
 
 
 typedef struct {
@@ -1527,6 +1554,112 @@ winHandleIconMessage (HWND hwnd, UINT message,
 LRESULT CALLBACK
 winWindowProc (HWND hWnd, UINT message, 
 	       WPARAM wParam, LPARAM lParam);
+
+
+/*
+ * winwin32rootless.c
+ */
+
+Bool
+winWin32RootlessCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
+			     int newX, int newY, RegionPtr pShape);
+
+void
+winWin32RootlessDestroyFrame (RootlessFrameID wid);
+
+void
+winWin32RootlessMoveFrame (RootlessFrameID wid, ScreenPtr pScreen, int newX, int newY);
+
+void
+winWin32RootlessResizeFrame (RootlessFrameID wid, ScreenPtr pScreen,
+			     int newX, int newY, unsigned int newW, unsigned int newH,
+			     unsigned int gravity);
+
+void
+winWin32RootlessRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid);
+
+void
+winWin32RootlessReshapeFrame (RootlessFrameID wid, RegionPtr pShape);
+
+void
+winWin32RootlessUnmapFrame (RootlessFrameID wid);
+
+void
+winWin32RootlessStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow);
+
+void
+winWin32RootlessStopDrawing (RootlessFrameID wid, Bool flush);
+
+void
+winWin32RootlessUpdateRegion (RootlessFrameID wid, RegionPtr pDamage);
+
+void
+winWin32RootlessDamageRects (RootlessFrameID wid, int count, const BoxRec *rects,
+			     int shift_x, int shift_y);
+
+void
+winWin32RootlessRootlessSwitchWindow (RootlessWindowPtr pFrame, WindowPtr oldWin);
+
+void
+winWin32RootlessCopyBytes (unsigned int width, unsigned int height,
+			   const void *src, unsigned int srcRowBytes,
+			   void *dst, unsigned int dstRowBytes);
+
+void
+winWin32RootlessFillBytes (unsigned int width, unsigned int height, unsigned int value,
+			   void *dst, unsigned int dstRowBytes);
+
+int
+winWin32RootlessCompositePixels (unsigned int width, unsigned int height, unsigned int function,
+				 void *src[2], unsigned int srcRowBytes[2],
+				 void *mask, unsigned int maskRowBytes,
+				 void *dst[2], unsigned int dstRowBytes[2]);
+
+void
+winWin32RootlessCopyWindow (RootlessFrameID wid, int dstNrects, const BoxRec *dstRects,
+			    int dx, int dy);
+
+
+/*
+ * winwin32rootlesswindow.c
+ */
+
+void
+winWin32RootlessReorderWindows (ScreenPtr pScreen);
+
+void
+winWin32RootlessMoveXWindow (WindowPtr pWin, int x, int y);
+
+void
+winWin32RootlessResizeXWindow (WindowPtr pWin, int w, int h);
+
+void
+winWin32RootlessUpdateIcon (Window id);
+
+
+/*
+ * winwin32rootlesscursor.c
+ */
+
+Bool
+winWin32RootlessInitCursor (ScreenPtr pScreen);
+
+
+/*
+ * winwin32rootlesswndproc.c
+ */
+
+LRESULT CALLBACK
+winWin32RootlessWindowProc (HWND hwnd, UINT message, 
+			    WPARAM wParam, LPARAM lParam);
+
+
+/*
+ * winwindowswm.c
+ */
+
+void
+winWindowsWMExtensionInit ();
 
 
 /*

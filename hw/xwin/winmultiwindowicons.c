@@ -100,7 +100,12 @@ winScaleXBitmapToWindows (int iconSize,
 	      "Bailing.\n");
       return;
     }
-  
+
+  /* Get icon data */
+  miGetImage ((DrawablePtr) &(pixmap->drawable), 0, 0,
+	      pixmap->drawable.width, pixmap->drawable.height,
+	      ZPixmap, 0xffffffff, iconData);
+
   /* Keep aspect ratio */
   factX = ((float)pixmap->drawable.width) / ((float)iconSize);
   factY = ((float)pixmap->drawable.height) / ((float)iconSize);

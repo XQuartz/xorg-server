@@ -37,6 +37,9 @@
 #include <commctrl.h>
 #include "winprefs.h"
 #include "winconfig.h"
+#ifdef CYGDEBUG
+#include "winmessages.h"
+#endif
 
 
 /*
@@ -76,6 +79,19 @@ winWindowProc (HWND hwnd, UINT message,
   int				iScanCode;
   int				i;
 
+#if CYGDEBUG
+  if (message >= WM_USER)
+    {
+      winDebug("winWindowProc - Message WM_USER + %d", message - WM_USER);
+      winDebug(" wParam 0x%x lParam 0x%x\n", wParam, lParam);
+    }
+  else if (message < MESSAGE_NAMES_LEN && MESSAGE_NAMES[message])
+    {  
+      winDebug("winWindowProc - Message %s", MESSAGE_NAMES[message]);
+      winDebug(" wParam 0x%x lParam 0x%x\n", wParam, lParam);
+    }
+#endif
+  
   /* Watch for server regeneration */
   if (g_ulServerGeneration != s_ulServerGeneration)
     {

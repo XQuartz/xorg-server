@@ -35,6 +35,9 @@
 #include "dixevents.h"
 #include "winmultiwindowclass.h"
 #include "winprefs.h"
+#ifdef CYGDEBUG
+#include "winmessages.h"
+#endif
 
 /*
  * External global variables
@@ -287,6 +290,19 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
   winWMMessageRec	wmMsg;
   Bool                  fWMMsgInitialized = FALSE;
   static Bool		s_fTracking = FALSE;
+
+#if CYGDEBUG
+  if (message >= WM_USER)
+    {
+      winDebug("winTopLevelWindowProc - Message WM_USER + %d", message - WM_USER);
+      winDebug(" wParam 0x%x lParam 0x%x\n", wParam, lParam);
+    }
+  else if (message < MESSAGE_NAMES_LEN && MESSAGE_NAMES[message])
+    {  
+      winDebug("winTopLevelWindowProc - Message %s", MESSAGE_NAMES[message]);
+      winDebug(" wParam 0x%x lParam 0x%x\n", wParam, lParam);
+    }
+#endif
   
   /* Check if the Windows window property for our X window pointer is valid */
   if ((pWin = GetProp (hwnd, WIN_WINDOW_PROP)) != NULL)
@@ -926,6 +942,44 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       /* for applications like xterm */
       return ValidateSizing (hwnd, pWin, wParam, lParam);
 
+    case WM_WINDOWPOSCHANGING:  
+      if (lParam != 0)
+        {
+          WINDOWPOS *windowpos = (WINDOWPOS *)lParam;
+          HWND hwndprev = GetNextWindow(hwnd, GW_HWNDPREV);
+          HWND hwndafter = windowpos->hwndInsertAfter;
+#ifdef CYGDEBUG
+          char buffer[1024];
+          char buffer2[1024];
+          GetWindowText(hwndafter, buffer, sizeof(buffer));
+          GetWindowText(hwndprev, buffer2, sizeof(buffer2));
+          winDebug("%s - hwndInsertAfter = %x (%s), hwndPrev = %x (%s)\n",
+                  __FUNCTION__, hwndafter,
+                  (hwndafter==HWND_TOP?"HWND_TOP":
+                  (hwndafter==HWND_BOTTOM?"HWND_BOTTOM":
+                  (hwndafter==HWND_NOTOPMOST?"HWND_NOTOPMOST":
+                  (hwndafter==HWND_TOPMOST?"HWND_TOPMOST":
+                   buffer)))),
+                  hwndprev,
+                  (hwndprev==HWND_TOP?"HWND_TOP":
+                  (hwndprev==HWND_BOTTOM?"HWND_BOTTOM":
+                  (hwndprev==HWND_NOTOPMOST?"HWND_NOTOPMOST":
+                  (hwndprev==HWND_TOPMOST?"HWND_TOPMOST":
+                   buffer2)))));
+          winDebug("%s - flags: %s\n", __FUNCTION__, 
+                  (windowpos->flags & SWP_NOZORDER?"NOZORDER":""));
+  
+#endif
+          if (windowpos->flags & SWP_NOZORDER)
+              break;
+          if (TRUE || hwndafter == HWND_TOP || hwndafter != hwndprev) 
+            {
+              wmMsg.msg = WM_WM_RAISE;
+              //if (fWMMsgInitialized)
+                winSendMessageToWM (s_pScreenPriv->pWMInfo, &wmMsg);
+            }
+        }
+      break;
     case WM_WINDOWPOSCHANGED:
       /*
        * Pass the message to DefWindowProc to let the function

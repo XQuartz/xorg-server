@@ -191,11 +191,9 @@
 #define WM_GIVEUP		(WM_USER + 1002)
 
 
-/*
- * Multi-Window Window Manager header
- */
-
+/* Local includes */
 #include "winwindow.h"
+#include "winmsg.h"
 
 
 /*

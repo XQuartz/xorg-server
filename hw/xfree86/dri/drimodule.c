@@ -1,4 +1,4 @@
-/* $XdotOrg$ */
+/* $XdotOrg: xc/programs/Xserver/GL/dri/drimodule.c,v 1.1.4.1 2003/12/18 19:29:12 kaleb Exp $ */
 /**************************************************************************
 
 Copyright 1999 Precision Insight, Inc., Cedar Park, Texas.
@@ -110,7 +110,7 @@ driSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 	}
 	else {
 	    LoaderReqSymLists(drmSymbols, NULL);
-	    LoaderRefSymbols("noXineramaExtension", NULL);
+	    LoaderRefSymbols("noPanoramiXExtension", NULL);
 	    LoadExtension(&XF86DRIExt, FALSE);
 	}
     } else {

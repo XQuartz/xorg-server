@@ -1,4 +1,4 @@
-/* $XdotOrg$ */
+/* $XdotOrg: xc/programs/Xserver/include/cursor.h,v 1.1.4.4 2003/12/18 19:29:15 kaleb Exp $ */
 /* $XFree86: xc/programs/Xserver/include/cursor.h,v 1.7 2003/04/27 21:31:04 herrb Exp $ */
 /***********************************************************
 
@@ -141,8 +141,8 @@ extern void GetSpritePosition(
     int * /*px*/,
     int * /*py*/);
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
 extern int XineramaGetCursorScreen(void);
-#endif /* XINERAMA */
+#endif /* PANORAMIX */
 
 #endif /* CURSOR_H */

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/fb/fbwindow.c,v 1.1.4.2 2003/12/18 19:29:12 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/fb/fbwindow.c,v 1.1.4.3 2004/02/25 21:46:42 kaleb Exp $ */
 /*
  * Id: fbwindow.c,v 1.1 1999/11/02 03:54:45 keithp Exp $
  *
@@ -224,7 +224,7 @@ fbFillRegionSolid (DrawablePtr	pDrawable,
     }
 }
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
 #include "panoramiX.h"
 #include "panoramiXsrv.h"
 #endif
@@ -248,7 +248,7 @@ fbFillRegionTiled (DrawablePtr	pDrawable,
     int		xRot = pDrawable->x;
     int		yRot = pDrawable->y;
     
-#ifdef XINERAMA
+#ifdef PANORAMIX
     if(!noPanoramiXExtension) 
     {
 	int index = pDrawable->pScreen->myNum;

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/mi/miexpose.c,v 1.1.4.3 2003/12/18 19:29:15 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/mi/miexpose.c,v 1.1.4.4 2004/02/25 21:47:02 kaleb Exp $ */
 /* $XFree86: xc/programs/Xserver/mi/miexpose.c,v 3.10 2003/11/10 18:22:49 tsi Exp $ */
 /***********************************************************
 
@@ -68,7 +68,7 @@ SOFTWARE.
 
 #include "globals.h"
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
 #include "panoramiX.h"
 #include "panoramiXsrv.h"
 #endif
@@ -426,7 +426,7 @@ miSendExposures(pWin, pRgn, dx, dy)
 	pe->u.expose.count = i;
     }
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
     if(!noPanoramiXExtension) {
 	int scrnum = pWin->drawable.pScreen->myNum;
 	int x = 0, y = 0;

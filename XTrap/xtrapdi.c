@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/XTrap/xtrapdi.c,v 1.1.4.2 2003/12/18 19:29:12 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/XTrap/xtrapdi.c,v 1.1.4.3 2004/02/25 21:46:31 kaleb Exp $ */
 /* $XFree86: xc/programs/Xserver/XTrap/xtrapdi.c,v 1.7 2003/10/28 22:52:10 tsi Exp $ */
 /*****************************************************************************
 Copyright 1987, 1988, 1989, 1990, 1991 by Digital Equipment Corp., Maynard, MA
@@ -77,7 +77,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <X11/extensions/xtrapddmi.h>
 #include <X11/extensions/xtrapproto.h>
 #include "colormapst.h"
-#ifdef XINERAMA
+#ifdef PANORAMIX
 #include "panoramiX.h"
 #include "panoramiXsrv.h"
 #include "cursor.h"
@@ -1559,7 +1559,7 @@ void XETrapStampAndMail(xEvent *x_event)
             /* Copy the event information into our local memory */
             (void)memcpy(&(data.u.event),x_event,sizeof(xEvent));
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
 	    if (!noPanoramiXExtension &&
                 (data.u.event.u.u.type == MotionNotify ||
                 data.u.event.u.u.type == ButtonPress ||

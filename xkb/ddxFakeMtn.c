@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/xkb/ddxFakeMtn.c,v 1.1.4.4 2003/12/18 19:29:15 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/xkb/ddxFakeMtn.c,v 1.1.4.5 2004/02/25 21:47:10 kaleb Exp $ */
 /* $Xorg: ddxFakeMtn.c,v 1.3 2000/08/17 19:53:45 cpqbld Exp $ */
 /************************************************************
 Copyright (c) 1993 by Silicon Graphics Computer Systems, Inc.
@@ -38,7 +38,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "XKBsrv.h"
 #include "XI.h"
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
 #include "panoramiX.h"
 #include "panoramiXsrv.h"
 #endif
@@ -55,7 +55,7 @@ ScreenPtr	   pScreen, oldScreen;
     GetSpritePosition(&oldX, &oldY);
     pScreen = oldScreen = GetSpriteWindow()->drawable.pScreen;
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
     if (!noPanoramiXExtension) {
 	BoxRec box;
 	int i;

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/dix/dixfonts.c,v 1.1.4.3 2003/12/18 19:29:12 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/dixfonts.c,v 1.1.4.4 2004/02/25 21:46:40 kaleb Exp $ */
 /* $XFree86: xc/programs/Xserver/dix/dixfonts.c,v 3.29 2003/11/17 22:20:34 dawes Exp $ */
 /************************************************************************
 Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -42,7 +42,7 @@ SOFTWARE.
 #include	<stdio.h>
 #endif
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
 #include "panoramiX.h"
 #endif
 
@@ -1399,7 +1399,7 @@ bail:
 
     if (c->err != Success) err = c->err;
     if (err != Success && c->client != serverClient) {
-#ifdef XINERAMA
+#ifdef PANORAMIX
         if (noPanoramiXExtension || !c->pGC->pScreen->myNum)
 #endif
 	    SendErrorToClient(c->client, c->reqType, 0, 0, err);

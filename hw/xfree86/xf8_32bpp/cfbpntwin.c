@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/xf8_32bpp/cfbpntwin.c,v 1.1.4.1 2003/12/18 19:29:15 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/xf8_32bpp/cfbpntwin.c,v 1.1.4.2 2004/02/25 21:46:57 kaleb Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/xf8_32bpp/cfbpntwin.c,v 1.5 2001/10/01 13:44:15 eich Exp $ */
 
 #include "X.h"
@@ -15,7 +15,7 @@
 #include "cfb8_32.h"
 #include "mi.h"
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
 #include "panoramiX.h"
 #include "panoramiXsrv.h"
 #endif
@@ -44,7 +44,7 @@ cfb8_32PaintWindow(
 	case BackgroundPixmap:
 	    xorg = pWin->drawable.x;
 	    yorg = pWin->drawable.y;
-#ifdef XINERAMA
+#ifdef PANORAMIX
 	    if(!noPanoramiXExtension) {
 		int index = pWin->drawable.pScreen->myNum;
 		if(WindowTable[index] == pWin) {
@@ -92,7 +92,7 @@ cfb8_32PaintWindow(
 	    xorg = pBgWin->drawable.x;
 	    yorg = pBgWin->drawable.y;
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
 	    if(!noPanoramiXExtension) {
 		int index = pWin->drawable.pScreen->myNum;
 		if(WindowTable[index] == pBgWin) {

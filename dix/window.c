@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/dix/window.c,v 1.1.4.3 2003/12/18 19:29:12 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/window.c,v 1.1.4.4 2004/02/25 21:46:40 kaleb Exp $ */
 /* $Xorg: window.c,v 1.4 2001/02/09 02:04:41 xorgcvs Exp $ */
 /*
 
@@ -49,7 +49,7 @@ SOFTWARE.
 
 */
 
-/* The Xinerama components contained the following notice */
+/* The panoramix components contained the following notice */
 /****************************************************************
 *                                                               *
 *    Copyright (c) Digital Equipment Corporation, 1991, 1997    *
@@ -86,7 +86,7 @@ SOFTWARE.
 #include "dixstruct.h"
 #include "gcstruct.h"
 #include "servermd.h"
-#ifdef XINERAMA
+#ifdef PANORAMIX
 #include "panoramiX.h"
 #include "panoramiXsrv.h"
 #endif
@@ -2321,7 +2321,7 @@ ConfigureWindow(pWin, mask, vlist, client)
 	    event.u.u.detail = Above;
 	event.u.configureRequest.x = x;
 	event.u.configureRequest.y = y;
-#ifdef XINERAMA
+#ifdef PANORAMIX
 	if(!noPanoramiXExtension && (!pParent || !pParent->parent)) {
             event.u.configureRequest.x += panoramiXdataPtr[0].x;
             event.u.configureRequest.y += panoramiXdataPtr[0].y;
@@ -2407,7 +2407,7 @@ ActuallyDoSomething:
 	    event.u.configureNotify.aboveSibling = None;
 	event.u.configureNotify.x = x;
 	event.u.configureNotify.y = y;
-#ifdef XINERAMA
+#ifdef PANORAMIX
 	if(!noPanoramiXExtension && (!pParent || !pParent->parent)) {
 	    event.u.configureNotify.x += panoramiXdataPtr[0].x;
             event.u.configureNotify.y += panoramiXdataPtr[0].y;
@@ -2565,7 +2565,7 @@ ReparentWindow(pWin, pParent, x, y, client)
     event.u.reparent.parent = pParent->drawable.id;
     event.u.reparent.x = x;
     event.u.reparent.y = y;
-#ifdef XINERAMA
+#ifdef PANORAMIX
     if(!noPanoramiXExtension && !pParent->parent) {
 	event.u.reparent.x += panoramiXdataPtr[0].x;
 	event.u.reparent.y += panoramiXdataPtr[0].y;
@@ -2938,7 +2938,7 @@ UnrealizeTree(
 	{
 	    pChild->realized = FALSE;
 	    pChild->visibility = VisibilityNotViewable;
-#ifdef XINERAMA
+#ifdef PANORAMIX
 	    if(!noPanoramiXExtension && !pChild->drawable.pScreen->myNum) {
 		PanoramiXRes *win;
 		win = (PanoramiXRes*)LookupIDByType(pChild->drawable.id,
@@ -3220,10 +3220,9 @@ SendVisibilityNotify(pWin)
     WindowPtr pWin;
 {
     xEvent event;
-#ifndef NO_XINERAMA_PORT
     unsigned int visibility = pWin->visibility;
-#endif
-#ifdef XINERAMA
+
+#ifdef PANORAMIX
     /* This is not quite correct yet, but it's close */
     if(!noPanoramiXExtension) {
 	PanoramiXRes *win;
@@ -3277,6 +3276,7 @@ SendVisibilityNotify(pWin)
 	win->u.win.visibility = visibility;
     }
 #endif
+
     event.u.u.type = VisibilityNotify;
     event.u.visibility.window = pWin->drawable.id;
     event.u.visibility.state = visibility;

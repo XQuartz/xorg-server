@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/common/xf86Config.c,v 1.1.4.3 2003/12/18 19:29:13 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/common/xf86Config.c,v 1.1.4.4 2004/02/25 21:46:46 kaleb Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/common/xf86Config.c,v 3.277 2003/10/15 22:51:48 dawes Exp $ */
 
 
@@ -1058,7 +1058,7 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
 	}
 #endif
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
     from = X_DEFAULT;
     if (!noPanoramiXExtension)
       from = X_CMDLINE;

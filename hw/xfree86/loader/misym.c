@@ -1,4 +1,4 @@
-/* $XdotOrg$ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/loader/misym.c,v 1.1.4.2 2003/12/18 19:29:14 kaleb Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/loader/misym.c,v 1.38 2003/10/15 16:29:04 dawes Exp $ */
 
 /*
@@ -65,9 +65,9 @@
 #include "mifillarc.h"
 #include "micmap.h"
 #include "mioverlay.h"
-#ifdef XINERAMA
+#ifdef PANORAMIX
 #include "resource.h"
-#include "xinerama.h"
+#include "panoramiX.h"
 #endif
 #ifdef RENDER
 #include "mipict.h"

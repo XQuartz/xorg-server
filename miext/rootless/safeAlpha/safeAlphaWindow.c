@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/miext/rootless/safeAlpha/safeAlphaWindow.c,v 1.1.4.1 2003/12/18 19:29:15 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/miext/rootless/safeAlpha/safeAlphaWindow.c,v 1.1.4.2 2004/02/23 21:37:25 kaleb Exp $ */
 /*
  * Specialized window functions to protect the alpha channel
  */
@@ -38,9 +38,9 @@
 #include "safeAlpha.h"
 #include "rootlessCommon.h"
 
-#ifdef XINERAMA
-#include "xinerama.h"
-#include "xineramaSrv.h"
+#ifdef PANORAMIX
+#include "panoramiX.h"
+#include "panoramiXsrv.h"
 #endif
 
 /*
@@ -69,14 +69,14 @@ SafeAlphaFillRegionTiled(
     int         yRot = pDrawable->y;
     FbBits      planeMask;
 
-#ifdef XINERAMA
-    if(!noXineramaExtension)
+#ifdef PANORAMIX
+    if(!noPanoramiXExtension)
     {
         int index = pDrawable->pScreen->myNum;
         if(&WindowTable[index]->drawable == pDrawable)
         {
-            xRot -= xineramaDataPtr[index].x;
-            yRot -= xineramaDataPtr[index].y;
+            xRot -= panoramiXdataPtr[index].x;
+            yRot -= panoramiXdataPtr[index].y;
         }
     }
 #endif

@@ -88,7 +88,7 @@ SOFTWARE.
 #include "dixevents.h"
 #include "dixgrabs.h"
 #include "cursor.h"
-#ifdef XINERAMA
+#ifdef PANORAMIX
 #include "panoramiX.h"
 #include "panoramiXsrv.h"
 #endif
@@ -672,7 +672,7 @@ FindAllClientResources(
     }
 }
 
-#ifndef NO_XINERAMA_PORT
+
 pointer
 LookupClientResourceComplex(
     ClientPtr client,
@@ -698,7 +698,7 @@ LookupClientResourceComplex(
     }
     return NULL;
 }
-#endif /* NO_XINERAMA_PORT */
+
 
 void
 FreeClientNeverRetainResources(ClientPtr client)
@@ -797,7 +797,7 @@ LegalNewID(id, client)
     register ClientPtr client;
 {
 
-#ifdef XINERAMA
+#ifdef PANORAMIX
     XID 	minid, maxid;
 
 	if (!noPanoramiXExtension) { 
@@ -807,7 +807,7 @@ LegalNewID(id, client)
             if ((id >= minid) && (id <= maxid))
 	        return TRUE;
 	}
-#endif /* XINERAMA */
+#endif /* PANORAMIX */
 	return ((client->clientAsMask == (id & ~RESOURCE_ID_MASK)) &&
 	    ((clientTable[client->index].expectID <= id) ||
 	     !LookupIDByClass(id, RC_ANY)));

@@ -389,7 +389,8 @@ winRestackWindowMultiWindow (WindowPtr pWin, WindowPtr pOldNextSib)
   if (winGetScreenPriv(pWin->drawable.pScreen)->RestackWindow)
     winGetScreenPriv(pWin->drawable.pScreen)->RestackWindow (pWin,
 							     pOldNextSib);
-  
+
+#if 0
   /* Bail out if no window privates or window handle is invalid */
   if (!pWinPriv || !pWinPriv->hWnd)
     return;
@@ -442,6 +443,7 @@ winRestackWindowMultiWindow (WindowPtr pWin, WindowPtr pOldNextSib)
 		0, 0,
 		0, 0,
 		uFlags);
+#endif
 }
 
 

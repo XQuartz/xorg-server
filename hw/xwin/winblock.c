@@ -94,7 +94,7 @@ winBlockHandler_ProcessMessages:
 #endif
 
 #ifdef XWIN_MULTIWINDOWEXTWM
-  if (pScreenPriv->pScreenInfo->fRootless)
-    winWin32RootlessReorderWindows ((ScreenPtr)pBlockData);
+  if (pScreenPriv->pScreenInfo->fMWExtWM)
+    winMWExtWMReorderWindows ((ScreenPtr)pBlockData);
 #endif
 }

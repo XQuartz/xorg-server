@@ -56,6 +56,8 @@ HICON		g_hiconX = NULL;
 char *		g_pszLogFile = "/tmp/XWin.log";
 int		g_iLogVerbose = 4;
 Bool		g_fLogInited = FALSE;
+char *		g_pszCommandLine = NULL;
+Bool		g_fUseMsg = FALSE;
 
 
 /*

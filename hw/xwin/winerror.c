@@ -31,6 +31,11 @@
 
 #include "win.h"
 
+/* References to external symbols */
+extern char *		g_pszCommandLine;
+extern Bool		g_fUseMsg;
+
+
 #ifdef DDXOSVERRORF
 /* Prototype */
 void
@@ -64,10 +69,80 @@ OsVendorVErrorF (const char *pszFormat, va_list va_args)
 void
 OsVendorFatalError (void)
 {
-  MessageBox (NULL,
-	      "A fatal error has occurred and Cygwin/X will now exit.\n"
-	      "Please open /tmp/XWin.log for more information.\n",
-	      "Cygwin/X - Fatal Error",
-	      MB_OK);
+  /* Don't give duplicate warning if UseMsg was called */
+  if (g_fUseMsg)
+    return;
+
+  winMessageBoxF ("A fatal error has occurred and Cygwin/X will now exit.\n" \
+		  "Please open /tmp/XWin.log for more information.\n",
+		  MB_ICONERROR);
 }
 #endif
+
+
+/*
+ * winMessageBoxF - Print a formatted error message in a useful
+ * message box.
+ */
+
+void
+winMessageBoxF (const char *pszError, UINT uType, ...)
+{
+  int		i;
+  char *	pszErrorF = NULL;
+  char *	pszMsgBox = NULL;
+  va_list	args;
+
+  /* Get length of formatted error string */
+  va_start (args, pszError);
+  i = sprintf (NULL, pszError, args);
+  va_end (args);
+  
+  /* Allocate memory for formatted error string */
+  pszErrorF = malloc (i);
+  if (!pszErrorF)
+    goto winMessageBoxF_Cleanup;
+
+  /* Create the formatted error string */
+  va_start (args, pszError);
+  sprintf (pszErrorF, pszError, args);
+  va_end (args);
+
+#define MESSAGEBOXF \
+	"%s\n" \
+	"Vendor: %s\n" \
+	"Release: %s\n" \
+	"Contact: %s\n" \
+	"XWin was started with the following command-line:\n\n" \
+	"%s\n"
+
+  /* Get length of message box string */
+  i = sprintf (NULL, MESSAGEBOXF,
+	       pszErrorF,
+	       VENDOR_STRING, VERSION_STRING, VENDOR_CONTACT,
+	       g_pszCommandLine);
+
+  /* Allocate memory for message box string */
+  pszMsgBox = malloc (i);
+  if (!pszMsgBox)
+    goto winMessageBoxF_Cleanup;
+
+  /* Format the message box string */
+  sprintf (pszMsgBox, MESSAGEBOXF,
+	   pszErrorF,
+	   VENDOR_STRING, VERSION_STRING, VENDOR_CONTACT,
+	   g_pszCommandLine);
+
+  /* Display the message box string */
+  MessageBox (NULL,
+	      pszMsgBox,
+	      "Cygwin/X",
+	      MB_OK | uType);
+
+ winMessageBoxF_Cleanup:
+  if (pszErrorF)
+    free (pszErrorF);
+  if (pszMsgBox)
+    free (pszMsgBox);
+#undef MESSAGEBOXF
+}

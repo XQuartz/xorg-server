@@ -50,8 +50,10 @@ Sets the display resolution for the X server to use on screen
 .B \-nodecoration
 Draw the Cygwin/X window without a border or title bar.
 .TP 8
+.B \-mwextwm
+Run the server in multi-window external window manager mode.
 .B \-rootless
-EXPERIMENTAL: Run Cygwin/X in pseduo-rootless mode.
+Run the server in rootless mode.
 .TP 8
 .B \-lesspointer
 Hide the Windows mouse pointer when over an inactive Cygwin/X window
@@ -120,10 +122,3 @@ Harold L Hunt II - Project leader, lead developer, documentation,
 and website updates
 .br
 Suhaib Siddiqi - Originator of the project
-
-
-
-
-
-
-

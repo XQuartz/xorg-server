@@ -42,11 +42,11 @@ extern HICON		g_hiconX;
 
 
 /*
- * winWin32RootlessReorderWindows
+ * winMWExtWMReorderWindows
  */
 
 void
-winWin32RootlessReorderWindows (ScreenPtr pScreen)
+winMWExtWMReorderWindows (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
   HWND hwnd = NULL;
@@ -56,7 +56,7 @@ winWin32RootlessReorderWindows (ScreenPtr pScreen)
   DWORD dwWindowProcessID = 0;
 
 #if CYGMULTIWINDOW_DEBUG && FALSE
-  ErrorF ("winWin32RootlessReorderWindows\n");
+  ErrorF ("winMWExtWMReorderWindows\n");
 #endif
 
   pScreenPriv->fRestacking = TRUE;
@@ -64,7 +64,7 @@ winWin32RootlessReorderWindows (ScreenPtr pScreen)
   if (pScreenPriv->fWindowOrderChanged)
     {
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winWin32RootlessReorderWindows - Need to restack\n");
+      ErrorF ("winMWExtWMReorderWindows - Need to restack\n");
 #endif
       hwnd = GetTopWindow (NULL);
 
@@ -84,7 +84,7 @@ winWin32RootlessReorderWindows (ScreenPtr pScreen)
 		  
 		  if (vlist == NULL)
 		    {
-		      ErrorF ("winWin32RootlessReorderWindows - malloc () "
+		      ErrorF ("winMWExtWMReorderWindows - malloc () "
 			      "failed\n");
 		      return;
 		    }
@@ -109,11 +109,11 @@ winWin32RootlessReorderWindows (ScreenPtr pScreen)
 
 
 /*
- * winWin32RootlessMoveXWindow
+ * winMWExtWMMoveXWindow
  */
 
 void
-winWin32RootlessMoveXWindow (WindowPtr pWin, int x, int y)
+winMWExtWMMoveXWindow (WindowPtr pWin, int x, int y)
 {
   XID *vlist = malloc(sizeof(long)*2);
 
@@ -125,11 +125,11 @@ winWin32RootlessMoveXWindow (WindowPtr pWin, int x, int y)
 
 
 /*
- * winWin32RootlessResizeXWindow
+ * winMWExtWMResizeXWindow
  */
 
 void
-winWin32RootlessResizeXWindow (WindowPtr pWin, int w, int h)
+winMWExtWMResizeXWindow (WindowPtr pWin, int w, int h)
 {
   XID *vlist = malloc(sizeof(long)*2);
 
@@ -141,11 +141,11 @@ winWin32RootlessResizeXWindow (WindowPtr pWin, int w, int h)
 
 
 /*
- * winWin32RootlessMoveResizeXWindow
+ * winMWExtWMMoveResizeXWindow
  */
 
 void
-winWin32RootlessMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h)
+winMWExtWMMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h)
 {
   XID *vlist = malloc(sizeof(long)*4);
 
@@ -160,12 +160,12 @@ winWin32RootlessMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h)
 
 
 /*
- * winWin32RootlessUpdateIcon
+ * winMWExtWMUpdateIcon
  * Change the Windows window icon
  */
 
 void
-winWin32RootlessUpdateIcon (Window id)
+winMWExtWMUpdateIcon (Window id)
 {
   WindowPtr		pWin;
   HICON			hIcon, hiconOld;

@@ -315,9 +315,9 @@ winWindowProc (HWND hwnd, UINT message,
 	if (!s_pScreenInfo->fScrollbars
 	    || !s_pScreenInfo->fDecoration
 #ifdef XWIN_MULTIWINDOWEXTWM
-	    || s_pScreenInfo->fRootless
+	    || s_pScreenInfo->fMWExtWM
 #endif
-	    || s_pScreenInfo->fPseudoRootless
+	    || s_pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOW
 	    || s_pScreenInfo->fMultiWindow
 #endif
@@ -591,9 +591,9 @@ winWindowProc (HWND hwnd, UINT message,
 	    || s_pScreenInfo->fFullScreen
 	    || !s_pScreenInfo->fDecoration
 #ifdef XWIN_MULTIWINDOWEXTWM
-	    || s_pScreenInfo->fRootless
+	    || s_pScreenInfo->fMWExtWM
 #endif
-	    || s_pScreenInfo->fPseudoRootless
+	    || s_pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOW
 	    || s_pScreenInfo->fMultiWindow
 #endif
@@ -779,9 +779,9 @@ winWindowProc (HWND hwnd, UINT message,
     case WM_LBUTTONDOWN:
       if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
 	break;
-      if (s_pScreenInfo->fPseudoRootless
+      if (s_pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOWEXTWM
-	  || s_pScreenInfo->fRootless
+	  || s_pScreenInfo->fMWExtWM
 #endif
 	  )
 	SetCapture (hwnd);
@@ -790,9 +790,9 @@ winWindowProc (HWND hwnd, UINT message,
     case WM_LBUTTONUP:
       if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
 	break;
-      if (s_pScreenInfo->fPseudoRootless
+      if (s_pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOWEXTWM
-	  || s_pScreenInfo->fRootless
+	  || s_pScreenInfo->fMWExtWM
 #endif
 	  )
 	ReleaseCapture ();
@@ -802,9 +802,9 @@ winWindowProc (HWND hwnd, UINT message,
     case WM_MBUTTONDOWN:
       if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
 	break;
-      if (s_pScreenInfo->fPseudoRootless
+      if (s_pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOWEXTWM
-	  || s_pScreenInfo->fRootless
+	  || s_pScreenInfo->fMWExtWM
 #endif
 	  )
 	SetCapture (hwnd);
@@ -813,9 +813,9 @@ winWindowProc (HWND hwnd, UINT message,
     case WM_MBUTTONUP:
       if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
 	break;
-      if (s_pScreenInfo->fPseudoRootless
+      if (s_pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOWEXTWM
-	  || s_pScreenInfo->fRootless
+	  || s_pScreenInfo->fMWExtWM
 #endif
 	  )
 	ReleaseCapture ();
@@ -825,9 +825,9 @@ winWindowProc (HWND hwnd, UINT message,
     case WM_RBUTTONDOWN:
       if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
 	break;
-      if (s_pScreenInfo->fPseudoRootless
+      if (s_pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOWEXTWM
-	  || s_pScreenInfo->fRootless
+	  || s_pScreenInfo->fMWExtWM
 #endif
 	  )
 	SetCapture (hwnd);
@@ -836,9 +836,9 @@ winWindowProc (HWND hwnd, UINT message,
     case WM_RBUTTONUP:
       if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
 	break;
-      if (s_pScreenInfo->fPseudoRootless
+      if (s_pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOWEXTWM
-	  || s_pScreenInfo->fRootless
+	  || s_pScreenInfo->fMWExtWM
 #endif
 	  )
 	ReleaseCapture ();

@@ -504,7 +504,7 @@ ProcWindowsWMFrameDraw (register ClientPtr client)
 
   ShowWindow (pRLWinPriv->hWnd, nCmdShow);
 
-  winWin32RootlessUpdateIcon (pWin->drawable.id);
+  winMWExtWMUpdateIcon (pWin->drawable.id);
 
   if (wBoundingShape(pWin) != NULL)
     {
@@ -515,7 +515,7 @@ ProcWindowsWMFrameDraw (register ClientPtr client)
       REGION_NULL(pScreen, &newShape);
       REGION_COPY(pScreen, &newShape, wBoundingShape(pWin));
       REGION_TRANSLATE(pScreen, &newShape, pWin->borderWidth, pWin->borderWidth);
-      winWin32RootlessReshapeFrame (pRLWinPriv, &newShape);
+      winMWExtWMReshapeFrame (pRLWinPriv, &newShape);
       REGION_UNINIT(pScreen, &newShape);
     }
 #if CYGMULTIWINDOW_DEBUG

@@ -44,6 +44,8 @@ from The Open Group.
 extern int			g_iNumScreens;
 extern winScreenInfo		g_ScreenInfo[];
 extern int			g_iLastScreen;
+extern char *			g_pszCommandLine;
+extern Bool			g_fUseMsg;
 
 extern char *			g_pszLogFile;
 extern int			g_iLogVerbose;
@@ -76,12 +78,21 @@ extern FARPROC			g_fpTrackMouseEvent;
  */
 
 #if defined(DDXOSVERRORF)
-void OsVendorVErrorF (const char *pszFormat, va_list va_args);
+void
+OsVendorVErrorF (const char *pszFormat, va_list va_args);
 #endif
 
-void winInitializeDefaultScreens (void);
+void
+winInitializeDefaultScreens (void);
 
-static Bool winCheckDisplayNumber (void);
+static Bool
+winCheckDisplayNumber (void);
+
+void
+winLogCommandLine (int argc, char *argv[]);
+
+void
+winLogVersionInfo (void);
 
 
 /*
@@ -118,9 +129,9 @@ const int NUMFORMATS = sizeof (g_PixmapFormats) / sizeof (g_PixmapFormats[0]);
  */
 
 void
-BeforeReset (void)
+ddxBeforeReset (void)
 {
-  ErrorF ("BeforeReset - Hello\n");
+  ErrorF ("ddxBeforeReset - Hello\n");
 
 #ifdef XWIN_CLIPBOARD
   /* Close down clipboard resources */
@@ -133,7 +144,7 @@ BeforeReset (void)
       /* Wait for the clipboard thread to exit */
       pthread_join (g_ptClipboardProc, NULL);
 
-      ErrorF ("BeforeReset - Clipboard thread has exited.\n");
+      ErrorF ("ddxBeforeReset - Clipboard thread has exited.\n");
     }
 #endif
 }
@@ -189,6 +200,13 @@ ddxGiveUp (void)
       g_fpTrackMouseEvent = (FARPROC) (void (*)(void))NoopDDA;
     }
   
+  /* Free concatenated command line */
+  if (g_pszCommandLine)
+    {
+      free (g_pszCommandLine);
+      g_pszCommandLine = NULL;
+    }
+
   /* Tell Windows that we want to end the app */
   PostQuitMessage (0);
 }
@@ -223,13 +241,9 @@ OsVendorInit (void)
   LogSetParameter (XLOG_FLUSH, 1);
   LogSetParameter (XLOG_VERBOSITY, g_iLogVerbose);
 
-  /* Check for duplicate invocation on same display number.*/
-  if (serverGeneration == 1 && !winCheckDisplayNumber ())
-    {
-      FatalError ("OsVendorInit - Duplicate invocation on display "
-		  "number: %s.  Exiting.\n", display);
-      return;
-    }
+  /* Log the version information */
+  if (serverGeneration == 1)
+    winLogVersionInfo ();
 
   /* Add a default screen if no screens were specified */
   if (g_iNumScreens == 0)
@@ -254,13 +268,6 @@ OsVendorInit (void)
       /* We have to flag this as an explicit screen, even though it isn't */
       g_ScreenInfo[0].fExplicitScreen = TRUE;
     }
-
-  /* Validate command-line arguments */
-  if (serverGeneration == 1 && !winValidateArgs ())
-    {
-      FatalError ("OsVendorInit - Invalid command-line arguments found.  "
-		  "Exiting.\n");
-    }
 }
 
 
@@ -268,6 +275,9 @@ OsVendorInit (void)
 void
 ddxUseMsg (void)
 {
+  /* Set a flag so that FatalError won't give duplicate warning message */
+  g_fUseMsg = TRUE;
+
   ErrorF ("-depth bits_per_pixel\n"
 	  "\tSpecify an optional bitdepth to use in fullscreen mode\n"
 	  "\twith a DirectDraw engine.\n");
@@ -307,12 +317,12 @@ ddxUseMsg (void)
 	  "\tmode only.\n");
 
 #ifdef XWIN_MULTIWINDOWEXTWM
-  ErrorF ("-rootless\n"
-	  "\tRun the server in rootless mode.\n");
+  ErrorF ("-mwextwm\n"
+	  "\tRun the server in multi-window external window manager mode.\n");
 #endif
 
-  ErrorF ("-pseudorootless\n"
-	  "\tRun the server in pseudo-rootless mode.\n");
+  ErrorF ("-rootless\n"
+	  "\tRun the server in rootless mode.\n");
 
 #ifdef XWIN_MULTIWINDOW
   ErrorF ("-multiwindow\n"
@@ -396,11 +406,10 @@ ddxUseMsg (void)
   LogClose ();
 
   /* Notify user where UseMsg text can be found.*/
-  MessageBox (NULL,
-	      "The Cygwin/X help text has been printed to /tmp/XWin.log.\n"
-	      "Please open /tmp/XWin.log to read the help text.",
-	      "Cygwin/X - Help Text Information",
-	      MB_OK);
+  winMessageBoxF ("The Cygwin/X help text has been printed to "
+		  "/tmp/XWin.log.\n"
+		  "Please open /tmp/XWin.log to read the help text.\n",
+		  MB_ICONINFORMATION);
 }
 
 
@@ -425,9 +434,26 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
 {
   int		i;
 
+  /* Log the command line */
+  winLogCommandLine (argc, argv);
+
 #if CYGDEBUG
   winErrorFVerb (2, "InitOutput\n");
 #endif
+
+  /* Validate command-line arguments */
+  if (serverGeneration == 1 && !winValidateArgs ())
+    {
+      FatalError ("InitOutput - Invalid command-line arguments found.  "
+		  "Exiting.\n");
+    }
+
+  /* Check for duplicate invocation on same display number.*/
+  if (serverGeneration == 1 && !winCheckDisplayNumber ())
+    {
+      FatalError ("InitOutput - Duplicate invocation on display "
+		  "number: %s.  Exiting.\n", display);
+    }
 
 #ifdef XWIN_XF86CONFIG
   /* Try to read the XF86Config-style configuration file */

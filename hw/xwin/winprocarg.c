@@ -47,10 +47,18 @@ extern Bool			g_fClipboard;
 extern int			g_iLogVerbose;
 extern char *			g_pszLogFile;
 extern Bool			g_fXdmcpEnabled;
+extern char *			g_pszCommandLine;
+
 
 /*
  * Function prototypes
  */
+
+void
+winLogCommandLine (int argc, char *argv[]);
+
+void
+winLogVersionInfo (void);
 
 #ifdef DDXOSVERRORF
 void OsVendorVErrorF (const char *pszFormat, va_list va_args);
@@ -108,9 +116,9 @@ winInitializeDefaultScreens (void)
       g_ScreenInfo[i].fFullScreen = FALSE;
       g_ScreenInfo[i].fDecoration = TRUE;
 #ifdef XWIN_MULTIWINDOWEXTWM
-      g_ScreenInfo[i].fRootless = FALSE;
+      g_ScreenInfo[i].fMWExtWM = FALSE;
 #endif
-      g_ScreenInfo[i].fPseudoRootless = FALSE;
+      g_ScreenInfo[i].fRootless = FALSE;
 #ifdef XWIN_MULTIWINDOW
       g_ScreenInfo[i].fMultiWindow = FALSE;
 #endif
@@ -165,8 +173,8 @@ ddxProcessArgument (int argc, char *argv[], int i)
 {
   static Bool		s_fBeenHere = FALSE;
 
-  /* Initialize once - only if option is not -help */
-  if (!s_fBeenHere && !IS_OPTION ("-help"))
+  /* Initialize once */
+  if (!s_fBeenHere)
     {
 #ifdef DDXOSVERRORF
       /*
@@ -178,13 +186,24 @@ ddxProcessArgument (int argc, char *argv[], int i)
 
       s_fBeenHere = TRUE;
 
-      /*
-       * Initialize default screen settings.  We have to do this before
-       * OsVendorInit () gets called, otherwise we will overwrite
-       * settings changed by parameters such as -fullscreen, etc.
-       */
-      winErrorFVerb (2, "ddxProcessArgument - Initializing default screens\n");
-      winInitializeDefaultScreens ();
+      /* Log the version information */
+      winLogVersionInfo ();
+
+      /* Log the command line */
+      winLogCommandLine (argc, argv);
+
+      /* Initialize only if option is not -help */
+      if (!IS_OPTION("-help"))
+	{
+	  /*
+	   * Initialize default screen settings.  We have to do this before
+	   * OsVendorInit () gets called, otherwise we will overwrite
+	   * settings changed by parameters such as -fullscreen, etc.
+	   */
+	  winErrorFVerb (2, "ddxProcessArgument - Initializing default "
+			 "screens\n");
+	  winInitializeDefaultScreens ();
+	}
     }
 
 #if CYGDEBUG
@@ -417,6 +436,33 @@ ddxProcessArgument (int argc, char *argv[], int i)
 
 #ifdef XWIN_MULTIWINDOWEXTWM
   /*
+   * Look for the '-mwextwm' argument
+   */
+  if (IS_OPTION ("-mwextwm"))
+    {
+      /* Is this parameter attached to a screen or is it global? */
+      if (-1 == g_iLastScreen)
+	{
+	  int			j;
+
+	  /* Parameter is for all screens */
+	  for (j = 0; j < MAXSCREENS; j++)
+	    {
+	      g_ScreenInfo[j].fMWExtWM = TRUE;
+	    }
+	}
+      else
+	{
+	  /* Parameter is for a single screen */
+	  g_ScreenInfo[g_iLastScreen].fMWExtWM = TRUE;
+	}
+
+      /* Indicate that we have processed this argument */
+      return 1;
+    }
+#endif
+
+  /*
    * Look for the '-rootless' argument
    */
   if (IS_OPTION ("-rootless"))
@@ -436,33 +482,6 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	{
 	  /* Parameter is for a single screen */
 	  g_ScreenInfo[g_iLastScreen].fRootless = TRUE;
-	}
-
-      /* Indicate that we have processed this argument */
-      return 1;
-    }
-#endif
-
-  /*
-   * Look for the '-pseudorootless' argument
-   */
-  if (IS_OPTION ("-pseudorootless"))
-    {
-      /* Is this parameter attached to a screen or is it global? */
-      if (-1 == g_iLastScreen)
-	{
-	  int			j;
-
-	  /* Parameter is for all screens */
-	  for (j = 0; j < MAXSCREENS; j++)
-	    {
-	      g_ScreenInfo[j].fPseudoRootless = TRUE;
-	    }
-	}
-      else
-	{
-	  /* Parameter is for a single screen */
-	  g_ScreenInfo[g_iLastScreen].fPseudoRootless = TRUE;
 	}
 
       /* Indicate that we have processed this argument */
@@ -1073,4 +1092,90 @@ ddxProcessArgument (int argc, char *argv[], int i)
 #endif
 
   return 0;
+}
+
+
+/*
+ * winLogCommandLine - Write entire command line to the log file
+ */
+
+void
+winLogCommandLine (int argc, char *argv[])
+{
+  int		i;
+  int		iSize = 0;
+  int		iCurrLen = 0;
+
+#define CHARS_PER_LINE 60
+
+  /* Bail if command line has already been logged */
+  if (g_pszCommandLine)
+    return;
+
+  /* Count how much memory is needed for concatenated command line */
+  for (i = 0, iCurrLen = 0; i < argc; ++i)
+    if (argv[i])
+      {
+	/* Add a character for lines that overflow */
+	if ((strlen (argv[i]) < CHARS_PER_LINE
+	    && iCurrLen + strlen (argv[i]) > CHARS_PER_LINE)
+	    || strlen (argv[i]) > CHARS_PER_LINE)
+	  {
+	    iCurrLen = 0;
+	    ++iSize;
+	  }
+	
+	/* Add space for item and trailing space */
+	iSize += strlen (argv[i]) + 1;
+
+	/* Update current line length */
+	iCurrLen += strlen (argv[i]);
+      }
+
+  /* Allocate memory for concatenated command line */
+  g_pszCommandLine = malloc (iSize + 1);
+  if (!g_pszCommandLine)
+    FatalError ("winLogCommandLine - Could not allocate memory for "
+		"command line string.  Exiting.\n");
+  
+  /* Set first character to concatenated command line to null */
+  g_pszCommandLine[0] = '\0';
+
+  /* Loop through all args */
+  for (i = 0, iCurrLen = 0; i < argc; ++i)
+    {
+      /* Add a character for lines that overflow */
+      if ((strlen (argv[i]) < CHARS_PER_LINE
+	   && iCurrLen + strlen (argv[i]) > CHARS_PER_LINE)
+	  || strlen (argv[i]) > CHARS_PER_LINE)
+      {
+	iCurrLen = 0;
+	
+	/* Add line break if it fits */
+	strncat (g_pszCommandLine, "\n", iSize - strlen (g_pszCommandLine));
+      }
+      
+      strncat (g_pszCommandLine, argv[i], iSize - strlen (g_pszCommandLine));
+      strncat (g_pszCommandLine, " ", iSize - strlen (g_pszCommandLine));
+
+      /* Save new line length */
+      iCurrLen += strlen (argv[i]);
+    }
+
+  ErrorF ("XWin was started with the following command line:\n\n"
+	  "%s\n\n", g_pszCommandLine);
+}
+
+
+/*
+ * winLogVersionInfo - Log Cygwin/X version information
+ */
+
+void
+winLogVersionInfo (void)
+{
+  ErrorF ("Welcome to the XWin X Server\n");
+  ErrorF ("Vendor: %s\n", VENDOR_STRING);
+  ErrorF ("Release: %s\n\n", VERSION_STRING);
+  ErrorF ("Contact: %s\n\n", VENDOR_CONTACT);
 }

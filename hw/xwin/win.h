@@ -390,9 +390,9 @@ typedef struct
   Bool			fFullScreen;
   Bool			fDecoration;
 #ifdef XWIN_MULTIWINDOWEXTWM
-  Bool			fRootless;
+  Bool			fMWExtWM;
 #endif
-  Bool			fPseudoRootless;
+  Bool			fRootless;
 #ifdef XWIN_MULTIWINDOW
   Bool			fMultiWindow;
 #endif
@@ -487,24 +487,25 @@ typedef struct _winPrivScreenRec
   /* Privates used by both shadow fb DirectDraw servers */
   LPDIRECTDRAWCLIPPER	pddcPrimary;
 
-  /* Privates used by rootless server */
-  RootlessFrameID      widTop;
-  QueryBestSizeProcPtr         QueryBestSize;
-  miPointerSpriteFuncPtr       spriteFuncs;
-  HCURSOR                      hCursor;
-  Bool                         fCursorVisible;
-  int                          nCX;
-  int                          nCY;
-
+#ifdef XWIN_MULTIWINDOWEXTWM
+  /* Privates used by multi-window external window manager */
+  RootlessFrameID	widTop;
+  QueryBestSizeProcPtr	QueryBestSize;
+  miPointerSpriteFuncPtr spriteFuncs;
+  HCURSOR		hCursor;
+  Bool			fCursorVisible;
+  int			nCX;
+  int			nCY;
+#endif
 
 #ifdef XWIN_MULTIWINDOW
-  /* Privates used by multi-window server */
+  /* Privates used by multi-window */
   pthread_t		ptWMProc;
   pthread_t		ptXMsgProc;
   void			*pWMInfo;
 #endif
 
-  /* Privates used by both multi-window and pseudo rootless */
+  /* Privates used by both multi-window and rootless */
   Bool			fRootWindowShown;
   Bool                  fRestacking;
   Bool                  fWindowOrderChanged;
@@ -827,14 +828,17 @@ Bool
 winGetDDProcAddresses (void);
 
 
-#ifdef DDXOSVERRORF
 /*
  * winerror.c
  */
 
+#ifdef DDXOSVERRORF
 void
 OSVenderVErrorF (const char *pszFormat, va_list va_args);
 #endif
+
+void
+winMessageBoxF (const char *pszError, UINT uType, ...);
 
 
 #ifdef XWIN_NATIVEGDI
@@ -1431,26 +1435,26 @@ winMapWindowNativeGDI (WindowPtr pWindow);
 #endif
 
 Bool
-winCreateWindowPRootless (WindowPtr pWindow);
+winCreateWindowRootless (WindowPtr pWindow);
 
 Bool
-winDestroyWindowPRootless (WindowPtr pWindow);
+winDestroyWindowRootless (WindowPtr pWindow);
 
 Bool
-winPositionWindowPRootless (WindowPtr pWindow, int x, int y);
+winPositionWindowRootless (WindowPtr pWindow, int x, int y);
 
 Bool
-winChangeWindowAttributesPRootless (WindowPtr pWindow, unsigned long mask);
+winChangeWindowAttributesRootless (WindowPtr pWindow, unsigned long mask);
 
 Bool
-winUnmapWindowPRootless (WindowPtr pWindow);
+winUnmapWindowRootless (WindowPtr pWindow);
 
 Bool
-winMapWindowPRootless (WindowPtr pWindow);
+winMapWindowRootless (WindowPtr pWindow);
 
 #ifdef SHAPE
 void
-winSetShapePRootless (WindowPtr pWindow);
+winSetShapeRootless (WindowPtr pWindow);
 #endif
 
 
@@ -1581,62 +1585,62 @@ winWindowProc (HWND hWnd, UINT message,
  */
 
 Bool
-winWin32RootlessCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
+winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
 			     int newX, int newY, RegionPtr pShape);
 
 void
-winWin32RootlessDestroyFrame (RootlessFrameID wid);
+winMWExtWMDestroyFrame (RootlessFrameID wid);
 
 void
-winWin32RootlessMoveFrame (RootlessFrameID wid, ScreenPtr pScreen, int newX, int newY);
+winMWExtWMMoveFrame (RootlessFrameID wid, ScreenPtr pScreen, int newX, int newY);
 
 void
-winWin32RootlessResizeFrame (RootlessFrameID wid, ScreenPtr pScreen,
+winMWExtWMResizeFrame (RootlessFrameID wid, ScreenPtr pScreen,
 			     int newX, int newY, unsigned int newW, unsigned int newH,
 			     unsigned int gravity);
 
 void
-winWin32RootlessRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid);
+winMWExtWMRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid);
 
 void
-winWin32RootlessReshapeFrame (RootlessFrameID wid, RegionPtr pShape);
+winMWExtWMReshapeFrame (RootlessFrameID wid, RegionPtr pShape);
 
 void
-winWin32RootlessUnmapFrame (RootlessFrameID wid);
+winMWExtWMUnmapFrame (RootlessFrameID wid);
 
 void
-winWin32RootlessStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow);
+winMWExtWMStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesPerRow);
 
 void
-winWin32RootlessStopDrawing (RootlessFrameID wid, Bool flush);
+winMWExtWMStopDrawing (RootlessFrameID wid, Bool flush);
 
 void
-winWin32RootlessUpdateRegion (RootlessFrameID wid, RegionPtr pDamage);
+winMWExtWMUpdateRegion (RootlessFrameID wid, RegionPtr pDamage);
 
 void
-winWin32RootlessDamageRects (RootlessFrameID wid, int count, const BoxRec *rects,
+winMWExtWMDamageRects (RootlessFrameID wid, int count, const BoxRec *rects,
 			     int shift_x, int shift_y);
 
 void
-winWin32RootlessRootlessSwitchWindow (RootlessWindowPtr pFrame, WindowPtr oldWin);
+winMWExtWMRootlessSwitchWindow (RootlessWindowPtr pFrame, WindowPtr oldWin);
 
 void
-winWin32RootlessCopyBytes (unsigned int width, unsigned int height,
+winMWExtWMCopyBytes (unsigned int width, unsigned int height,
 			   const void *src, unsigned int srcRowBytes,
 			   void *dst, unsigned int dstRowBytes);
 
 void
-winWin32RootlessFillBytes (unsigned int width, unsigned int height, unsigned int value,
+winMWExtWMFillBytes (unsigned int width, unsigned int height, unsigned int value,
 			   void *dst, unsigned int dstRowBytes);
 
 int
-winWin32RootlessCompositePixels (unsigned int width, unsigned int height, unsigned int function,
+winMWExtWMCompositePixels (unsigned int width, unsigned int height, unsigned int function,
 				 void *src[2], unsigned int srcRowBytes[2],
 				 void *mask, unsigned int maskRowBytes,
 				 void *dst[2], unsigned int dstRowBytes[2]);
 
 void
-winWin32RootlessCopyWindow (RootlessFrameID wid, int dstNrects, const BoxRec *dstRects,
+winMWExtWMCopyWindow (RootlessFrameID wid, int dstNrects, const BoxRec *dstRects,
 			    int dx, int dy);
 #endif
 
@@ -1647,19 +1651,19 @@ winWin32RootlessCopyWindow (RootlessFrameID wid, int dstNrects, const BoxRec *ds
  */
 
 void
-winWin32RootlessReorderWindows (ScreenPtr pScreen);
+winMWExtWMReorderWindows (ScreenPtr pScreen);
 
 void
-winWin32RootlessMoveXWindow (WindowPtr pWin, int x, int y);
+winMWExtWMMoveXWindow (WindowPtr pWin, int x, int y);
 
 void
-winWin32RootlessResizeXWindow (WindowPtr pWin, int w, int h);
+winMWExtWMResizeXWindow (WindowPtr pWin, int w, int h);
 
 void
-winWin32RootlessMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h);
+winMWExtWMMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h);
 
 void
-winWin32RootlessUpdateIcon (Window id);
+winMWExtWMUpdateIcon (Window id);
 #endif
 
 
@@ -1669,7 +1673,7 @@ winWin32RootlessUpdateIcon (Window id);
  */
 
 Bool
-winWin32RootlessInitCursor (ScreenPtr pScreen);
+winMWExtWMInitCursor (ScreenPtr pScreen);
 #endif
 
 
@@ -1679,7 +1683,7 @@ winWin32RootlessInitCursor (ScreenPtr pScreen);
  */
 
 LRESULT CALLBACK
-winWin32RootlessWindowProc (HWND hwnd, UINT message, 
+winMWExtWMWindowProc (HWND hwnd, UINT message, 
 			    WPARAM wParam, LPARAM lParam);
 #endif
 

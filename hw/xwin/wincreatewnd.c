@@ -157,9 +157,9 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   /* Decorated or undecorated window */
   if (pScreenInfo->fDecoration
 #ifdef XWIN_MULTIWINDOWEXTWM
-      && !pScreenInfo->fRootless
+      && !pScreenInfo->fMWExtWM
 #endif
-      && !pScreenInfo->fPseudoRootless
+      && !pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOW
       && !pScreenInfo->fMultiWindow
 #endif
@@ -203,9 +203,9 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
       /* Adjust the window width and height for borders and title bar */
       if (pScreenInfo->fDecoration
 #ifdef XWIN_MULTIWINDOWEXTWM
-	  && !pScreenInfo->fRootless
+	  && !pScreenInfo->fMWExtWM
 #endif
-	  && !pScreenInfo->fPseudoRootless
+	  && !pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOW
 	  && !pScreenInfo->fMultiWindow
 #endif
@@ -275,9 +275,9 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   /* Clean up the scrollbars flag, if necessary */
   if ((!pScreenInfo->fDecoration
 #ifdef XWIN_MULTIWINDOWEXTWM
-       || pScreenInfo->fRootless
+       || pScreenInfo->fMWExtWM
 #endif
-       || pScreenInfo->fPseudoRootless
+       || pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOW
        || pScreenInfo->fMultiWindow
 #endif
@@ -418,7 +418,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   /* Show the window */
   if (FALSE
 #ifdef XWIN_MULTIWINDOWEXTWM
-      || pScreenInfo->fRootless
+      || pScreenInfo->fMWExtWM
 #endif
 #ifdef XWIN_MULTIWINDOW
       || pScreenInfo->fMultiWindow
@@ -439,9 +439,9 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   /* Attempt to bring our window to the top of the display */
   if (TRUE
 #ifdef XWIN_MULTIWINDOWEXTWM
-      && !pScreenInfo->fRootless
+      && !pScreenInfo->fMWExtWM
 #endif
-      && !pScreenInfo->fPseudoRootless
+      && !pScreenInfo->fRootless
 #ifdef XWIN_MULTIWINDOW
       && !pScreenInfo->fMultiWindow
 #endif

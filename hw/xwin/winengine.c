@@ -187,7 +187,7 @@ winSetEngine (ScreenPtr pScreen)
   /* ShadowGDI is the only engine that supports Multi Window Mode */
   if (TRUE
 #ifdef XWIN_MULTIWINDOWEXTWM
-      || pScreenInfo->fRootless
+      || pScreenInfo->fMWExtWM
 #endif
 #ifdef XWIN_MULTIWINDOW
       || pScreenInfo->fMultiWindow

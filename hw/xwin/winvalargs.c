@@ -83,7 +83,7 @@ winValidateArgs (void)
     {
       /*
        * Check for any combination of
-       * -multiwindow, -rootless, and -pseudorootless.
+       * -multiwindow, -mwextwm, and -rootless.
        */
       {
 	int		iCount = 0;
@@ -94,52 +94,52 @@ winValidateArgs (void)
 	  ++iCount;
 #endif
 #ifdef XWIN_MULTIWINDOWEXTWM
-	if (g_ScreenInfo[i].fRootless)
+	if (g_ScreenInfo[i].fMWExtWM)
 	  ++iCount;
 #endif
-	if (g_ScreenInfo[i].fPseudoRootless)
+	if (g_ScreenInfo[i].fRootless)
 	  ++iCount;
 
 	/* Fail if two or more conflicting options */
 	if (iCount > 1)
 	  {
-	    ErrorF ("winValidateArgs - Only one of -multiwindow, -rootless, "
-		    "and -pseudorootless can be specific at a time.\n");
+	    ErrorF ("winValidateArgs - Only one of -multiwindow, -mwextwm, "
+		    "and -rootless can be specific at a time.\n");
 	    return FALSE;
 	  }
       }
 
-      /* Check for multiwindow or rootless and Xdmcp */
+      /* Check for -multiwindow or -mwextwm and Xdmcp */
       if (g_fXdmcpEnabled
 	  && (FALSE
 #ifdef XWIN_MULTIWINDOW
 	      || g_ScreenInfo[i].fMultiWindow
 #endif
 #ifdef XWIN_MULTIWINDOWEXTWM
-	      || g_ScreenInfo[i].fRootless
+	      || g_ScreenInfo[i].fMWExtWM
 #endif
 	      )
 	  )
 	{
 	  ErrorF ("winValidateArgs - Xdmcp (-query, -broadcast, or -indirect) "
-		  "is invalid with -multiwindow or -rootless.\n");
+		  "is invalid with -multiwindow or -mwextwm.\n");
 	  return FALSE;
 	}
 
-      /* Check for multiwindow, rootless, or pseudorootless and fullscreen */
+      /* Check for -multiwindow, -mwextwm, or -rootless and fullscreen */
       if (g_ScreenInfo[i].fFullScreen
 	  && (FALSE
 #ifdef XWIN_MULTIWINDOW
 	      || g_ScreenInfo[i].fMultiWindow
 #endif
 #ifdef XWIN_MULTIWINDOWEXTWM
-	      || g_ScreenInfo[i].fRootless
+	      || g_ScreenInfo[i].fMWExtWM
 #endif
-	      || g_ScreenInfo[i].fPseudoRootless)
+	      || g_ScreenInfo[i].fRootless)
 	  )
 	{
 	  ErrorF ("winValidateArgs - -fullscreen is invalid with "
-		  "-multiwindow, -rootless, or -pseudorootless.\n");
+		  "-multiwindow, -mwextwm, or -rootless.\n");
 	  return FALSE;
 	}
       

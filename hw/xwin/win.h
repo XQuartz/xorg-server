@@ -554,6 +554,8 @@ typedef struct _winPrivScreenRec
   ClipNotifyProcPtr			ClipNotify;
   RestackWindowProcPtr			RestackWindow;
   ReparentWindowProcPtr			ReparentWindow;
+  ResizeWindowProcPtr			ResizeWindow;
+  MoveWindowProcPtr			MoveWindow;
 #ifdef SHAPE
   SetShapeProcPtr			SetShape;
 #endif
@@ -1522,10 +1524,15 @@ void
 winReorderWindowsMultiWindow (ScreenPtr pScreen);
 
 void
-winMoveXWindow (WindowPtr pWin, int x, int y);
+winResizeWindowMultiWindow (WindowPtr pWin, int x, int y, unsigned int w,
+			    unsigned int h, WindowPtr pSib);
+void
+winMoveWindowMultiWindow (WindowPtr pWin, int x, int y,
+			  WindowPtr pSib, VTKind kind);
 
 void
-winResizeXWindow (WindowPtr pWin, int w, int h);
+winCopyWindowMultiWindow (WindowPtr pWin, DDXPointRec oldpt,
+			  RegionPtr oldRegion);
 
 void
 winWin32RootlessMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h);
@@ -1533,6 +1540,8 @@ winWin32RootlessMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h);
 XID
 winGetWindowID (WindowPtr pWin);
 
+int
+winAdjustXWindow (WindowPtr pWin, HWND hwnd);
 
 /*
  * winmultiwindowwndproc.c

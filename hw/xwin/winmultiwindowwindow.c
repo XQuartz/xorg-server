@@ -104,8 +104,6 @@ winCreateWindowMultiWindow (WindowPtr pWin)
   pWinPriv->hWnd = NULL;
   pWinPriv->pScreenPriv = winGetScreenPriv(pWin->drawable.pScreen);
   pWinPriv->fXKilled = FALSE;
-  pWinPriv->fNeedRestore = FALSE;
-  pWinPriv->fAlwaysOnTop = FALSE;
  
   return fResult;
 }
@@ -141,6 +139,10 @@ winDestroyWindowMultiWindow (WindowPtr pWin)
 
 /*
  * PositionWindow - See Porting Layer Definition - p. 37
+ *
+ * This function adjusts the position and size of Windows window
+ * with respect to the underlying X window.  This is the inverse
+ * of winAdjustXWindow, which adjusts X window to Windows window.
  */
 
 Bool
@@ -167,10 +169,32 @@ winPositionWindowMultiWindow (WindowPtr pWin, int x, int y)
   if (winGetScreenPriv(pWin->drawable.pScreen)->PositionWindow)
     fResult = winGetScreenPriv(pWin->drawable.pScreen)->PositionWindow (pWin, x, y);
   
+#if CYGWINDOWING_DEBUG
+  ErrorF ("winPositionWindowMultiWindow: (x, y) = (%d, %d)\n",
+	  x, y);
+#endif
+
   /* Bail out if the Windows window handle is bad */
   if (!hWnd)
-    return fResult;
+    {
+#if CYGWINDOWING_DEBUG
+      ErrorF ("\timmediately return since hWnd is NULL\n");
+#endif
+      return fResult;
+    }
 
+#if 0
+  if ( (pWin->drawable.width == 0) &&
+       (pWin->drawable.height == 0) )
+    {
+      /* The Windows window is in the iconic state. */
+#if CYGWINDOWING_DEBUG
+      ErrorF ("\timmediately return because drawable is 0x0\n");
+#endif
+      return fResult;
+    }
+#endif
+  
   /* Get the Windows window style and extended style */
   dwExStyle = GetWindowLongPtr (hWnd, GWL_EXSTYLE);
   dwStyle = GetWindowLongPtr (hWnd, GWL_STYLE);
@@ -228,6 +252,10 @@ winPositionWindowMultiWindow (WindowPtr pWin, int x, int y)
       ErrorF ("winPositionWindowMultiWindow - Need to move\n");
 #endif
 
+#if CYGWINDOWING_DEBUG
+      ErrorF ("\tMoveWindow to (%ld, %ld) - %ldx%ld\n", rcNew.left, rcNew.top,
+	      rcNew.right - rcNew.left, rcNew.bottom - rcNew.top);
+#endif
       /* Change the position and dimensions of the Windows window */
       MoveWindow (hWnd,
 		  rcNew.left, rcNew.top,
@@ -368,7 +396,7 @@ winRestackWindowMultiWindow (WindowPtr pWin, WindowPtr pOldNextSib)
   HWND                  hWnd = NULL;
   winWindowPriv(pWin);
 
-#if CYGMULTIWINDOW_DEBUG
+#if CYGMULTIWINDOW_DEBUG || CYGWINDOWING_DEBUG
   ErrorF ("winRestackMultiWindow - %08x\n", pWin);
 #endif
   
@@ -705,38 +733,6 @@ winGetWindowID (WindowPtr pWin)
 
 
 /*
- * winMoveXWindow - 
- */
-
-void
-winMoveXWindow (WindowPtr pWin, int x, int y)
-{
-  XID *vlist = malloc(sizeof(long)*2);
-
-  (CARD32*)vlist[0] = x;
-  (CARD32*)vlist[1] = y;
-  ConfigureWindow (pWin, CWX | CWY, vlist, wClient(pWin));
-  free(vlist);
-}
-
-
-/*
- * winResizeXWindow - 
- */
-
-void
-winResizeXWindow (WindowPtr pWin, int w, int h)
-{
-  XID *vlist = malloc(sizeof(long)*2);
-
-  (CARD32*)vlist[0] = w;
-  (CARD32*)vlist[1] = h;
-  ConfigureWindow (pWin, CWWidth | CWHeight, vlist, wClient(pWin));
-  free(vlist);
-}
-
-
-/*
  * winFindWindow - 
  */
 
@@ -767,7 +763,7 @@ winReorderWindowsMultiWindow (ScreenPtr pScreen)
   DWORD dwWindowProcessID = 0;
 
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winOrderWindowsMultiWindow\n");
+  ErrorF ("winReorderWindowsMultiWindow\n");
 #endif
 
   pScreenPriv->fRestacking = TRUE;
@@ -783,8 +779,9 @@ winReorderWindowsMultiWindow (ScreenPtr pScreen)
 	{
 	  GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
 
-	  if ((dwWindowProcessID == dwCurrentProcessID)
-	      && GetProp (hwnd, WIN_WINDOW_PROP))
+	  if ( (dwWindowProcessID == dwCurrentProcessID)
+	       && GetProp (hwnd, WIN_WINDOW_PROP)
+	       && !IsIconic (hwnd) ) /* ignore minimized windows */
 	    {
 	      pWinSib = pWin;
 	      pWin = GetProp (hwnd, WIN_WINDOW_PROP);
@@ -827,10 +824,159 @@ winMinimizeWindow (Window id)
 {
   WindowPtr		pWin;
   winPrivWinPtr	pWinPriv;
+
+#if CYGWINDOWING_DEBUG
+  ErrorF ("winMinimizeWindow\n");
+#endif
   
   pWin = LookupIDByType (id, RT_WINDOW);
   
   pWinPriv = winGetWindowPriv (pWin);
   
   ShowWindow (pWinPriv->hWnd, SW_MINIMIZE);
+}
+
+
+/*
+ * CopyWindow - See Porting Layer Definition - p. 39
+ */
+void
+winCopyWindowMultiWindow (WindowPtr pWin, DDXPointRec oldpt,
+			  RegionPtr oldRegion)
+{
+#if CYGWINDOWING_DEBUG
+  ErrorF ("CopyWindowMultiWindow\n");
+#endif
+  /* Call any wrapped CopyWindow function */
+  if (winGetScreenPriv(pWin->drawable.pScreen)->CopyWindow)
+    winGetScreenPriv(pWin->drawable.pScreen)->CopyWindow (pWin,
+							  oldpt,
+							  oldRegion);
+}
+
+
+/*
+ * MoveWindow - See Porting Layer Definition - p. 42
+ */
+void
+winMoveWindowMultiWindow (WindowPtr pWin, int x, int y,
+			  WindowPtr pSib, VTKind kind)
+{
+#if CYGWINDOWING_DEBUG
+  ErrorF ("MoveWindowMultiWindow to (%d, %d)\n", x, y);
+#endif
+  /* Call any wrapped MoveWindow function */
+  if (winGetScreenPriv(pWin->drawable.pScreen)->MoveWindow)
+    winGetScreenPriv(pWin->drawable.pScreen)->MoveWindow (pWin, x, y,
+							  pSib, kind);
+}
+
+
+/*
+ * ResizeWindow - See Porting Layer Definition - p. 42
+ */
+void
+winResizeWindowMultiWindow (WindowPtr pWin, int x, int y, unsigned int w,
+			    unsigned int h, WindowPtr pSib)
+{
+#if CYGWINDOWING_DEBUG
+  ErrorF ("ResizeWindowMultiWindow to (%d, %d) - %dx%d\n", x, y, w, h);
+#endif
+  /* Call any wrapped MoveWindow function */
+  if (winGetScreenPriv(pWin->drawable.pScreen)->ResizeWindow)
+    winGetScreenPriv(pWin->drawable.pScreen)->ResizeWindow (pWin, x, y,
+							    w, h, pSib);
+}
+
+
+/*
+ * winAdjustXWindow
+ *
+ * Move and resize X window with respect to corresponding Windows window.
+ * This is called from WM_MOVE/WM_SIZE handlers when the user performs
+ * any windowing operation (move, resize, minimize, maximize, restore).
+ *
+ * The functionality is the inverse of winPositionWindowMultiWindow, which
+ * adjusts Windows window with respect to X window.
+ */
+int
+winAdjustXWindow (WindowPtr pWin, HWND hwnd)
+{
+  RECT rcDraw; /* Rect made from pWin->drawable to be adjusted */
+  RECT rcWin;  /* The source: WindowRect from hwnd */
+  DrawablePtr pDraw;
+  XID vlist[4];
+  LONG dX, dY, dW, dH, x, y;
+  DWORD dwStyle, dwExStyle;
+
+#define WIDTH(rc) (rc.right - rc.left)
+#define HEIGHT(rc) (rc.bottom - rc.top)
+  
+#if CYGWINDOWING_DEBUG
+  ErrorF ("winAdjustXWindow\n");
+#endif
+
+  if (IsIconic (hwnd))
+    {
+#if CYGWINDOWING_DEBUG
+      ErrorF ("\timmediately return because the window is iconized\n");
+#endif
+      /*
+       * If the Windows window is minimized, its WindowRect has
+       * meaningless values so we don't adjust X window to it.
+       * Instead we put the X window to the bottom in Z order to
+       * be obscured by other windows.
+       */
+      vlist[0] = Below;
+      return ConfigureWindow (pWin, CWStackMode, vlist, wClient(pWin));
+    }
+  
+  pDraw = &pWin->drawable;
+
+  /* Calculate the window rect from the drawable */
+  x = pDraw->x + GetSystemMetrics (SM_XVIRTUALSCREEN);
+  y = pDraw->y + GetSystemMetrics (SM_YVIRTUALSCREEN);
+  SetRect (&rcDraw, x, y, x + pDraw->width, y + pDraw->height);
+  dwExStyle = GetWindowLongPtr (hwnd, GWL_EXSTYLE);
+  dwStyle = GetWindowLongPtr (hwnd, GWL_STYLE);
+  AdjustWindowRectEx (&rcDraw, dwStyle, FALSE, dwExStyle);
+
+  /* The source of adjust */
+  GetWindowRect (hwnd, &rcWin);
+
+  if (EqualRect (&rcDraw, &rcWin)) {
+    /* Bail if no adjust is needed */
+#if CYGWINDOWING_DEBUG
+    ErrorF ("\treturn because already adjusted\n");
+#endif
+    return 0;
+  }
+  
+  /* Calculate delta values */
+  dX = rcWin.left - rcDraw.left;
+  dY = rcWin.top - rcDraw.top;
+  dW = WIDTH(rcWin) - WIDTH(rcDraw);
+  dH = HEIGHT(rcWin) - HEIGHT(rcDraw);
+
+  /*
+   * Adjust.
+   * We may only need to move (vlist[0] and [1]), or only resize
+   * ([2] and [3]) but currently we set all the parameters and leave
+   * the decision to ConfigureWindow.  The reason is code simplicity.
+  */
+  vlist[0] = pDraw->x + dX - wBorderWidth(pWin)
+    - GetSystemMetrics(SM_XVIRTUALSCREEN);
+  vlist[1] = pDraw->y + dY - wBorderWidth(pWin)
+    - GetSystemMetrics(SM_YVIRTUALSCREEN);
+  vlist[2] = pDraw->width + dW;
+  vlist[3] = pDraw->height + dH;
+#if CYGWINDOWING_DEBUG
+  ErrorF ("\tConfigureWindow to (%ld, %ld) - %ldx%ld\n", vlist[0], vlist[1],
+	  vlist[2], vlist[3]);
+#endif
+  return ConfigureWindow (pWin, CWX | CWY | CWWidth | CWHeight,
+			  vlist, wClient(pWin));
+  
+#undef WIDTH
+#undef HEIGHT
 }

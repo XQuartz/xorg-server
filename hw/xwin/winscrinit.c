@@ -536,6 +536,9 @@ winFinishScreenInitFB (int index,
       WRAP(ChangeWindowAttributes);
       WRAP(ReparentWindow);
       WRAP(RestackWindow);
+      WRAP(ResizeWindow);
+      WRAP(MoveWindow);
+      WRAP(CopyWindow);
 #ifdef SHAPE
       WRAP(SetShape);
 #endif
@@ -549,6 +552,9 @@ winFinishScreenInitFB (int index,
       pScreen->UnrealizeWindow = winUnmapWindowMultiWindow;
       pScreen->ReparentWindow = winReparentWindowMultiWindow;
       pScreen->RestackWindow = winRestackWindowMultiWindow;
+      pScreen->ResizeWindow = winResizeWindowMultiWindow;
+      pScreen->MoveWindow = winMoveWindowMultiWindow;
+      pScreen->CopyWindow = winCopyWindowMultiWindow;
 #ifdef SHAPE
       pScreen->SetShape = winSetShapeMultiWindow;
 #endif

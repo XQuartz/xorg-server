@@ -54,6 +54,7 @@
 #define WIN_NEEDMANAGE_PROP	"cyg_override_redirect_prop_rl"
 #define WIN_HWND_CACHE		"cyg_privmap_rl"
 #define CYGMULTIWINDOW_DEBUG    NO
+#define CYGWINDOWING_DEBUG	NO
 
 typedef struct _winPrivScreenRec *winPrivScreenPtr;
 
@@ -68,14 +69,7 @@ typedef struct
   HRGN			hRgn;
   HWND			hWnd;
   winPrivScreenPtr	pScreenPriv;
-  int			iX;
-  int			iY;
-  int			iWidth;
-  int			iHeight;
   Bool			fXKilled;
-  Bool                  fNeedRestore;
-  POINT                 ptRestore;
-  Bool                  fAlwaysOnTop;
 
   /* Privates used by primary fb DirectDraw server */
   LPDDSURFACEDESC	pddsdPrimary;

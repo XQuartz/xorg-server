@@ -206,7 +206,7 @@ ValidateSizing (HWND hwnd, WindowPtr pWin,
 {
   WinXSizeHints sizeHints;
   RECT *rect;
-  int iWidth, iHeight, iTopBorder;
+  int iWidth, iHeight;
   POINT pt;
 
   /* Invalid input checking */
@@ -229,21 +229,19 @@ ValidateSizing (HWND hwnd, WindowPtr pWin,
   iWidth = rect->right - rect->left;
   iHeight = rect->bottom - rect->top;
 
-  /* Get title bar height, there must be an easier way?! */
-  pt.x = pt.y = 0;
-  ClientToScreen(hwnd, &pt);
-  iTopBorder = pt.y - rect->top;
-  
   /* Now remove size of any borders */
   iWidth -= 2 * GetSystemMetrics(SM_CXSIZEFRAME);
-  iHeight -= GetSystemMetrics(SM_CYSIZEFRAME) + iTopBorder;
+  iHeight -= (GetSystemMetrics(SM_CYCAPTION)
+	      + 2 * GetSystemMetrics(SM_CYSIZEFRAME));
+	      
 
   /* Constrain the size to legal values */
   ConstrainSize (sizeHints, &iWidth, &iHeight);
 
   /* Add back the borders */
   iWidth += 2 * GetSystemMetrics(SM_CXSIZEFRAME);
-  iHeight += GetSystemMetrics(SM_CYSIZEFRAME) + iTopBorder;
+  iHeight += (GetSystemMetrics(SM_CYCAPTION)
+	      + 2 * GetSystemMetrics(SM_CYSIZEFRAME));
 
   /* Adjust size according to where we're dragging from */
   switch(wParam) {
@@ -321,10 +319,10 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       wmMsg.hwndWindow	= hwnd;
       wmMsg.iWindow	= (Window)GetProp (hwnd, WIN_WID_PROP);
 
-      wmMsg.iX		= pWinPriv->iX;
-      wmMsg.iY		= pWinPriv->iY;
-      wmMsg.iWidth	= pWinPriv->iWidth;
-      wmMsg.iHeight	= pWinPriv->iHeight;
+      wmMsg.iX		= pDraw->x;
+      wmMsg.iY		= pDraw->y;
+      wmMsg.iWidth	= pDraw->width;
+      wmMsg.iHeight	= pDraw->height;
 
       fWMMsgInitialized = TRUE;
 
@@ -375,7 +373,6 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 
       return 0;
 
-
     case WM_INIT_SYS_MENU:
       /*
        * Add whatever the setup file wants to for this window
@@ -387,30 +384,33 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       /*
        * Any window menu items go through here
        */
+#if CYGMULTIWINDOW_DEBUG
       switch (wParam & 0xFFF0) /* See MSDN for the magic number 0xFFF0 */
 	{
 	case SC_MINIMIZE:
-	  /* If minimizing then remove always-on-top, and store the setting */
-	  if (GetWindowLong (hwnd, GWL_EXSTYLE) & WS_EX_TOPMOST)
-	    pWinPriv->fAlwaysOnTop = TRUE;
-	  else
-	    pWinPriv->fAlwaysOnTop = FALSE;
-	  SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0,
-		       SWP_NOMOVE|SWP_NOSIZE);
+	  ErrorF ("winTopLevelWindowProc - WM_SYSCOMMAND (SC_MINIMIZE)\n");
 	  break;
 
 	case SC_RESTORE:
-	  if (pWinPriv->fAlwaysOnTop)
-	    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-			 SWP_NOMOVE|SWP_NOSIZE);
+	  ErrorF ("winTopLevelWindowProc - WM_SYSCOMMAND (SC_RESTORE)\n");
 	  break;
 
+	case SC_MAXIMIZE:
+	  ErrorF ("winTopLevelWindowProc - WM_SYSCOMMAND (SC_MAXIMIZE)\n");
+	  break;
+	  
 	default:
+	  ErrorF ("winTopLevelWindowProc - WM_SYSCOMMAND (UNKNOWN)\n");
+#endif
 	  if (HandleCustomWM_COMMAND ((unsigned long)hwnd, LOWORD(wParam)))
-	    /* Don't pass customized menus to DefWindowProc */
-	    return 0;
+	    {
+	      /* Don't pass customized menus to DefWindowProc */
+	      return 0;
+	    }
+#if CYGMULTIWINDOW_DEBUG
 	  break;
 	}
+#endif
       break;
 
     case WM_INITMENU:
@@ -665,6 +665,42 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       if (wParam == VK_F4 && (GetKeyState (VK_MENU) & 0x8000))
 	  break;
 
+#if CYGWINDOWING_DEBUG
+      if (wParam == VK_ESCAPE)
+	{
+	  /* Place for debug: put any tests and dumps here */
+	  WINDOWPLACEMENT windPlace;
+	  RECT rc;
+	  LPRECT pRect;
+	  
+	  windPlace.length = sizeof (WINDOWPLACEMENT);
+	  GetWindowPlacement (hwnd, &windPlace);
+	  pRect = &windPlace.rcNormalPosition;
+	  ErrorF ("\nCYGWINDOWING Dump:\n"
+		  "\tdrawable: (%hd, %hd) - %hdx%hd\n", pDraw->x,
+		  pDraw->y, pDraw->width, pDraw->height);
+	  ErrorF ("\twindPlace: (%ld, %ld) - %ldx%ld\n", pRect->left,
+		  pRect->top, pRect->right - pRect->left,
+		  pRect->bottom - pRect->top);
+	  if (GetClientRect (hwnd, &rc))
+	    {
+	      pRect = &rc;
+	      ErrorF ("\tClientRect: (%ld, %ld) - %ldx%ld\n", pRect->left,
+		      pRect->top, pRect->right - pRect->left,
+		      pRect->bottom - pRect->top);
+	    }
+	  if (GetWindowRect (hwnd, &rc))
+	    {
+	      pRect = &rc;
+	      ErrorF ("\tWindowRect: (%ld, %ld) - %ldx%ld\n", pRect->left,
+		      pRect->top, pRect->right - pRect->left,
+		      pRect->bottom - pRect->top);
+	    }
+	  ErrorF ("\n");
+	  return 0;
+	}
+#endif
+      
       /* Pass the message to the root window */
       SendMessage (hwndScreen, message, wParam, lParam);
       return 0;
@@ -759,42 +795,13 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       break;
 
     case WM_MOVE:
-#if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winTopLevelWindowProc - WM_MOVE - %d ms\n", GetTickCount ());
+#if CYGWINDOWING_DEBUG
+      ErrorF ("winTopLevelWindowProc - WM_MOVE to (%d, %d) - %d ms\n",
+	      (int)(short)LOWORD(lParam), (int)(short)HIWORD(lParam),
+	      (int)(GetTickCount ()));
 #endif
-      
-      /* Bail if Windows window is not actually moving */
-      if (pWinPriv->iX == (short) LOWORD(lParam)
-	  && pWinPriv->iY == (short) HIWORD(lParam))
-	break;
-
-      /* Also bail if we're maximizing, we'll do the whole thing in WM_SIZE */
-      {
-	WINDOWPLACEMENT windPlace;
-	windPlace.length = sizeof (WINDOWPLACEMENT);
-
-	/* Get current window placement */
-	GetWindowPlacement (hwnd, &windPlace);
-
-	/* Bail if maximizing */
-	if (windPlace.showCmd == SW_MAXIMIZE
-	    || windPlace.showCmd == SW_SHOWMAXIMIZED)
-	  break;
-      } 
-
-      /* Get new position */
-      pWinPriv->iX = (short) LOWORD(lParam);
-      pWinPriv->iY = (short) HIWORD(lParam);
-
-#if CYGMULTIWINDOW_DEBUG
-      ErrorF ("\t(%d, %d)\n", pWinPriv->iX, pWinPriv->iY);
-#endif
-
-      winMoveXWindow (pWin,
-		      (LOWORD(lParam) - wBorderWidth (pWin)
-		       - GetSystemMetrics (SM_XVIRTUALSCREEN)),
-		      (HIWORD(lParam) - wBorderWidth (pWin)
-		       - GetSystemMetrics (SM_YVIRTUALSCREEN)));
+      /* Adjust the X Window to the moved Windows window */
+      winAdjustXWindow (pWin, hwnd);
       return 0;
 
     case WM_SHOWWINDOW:
@@ -802,6 +809,10 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       if (!wParam)
 	return 0;
 
+#if CYGWINDOWING_DEBUG
+      ErrorF ("winTopLevelWindowProc - WM_SHOWWINDOW\n");
+#endif
+      
       /* Tell X to map the window */
       MapWindow (pWin, wClient(pWin));
 
@@ -825,10 +836,10 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	    {
 	      /* Setup a rectangle with the X window position and size */
 	      SetRect (&rcNew,
-		       pWinPriv->iX,
-		       pWinPriv->iY,
-		       pWinPriv->iX + pWinPriv->iWidth,
-		       pWinPriv->iY + pWinPriv->iHeight);
+		       pDraw->x,
+		       pDraw->y,
+		       pDraw->x + pDraw->width,
+		       pDraw->y + pDraw->height);
 
 #if 0
 	      ErrorF ("winTopLevelWindowProc - (%d, %d)-(%d, %d)\n",
@@ -843,8 +854,8 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 				  WS_EX_APPWINDOW);
 
 	      /* Calculate position deltas */
-	      iDx = pWinPriv->iX - rcNew.left;
-	      iDy = pWinPriv->iY - rcNew.top;
+	      iDx = pDraw->x - rcNew.left;
+	      iDy = pDraw->y - rcNew.top;
 
 	      /* Calculate new rectangle */
 	      rcNew.left += iDx;
@@ -879,8 +890,8 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	  
       /* Setup the Window Manager message */
       wmMsg.msg = WM_WM_MAP;
-      wmMsg.iWidth = pWinPriv->iWidth;
-      wmMsg.iHeight = pWinPriv->iHeight;
+      wmMsg.iWidth = pDraw->width;
+      wmMsg.iHeight = pDraw->height;
 
       /* Tell our Window Manager thread to map the window */
       if (fWMMsgInitialized)
@@ -896,120 +907,49 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       return ValidateSizing (hwnd, pWin, wParam, lParam);
 
     case WM_WINDOWPOSCHANGED:
-      {
-	LPWINDOWPOS pwindPos = (LPWINDOWPOS) lParam;
-
-	/* Bail if window z order was not changed */
-	if (pwindPos->flags & SWP_NOZORDER)
-	  break;
-
-#if CYGMULTIWINDOW_DEBUG
-	ErrorF ("winTopLevelWindowProc - hwndInsertAfter: %p\n",
-		pwindPos->hwndInsertAfter);
-#endif
-	
-#if 0
-	/* Pass the message to the root window */
-	SendMessage (hwndScreen, message, wParam, lParam);
-#endif
-	
-	if (s_pScreenPriv != NULL)
-	  s_pScreenPriv->fWindowOrderChanged = TRUE;
-      }
-      break;
-
-    case WM_SIZE:
-      /* see dix/window.c */
-
-#if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winTopLevelWindowProc - WM_SIZE - %d ms\n", GetTickCount ());
-#endif
-
-      /* Branch on type of resizing occurring */
-      switch (wParam)
+      if (!( ((LPWINDOWPOS)lParam)->flags
+	     & SWP_NOZORDER ))
 	{
-	case SIZE_MINIMIZED:
-#if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("\tSIZE_MINIMIZED\n");
+#if CYGWINDOWING_DEBUG
+	  ErrorF ("winTopLevelWindowProc - WM_WINDOWPOSCHANGED: "
+		  "Z order is changed\n");
 #endif
 	  if (s_pScreenPriv != NULL)
 	    s_pScreenPriv->fWindowOrderChanged = TRUE;
-	  break;
-
-	case SIZE_RESTORED:
-	case SIZE_MAXIMIZED:
-#if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("SIZE_RESTORED || SIZE_MAXIMIZED\n");
-#endif
-	  /* Break out if nothing to do */
-	  if (pWinPriv->iWidth == (short) LOWORD(lParam)
-	      && pWinPriv->iHeight == (short) HIWORD(lParam))
-	    break;
-	  
-	  /* Get the dimensions of the resized Windows window  */
-	  pWinPriv->iWidth = (short) LOWORD(lParam);
-	  pWinPriv->iHeight = (short) HIWORD(lParam);
-
-#if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("\t(%d, %d)\n", pWinPriv->iWidth, pWinPriv->iHeight);
-#endif
-
-	  /*
-	   * If we're maximizing the window has been moved to upper left
-	   * of current screen.  Now it is safe for X to know about this.
-	   */
-	  if (wParam == SIZE_MAXIMIZED)
-	    {
-	      POINT		ptHome;
-
-	      /* Flag that we are being maximized and store info for restore */
-	      pWinPriv->fNeedRestore = TRUE;
-	      pWinPriv->ptRestore.x = pWinPriv->iX;
-	      pWinPriv->ptRestore.y = pWinPriv->iY;
-	     
-	      /* Get screen location of window root */
-	      ptHome.x = 0;
-	      ptHome.y = 0;
-	      ClientToScreen (hwnd, &ptHome);
-
-	      /* Map from screen (-X,-Y) to (0,0) root coords */
-	      winMoveXWindow (pWin,
-			      ptHome.x - wBorderWidth (pWin)
-			      - GetSystemMetrics (SM_XVIRTUALSCREEN),
-			      ptHome.y - wBorderWidth (pWin)
-			      - GetSystemMetrics (SM_YVIRTUALSCREEN));
-	    }
-	  else if (wParam == SIZE_RESTORED && pWinPriv->fNeedRestore)
-	    {
-	      /* If need restore and !maximized then move to cached position */
-	      WINDOWPLACEMENT windPlace;
-
-	      windPlace.length = sizeof (WINDOWPLACEMENT);
-
-	      GetWindowPlacement (hwnd, &windPlace);
-
-	      if (windPlace.showCmd != SW_MAXIMIZE
-		  && windPlace.showCmd != SW_SHOWMAXIMIZED)
-		{
-		  pWinPriv->fNeedRestore = FALSE;
-		  winMoveXWindow (pWin,
-				  pWinPriv->ptRestore.x  - wBorderWidth (pWin)
-				  - GetSystemMetrics (SM_XVIRTUALSCREEN),
-				  pWinPriv->ptRestore.y - wBorderWidth (pWin)
-				  - GetSystemMetrics (SM_YVIRTUALSCREEN));
-		}
-	    }
-
-	  /* Perform the resize and notify the X client */
-	  winResizeXWindow (pWin,
-			    (short) LOWORD(lParam),
-			    (short) HIWORD(lParam));
-	  break;
-
-	default:
-	  break;
 	}
-      return 0;
+      /*
+       * Pass the message to DefWindowProc to let the function
+       * break down WM_WINDOWPOSCHANGED to WM_MOVE and WM_SIZE.
+      */
+      break; 
+
+    case WM_SIZE:
+      /* see dix/window.c */
+#if CYGWINDOWING_DEBUG
+      {
+	char buf[64];
+	switch (wParam)
+	  {
+	  case SIZE_MINIMIZED:
+	    strcpy(buf, "SIZE_MINIMIZED");
+	    break;
+	  case SIZE_MAXIMIZED:
+	    strcpy(buf, "SIZE_MAXIMIZED");
+	    break;
+	  case SIZE_RESTORED:
+	    strcpy(buf, "SIZE_RESTORED");
+	    break;
+	  default:
+	    strcpy(buf, "UNKNOWN_FLAG");
+	  }
+	ErrorF ("winTopLevelWindowProc - WM_SIZE to %dx%d (%s) - %d ms\n",
+		(int)LOWORD(lParam), (int)HIWORD(lParam), buf,
+		(int)(GetTickCount ()));
+      }
+#endif
+      /* Adjust the X Window to the moved Windows window */
+      winAdjustXWindow (pWin, hwnd);
+      return 0; /* end of WM_SIZE handler */
 
     case WM_MOUSEACTIVATE:
 #if CYGMULTIWINDOW_DEBUG

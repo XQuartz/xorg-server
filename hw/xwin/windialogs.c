@@ -129,10 +129,13 @@ static LRESULT CALLBACK
 winURLWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
   WNDPROC origCB = NULL;
+  HCURSOR cursor;
   
   /* If it's a SetCursor message, tell it to the hand */
   if (msg==WM_SETCURSOR) {
-    SetCursor(LoadCursor(NULL, IDC_HAND));
+    cursor = LoadCursor (NULL, IDC_HAND);
+    if (cursor)
+      SetCursor (cursor);
     return TRUE;
   }
   origCB = (WNDPROC)GetWindowLong (hwnd, GWL_USERDATA);

@@ -26,9 +26,11 @@
  *from Harold L Hunt II.
  *
  * Authors:	Harold L Hunt II
+ *              Earle F. Philhower III
  */
 
 #include "win.h"
+#include <sys/cygwin.h>
 #include <shellapi.h>
 
 
@@ -57,6 +59,110 @@ winChangeDepthDlgProc (HWND hDialog, UINT message,
 static BOOL CALLBACK
 winAboutDlgProc (HWND hDialog, UINT message,
 		 WPARAM wParam, LPARAM lParam);
+
+
+static void
+winDrawURLWindow (LPARAM lParam);
+
+static LRESULT CALLBACK
+winURLWndProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+static void
+winOverrideURLButton (HWND hdlg, int id);
+
+static void
+winUnoverrideURLButton (HWND hdlg, int id);
+
+
+/*
+ * Owner-draw a button as a URL
+ */
+
+static void
+winDrawURLWindow (LPARAM lParam)
+{
+  DRAWITEMSTRUCT *draw;
+  char str[256];
+  RECT rect;
+  HFONT font;
+  COLORREF crText;
+  
+  draw = (DRAWITEMSTRUCT *) lParam;
+  GetWindowText (draw->hwndItem, str, sizeof(str));
+  str[255] = 0;
+  GetClientRect (draw->hwndItem, &rect);
+  
+  /* Color the button depending upon its state */
+  if (draw->itemState & ODS_SELECTED)
+    crText = RGB(128+64,0,0);
+  else if (draw->itemState & ODS_FOCUS)
+    crText = RGB(0,128+64,0);
+  else
+    crText = RGB(0,0,128+64);
+  SetTextColor (draw->hDC, crText);
+  
+  /* Create underlined font 14 high, standard dialog font */
+  font = CreateFont (-14, 0, 0, 0, FW_NORMAL, FALSE, TRUE, FALSE,
+		     0, 0, 0, 0, 0, "MS Sans Serif");
+  if (!font)
+    {
+      ErrorF ("winDrawURLWindow: Unable to create URL font, bailing.\n");
+      return;
+    }
+  /* Draw it */
+  SetBkMode (draw->hDC, OPAQUE);
+  SelectObject (draw->hDC, font);
+  DrawText (draw->hDC, str, strlen (str),&rect,DT_CENTER | DT_VCENTER);
+  /* Delete the created font, replace it with stock font */
+  DeleteObject (SelectObject (draw->hDC, GetStockObject (ANSI_VAR_FONT)));
+}
+
+
+/*
+ * WndProc for overridden buttons
+ */
+
+static LRESULT CALLBACK
+winURLWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+  WNDPROC origCB = NULL;
+  
+  /* If it's a SetCursor message, tell it to the hand */
+  if (msg==WM_SETCURSOR) {
+    SetCursor(LoadCursor(NULL, IDC_HAND));
+    return TRUE;
+  }
+  origCB = (WNDPROC)GetWindowLong (hwnd, GWL_USERDATA);
+  /* Otherwise fall through to original WndProc */
+  if (origCB)
+    return CallWindowProc (origCB, hwnd, msg, wParam, lParam);
+  else
+    return FALSE;
+}
+
+
+/*
+ * Register and unregister the custom WndProc
+ */
+
+static void
+winOverrideURLButton (HWND hwnd, int id)
+{
+  WNDPROC origCB;
+  origCB = (WNDPROC)SetWindowLong (GetDlgItem (hwnd, id),
+				   GWL_WNDPROC, (LONG)winURLWndProc);
+  SetWindowLong (GetDlgItem (hwnd, id), GWL_USERDATA, (LONG)origCB);
+}
+
+static void
+winUnoverrideURLButton (HWND hwnd, int id)
+{
+  WNDPROC origCB;
+  origCB = (WNDPROC)SetWindowLong (GetDlgItem (hwnd, id),
+				   GWL_USERDATA, 0);
+  if (origCB)
+    SetWindowLong (GetDlgItem (hwnd, id), GWL_WNDPROC, (LONG)origCB);
+}
 
 
 /*
@@ -459,6 +565,17 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 		   ICON_SMALL,
 		   (LPARAM) LoadIcon (g_hInstance, MAKEINTRESOURCE(IDI_XWIN)));
 
+      /* Override the URL buttons */
+      winOverrideURLButton (hwndDialog, ID_ABOUT_CHANGELOG);
+      winOverrideURLButton (hwndDialog, ID_ABOUT_WEBSITE);
+      winOverrideURLButton (hwndDialog, ID_ABOUT_UG);
+      winOverrideURLButton (hwndDialog, ID_ABOUT_FAQ);
+
+      return TRUE;
+
+    case WM_DRAWITEM:
+      /* Draw the URL buttons as needed */
+      winDrawURLWindow (lParam);
       return TRUE;
 
     case WM_MOUSEMOVE:
@@ -483,6 +600,13 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 
 	  /* Fix to make sure keyboard focus isn't trapped */
 	  PostMessage (s_pScreenPriv->hwndScreen, WM_NULL, 0, 0);
+
+	  /* Restore window procedures for URL buttons */
+	  winUnoverrideURLButton (hwndDialog, ID_ABOUT_CHANGELOG);
+	  winUnoverrideURLButton (hwndDialog, ID_ABOUT_WEBSITE);
+	  winUnoverrideURLButton (hwndDialog, ID_ABOUT_UG);
+	  winUnoverrideURLButton (hwndDialog, ID_ABOUT_FAQ);
+
 	  return TRUE;
 
 	case ID_ABOUT_CHANGELOG:
@@ -580,6 +704,13 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
 
       /* Fix to make sure keyboard focus isn't trapped */
       PostMessage (s_pScreenPriv->hwndScreen, WM_NULL, 0, 0);
+
+      /* Restore window procedures for URL buttons */
+      winUnoverrideURLButton (hwndDialog, ID_ABOUT_CHANGELOG);
+      winUnoverrideURLButton (hwndDialog, ID_ABOUT_WEBSITE);
+      winUnoverrideURLButton (hwndDialog, ID_ABOUT_UG);
+      winUnoverrideURLButton (hwndDialog, ID_ABOUT_FAQ);
+
       return TRUE;
     }
 

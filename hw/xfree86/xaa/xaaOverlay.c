@@ -1,4 +1,4 @@
-: /* $XdotOrg: xc/programs/Xserver/hw/xfree86/xaa/xaaOverlay.c,v 1.1.4.3 2004/02/25 21:46:55 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/xaa/xaaOverlay.c,v 1.1.4.3.2.2 2004/03/04 17:48:14 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/xaa/xaaOverlay.c,v 1.14tsi Exp $ */
 
 #include "misc.h"

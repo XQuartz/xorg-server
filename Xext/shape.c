@@ -1,4 +1,4 @@
-: /* $XdotOrg: xc/programs/Xserver/Xext/shape.c,v 1.1.4.4 2004/02/25 21:46:33 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/Xext/shape.c,v 1.1.4.4.2.2 2004/03/04 17:47:20 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/Xext/shape.c,v 3.18 2003/10/28 23:08:43 tsi Exp $ */
 /************************************************************
 

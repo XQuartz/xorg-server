@@ -1,4 +1,4 @@
-: /* $XdotOrg: xc/programs/Xserver/hw/xfree86/xaa/xaaPaintWin.c,v 1.1.4.2 2004/02/25 21:46:56 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/xaa/xaaPaintWin.c,v 1.1.4.2.2.2 2004/03/04 17:48:14 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/xaa/xaaPaintWin.c,v 1.10 2001/10/28 03:34:04 tsi Exp $ */
 
 #include "misc.h"

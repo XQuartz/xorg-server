@@ -1,5 +1,5 @@
 /*
-:  * $XdotOrg: xc/programs/Xserver/fb/fbcompose.c,v 1.18 2003/12/04 17:15:12 tsi Exp $
+ * $XdotOrg: xc/programs/Xserver/fb/fbcompose.c,v 1.1.4.2.4.1 2004/03/04 17:47:28 eich Exp $
  * $XFree86: xc/programs/Xserver/fb/fbcompose.c,v 1.17tsi Exp $
  *
  * Copyright © 2000 Keith Packard, member of The XFree86 Project, Inc.

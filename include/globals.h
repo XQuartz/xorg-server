@@ -1,4 +1,4 @@
-: /* $XdotOrg: xc/programs/Xserver/include/globals.h,v 1.1.4.2 2004/02/25 21:47:00 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/include/globals.h,v 1.1.4.2.2.2 2004/03/04 17:48:21 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/include/globals.h,v 1.3 1999/09/25 14:38:21 dawes Exp $ */
 
 #ifndef _XSERV_GLOBAL_H_

@@ -1,4 +1,4 @@
-: /* $XdotOrg: xc/programs/Xserver/dix/globals.c,v 1.13 2003/12/03 17:11:29 tsi Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/globals.c,v 1.1.4.3.4.1 2004/03/04 17:47:26 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/dix/globals.c,v 1.12tsi Exp $ */
 /************************************************************
 

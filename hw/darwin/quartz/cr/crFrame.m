@@ -27,7 +27,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-: /* $XdotOrg: xc/programs/Xserver/hw/darwin/quartz/cr/crFrame.m,v 1.1.4.1 2003/12/06 13:24:23 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/darwin/quartz/cr/crFrame.m,v 1.1.4.2.4.1 2004/03/04 17:47:30 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/darwin/quartz/cr/crFrame.m,v 1.7 2003/11/27 01:53:39 torrey Exp $ */
 
 #include "quartzCommon.h"

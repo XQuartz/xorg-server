@@ -1,4 +1,4 @@
-: /* $XdotOrg: xc/programs/Xserver/dix/main.c,v 1.1.4.5 2004/02/25 21:46:40 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/main.c,v 1.1.4.5.2.2 2004/03/04 17:47:26 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/dix/main.c,v 3.43 2003/10/30 21:21:02 herrb Exp $ */
 /***********************************************************
 

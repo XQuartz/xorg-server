@@ -1,4 +1,4 @@
-: /* $XdotOrg: xc/programs/Xserver/XTrap/xtrapdi.c,v 1.1.4.3 2004/02/25 21:46:31 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/XTrap/xtrapdi.c,v 1.1.4.3.2.2 2004/03/04 17:47:20 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/XTrap/xtrapdi.c,v 1.6tsi Exp $ */
 /*****************************************************************************
 Copyright 1987, 1988, 1989, 1990, 1991 by Digital Equipment Corp., Maynard, MA

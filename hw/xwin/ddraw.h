@@ -1,4 +1,4 @@
-/* $XFree86$ */
+/* $Id$ */
 
 #ifndef __WINE_DDRAW_H
 #define __WINE_DDRAW_H

@@ -1,4 +1,5 @@
 /* $Xorg: Keyboard.c,v 1.3 2000/08/17 19:53:28 cpqbld Exp $ */
+/* $XdotOrg$ */
 /*
 
 Copyright 1993 by Davor Matic
@@ -13,7 +14,6 @@ is" without express or implied warranty.
 
 */
 /* $XFree86: xc/programs/Xserver/hw/xnest/Keyboard.c,v 1.9 2003/09/13 21:33:09 dawes Exp $ */
-
 #define NEED_EVENTS
 #include "X.h"
 #include "Xproto.h"
@@ -65,7 +65,7 @@ extern	Status	XkbGetControls(
 #define	XKB_CONFIG_FILE		"X0-config.keyboard"
 #endif
 #ifndef XKB_DFLT_RULES_FILE
-#define	XKB_DFLT_RULES_FILE	"xfree86"
+#define	XKB_DFLT_RULES_FILE	__XKBDEFRULES__
 #endif
 #ifndef XKB_DFLT_KB_LAYOUT
 #define	XKB_DFLT_KB_LAYOUT	"us"

@@ -27,7 +27,7 @@
  *
  * Authors: Alexander Gottwald	
  */
-/* $XFree86$ */
+/* $Id$ */
 #ifndef __WIN_CONFIG_H__
 #define __WIN_CONFIG_H__
 

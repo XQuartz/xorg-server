@@ -193,6 +193,12 @@ winClipboardFlushXEvents (HWND hwnd,
 	      goto winClipboardFlushXEvents_SelectionRequest_Done;
 	    }
 
+	  /* Close clipboard if we have it open already */
+	  if (GetOpenClipboardWindow () == hwnd)
+	    {
+	      CloseClipboard ();
+	    }
+
 	  /* Access the clipboard */
 	  if (!OpenClipboard (hwnd))
 	    {

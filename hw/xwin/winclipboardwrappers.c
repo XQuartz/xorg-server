@@ -459,6 +459,12 @@ winProcSetSelectionOwner (ClientPtr client)
       goto winProcSetSelectionOwner_Done;
     }
 
+  /* Close clipboard if we have it open already */
+  if (GetOpenClipboardWindow () == g_hwndClipboard)
+    {
+      CloseClipboard ();
+    }
+
   /* Access the Windows clipboard */
   if (!OpenClipboard (g_hwndClipboard))
     {

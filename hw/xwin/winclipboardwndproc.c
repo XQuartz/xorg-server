@@ -323,7 +323,13 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	if (message == WM_RENDERALLFORMATS)
 	  {
 	    /* We must open and empty the clipboard */
-	    
+
+	    /* Close clipboard if we have it open already */
+	    if (GetOpenClipboardWindow () == hwnd)
+	      {
+		CloseClipboard ();
+	      }	    
+
 	    if (!OpenClipboard (hwnd))
 	      {
 		ErrorF ("winClipboardWindowProc - WM_RENDER*FORMATS - "

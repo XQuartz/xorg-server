@@ -36,17 +36,41 @@
 
 
 /*
- * External global variables
+ * External symbols
  */
 
-extern const GUID _IID_IDirectDraw2;
+extern const GUID		_IID_IDirectDraw2;
+extern HWND			g_hDlgExit;
+
+
+/*
+ * Local function prototypes
+ */
+
+static Bool
+winAllocateFBPrimaryDD (ScreenPtr pScreen);
+
+static Bool
+winCloseScreenPrimaryDD (int nIndex, ScreenPtr pScreen);
+
+static Bool
+winInitVisualsPrimaryDD (ScreenPtr pScreen);
+
+static Bool
+winAdjustVideoModePrimaryDD (ScreenPtr pScreen);
+
+static Bool
+winActivateAppPrimaryDD (ScreenPtr pScreen);
+
+static Bool
+winHotKeyAltTabPrimaryDD (ScreenPtr pScreen);
 
 
 /*
  * Create a DirectDraw primary surface 
  */
 
-Bool
+static Bool
 winAllocateFBPrimaryDD (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -222,7 +246,7 @@ winAllocateFBPrimaryDD (ScreenPtr pScreen)
  * Free our resources and private structures.
  */
 
-Bool
+static Bool
 winCloseScreenPrimaryDD (int nIndex, ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -305,7 +329,7 @@ winCloseScreenPrimaryDD (int nIndex, ScreenPtr pScreen)
  * to verify that last sentence.
  */
 
-Bool
+static Bool
 winInitVisualsPrimaryDD (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -384,7 +408,7 @@ winInitVisualsPrimaryDD (ScreenPtr pScreen)
 }
 
 
-Bool
+static Bool
 winAdjustVideoModePrimaryDD (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -444,7 +468,7 @@ winAdjustVideoModePrimaryDD (ScreenPtr pScreen)
  * the fb code back to the primary surface memory.
  */
 
-Bool
+static Bool
 winActivateAppPrimaryDD (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -533,7 +557,7 @@ winActivateAppPrimaryDD (ScreenPtr pScreen)
  * fb for the duration of the deactivation.
  */
 
-Bool
+static Bool
 winHotKeyAltTabPrimaryDD (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);

@@ -37,7 +37,7 @@
 #include "winkeybd.h"
 #include "winconfig.h"
 #include "winmsg.h"
- 
+
 #ifdef XKB
 #define XKB_IN_SERVER
 #include "XKBsrv.h"
@@ -47,6 +47,22 @@ static Bool g_winKeyState[NUM_KEYCODES];
 
 /* Stored to get internal mode key states.  Must be read-only.  */
 static unsigned short const *g_winInternalModeKeyStatesPtr = NULL;
+
+
+/*
+ * Local prototypes
+ */
+
+static void
+winGetKeyMappings (KeySymsPtr pKeySyms, CARD8 *pModMap);
+
+static void
+winKeybdBell (int iPercent, DeviceIntPtr pDeviceInt,
+	      pointer pCtrl, int iClass);
+
+static void
+winKeybdCtrl (DeviceIntPtr pDevice, KeybdCtrl *pCtrl);
+
 
 /* 
  * Translate a Windows WM_[SYS]KEY(UP/DOWN) message
@@ -78,7 +94,7 @@ winTranslateKey (WPARAM wParam, LPARAM lParam, int *piScanCode)
  * initializing the keyboard.
  */
 
-void
+static void
 winGetKeyMappings (KeySymsPtr pKeySyms, CARD8 *pModMap)
 {
   int			i;
@@ -157,7 +173,7 @@ winGetKeyMappings (KeySymsPtr pKeySyms, CARD8 *pModMap)
 
 
 /* Ring the keyboard bell (system speaker on PCs) */
-void
+static void
 winKeybdBell (int iPercent, DeviceIntPtr pDeviceInt,
 	      pointer pCtrl, int iClass)
 {
@@ -172,7 +188,7 @@ winKeybdBell (int iPercent, DeviceIntPtr pDeviceInt,
 
 
 /* Change some keyboard configuration parameters */
-void
+static void
 winKeybdCtrl (DeviceIntPtr pDevice, KeybdCtrl *pCtrl)
 {
   g_winInternalModeKeyStatesPtr = &(pDevice->key->state);

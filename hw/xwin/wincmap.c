@@ -34,13 +34,66 @@
 
 #include "win.h"
 
+
+/*
+ * Local prototypes
+ */
+
+static int
+winListInstalledColormaps (ScreenPtr pScreen, Colormap *pmaps);
+
+static void
+winStoreColors (ColormapPtr pmap, int ndef, xColorItem *pdefs);
+
+static void
+winInstallColormap (ColormapPtr pmap);
+
+static void
+winUninstallColormap (ColormapPtr pmap);
+
+static void
+winResolveColor (unsigned short *pred,
+		 unsigned short *pgreen,
+		 unsigned short *pblue,
+		 VisualPtr	pVisual);
+
+static Bool
+winCreateColormap (ColormapPtr pmap);
+
+static void
+winDestroyColormap (ColormapPtr pmap);
+
+static Bool
+winGetPaletteDIB (ScreenPtr pScreen, ColormapPtr pcmap);
+
+static Bool
+winGetPaletteDD (ScreenPtr pScreen, ColormapPtr pcmap);
+
+
+/*
+ * Set screen functions for colormaps
+ */
+
+void
+winSetColormapFunctions (ScreenPtr pScreen)
+{
+  pScreen->CreateColormap = winCreateColormap;
+  pScreen->DestroyColormap = winDestroyColormap;
+  pScreen->InstallColormap = winInstallColormap;
+  pScreen->UninstallColormap = winUninstallColormap;
+  pScreen->ListInstalledColormaps = winListInstalledColormaps;
+  pScreen->StoreColors = winStoreColors;
+  pScreen->ResolveColor = winResolveColor;
+}
+
+
 /* See Porting Layer Definition - p. 30 */
 /*
  * Walk the list of installed colormaps, filling the pmaps list
  * with the resource ids of the installed maps, and return
  * a count of the total number of installed maps.
  */
-int
+static int
 winListInstalledColormaps (ScreenPtr pScreen, Colormap *pmaps)
 {
   winScreenPriv(pScreen);
@@ -57,7 +110,7 @@ winListInstalledColormaps (ScreenPtr pScreen, Colormap *pmaps)
 
 /* See Porting Layer Definition - p. 30 */
 /* See Programming Windows - p. 663 */
-void
+static void
 winInstallColormap (ColormapPtr pColormap)
 {
   ScreenPtr		pScreen = pColormap->pScreen;
@@ -102,7 +155,7 @@ winInstallColormap (ColormapPtr pColormap)
 
 
 /* See Porting Layer Definition - p. 30 */
-void
+static void
 winUninstallColormap (ColormapPtr pmap)
 {
   winScreenPriv(pmap->pScreen);
@@ -138,7 +191,7 @@ winUninstallColormap (ColormapPtr pmap)
 
 
 /* See Porting Layer Definition - p. 30 */
-void
+static void
 winStoreColors (ColormapPtr pmap,
 		int ndef,
 		xColorItem *pdefs)
@@ -190,7 +243,7 @@ winStoreColors (ColormapPtr pmap,
 
 
 /* See Porting Layer Definition - p. 30 */
-void
+static void
 winResolveColor (unsigned short *pred,
 		 unsigned short *pgreen,
 		 unsigned short *pblue,
@@ -205,7 +258,7 @@ winResolveColor (unsigned short *pred,
 
 
 /* See Porting Layer Definition - p. 29 */
-Bool
+static Bool
 winCreateColormap (ColormapPtr pmap)
 {
   winPrivCmapPtr	pCmapPriv = NULL;
@@ -255,7 +308,7 @@ winCreateColormap (ColormapPtr pmap)
 
 
 /* See Porting Layer Definition - p. 29, 30 */
-void
+static void
 winDestroyColormap (ColormapPtr pColormap)
 {
   winScreenPriv(pColormap->pScreen);
@@ -283,8 +336,7 @@ winDestroyColormap (ColormapPtr pColormap)
  * Internal function to load the palette used by the Shadow DIB
  */
 
-static
-Bool
+static Bool
 winGetPaletteDIB (ScreenPtr pScreen, ColormapPtr pcmap)
 {
   winScreenPriv(pScreen);
@@ -375,11 +427,10 @@ winGetPaletteDIB (ScreenPtr pScreen, ColormapPtr pcmap)
 
 
 /*
- * Internal function to load the standard system palette being used by GDI
+ * Internal function to load the standard system palette being used by DD
  */
 
-static
-Bool
+static Bool
 winGetPaletteDD (ScreenPtr pScreen, ColormapPtr pcmap)
 {
   int			i;

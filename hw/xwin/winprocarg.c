@@ -65,6 +65,9 @@ winLogVersionInfo (void);
 void OsVendorVErrorF (const char *pszFormat, va_list va_args);
 #endif
 
+void
+winInitializeDefaultScreens (void);
+
 
 /*
  * Process arguments on the command line

@@ -36,7 +36,6 @@
 #ifndef _WIN_H_
 #define _WIN_H_
 
-
 #ifndef NO
 #define NO					0
 #endif
@@ -764,29 +763,8 @@ winInitClipboard (void);
  * wincmap.c
  */
 
-int
-winListInstalledColormaps (ScreenPtr pScreen, Colormap *pmaps);
-
 void
-winStoreColors (ColormapPtr pmap, int ndef, xColorItem *pdefs);
-
-void
-winInstallColormap (ColormapPtr pmap);
-
-void
-winUninstallColormap (ColormapPtr pmap);
-
-void
-winResolveColor (unsigned short *pred,
-		 unsigned short *pgreen,
-		 unsigned short *pblue,
-		 VisualPtr	pVisual);
-
-Bool
-winCreateColormap (ColormapPtr pmap);
-
-void
-winDestroyColormap (ColormapPtr pmap);
+winSetColormapFunctions (ScreenPtr pScreen);
 
 Bool
 winCreateDefColormap (ScreenPtr pScreen);
@@ -879,32 +857,6 @@ winUnrealizeFontNativeGDI (ScreenPtr pScreen, FontPtr pFont);
 
 Bool
 winCreateGCNativeGDI (GCPtr pGC);
-
-void
-winChangeGCNativeGDI (GCPtr pGC, unsigned long ulChanges);
-
-void
-winPadPixmapNativdGDI (PixmapPtr pPixmap);
-
-void
-winValidateGCNativeGDI (GCPtr pGC,
-			unsigned long changes,
-			DrawablePtr pDrawable);
-
-void
-winCopyGCNativeGDI (GCPtr pGCsrc, unsigned long ulMask, GCPtr pGCdst);
-
-void
-winDestroyGCNativeGDI (GCPtr pGC);
-
-void
-winChangeClipNativeGDI (GCPtr pGC, int nType, pointer pValue, int nRects);
-
-void
-winDestroyClipNativeGDI (GCPtr pGC);
-
-void
-winCopyClipNativeGDI (GCPtr pGCdst, GCPtr pGCsrc);
 #endif
 
 
@@ -937,16 +889,6 @@ winInitializeGlobals (void);
 
 void
 winTranslateKey (WPARAM wParam, LPARAM lParam, int *piScanCode);
-
-void
-winGetKeyMappings (KeySymsPtr pKeySyms, CARD8 *pModMap);
-
-void
-winKeybdBell (int iPercent, DeviceIntPtr pDeviceInt,
-	      pointer pCtrl, int iClass);
-
-void
-winKeybdCtrl (DeviceIntPtr pDevice, KeybdCtrl *pCtrl);
 
 int
 winKeybdProc (DeviceIntPtr pDeviceInt, int iState);
@@ -1004,9 +946,6 @@ winPaintBackground (HWND hwnd, COLORREF colorref);
  * winmouse.c
  */
 
-void
-winMouseCtrl (DeviceIntPtr pDevice, PtrCtrl *pCtrl);
-
 int
 winMouseProc (DeviceIntPtr pDeviceInt, int iState);
 
@@ -1031,49 +970,7 @@ winCreateDIBNativeGDI (int iWidth, int iHeight, int iDepth,
 		       BYTE **ppbBits, BITMAPINFO **ppbmi);
 
 Bool
-winAllocateFBNativeGDI (ScreenPtr pScreen);
-
-void
-winShadowUpdateNativeGDI (ScreenPtr pScreen, 
-			  shadowBufPtr pBuf);
-
-Bool
-winCloseScreenNativeGDI (int nIndex, ScreenPtr pScreen);
-
-Bool
-winInitVisualsNativeGDI (ScreenPtr pScreen);
-
-Bool
-winAdjustVideoModeNativeGDI (ScreenPtr pScreen);
-
-Bool
-winBltExposedRegionsNativeGDI (ScreenPtr pScreen);
-
-Bool
-winActivateAppNativeGDI (ScreenPtr pScreen);
-
-Bool
 winSetEngineFunctionsNativeGDI (ScreenPtr pScreen);
-
-Bool
-winRedrawScreenNativeGDI (ScreenPtr pScreen);
-
-Bool
-winRealizeInstalledPaletteNativeGDI (ScreenPtr pScreen);
-
-Bool
-winInstallColormapNativeGDI (ColormapPtr pColormap);
-
-Bool
-winStoreColorsNativeGDI (ColormapPtr pmap, 
-			 int ndef,
-			 xColorItem *pdefs);
-
-Bool
-winCreateColormapNativeGDI (ColormapPtr pColormap);
-
-Bool
-winDestroyColormapNativeGDI (ColormapPtr pColormap);
 #endif
 
 
@@ -1083,25 +980,7 @@ winDestroyColormapNativeGDI (ColormapPtr pColormap);
  */
 
 Bool
-winAllocateFBPrimaryDD (ScreenPtr pScreen);
-
-Bool
-winCloseScreenPrimaryDD (int nIndex, ScreenPtr pScreen);
-
-Bool
-winInitVisualsPrimaryDD (ScreenPtr pScreen);
-
-Bool
-winAdjustVideoModePrimaryDD (ScreenPtr pScreen);
-
-Bool
-winActivateAppPrimaryDD (ScreenPtr pScreen);
-
-Bool
 winSetEngineFunctionsPrimaryDD (ScreenPtr pScreen);
-
-Bool
-winHotKeyAltTabPrimaryDD (ScreenPtr pScreen);
 #endif
 
 
@@ -1115,16 +994,6 @@ winCreatePixmapNativeGDI (ScreenPtr pScreen, int width, int height, int depth);
 
 Bool
 winDestroyPixmapNativeGDI (PixmapPtr pPixmap);
-
-void
-winXRotatePixmapNativeGDI (PixmapPtr pPix, int rw);
-
-void
-winYRotatePixmapNativeGDI (PixmapPtr pPix, int rh);
-
-void
-winCopyRotatePixmapNativeGDI (PixmapPtr psrcPix, PixmapPtr *ppdstPix,
-			      int xrot, int yrot);
 
 Bool
 winModifyPixmapHeaderNativeGDI (PixmapPtr pPixmap,
@@ -1160,14 +1029,6 @@ winPolyLineNativeGDI (DrawablePtr	pDrawable,
 #endif
 
 
-/*
- * winprocarg.c
- */
-
-void
-winInitializeDefaultScreens (void);
-
-
 #ifdef XWIN_NATIVEGDI
 /*
  * winpushpxl.c
@@ -1177,25 +1038,6 @@ void
 winPushPixels (GCPtr pGC, PixmapPtr pBitMap, DrawablePtr pDrawable,
 	       int dx, int dy, int xOrg, int yOrg);
 #endif
-
-
-#ifdef RANDR
-/*
- * winrandr.c
- */
-
-Bool
-winRandRGetInfo (ScreenPtr pScreen, Rotation *pRotations);
-
-Bool
-winRandRSetConfig (ScreenPtr		pScreen,
-		   Rotation		rotateKind,
-		   int			rate,
-		   RRScreenSizePtr	pSize);
-
-Bool
-winRandRInit (ScreenPtr pScreen);
-#endif /* RANDR */
 
 
 /*
@@ -1212,7 +1054,7 @@ winFinishScreenInitFB (int index,
 		       ScreenPtr pScreen,
 		       int argc, char **argv);
 
-#ifdef XWIN_NATIVEGDI
+#if defined(XWIN_NATIVEGDI)
 Bool
 winFinishScreenInitNativeGDI (int index,
 			      ScreenPtr pScreen,
@@ -1241,55 +1083,7 @@ winSetSpansNativeGDI (DrawablePtr	pDrawable,
  */
 
 Bool
-winAllocateFBShadowDD (ScreenPtr pScreen);
-
-void
-winShadowUpdateDD (ScreenPtr pScreen, 
-		   shadowBufPtr pBuf);
-
-Bool
-winCloseScreenShadowDD (int nIndex, ScreenPtr pScreen);
-
-Bool
-winInitVisualsShadowDD (ScreenPtr pScreen);
-
-Bool
-winAdjustVideoModeShadowDD (ScreenPtr pScreen);
-
-Bool
-winBltExposedRegionsShadowDD (ScreenPtr pScreen);
-
-Bool
-winActivateAppShadowDD (ScreenPtr pScreen);
-
-Bool
 winSetEngineFunctionsShadowDD (ScreenPtr pScreen);
-
-Bool
-winRedrawScreenShadowDD (ScreenPtr pScreen);
-
-Bool
-winRealizeInstalledPaletteShadowDD (ScreenPtr pScreen);
-
-Bool
-winInstallColormapShadowDD (ColormapPtr pColormap);
-
-Bool
-winStoreColorsShadowDD (ColormapPtr pmap, 
-			int ndef,
-			xColorItem *pdefs);
-
-Bool
-winCreateColormapShadowDD (ColormapPtr pColormap);
-
-Bool
-winDestroyColormapShadowDD (ColormapPtr pColormap);
-
-Bool
-winCreatePrimarySurfaceShadowDD (ScreenPtr pScreen);
-
-Bool
-winReleasePrimarySurfaceShadowDD (ScreenPtr pScreen);
 
 
 /*
@@ -1297,55 +1091,7 @@ winReleasePrimarySurfaceShadowDD (ScreenPtr pScreen);
  */
 
 Bool
-winAllocateFBShadowDDNL (ScreenPtr pScreen);
-
-void
-winShadowUpdateDDNL (ScreenPtr pScreen, 
-		     shadowBufPtr pBuf);
-
-Bool
-winCloseScreenShadowDDNL (int nIndex, ScreenPtr pScreen);
-
-Bool
-winInitVisualsShadowDDNL (ScreenPtr pScreen);
-
-Bool
-winAdjustVideoModeShadowDDNL (ScreenPtr pScreen);
-
-Bool
-winBltExposedRegionsShadowDDNL (ScreenPtr pScreen);
-
-Bool
-winActivateAppShadowDDNL (ScreenPtr pScreen);
-
-Bool
 winSetEngineFunctionsShadowDDNL (ScreenPtr pScreen);
-
-Bool
-winRedrawScreenShadowDDNL (ScreenPtr pScreen);
-
-Bool
-winRealizeInstalledPaletteShadowDDNL (ScreenPtr pScreen);
-
-Bool
-winInstallColormapShadowDDNL (ColormapPtr pColormap);
-
-Bool
-winStoreColorsShadowDDNL (ColormapPtr pmap, 
-			  int ndef,
-			  xColorItem *pdefs);
-
-Bool
-winCreateColormapShadowDDNL (ColormapPtr pColormap);
-
-Bool
-winDestroyColormapShadowDDNL (ColormapPtr pColormap);
-
-Bool
-winCreatePrimarySurfaceShadowDDNL (ScreenPtr pScreen);
-
-Bool
-winReleasePrimarySurfaceShadowDDNL (ScreenPtr pScreen);
 
 
 /*
@@ -1353,49 +1099,7 @@ winReleasePrimarySurfaceShadowDDNL (ScreenPtr pScreen);
  */
 
 Bool
-winAllocateFBShadowGDI (ScreenPtr pScreen);
-
-void
-winShadowUpdateGDI (ScreenPtr pScreen, 
-		    shadowBufPtr pBuf);
-
-Bool
-winCloseScreenShadowGDI (int nIndex, ScreenPtr pScreen);
-
-Bool
-winInitVisualsShadowGDI (ScreenPtr pScreen);
-
-Bool
-winAdjustVideoModeShadowGDI (ScreenPtr pScreen);
-
-Bool
-winBltExposedRegionsShadowGDI (ScreenPtr pScreen);
-
-Bool
-winActivateAppShadowGDI (ScreenPtr pScreen);
-
-Bool
-winRedrawScreenShadowGDI (ScreenPtr pScreen);
-
-Bool
 winSetEngineFunctionsShadowGDI (ScreenPtr pScreen);
-
-Bool
-winRealizeInstalledPaletteShadowGDI (ScreenPtr pScreen);
-
-Bool
-winInstallColormapShadowGDI (ColormapPtr pColormap);
-
-Bool
-winStoreColorsShadowGDI (ColormapPtr pmap, 
-			 int ndef,
-			 xColorItem *pdefs);
-
-Bool
-winCreateColormapShadowGDI (ColormapPtr pColormap);
-
-Bool
-winDestroyColormapShadowGDI (ColormapPtr pColormap);
 
 
 /*
@@ -1564,14 +1268,6 @@ LRESULT
 winHandleIconMessage (HWND hwnd, UINT message,
 		      WPARAM wParam, LPARAM lParam,
 		      winPrivScreenPtr pScreenPriv);
-
-
-/*
- * winvalargs.c
- */
-
-Bool
-winValidateArgs (void);
 
 
 /*

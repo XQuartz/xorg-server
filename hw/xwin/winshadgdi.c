@@ -32,8 +32,9 @@
 
 
 /*
- * External global variables
+ * External symbols
  */
+
 #ifdef XWIN_MULTIWINDOW
 extern DWORD			g_dwCurrentThreadID;
 #endif
@@ -45,15 +46,54 @@ extern HWND			g_hDlgExit;
  */
 
 #ifdef XWIN_MULTIWINDOW
-BOOL CALLBACK
+static BOOL CALLBACK
 winRedrawAllProcShadowGDI (HWND hwnd, LPARAM lParam);
 
 static BOOL CALLBACK
 winRedrawDamagedWindowShadowGDI (HWND hwnd, LPARAM lParam);
 #endif
 
-Bool
+static Bool
+winAllocateFBShadowGDI (ScreenPtr pScreen);
+
+static void
+winShadowUpdateGDI (ScreenPtr pScreen, 
+		    shadowBufPtr pBuf);
+
+static Bool
+winCloseScreenShadowGDI (int nIndex, ScreenPtr pScreen);
+
+static Bool
+winInitVisualsShadowGDI (ScreenPtr pScreen);
+
+static Bool
+winAdjustVideoModeShadowGDI (ScreenPtr pScreen);
+
+static Bool
 winBltExposedRegionsShadowGDI (ScreenPtr pScreen);
+
+static Bool
+winActivateAppShadowGDI (ScreenPtr pScreen);
+
+static Bool
+winRedrawScreenShadowGDI (ScreenPtr pScreen);
+
+static Bool
+winRealizeInstalledPaletteShadowGDI (ScreenPtr pScreen);
+
+static Bool
+winInstallColormapShadowGDI (ColormapPtr pColormap);
+
+static Bool
+winStoreColorsShadowGDI (ColormapPtr pmap, 
+			 int ndef,
+			 xColorItem *pdefs);
+
+static Bool
+winCreateColormapShadowGDI (ColormapPtr pColormap);
+
+static Bool
+winDestroyColormapShadowGDI (ColormapPtr pColormap);
 
 
 /*
@@ -227,7 +267,7 @@ winQueryRGBBitsAndMasks (ScreenPtr pScreen)
  * Redraw all ---?
  */
 
-BOOL CALLBACK
+static BOOL CALLBACK
 winRedrawAllProcShadowGDI (HWND hwnd, LPARAM lParam)
 {
   if (hwnd == (HWND)lParam)
@@ -274,7 +314,7 @@ winRedrawDamagedWindowShadowGDI (HWND hwnd, LPARAM lParam)
  * Allocate a DIB for the shadow framebuffer GDI server
  */
 
-Bool
+static Bool
 winAllocateFBShadowGDI (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -421,7 +461,7 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
  * Blit the damaged regions of the shadow fb to the screen
  */
 
-void
+static void
 winShadowUpdateGDI (ScreenPtr pScreen, 
 		    shadowBufPtr pBuf)
 {
@@ -546,7 +586,7 @@ winShadowUpdateGDI (ScreenPtr pScreen,
  * a pointer to said procedure is stored in our privates.
  */
 
-Bool
+static Bool
 winCloseScreenShadowGDI (int nIndex, ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -621,7 +661,7 @@ winCloseScreenShadowGDI (int nIndex, ScreenPtr pScreen)
  * to verify that last sentence.
  */
 
-Bool
+static Bool
 winInitVisualsShadowGDI (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -756,7 +796,7 @@ winInitVisualsShadowGDI (ScreenPtr pScreen)
  * Adjust the proposed video mode
  */
 
-Bool
+static Bool
 winAdjustVideoModeShadowGDI (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -808,7 +848,7 @@ winAdjustVideoModeShadowGDI (ScreenPtr pScreen)
  * Blt exposed regions to the screen
  */
 
-Bool
+static Bool
 winBltExposedRegionsShadowGDI (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -855,15 +895,18 @@ winBltExposedRegionsShadowGDI (ScreenPtr pScreen)
  * Do any engine-specific appliation-activation processing
  */
 
-Bool
+static Bool
 winActivateAppShadowGDI (ScreenPtr pScreen)
 {
+  /*
+   * 2004/04/10 - Harold - We don't seem to ned to do anything here
+   * since our window should be z-ordered correctly in fullscreen mode.
+   */
+  return TRUE;
+
+#if 0
   winScreenPriv(pScreen);
   winScreenInfo		*pScreenInfo = pScreenPriv->pScreenInfo;
-
-#if CYGDEBUG
-  ErrorF ("winActivateAppShadowGDI\n");
-#endif
 
   /*
    * Are we active?
@@ -887,9 +930,6 @@ winActivateAppShadowGDI (ScreenPtr pScreen)
        */
       ShowWindow (pScreenPriv->hwndScreen, SW_MINIMIZE);
     }
-
-#if CYGDEBUG
-  ErrorF ("winActivateAppShadowGDI - Returning\n");
 #endif
 
   return TRUE;
@@ -900,7 +940,7 @@ winActivateAppShadowGDI (ScreenPtr pScreen)
  * Reblit the shadow framebuffer to the screen.
  */
 
-Bool
+static Bool
 winRedrawScreenShadowGDI (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -929,7 +969,7 @@ winRedrawScreenShadowGDI (ScreenPtr pScreen)
  * Realize the currently installed colormap
  */
 
-Bool
+static Bool
 winRealizeInstalledPaletteShadowGDI (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -978,7 +1018,7 @@ winRealizeInstalledPaletteShadowGDI (ScreenPtr pScreen)
  * Install the specified colormap
  */
 
-Bool
+static Bool
 winInstallColormapShadowGDI (ColormapPtr pColormap)
 {
   ScreenPtr		pScreen = pColormap->pScreen;
@@ -1039,7 +1079,7 @@ winInstallColormapShadowGDI (ColormapPtr pColormap)
  * Store the specified colors in the specified colormap
  */
 
-Bool
+static Bool
 winStoreColorsShadowGDI (ColormapPtr pColormap,
 			 int ndef,
 			 xColorItem *pdefs)
@@ -1099,7 +1139,7 @@ winStoreColorsShadowGDI (ColormapPtr pColormap,
  * Colormap initialization procedure
  */
 
-Bool
+static Bool
 winCreateColormapShadowGDI (ColormapPtr pColormap)
 {
   LPLOGPALETTE		lpPaletteNew = NULL;
@@ -1156,7 +1196,7 @@ winCreateColormapShadowGDI (ColormapPtr pColormap)
  * Colormap destruction procedure
  */
 
-Bool
+static Bool
 winDestroyColormapShadowGDI (ColormapPtr pColormap)
 {
   winScreenPriv(pColormap->pScreen);

@@ -75,6 +75,14 @@ extern int			g_iScreenPrivateIndex;
 
 
 /*
+ * Prototypes
+ */
+
+Bool
+winRandRInit (ScreenPtr pScreen);
+
+
+/*
  * Local functions
  */
 
@@ -298,13 +306,7 @@ winFinishScreenInitFB (int index,
 	  || (pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD
 	      && pScreenInfo->fFullScreen)))
     {
-      pScreen->CreateColormap = winCreateColormap;
-      pScreen->DestroyColormap = winDestroyColormap;
-      pScreen->InstallColormap = winInstallColormap;
-      pScreen->UninstallColormap = winUninstallColormap;
-      pScreen->ListInstalledColormaps = winListInstalledColormaps;
-      pScreen->StoreColors = winStoreColors;
-      pScreen->ResolveColor = winResolveColor;
+      winSetColormapFunctions (pScreen);
 
       /*
        * NOTE: Setting whitePixel to 255 causes Magic 7.1 to allocate its

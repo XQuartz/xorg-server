@@ -40,6 +40,23 @@
 extern int			g_iPixmapPrivateIndex;
 
 
+/*
+ * Local prototypes
+ */
+
+#if 0
+static void
+winXRotatePixmapNativeGDI (PixmapPtr pPix, int rw);
+
+static void
+winYRotatePixmapNativeGDI (PixmapPtr pPix, int rh);
+
+static void
+winCopyRotatePixmapNativeGDI (PixmapPtr psrcPix, PixmapPtr *ppdstPix,
+			      int xrot, int yrot);
+#endif
+
+
 /* See Porting Layer Definition - p. 34 */
 /* See mfb/mfbpixmap.c - mfbCreatePixmap() */
 PixmapPtr
@@ -181,12 +198,13 @@ winModifyPixmapHeaderNativeGDI (PixmapPtr pPixmap,
 }
 
 
+#if 0
 /* 
  * Not used yet.
  * See cfb/cfbpixmap.c
  */
 
-void
+static void
 winXRotatePixmapNativeGDI (PixmapPtr pPix, int rw)
 {
   ErrorF ("winXRotatePixmap()\n");
@@ -198,7 +216,7 @@ winXRotatePixmapNativeGDI (PixmapPtr pPix, int rw)
  * Not used yet.
  * See cfb/cfbpixmap.c
  */
-void
+static void
 winYRotatePixmapNativeGDI (PixmapPtr pPix, int rh)
 {
   ErrorF ("winYRotatePixmap()\n");
@@ -211,10 +229,11 @@ winYRotatePixmapNativeGDI (PixmapPtr pPix, int rh)
  * See cfb/cfbpixmap.c
  */
 
-void
+static void
 winCopyRotatePixmapNativeGDI (PixmapPtr psrcPix, PixmapPtr *ppdstPix,
 			      int xrot, int yrot)
 {
   ErrorF ("winCopyRotatePixmap()\n");
   /* fill in this function, look at CFB */
 }
+#endif

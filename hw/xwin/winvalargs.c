@@ -42,6 +42,14 @@ extern Bool			g_fXdmcpEnabled;
 
 
 /*
+ * Prototypes
+ */
+
+Bool
+winValidateArgs (void);
+
+
+/*
  * winValidateArgs - Look for invalid argument combinations
  */
 

@@ -34,7 +34,13 @@
 
 #include "win.h"
 
+
+/*
+ * External symbols
+ */
+
 extern HWND			g_hDlgExit;
+
 
 /*
  * FIXME: Headers are broken, DEFINE_GUID doesn't work correctly,
@@ -57,12 +63,65 @@ DEFINE_GUID( IID_IDirectDraw4, 0x9c59509a,0x39bd,0x11d1,0x8c,0x4a,0x00,0xc0,0x4f
 
 
 /*
+ * Local prototypes
+ */
+
+static Bool
+winAllocateFBShadowDDNL (ScreenPtr pScreen);
+
+static void
+winShadowUpdateDDNL (ScreenPtr pScreen, 
+		     shadowBufPtr pBuf);
+
+static Bool
+winCloseScreenShadowDDNL (int nIndex, ScreenPtr pScreen);
+
+static Bool
+winInitVisualsShadowDDNL (ScreenPtr pScreen);
+
+static Bool
+winAdjustVideoModeShadowDDNL (ScreenPtr pScreen);
+
+static Bool
+winBltExposedRegionsShadowDDNL (ScreenPtr pScreen);
+
+static Bool
+winActivateAppShadowDDNL (ScreenPtr pScreen);
+
+static Bool
+winRedrawScreenShadowDDNL (ScreenPtr pScreen);
+
+static Bool
+winRealizeInstalledPaletteShadowDDNL (ScreenPtr pScreen);
+
+static Bool
+winInstallColormapShadowDDNL (ColormapPtr pColormap);
+
+static Bool
+winStoreColorsShadowDDNL (ColormapPtr pmap, 
+			  int ndef,
+			  xColorItem *pdefs);
+
+static Bool
+winCreateColormapShadowDDNL (ColormapPtr pColormap);
+
+static Bool
+winDestroyColormapShadowDDNL (ColormapPtr pColormap);
+
+static Bool
+winCreatePrimarySurfaceShadowDDNL (ScreenPtr pScreen);
+
+static Bool
+winReleasePrimarySurfaceShadowDDNL (ScreenPtr pScreen);
+
+
+/*
  * Create the primary surface and attach the clipper.
  * Used for both the initial surface creation and during
  * WM_DISPLAYCHANGE messages.
  */
 
-Bool
+static Bool
 winCreatePrimarySurfaceShadowDDNL (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -120,7 +179,7 @@ winCreatePrimarySurfaceShadowDDNL (ScreenPtr pScreen)
  * Called from WM_DISPLAYCHANGE.
  */
 
-Bool
+static Bool
 winReleasePrimarySurfaceShadowDDNL (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -505,7 +564,7 @@ winFinishCreateWindowsWindowDDNL (WindowPtr pWin)
  * Transfer the damaged regions of the shadow framebuffer to the display.
  */
 
-void
+static void
 winShadowUpdateDDNL (ScreenPtr pScreen, 
 		     shadowBufPtr pBuf)
 {
@@ -648,7 +707,7 @@ winShadowUpdateDDNL (ScreenPtr pScreen,
  * Free our resources and private structures.
  */
 
-Bool
+static Bool
 winCloseScreenShadowDDNL (int nIndex, ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -760,7 +819,7 @@ winCloseScreenShadowDDNL (int nIndex, ScreenPtr pScreen)
  * to verify that last sentence.
  */
 
-Bool
+static Bool
 winInitVisualsShadowDDNL (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -913,7 +972,7 @@ winInitVisualsShadowDDNL (ScreenPtr pScreen)
  * Adjust the user proposed video mode
  */
 
-Bool
+static Bool
 winAdjustVideoModeShadowDDNL (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -983,7 +1042,7 @@ winAdjustVideoModeShadowDDNL (ScreenPtr pScreen)
  * Blt exposed regions to the screen
  */
 
-Bool
+static Bool
 winBltExposedRegionsShadowDDNL (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -1088,10 +1147,10 @@ winBltExposedRegionsShadowDDNL (ScreenPtr pScreen)
 
 
 /*
- * Do any engine-specific appliation-activation processing
+ * Do any engine-specific application-activation processing
  */
 
-Bool
+static Bool
 winActivateAppShadowDDNL (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -1117,7 +1176,7 @@ winActivateAppShadowDDNL (ScreenPtr pScreen)
  * Reblit the shadow framebuffer to the screen.
  */
 
-Bool
+static Bool
 winRedrawScreenShadowDDNL (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -1165,7 +1224,7 @@ winRedrawScreenShadowDDNL (ScreenPtr pScreen)
  * Realize the currently installed colormap
  */
 
-Bool
+static Bool
 winRealizeInstalledPaletteShadowDDNL (ScreenPtr pScreen)
 {
   return TRUE;
@@ -1176,7 +1235,7 @@ winRealizeInstalledPaletteShadowDDNL (ScreenPtr pScreen)
  * Install the specified colormap
  */
 
-Bool
+static Bool
 winInstallColormapShadowDDNL (ColormapPtr pColormap)
 {
   ScreenPtr		pScreen = pColormap->pScreen;
@@ -1205,7 +1264,7 @@ winInstallColormapShadowDDNL (ColormapPtr pColormap)
  * Store the specified colors in the specified colormap
  */
 
-Bool
+static Bool
 winStoreColorsShadowDDNL (ColormapPtr pColormap, 
 			  int ndef,
 			  xColorItem *pdefs)
@@ -1249,7 +1308,7 @@ winStoreColorsShadowDDNL (ColormapPtr pColormap,
  * Colormap initialization procedure
  */
 
-Bool
+static Bool
 winCreateColormapShadowDDNL (ColormapPtr pColormap)
 {
   HRESULT		ddrval = DD_OK;
@@ -1277,7 +1336,7 @@ winCreateColormapShadowDDNL (ColormapPtr pColormap)
  * Colormap destruction procedure
  */
 
-Bool
+static Bool
 winDestroyColormapShadowDDNL (ColormapPtr pColormap)
 {
   winScreenPriv(pColormap->pScreen);

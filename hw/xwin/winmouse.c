@@ -41,7 +41,16 @@
 static CARD8 const *g_winMouseButtonMap = NULL;
 #endif
 
-void
+
+/*
+ * Local prototypes
+ */
+
+static void
+winMouseCtrl (DeviceIntPtr pDevice, PtrCtrl *pCtrl);
+
+
+static void
 winMouseCtrl (DeviceIntPtr pDevice, PtrCtrl *pCtrl)
 {
 }

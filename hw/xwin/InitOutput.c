@@ -99,6 +99,9 @@ winLogCommandLine (int argc, char *argv[]);
 void
 winLogVersionInfo (void);
 
+Bool
+winValidateArgs (void);
+
 
 /*
  * For the depth 24 pixmap we default to 32 bits per pixel, but

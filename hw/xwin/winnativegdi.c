@@ -31,7 +31,65 @@
 
 #include "win.h"
 
-Bool
+
+/*
+ * External symbols
+ */
+
+extern HWND			g_hDlgExit;
+
+
+/*
+ * Local function prototypes
+ */
+
+static Bool
+winAllocateFBNativeGDI (ScreenPtr pScreen);
+
+static void
+winShadowUpdateNativeGDI (ScreenPtr pScreen, 
+			  shadowBufPtr pBuf);
+
+static Bool
+winCloseScreenNativeGDI (int nIndex, ScreenPtr pScreen);
+
+static Bool
+winInitVisualsNativeGDI (ScreenPtr pScreen);
+
+static Bool
+winAdjustVideoModeNativeGDI (ScreenPtr pScreen);
+
+#if 0
+static Bool
+winBltExposedRegionsNativeGDI (ScreenPtr pScreen);
+#endif
+
+static Bool
+winActivateAppNativeGDI (ScreenPtr pScreen);
+
+static Bool
+winRedrawScreenNativeGDI (ScreenPtr pScreen);
+
+static Bool
+winRealizeInstalledPaletteNativeGDI (ScreenPtr pScreen);
+
+static Bool
+winInstallColormapNativeGDI (ColormapPtr pColormap);
+
+static Bool
+winStoreColorsNativeGDI (ColormapPtr pmap, 
+			 int ndef,
+			 xColorItem *pdefs);
+
+static Bool
+winCreateColormapNativeGDI (ColormapPtr pColormap);
+
+static Bool
+winDestroyColormapNativeGDI (ColormapPtr pColormap);
+
+
+
+static Bool
 winAllocateFBNativeGDI (ScreenPtr pScreen)
 {
   FatalError ("winAllocateFBNativeGDI\n");
@@ -39,11 +97,13 @@ winAllocateFBNativeGDI (ScreenPtr pScreen)
   return TRUE;
 }
 
+
 /*
  * We wrap whatever CloseScreen procedure was specified by fb;
  * a pointer to said procedure is stored in our privates.
  */
-Bool
+
+static Bool
 winCloseScreenNativeGDI (int nIndex, ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -95,7 +155,7 @@ winCloseScreenNativeGDI (int nIndex, ScreenPtr pScreen)
 }
 
 
-void
+static void
 winShadowUpdateNativeGDI (ScreenPtr pScreen, 
 			  shadowBufPtr pBuf)
 {
@@ -104,7 +164,7 @@ winShadowUpdateNativeGDI (ScreenPtr pScreen,
 }
 
 
-Bool
+static Bool
 winInitVisualsNativeGDI (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -199,7 +259,7 @@ winInitVisualsNativeGDI (ScreenPtr pScreen)
 
 
 /* Adjust the video mode */
-Bool
+static Bool
 winAdjustVideoModeNativeGDI (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -263,7 +323,7 @@ winAdjustVideoModeNativeGDI (ScreenPtr pScreen)
 }
 
 
-Bool
+static Bool
 winActivateAppNativeGDI (ScreenPtr pScreen)
 {
   winScreenPriv(pScreen);
@@ -382,15 +442,17 @@ winCreateDIBNativeGDI (int iWidth, int iHeight, int iDepth,
 }
 
 
-Bool
+#if 0
+static Bool
 winBltExposedRegionsNativeGDI (ScreenPtr pScreen)
 {
   
   return TRUE;
 }
+#endif
 
 
-Bool
+static Bool
 winRedrawScreenNativeGDI (ScreenPtr pScreen)
 {
   FatalError ("winRedrawScreenNativeGDI\n");
@@ -398,7 +460,7 @@ winRedrawScreenNativeGDI (ScreenPtr pScreen)
 }
 
 
-Bool
+static Bool
 winRealizeInstalledPaletteNativeGDI (ScreenPtr pScreen)
 {
   FatalError ("winRealizeInstalledPaletteNativeGDI\n");
@@ -406,7 +468,7 @@ winRealizeInstalledPaletteNativeGDI (ScreenPtr pScreen)
 }
 
 
-Bool
+static Bool
 winInstallColormapNativeGDI (ColormapPtr pColormap)
 {
   FatalError ("winInstallColormapNativeGDI\n");
@@ -414,7 +476,7 @@ winInstallColormapNativeGDI (ColormapPtr pColormap)
 }
 
 
-Bool
+static Bool
 winStoreColorsNativeGDI (ColormapPtr pmap, 
 			 int ndef,
 			 xColorItem *pdefs)
@@ -424,7 +486,7 @@ winStoreColorsNativeGDI (ColormapPtr pmap,
 }
 
 
-Bool
+static Bool
 winCreateColormapNativeGDI (ColormapPtr pColormap)
 {
   FatalError ("winCreateColormapNativeGDI\n");
@@ -432,7 +494,7 @@ winCreateColormapNativeGDI (ColormapPtr pColormap)
 }
 
 
-Bool
+static Bool
 winDestroyColormapNativeGDI (ColormapPtr pColormap)
 {
   FatalError ("winDestroyColormapNativeGDI\n");

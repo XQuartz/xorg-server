@@ -89,7 +89,7 @@ winCreateBoundingWindowFullScreen (ScreenPtr pScreen)
 	    (int) pScreenInfo->dwScreen);
 
   /* Create the window */
-  *phwnd = CreateWindowExA (WS_EX_TOPMOST,	/* Extended styles */
+  *phwnd = CreateWindowExA (0,			/* Extended styles */
 			    WINDOW_CLASS,	/* Class name */
 			    szTitle,		/* Window name */
 			    WS_POPUP,

@@ -31,7 +31,41 @@
 #include "win.h"
 
 void
-winPushPixels(GCPtr pGC, PixmapPtr pBitMap, DrawablePtr pDrawable, int dx, int dy, int xOrg, int yOrg);
+winPushPixels (GCPtr pGC, PixmapPtr pBitMap, DrawablePtr pDrawable, int dx, int dy, int xOrg, int yOrg);
+
+
+/*
+ * Local prototypes
+ */
+
+#if 0
+static void
+winChangeGCNativeGDI (GCPtr pGC, unsigned long ulChanges);
+#endif
+
+static void
+winValidateGCNativeGDI (GCPtr pGC,
+			unsigned long changes,
+			DrawablePtr pDrawable);
+
+#if 0
+static void
+winCopyGCNativeGDI (GCPtr pGCsrc, unsigned long ulMask, GCPtr pGCdst);
+#endif
+
+static void
+winDestroyGCNativeGDI (GCPtr pGC);
+
+#if 0
+static void
+winChangeClipNativeGDI (GCPtr pGC, int nType, pointer pValue, int nRects);
+
+static void
+winDestroyClipNativeGDI (GCPtr pGC);
+
+static void
+winCopyClipNativeGDI (GCPtr pGCdst, GCPtr pGCsrc);
+#endif
 
 #if 0
 /* GC Handling Routines */
@@ -133,17 +167,19 @@ winCreateGCNativeGDI (GCPtr pGC)
 }
 
 
+#if 0
 /* See Porting Layer Definition - p. 45 */
-void
+static void
 winChangeGCNativeGDI (GCPtr pGC, unsigned long ulChanges)
 {
 #if 0
   ErrorF ("winChangeGCNativeGDI () - Doing nothing\n");
 #endif
 }
+#endif
 
 
-void
+static void
 winValidateGCNativeGDI (GCPtr pGC,
 			unsigned long ulChanges,
 			DrawablePtr pDrawable)
@@ -156,16 +192,18 @@ winValidateGCNativeGDI (GCPtr pGC,
 }
 
 
+#if 0
 /* See Porting Layer Definition - p. 46 */
-void
+static void
 winCopyGCNativeGDI (GCPtr pGCsrc, unsigned long ulMask, GCPtr pGCdst)
 {
 
 }
+#endif
 
 
 /* See Porting Layer Definition - p. 46 */
-void
+static void
 winDestroyGCNativeGDI (GCPtr pGC)
 {
   winGCPriv(pGC);
@@ -193,8 +231,9 @@ winDestroyGCNativeGDI (GCPtr pGC)
 }
 
 
+#if 0
 /* See Porting Layer Definition - p. 46 */
-void
+static void
 winChangeClipNativeGDI (GCPtr pGC, int nType, pointer pValue, int nRects)
 {
 
@@ -202,7 +241,7 @@ winChangeClipNativeGDI (GCPtr pGC, int nType, pointer pValue, int nRects)
 
 
 /* See Porting Layer Definition - p. 47 */
-void
+static void
 winDestroyClipNativeGDI (GCPtr pGC)
 {
 
@@ -210,8 +249,9 @@ winDestroyClipNativeGDI (GCPtr pGC)
 
 
 /* See Porting Layer Definition - p. 47 */
-void
+static void
 winCopyClipNativeGDI (GCPtr pGCdst, GCPtr pGCsrc)
 {
 
 }
+#endif

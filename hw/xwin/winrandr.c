@@ -32,10 +32,27 @@
 
 
 /*
+ * Local prototypes
+ */
+
+static Bool
+winRandRGetInfo (ScreenPtr pScreen, Rotation *pRotations);
+
+static Bool
+winRandRSetConfig (ScreenPtr		pScreen,
+		   Rotation		rotateKind,
+		   int			rate,
+		   RRScreenSizePtr	pSize);
+
+Bool
+winRandRInit (ScreenPtr pScreen);
+
+
+/*
  * Answer queries about the RandR features supported.
  */
 
-Bool
+static Bool
 winRandRGetInfo (ScreenPtr pScreen, Rotation *pRotations)
 {
   winScreenPriv(pScreen);
@@ -83,7 +100,7 @@ winRandRGetInfo (ScreenPtr pScreen, Rotation *pRotations)
  * Respond to resize/rotate request from either X Server or X client app
  */
 
-Bool
+static Bool
 winRandRSetConfig (ScreenPtr		pScreen,
 		   Rotation		rotateKind,
 		   int			rate,

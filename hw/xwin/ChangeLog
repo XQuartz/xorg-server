@@ -1,3 +1,11 @@
+2004-10-20  Alexander Gottwald  <ago at freedesktop dot org>
+
+	* Imakefile:
+	Add ETCX11DIR to DEFINES
+	* InitOutput.c (InitOutput):
+	* winconfig.c (winConfigFiles) :
+	Add entries from /etc/X11/font-dirs to default fontpath
+
 2004-10-16  Alexander Gottwald  <ago at freedesktop dot org>
 
 	* winprocarg.c (winInitializeDefaultScreens, ddxProcessArgument):

@@ -1344,15 +1344,15 @@ ddxProcessArgument(int argc, char **argv, int i)
       return 2;
     }
   }
-  if (!strcmp(argv[i], "-xf86config"))
+  if (!strcmp(argv[i], "-config"))
   {
     if (!argv[i + 1])
       return 0;
     if (getuid() != 0 && !xf86PathIsSafe(argv[i + 1])) {
-      FatalError("\nInvalid argument for -xf86config\n"
-	  "\tFor non-root users, the file specified with -xf86config must be\n"
+      FatalError("\nInvalid argument for -config\n"
+	  "\tFor non-root users, the file specified with -config must be\n"
 	  "\ta relative path and must not contain any \"..\" elements.\n"
-	  "\tUsing default XF86Config search path.\n\n");
+	  "\tUsing default "__XCONFIGFILE__" search path.\n\n");
     }
     xf86ConfigFile = argv[i + 1];
     return 2;
@@ -1655,15 +1655,14 @@ ddxUseMsg()
   ErrorF("Device Dependent Usage\n");
   if (getuid() == 0)
   {
-    ErrorF("-xf86config file       specify a configuration file\n");
     ErrorF("-modulepath paths      specify the module search path\n");
     ErrorF("-logfile file          specify a log file name\n");
-    ErrorF("-configure             probe for devices and write an XF86Config\n");
+    ErrorF("-configure             probe for devices and write an "__XCONFIGFILE__"\n");
   }
   else
   {
-    ErrorF("-xf86config file       specify a configuration file, relative to the\n");
-    ErrorF("                       XF86Config search path, only root can use absolute\n");
+    ErrorF("-config file       specify a configuration file, relative to the\n");
+    ErrorF("                       "__XCONFIGFILE__" search path, only root can use absolute\n");
   }
   ErrorF("-probeonly             probe for devices, then exit\n");
   ErrorF("-scanpci               execute the scanpci module and exit\n");

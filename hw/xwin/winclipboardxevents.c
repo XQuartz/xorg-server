@@ -189,6 +189,22 @@ winClipboardFlushXEvents (HWND hwnd,
 	      break;
 	    }
 
+	  /* Check that clipboard format is available */
+	  if (fUnicodeSupport
+	      && !IsClipboardFormatAvailable (CF_UNICODETEXT))
+	    {
+	      ErrorF ("winClipboardFlushXEvents - CF_UNICODETEXT is not "
+		      "available from Win32 clipboard.  Aborting.\n");
+	      break;
+	    }
+	  else if (!fUnicodeSupport
+		   && !IsClipboardFormatAvailable (CF_TEXT))
+	    {
+	      ErrorF ("winClipboardFlushXEvents - CF_TEXT is not "
+		      "available from Win32 clipboard.  Aborting.\n");
+	      break;
+	    }
+
 	  /* Access the clipboard */
 	  if (!OpenClipboard (hwnd))
 	    {
@@ -215,27 +231,11 @@ winClipboardFlushXEvents (HWND hwnd,
 	  /* Get a pointer to the clipboard text, in desired format */
 	  if (fUnicodeSupport)
 	    {
-	      /* Check that clipboard format is available */
-	      if (!IsClipboardFormatAvailable (CF_UNICODETEXT))
-		{
-		  ErrorF ("winClipboardFlushXEvents - CF_UNICODETEXT is not "
-			  "available from Win32 clipboard.  Aborting.\n");
-		  break;
-		}
-
 	      /* Retrieve clipboard data */
 	      hGlobal = GetClipboardData (CF_UNICODETEXT);
 	    }
 	  else
 	    {
-	      /* Check that clipboard format is available */
-	      if (!IsClipboardFormatAvailable (CF_TEXT))
-		{
-		  ErrorF ("winClipboardFlushXEvents - CF_TEXT is not "
-			  "available from Win32 clipboard.  Aborting.\n");
-		  break;
-		}
-
 	      /* Retrieve clipboard data */
 	      hGlobal = GetClipboardData (CF_TEXT);
 	    }

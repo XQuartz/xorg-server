@@ -214,9 +214,31 @@ winClipboardFlushXEvents (HWND hwnd,
 	  
 	  /* Get a pointer to the clipboard text, in desired format */
 	  if (fUnicodeSupport)
-	    hGlobal = GetClipboardData (CF_UNICODETEXT);
+	    {
+	      /* Check that clipboard format is available */
+	      if (!IsClipboardFormatAvailable (CF_UNICODETEXT))
+		{
+		  ErrorF ("winClipboardFlushXEvents - CF_UNICODETEXT is not "
+			  "available from Win32 clipboard.  Aborting.\n");
+		  break;
+		}
+
+	      /* Retrieve clipboard data */
+	      hGlobal = GetClipboardData (CF_UNICODETEXT);
+	    }
 	  else
-	    hGlobal = GetClipboardData (CF_TEXT);
+	    {
+	      /* Check that clipboard format is available */
+	      if (!IsClipboardFormatAvailable (CF_TEXT))
+		{
+		  ErrorF ("winClipboardFlushXEvents - CF_TEXT is not "
+			  "available from Win32 clipboard.  Aborting.\n");
+		  break;
+		}
+
+	      /* Retrieve clipboard data */
+	      hGlobal = GetClipboardData (CF_TEXT);
+	    }
 	  if (!hGlobal)
 	    {
 	      ErrorF ("winClipboardFlushXEvents - SelectionRequest - "

@@ -155,6 +155,20 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	    return 0;
 	  }
 
+	/*
+	 * Do not take ownership of the X11 selections when something
+	 * other than CF_TEXT or CF_UNICODETEXT has been copied
+	 * into the Win32 clipboard.
+	 */
+	if (!IsClipboardFormatAvailable (CF_TEXT)
+	    && !IsClipboardFormatAvailable (CF_UNICODETEXT))
+	  {
+	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+		    "Clipboard does not contain CF_TEXT nor CF_UNICODETEXT; "
+		    "not taking ownership of X11 selections.\n");
+	    return 0;
+	  }
+
 	/* Reassert ownership of PRIMARY */	  
 	iReturn = XSetSelectionOwner (pDisplay,
 				      XA_PRIMARY,
@@ -196,55 +210,16 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 
 
     case WM_DESTROYCLIPBOARD:
-#if 0
-      {
-	int	iReturn;
-	Display *pDisplay = g_pClipboardDisplay;
-
-	/* Do nothing if winProcSetSelectionOwner called EmptyClipboard */
-	if (hwnd == GetClipboardOwner ())
-	  {
-	    ErrorF ("winClipboardWindowProc - WM_DESTROYCLIPBOARD - "
-		    "winProcSetSelectionOwner called EmptyClipboard, "
-		    "doing nothing.\n");
-	    return 0;
-	  }
-
-	/* Release ownership of PRIMARY */	  
-	iReturn = XSetSelectionOwner (pDisplay,
-				      XA_PRIMARY,
-				      None,
-				      CurrentTime);
-	if (iReturn == BadAtom || iReturn == BadWindow)
-	  {
-	    ErrorF ("winClipboardWindowProc - WM_DESTROYCLIPBOARD - "
-		    "Could not release ownership of PRIMARY\n");
-	  }
-	else
-	  {
-	    ErrorF ("winClipboardWindowProc - WM_DESTROYCLIPBOARD - "
-		    "Released ownership of PRIMARY\n");
-	  }
-	
-	/* Release ownership of the CLIPBOARD */	  
-	iReturn = XSetSelectionOwner (pDisplay,
-				      XInternAtom (pDisplay,
-						   "CLIPBOARD",
-						   FALSE),
-				      None,
-				      CurrentTime);
-	if (iReturn == BadAtom || iReturn == BadWindow)
-	  {
-	    ErrorF ("winClipboardWindowProc - WM_DESTROYCLIPBOARD - "
-		    "Could not release ownership of CLIPBOARD\n");
-	  }
-	else
-	  {
-	    ErrorF ("winClipboardWindowProc - WM_DESTROYCLIPBOARD - "
-		    "Released ownership of CLIPBOARD\n");
-	  }
-      }
-#endif
+      /*
+       * NOTE: Intentionally do nothing.
+       * Changes in the Win32 clipboard are handled by WM_DRAWCLIPBOARD
+       * above.  We only process this message to conform to the specs
+       * for delayed clipboard rendering in Win32.  You might think
+       * that we need to release ownership of the X11 selections, but
+       * we do not, because a WM_DRAWCLIPBOARD message will closely
+       * follow this message and reassert ownership of the X11
+       * selections, handling the issue for us.
+       */
       return 0;
 
 

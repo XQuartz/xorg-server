@@ -388,6 +388,13 @@ winProcSetSelectionOwner (ClientPtr client)
       goto winProcSetSelectionOwner_Done;
     }
 
+  /* Abort if no window at this point */
+  if (None == stuff->window)
+    {
+      ErrorF ("winProcSetSelectionOwner - No window, returning.\n");
+      goto winProcSetSelectionOwner_Done;
+    }
+
   /* Abort if invalid selection */
   if (!ValidAtom (stuff->selection))
     {

@@ -412,6 +412,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
   PAINTSTRUCT		ps;
   LPWINDOWPOS		pWinPos = NULL;
   RECT			rcClient;
+  XID			vlist[2];
 
   /* Check if the Windows window property for our X window pointer is valid */
   if ((pRLWinPriv = (win32RootlessWindowPtr)GetProp (hwnd, WIN_WINDOW_PROP)) != NULL)
@@ -898,8 +899,48 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 
 	/* Reorder if window z order was changed */
 	if ((pScreenPriv != NULL)
-	    && !(pWinPos->flags & SWP_NOZORDER))
-	  pScreenPriv->fWindowOrderChanged = TRUE;
+	    && !(pWinPos->flags & SWP_NOZORDER)
+	    && !(pWinPos->flags & SWP_SHOWWINDOW))
+	  {
+	    pScreenPriv->fWindowOrderChanged = TRUE;
+	    if (pWinPos->hwndInsertAfter == HWND_TOP
+		||pWinPos->hwndInsertAfter == HWND_TOPMOST
+		||pWinPos->hwndInsertAfter == HWND_NOTOPMOST)
+	      {
+		vlist[0] = Above;
+		ConfigureWindow (pWin, CWStackMode,
+				 vlist, wClient(pWin));
+	      }
+#if 1
+	    else if (pWinPos->hwndInsertAfter == HWND_BOTTOM)
+	      {
+	      }
+	    else
+	      {
+		HWND hWndAbove = NULL;
+		DWORD dwCurrentProcessID = GetCurrentProcessId ();
+		DWORD dwWindowProcessID = 0;
+
+		for (hWndAbove = pWinPos->hwndInsertAfter;
+		     hWndAbove != NULL;
+		     hWndAbove = GetNextWindow (hWndAbove, GW_HWNDPREV))
+		  {
+		    GetWindowThreadProcessId (hWndAbove, &dwWindowProcessID);
+
+		    if ((dwWindowProcessID == dwCurrentProcessID)
+			&& GetProp (Above, WIN_WINDOW_PROP)
+			&& !IsIconic (hwnd) ) /* ignore minimized windows */
+		      break;
+		  }
+		if (hWndAbove == NULL)
+		  {
+		    vlist[0] = Above;
+		    ConfigureWindow (pWin, CWStackMode,
+				     vlist, wClient(pWin));
+		  }
+	      }
+#endif
+	  }
 
 	if (!(pWinPos->flags & SWP_NOSIZE)) {
 	  if (IsIconic(hwnd)){
@@ -936,7 +977,8 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 	}
 	if (!g_fNoConfigureWindow ) {
 
-	  if (!pRLWinPriv->fMovingOrSizing) {
+	  if (!pRLWinPriv->fMovingOrSizing
+	      && (pWinPos->flags & SWP_SHOWWINDOW)) {
 	    GetClientRect (hwnd, &rcClient);
 	    MapWindowPoints (hwnd, HWND_DESKTOP, (LPPOINT)&rcClient, 2);
 

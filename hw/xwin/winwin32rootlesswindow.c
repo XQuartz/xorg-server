@@ -41,6 +41,7 @@
 extern HICON		g_hiconX;
 
 
+#if 0
 /*
  * winMWExtWMReorderWindows
  */
@@ -54,6 +55,7 @@ winMWExtWMReorderWindows (ScreenPtr pScreen)
   win32RootlessWindowPtr pRLWinSib = NULL;
   DWORD dwCurrentProcessID = GetCurrentProcessId ();
   DWORD dwWindowProcessID = 0;
+  XID vlist[2];
 
 #if CYGMULTIWINDOW_DEBUG && FALSE
   ErrorF ("winMWExtWMReorderWindows\n");
@@ -80,22 +82,19 @@ winMWExtWMReorderWindows (ScreenPtr pScreen)
 	      
 	      if (pRLWinSib)
 		{
-		  XID *vlist = malloc (sizeof(long) * 2);
-		  
-		  if (vlist == NULL)
-		    {
-		      ErrorF ("winMWExtWMReorderWindows - malloc () "
-			      "failed\n");
-		      return;
-		    }
-		  
-		  ((long*)vlist)[0] = pRLWinSib->pFrame->win->drawable.id;
-		  ((long*)vlist)[1] = Below;
+		  vlist[0] = pRLWinSib->pFrame->win->drawable.id;
+		  vlist[1] = Below;
 
 		  ConfigureWindow (pRLWin->pFrame->win, CWSibling | CWStackMode,
 				   vlist, wClient(pRLWin->pFrame->win));
-		  
-		  free (vlist);
+		}
+	      else
+		{
+		  /* 1st window - raise to the top */
+		  vlist[0] = Above;
+
+		  ConfigureWindow (pRLWin->pFrame->win, CWStackMode,
+				   vlist, wClient(pRLWin->pFrame->win));
 		}
 	    }
 	  hwnd = GetNextWindow (hwnd, GW_HWNDNEXT);
@@ -104,8 +103,8 @@ winMWExtWMReorderWindows (ScreenPtr pScreen)
 
   pScreenPriv->fRestacking = FALSE;
   pScreenPriv->fWindowOrderChanged = FALSE;
-
 }
+#endif
 
 
 /*

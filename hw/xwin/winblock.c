@@ -89,9 +89,4 @@ winBlockHandler_ProcessMessages:
 	  DispatchMessage (&msg);
 	}
     }
-
-#ifdef XWIN_MULTIWINDOWEXTWM
-  if (pScreenPriv->pScreenInfo->fMWExtWM)
-    winMWExtWMReorderWindows ((ScreenPtr)pBlockData);
-#endif
 }

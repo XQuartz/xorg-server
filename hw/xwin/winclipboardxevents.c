@@ -377,7 +377,7 @@ winClipboardFlushXEvents (HWND hwnd,
 		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
 			  "XA_STRING\n");
 #endif
-		  return FALSE;
+		  break;
 		}
 	      else if (event.xselection.target == atomUTF8String)
 		{
@@ -400,7 +400,7 @@ winClipboardFlushXEvents (HWND hwnd,
 
 		  /* Process the ConvertSelection event */
 		  XFlush (pDisplay);
-		  return FALSE;
+		  break;
 		}
 	      else if (event.xselection.target == atomCompoundText)
 		{
@@ -423,13 +423,13 @@ winClipboardFlushXEvents (HWND hwnd,
 
 		  /* Process the ConvertSelection event */
 		  XFlush (pDisplay);
-		  return FALSE;
+		  break;
 		}
 	      else
 		{
 		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
 			  "Unknown format.  Cannot request conversion.\n");
-		  return FALSE;
+		  break;
 		}
 	    }
 

@@ -366,6 +366,10 @@ HandleCustomWM_COMMAND (unsigned long hwndIn,
 				  0, 0,
 				  0, 0,
 				  SWP_NOSIZE | SWP_NOMOVE);
+#if XWIN_MULTIWINDOW
+		  /* Reflect the changed Z order */
+		  winReorderWindowsMultiWindow ();
+#endif
 		  return TRUE;
 		  
 		case CMD_RELOAD:

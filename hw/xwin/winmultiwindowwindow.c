@@ -103,7 +103,6 @@ winCreateWindowMultiWindow (WindowPtr pWin)
   pWinPriv->hWnd = NULL;
   pWinPriv->pScreenPriv = winGetScreenPriv(pWin->drawable.pScreen);
   pWinPriv->fXKilled = FALSE;
-  pWinPriv->fAlwaysOnTop = FALSE;
  
   return fResult;
 }
@@ -389,8 +388,14 @@ winRestackWindowMultiWindow (WindowPtr pWin, WindowPtr pOldNextSib)
   if (winGetScreenPriv(pWin->drawable.pScreen)->RestackWindow)
     winGetScreenPriv(pWin->drawable.pScreen)->RestackWindow (pWin,
 							     pOldNextSib);
-
-#if 0
+  
+#if 1
+  /*
+   * Calling winReorderWindowsMultiWindow here means our window manager
+   * (i.e. Windows Explorer) has initiative to determine Z order.
+   */
+  winReorderWindowsMultiWindow ();
+#else
   /* Bail out if no window privates or window handle is invalid */
   if (!pWinPriv || !pWinPriv->hWnd)
     return;
@@ -574,7 +579,7 @@ winCreateWindowsWindow (WindowPtr pWin)
   /* Change style back to popup, already placed... */
   SetWindowLong (hWnd, GWL_STYLE, WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
   SetWindowPos (hWnd, 0, 0, 0, 0, 0,
-                SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE);
+		SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE);
 
   pWinPriv->hWnd = hWnd;
 
@@ -745,6 +750,66 @@ winFindWindow (pointer value, XID id, pointer cdata)
     {
       wi->id = id;
     }
+}
+
+
+/*
+ * winReorderWindowsMultiWindow - 
+ */
+
+void
+winReorderWindowsMultiWindow (void)
+{
+  HWND hwnd = NULL;
+  WindowPtr pWin = NULL;
+  WindowPtr pWinSib = NULL;
+  XID vlist[2];
+  static Bool fRestacking = FALSE; /* Avoid recusive calls to this function */
+
+#if CYGMULTIWINDOW_DEBUG || CYGWINDOWING_DEBUG
+  ErrorF ("winReorderWindowsMultiWindow\n");
+#endif
+
+  if (fRestacking)
+    {
+      /* It is a recusive call so immediately exit */
+#if CYGWINDOWING_DEBUG
+      ErrorF ("winReorderWindowsMultiWindow - "
+	      "exit because fRestacking == TRUE\n");
+#endif
+      return;
+    }
+  fRestacking = TRUE;
+
+  /* Loop through top level Window windows, descending in Z order */
+  for ( hwnd = GetTopWindow (NULL);
+	hwnd;
+	hwnd = GetNextWindow (hwnd, GW_HWNDNEXT) )
+    {
+      if ( GetProp (hwnd, WIN_WINDOW_PROP)
+	   && !IsIconic (hwnd) ) /* ignore minimized windows */
+	{
+	  pWinSib = pWin;
+	  pWin = GetProp (hwnd, WIN_WINDOW_PROP);
+	      
+	  if (!pWinSib)
+	    { /* 1st window - raise to the top */
+	      vlist[0] = Above;
+		  
+	      ConfigureWindow (pWin, CWStackMode, vlist, wClient(pWin));
+	    }
+	  else
+	    { /* 2nd or deeper windows - just below the previous one */
+	      vlist[0] = winGetWindowID (pWinSib);
+	      vlist[1] = Below;
+
+	      ConfigureWindow (pWin, CWSibling | CWStackMode,
+			       vlist, wClient(pWin));
+	    }
+	}
+    }
+
+  fRestacking = FALSE;
 }
 
 

@@ -1524,6 +1524,9 @@ void
 winRestackWindowMultiWindow (WindowPtr pWin, WindowPtr pOldNextSib);
 
 void
+winReorderWindowsMultiWindow (void);
+
+void
 winResizeWindowMultiWindow (WindowPtr pWin, int x, int y, unsigned int w,
 			    unsigned int h, WindowPtr pSib);
 void

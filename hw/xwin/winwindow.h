@@ -67,7 +67,6 @@ typedef struct
   HWND			hWnd;
   winPrivScreenPtr	pScreenPriv;
   Bool			fXKilled;
-  Bool                  fAlwaysOnTop;
 
   /* Privates used by primary fb DirectDraw server */
   LPDDSURFACEDESC	pddsdPrimary;

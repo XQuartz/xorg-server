@@ -1,5 +1,10 @@
 2004-10-20  Alexander Gottwald  <ago at freedesktop dot org>
 
+	* XWin.rc, winresource.h, winwndproc.c:
+	Add ShowCursor entry to tray menu 
+
+2004-10-20  Alexander Gottwald  <ago at freedesktop dot org>
+
 	* Imakefile:
 	Add ETCX11DIR to DEFINES
 	* InitOutput.c (InitOutput):

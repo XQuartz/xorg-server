@@ -1,3 +1,8 @@
+2004-12-27  Alexander Gottwald  <ago at freedesktop dot org>
+
+	* winmultiwindowwindow.c:
+	Bug #1945: Stop unnecessary reordering. (Kensuke Matsuzaki)
+
 2004-12-14  Alexander Gottwald  <ago at freedesktop dot org>
 
 	* InitOutput.c:

@@ -419,6 +419,16 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
       ii.hbmMask = hAnd;
       ii.hbmColor = hXor;
       hCursor = (HCURSOR) CreateIconIndirect( &ii );
+
+      /* Check if windows created an icon instead of the cursor. 
+       * This breaks the hotspot. Discard it then */
+      GetIconInfo(hCursor, &ii);
+      if (ii.fIcon)
+	{
+	  WIN_DEBUG_MSG("winLoadCursor: Got bitmap icon. Discarding it.\n");
+	  DestroyIcon(hCursor);
+	  hCursor = NULL;
+	}
     }
   if (hAnd)
     DeleteObject (hAnd);

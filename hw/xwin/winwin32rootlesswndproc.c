@@ -63,6 +63,14 @@ static UINT_PTR		g_uipMousePollingTimerID = 0;
 
 
 /*
+ * Local function
+ */
+
+DEFINE_ATOM_HELPER(AtmWindowsWmRaiseOnClick, WINDOWSWM_RAISE_ON_CLICK)
+DEFINE_ATOM_HELPER(AtmWindowsWMMouseActivate, WINDOWSWM_MOUSE_ACTIVATE)
+DEFINE_ATOM_HELPER(AtmWindowsWMClientWindow, WINDOWSWM_CLIENT_WINDOW)
+
+/*
  * ConstrainSize - Taken from TWM sources - Respects hints for sizing
  */
 #define makemult(a,b) ((b==1) ? (a) : (((int)((a)/(b))) * (b)) )
@@ -286,7 +294,6 @@ IsRaiseOnClick (WindowPtr pWin)
 
   struct _Window	*pwin;
   struct _Property	*prop;  
-  static Atom		atmWindowsWmRaiseOnClick = 0;
   WindowPtr		pRoot = GetCurrentRootWindow ();
 
   if (!pWin)
@@ -295,11 +302,6 @@ IsRaiseOnClick (WindowPtr pWin)
       return 0;
     } 
 
-  if (!atmWindowsWmRaiseOnClick)
-    atmWindowsWmRaiseOnClick = MakeAtom (WINDOWSWM_RAISE_ON_CLICK,
-					 strlen(WINDOWSWM_RAISE_ON_CLICK),
-					 1);
-  
   pwin = (struct _Window*) pWin;
 
   if (pwin->optional)
@@ -309,7 +311,7 @@ IsRaiseOnClick (WindowPtr pWin)
 
   while (prop)
     {
-      if (prop->propertyName == atmWindowsWmRaiseOnClick
+      if (prop->propertyName == AtmWindowsWmRaiseOnClick ()
 	  && prop->type == XA_INTEGER
 	  && prop->format == 32)
 	{
@@ -340,7 +342,6 @@ IsMouseActive (WindowPtr pWin)
 
   struct _Window	*pwin;
   struct _Property	*prop;
-  static Atom		atmWindowsWMMouseActivate = 0;
   WindowPtr		pRoot = GetCurrentRootWindow ();
 
   if (!pWin)
@@ -349,11 +350,6 @@ IsMouseActive (WindowPtr pWin)
       return 0;
     } 
 
-  if (!atmWindowsWMMouseActivate)
-    atmWindowsWMMouseActivate = MakeAtom (WINDOWSWM_MOUSE_ACTIVATE,
-					 strlen(WINDOWSWM_MOUSE_ACTIVATE),
-					 1);
-  
   pwin = (struct _Window*) pWin;
 
   if (pwin->optional)
@@ -363,7 +359,7 @@ IsMouseActive (WindowPtr pWin)
 
   while (prop)
     {
-      if (prop->propertyName == atmWindowsWMMouseActivate
+      if (prop->propertyName == AtmWindowsWMMouseActivate ()
 	  && prop->type == XA_INTEGER
 	  && prop->format == 32)
 	{
@@ -395,8 +391,7 @@ WWMPropClientWindow (WindowPtr pWin)
 {
 
   struct _Window	*pwin;
-  struct _Property	*prop;  
-  static Atom		atmWindowsWMClientWindow = 0;
+  struct _Property	*prop;
 
   if (!pWin)
     {
@@ -404,11 +399,6 @@ WWMPropClientWindow (WindowPtr pWin)
       return 0;
     } 
 
-  if (!atmWindowsWMClientWindow)
-    atmWindowsWMClientWindow = MakeAtom (WINDOWSWM_CLIENT_WINDOW,
-					 strlen(WINDOWSWM_CLIENT_WINDOW),
-					 1);
-  
   pwin = (struct _Window*) pWin;
 
   if (pwin->optional)
@@ -418,7 +408,7 @@ WWMPropClientWindow (WindowPtr pWin)
 
   while (prop)
     {
-      if (prop->propertyName == atmWindowsWMClientWindow
+      if (prop->propertyName == AtmWindowsWMClientWindow ()
 	  && prop->type == XA_INTEGER
 	  && prop->format == 32)
 	{

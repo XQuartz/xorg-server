@@ -33,6 +33,14 @@
 #include "propertyst.h"
 #include "windowstr.h"
 #include "winmultiwindowclass.h"
+#include "win.h"
+
+/*
+ * Local function
+ */
+
+DEFINE_ATOM_HELPER(AtmWmWindowRole, "WM_WINDOW_ROLE")
+
 
 int
 winMultiWindowGetClassHint (WindowPtr pWin, char **res_name, char **res_class)
@@ -148,14 +156,9 @@ winMultiWindowGetWindowRole (WindowPtr pWin, char **res_role)
   struct _Window	*pwin;
   struct _Property	*prop;
   int			len_role;
-  static Atom		atmWmWindowRole = 0;
 
   if (!pWin || !res_role) 
     return 0; 
-
-  /* Initialize the window role atom, not in XAtom.h */
-  if (!atmWmWindowRole)
-    atmWmWindowRole = MakeAtom ("WM_WINDOW_ROLE", 14, 1);
 
   pwin = (struct _Window*) pWin;
   
@@ -167,7 +170,7 @@ winMultiWindowGetWindowRole (WindowPtr pWin, char **res_role)
   *res_role = NULL;
   while (prop)
     {
-      if (prop->propertyName == atmWmWindowRole
+      if (prop->propertyName == AtmWmWindowRole ()
 	  && prop->type == XA_STRING
 	  && prop->format == 8
 	  && prop->data)

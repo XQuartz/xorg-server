@@ -686,14 +686,19 @@ winWin32RootlessStartDrawing (RootlessFrameID wid, char **pixelData, int *bytesP
 	  
 	  pRLWinPriv->fResized = FALSE;
 	}
+#if CYGMULTIWINDOW_DEBUG
+      ErrorF ("winWin32RootlessStartDrawing - 0x%08x %d\n",
+	      (unsigned int)pRLWinPriv->pfb, (unsigned int)dibsection.dsBm.bmWidthBytes);
+#endif
     }
   else
     {
       ErrorF ("winWin32RootlessStartDrawing - Already window was destoroyed \n"); 
     }
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("winWin32RootlessStartDrawing - 0x%08x %d\n",
-	  (unsigned int)pRLWinPriv->pfb, (unsigned int)dibsection.dsBm.bmWidthBytes);
+  ErrorF ("winWin32RootlessStartDrawing - done (0x08x) 0x%08x %d\n",
+	  (int) pRLWinPriv,
+	  (unsigned int)pRLWinPriv->pfb, (unsigned int)pRLWinPriv->dwWidthBytes);
 #endif
   *pixelData = pRLWinPriv->pfb;
   *bytesPerRow = pRLWinPriv->dwWidthBytes;
@@ -870,7 +875,7 @@ winWin32RootlessCopyWindow (RootlessFrameID wid, int nDstRects, const BoxRec *pD
   win32RootlessWindowPtr pRLWinPriv = (win32RootlessWindowPtr) wid;
   const BoxRec *pEnd;
   RECT rcDmg;
-#if CYGMULTIWINDOW_DEBUG || TRUE
+#if CYGMULTIWINDOW_DEBUG
   ErrorF ("winWin32RootlessCopyWindow (%08x, %d, %08x, %d, %d)\n",
 	  (int) pRLWinPriv, nDstRects, (int) pDstRects, nDx, nDy);
 #endif
@@ -904,7 +909,7 @@ winWin32RootlessCopyWindow (RootlessFrameID wid, int nDstRects, const BoxRec *pD
       
       InvalidateRect (pRLWinPriv->hWnd, &rcDmg, FALSE);
     }
-#if CYGMULTIWINDOW_DEBUG || TRUE
+#if CYGMULTIWINDOW_DEBUG
   ErrorF ("winWin32RootlessCopyWindow - done\n");
 #endif
 }

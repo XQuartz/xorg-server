@@ -257,6 +257,16 @@ if (fDebugProcMsg) \
 /* We use xor this macro for detecting toggle key state changes */
 #define WIN_XOR(a,b) ((!(a) && (b)) || ((a) && !(b)))
 
+#define DEFINE_ATOM_HELPER(func,atom_name)			\
+static Atom func (void) {					\
+    static int generation;					\
+    static Atom atom;						\
+    if (generation != serverGeneration) {			\
+	generation = serverGeneration;				\
+	atom = MakeAtom (atom_name, strlen (atom_name), TRUE);	\
+    }								\
+    return atom;						\
+}
 
 /*
  * Typedefs for engine dependent function pointers

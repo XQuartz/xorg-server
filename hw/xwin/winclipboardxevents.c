@@ -119,10 +119,10 @@ winClipboardFlushXEvents (HWND hwnd,
 	  /* Handle targets type of request */
 	  if (event.xselectionrequest.target == atomTargets)
 	    {
-	      Atom atomTargetArr[4] = {atomTargets,
-				       atomCompoundText,
-				       atomUTF8String,
-				       XA_STRING};
+	      Atom atomTargetArr[] = {atomTargets,
+				      atomCompoundText,
+				      atomUTF8String,
+				      XA_STRING};
 
 	      /* Try to change the property */
 	      iReturn = XChangeProperty (pDisplay,
@@ -132,7 +132,8 @@ winClipboardFlushXEvents (HWND hwnd,
 					 sizeof (atomTargetArr[0]),
 					 PropModeReplace,
 					 (unsigned char *) atomTargetArr,
-					 sizeof (atomTargetArr));
+					 (sizeof (atomTargetArr)
+					  / sizeof (atomTargetArr[0])));
 	      if (iReturn == BadAlloc
 		  || iReturn == BadAtom
 		  || iReturn == BadMatch

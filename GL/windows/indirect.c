@@ -22,11 +22,41 @@
 #include <glxutil.h>
 #include <glxscreens.h>
 #include <GL/internal/glcore.h>
+#include <stdlib.h>
 
 #include "../../hw/xwin/winpriv.h"
 
 /* ggs: needed to call back to glx with visual configs */
 extern void GlxSetVisualConfigs(int nconfigs, __GLXvisualConfig *configs, void **configprivs);
+
+static struct
+{
+    unsigned enableDebug : 1;
+    unsigned dumpPFD : 1;
+    unsigned dumpHWND : 1;
+    unsigned dumpXID : 1;
+} debugSettings = { 1, 0, 0, 0};
+
+static void glWinInitDebugSettings(void) 
+{
+    char *envptr;
+
+    envptr = getenv("GLWIN_ENABLE_DEBUG");
+    if (envptr != NULL)
+        debugSettings.enableDebug = (atoi(envptr) == 1);
+
+    envptr = getenv("GLWIN_DUMP_PFD");
+    if (envptr != NULL)
+        debugSettings.dumpPFD = (atoi(envptr) == 1);
+        
+    envptr = getenv("GLWIN_DUMP_HWND");
+    if (envptr != NULL)
+        debugSettings.dumpHWND = (atoi(envptr) == 1);
+
+    envptr = getenv("GLWIN_DUMP_XID");
+    if (envptr != NULL)
+        debugSettings.dumpXID = (atoi(envptr) == 1);
+}
 
 static char errorbuffer[1024];
 const char *winErrorMessage(void)
@@ -95,7 +125,7 @@ GLuint __glFloorLog2(GLuint val)
 }
 
 #if 1
-#define GLWIN_DEBUG_MSG ErrorF
+#define GLWIN_DEBUG_MSG if (debugSettings.enableDebug) ErrorF
 #else
 #define GLWIN_DEBUG_MSG(a, ...)
 #endif
@@ -207,6 +237,7 @@ struct __GLcontextRec {
 
   HGLRC ctx;
   winWindowInfoRec winInfo;
+  PIXELFORMATDESCRIPTOR pfd;
   int pixelFormat;
 
   /* set when attached */
@@ -236,11 +267,26 @@ static GLboolean glWinDestroyContext(__GLcontext *gc)
 
 static HDC glWinMakeDC(__GLcontext *gc)
 {
+    HDC dc;
     if (gc->winInfo.hrgn == NULL) 
     {
+        GLWIN_DEBUG_MSG("Creating region from RECT(%ld,%ld,%ld,%ld):",
+                gc->winInfo.rect.left,
+                gc->winInfo.rect.top,
+                gc->winInfo.rect.right,
+                gc->winInfo.rect.bottom);
         gc->winInfo.hrgn = CreateRectRgnIndirect(&gc->winInfo.rect);
+        GLWIN_DEBUG_MSG("%p\n", gc->winInfo.hrgn);
     }
-    return GetDCEx(gc->winInfo.hwnd, gc->winInfo.hrgn, DCX_PARENTCLIP);
+    /*dc = GetDC(GetActiveWindow()); */
+    dc = GetDC(gc->winInfo.hwnd); 
+    /*dc = GetDCEx(gc->winInfo.hwnd, gc->winInfo.hrgn, 
+            DCX_WINDOW | DCX_NORESETATTRS ); */
+    /*dc = GetWindowDC(gc->winInfo.hwnd);*/
+
+    if (dc == NULL)
+        ErrorF("GetDC error: %s\n", winErrorMessage());
+    return dc;
 }
 
 static GLboolean glWinLoseCurrent(__GLcontext *gc)
@@ -272,6 +318,7 @@ static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
     HDC dc;
     PIXELFORMATDESCRIPTOR pfd;
     BOOL ret;
+    __GLXdrawablePrivate *glxPriv = (__GLXdrawablePrivate *)glPriv->other;
 
     if (gc->ctx) 
     {
@@ -281,7 +328,16 @@ static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
         }
     }
     
+    if (glxPriv->type == DRAWABLE_WINDOW)
+        winGetWindowInfo((WindowPtr) glxPriv->pDraw, &gc->winInfo);
     
+    if (debugSettings.dumpHWND)
+    {
+        GLWIN_DEBUG_MSG("Got HWND %p\n", gc->winInfo.hwnd);
+        GLWIN_DEBUG_MSG("ActiveWindow %p\n", GetActiveWindow());
+    }
+    gc->winInfo.hwnd = GetActiveWindow();
+
     dc = glWinMakeDC(gc);
     DescribePixelFormat(dc, gc->pixelFormat, 
             sizeof(pfd), &pfd);
@@ -459,7 +515,7 @@ static void pfdOut(const PIXELFORMATDESCRIPTOR *pfd)
     ErrorF("\n");
 }    
 
-static int makeFormat(__GLcontextModes *mode, __GLcontext *gc)
+static void makeFormat(__GLcontextModes *mode, PIXELFORMATDESCRIPTOR *pfdret)
 {
     PIXELFORMATDESCRIPTOR pfd = {
       sizeof(PIXELFORMATDESCRIPTOR),   /* size of this pfd */
@@ -480,14 +536,10 @@ static int makeFormat(__GLcontextModes *mode, __GLcontext *gc)
       0,                     /* reserved */
       0, 0, 0                /* layer masks ignored */
     }, *result = &pfd;
-    int iPixelFormat;
-    HDC dc;
-
-    GLWIN_DEBUG_MSG("makeFormat\n");
 
     /* disable anything but rgba. must get rgba to work first */
     if (!mode->rgbMode)
-        return 0; 
+        return; 
     
     if (mode->stereoMode) {
         result->dwFlags |= PFD_STEREO;
@@ -536,20 +588,7 @@ static int makeFormat(__GLcontextModes *mode, __GLcontext *gc)
 
     /* mode->pixmapMode ? */
 
-    GLWIN_DEBUG_MSG("makeFormat almost done\n");
-
-    result = NULL;
-    dc = GetDC(gc->winInfo.hwnd);
-
-    /*pfdOut(&pfd);*/
-    iPixelFormat = ChoosePixelFormat(dc, &pfd);
-    if (iPixelFormat == 0)
-	ErrorF("ChoosePixelFormat error: %s\n", winErrorMessage());
-    ReleaseDC(gc->winInfo.hwnd, dc);
-
-    GLWIN_DEBUG_MSG("makeFormat done (%d)\n", iPixelFormat);
-
-    return iPixelFormat;
+    *pfdret = pfd;
 }
 
 static __GLinterface *glWinCreateContext(__GLimports *imports,
@@ -564,29 +603,40 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
     GLWIN_DEBUG_MSG("glWinCreateContext\n");
 
     result = (__GLcontext *)calloc(1, sizeof(__GLcontext));
-    if (!result) return NULL;
+    if (!result) 
+        return NULL;
 
     result->interface.imports = *imports;
     result->interface.exports = glWinExports;
 
     winGetWindowInfo(NULL, &result->winInfo);
+    if (debugSettings.dumpHWND)
+        GLWIN_DEBUG_MSG("Got HWND %p\n", result->winInfo.hwnd);
+    
+    dc = GetDC(result->winInfo.hwnd);
 
-    result->pixelFormat = makeFormat(mode, result);
-    if (result->pixelFormat == 0) {
+    makeFormat(mode, &result->pfd);
+
+    if (debugSettings.dumpPFD)
+        pfdOut(&result->pfd);
+
+    result->pixelFormat = ChoosePixelFormat(dc, &result->pfd);
+    if (result->pixelFormat == 0)
+    {
+        ErrorF("ChoosePixelFormat error: %s\n", winErrorMessage());
+        ReleaseDC(result->winInfo.hwnd, dc);
         free(result);
         return NULL;
     }
 
+    GLWIN_DEBUG_MSG("ChoosePixelFormat done (%d)\n", result->pixelFormat);
+
     result->ctx = NULL;
 
-    dc = GetDC(result->winInfo.hwnd);
-    DescribePixelFormat(dc, result->pixelFormat, 
-            sizeof(pfd), &pfd);
-    /*pfdOut(&pfd);*/
     ret = SetPixelFormat(dc, result->pixelFormat, &pfd);
-
     if (!ret) {
         ErrorF("SetPixelFormat error: %s\n", winErrorMessage());
+        ReleaseDC(result->winInfo.hwnd, dc);
         free(result);
         return NULL;
     }
@@ -621,10 +671,6 @@ glWinRealizeWindow(WindowPtr pWin)
     result = pScreen->RealizeWindow(pWin);
     pScreen->RealizeWindow = glWinRealizeWindow;
 
-    /* The Aqua window will already have been created (windows are
-     * realized from top down)
-     */
-
     /* Re-attach this window's GL contexts, if any. */
     glxPriv = __glXFindDrawablePrivate(pWin->drawable.id);
     if (glxPriv) {
@@ -636,10 +682,6 @@ glWinRealizeWindow(WindowPtr pWin)
         /* GL contexts bound to this window for drawing */
         for (gx = glxPriv->drawGlxc; gx != NULL; gx = gx->next) {
             gc = (__GLcontext *)gx->gc;
-            
-            /* get the correct window handle */
-            winGetWindowInfo(pWin, &gc->winInfo);
-
             attach(gc, glPriv);
         }
 
@@ -1351,8 +1393,10 @@ static Bool glWinInitVisuals(VisualPtr *visualp, DepthPtr *depthp,
 			      int *rootDepthp, VisualID *defaultVisp,
 			      unsigned long sizes, int bitsPerRGB)
 {
+    glWinInitDebugSettings();
+
     GLWIN_DEBUG_MSG("glWinInitVisuals\n");
-    
+
     if (0 == numConfigs) /* if no configs */
     	glWinInitVisualConfigs(); /* ensure the visula configs are setup */
 

@@ -1,3 +1,9 @@
+2004-10-05  Alexander Gottwald  <ago at freedesktop dot org>
+
+	* XWin.rc:
+	Set the dialogstyle to DS_CENTERMOUSE. Dialogs will now popup on the
+	monitor where the mouse is and not on the center of the whole desktop.
+
 2004-10-02  Alexander Gottwald  <ago at freedesktop dot org>
 
 	* winmouse.c (winMouseProc):

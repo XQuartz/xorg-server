@@ -202,8 +202,8 @@ SetTrayIcon (char *fname)
 {
   strncpy (pref.trayIconName, fname, NAME_MAX);
   pref.trayIconName[NAME_MAX] = 0;
-  ErrorF("trayiconname: %s\n", pref.trayIconName);
 }
+
 static void
 SetRootMenu (char *menu)
 {

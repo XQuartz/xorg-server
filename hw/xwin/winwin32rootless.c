@@ -510,7 +510,11 @@ winWin32RootlessRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid)
   win32RootlessWindowPtr pRLWinPriv = (win32RootlessWindowPtr) wid;
   win32RootlessWindowPtr pRLNextWinPriv = (win32RootlessWindowPtr) nextWid;
   winScreenPriv(pRLWinPriv->pFrame->win->drawable.pScreen);
+  DWORD dwCurrentProcessID = GetCurrentProcessId ();
+  DWORD dwWindowProcessID = 0;
   HWND hWnd;
+  Bool fFirst = TRUE;
+  Bool fNeedRestack = TRUE;
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winWin32RootlessRestackFrame (%08x)\n", (int) pRLWinPriv);
 #endif
@@ -523,7 +527,77 @@ winWin32RootlessRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid)
   if(!IsWindowVisible (pRLWinPriv->hWnd))
     ShowWindow (pRLWinPriv->hWnd, SW_SHOWNOACTIVATE);
 
-  pScreenPriv->fWindowOrderChanged = TRUE;
+  if (pRLNextWinPriv == NULL)
+    {
+#if CYGMULTIWINDOW_DEBUG
+      ErrorF ("Win %08x is top\n", pRLWinPriv);
+#endif
+      pScreenPriv->widTop = wid;
+      SetWindowPos (pRLWinPriv->hWnd, HWND_TOP,
+		    0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+    }
+  else
+    {
+#if CYGMULTIWINDOW_DEBUG
+      ErrorF ("Win %08x is not top\n", pRLWinPriv);
+#endif
+      for (hWnd = GetNextWindow (pRLWinPriv->hWnd, GW_HWNDPREV);
+	   fNeedRestack && hWnd != NULL;
+	   hWnd = GetNextWindow (hWnd, GW_HWNDPREV))
+	{
+	  GetWindowThreadProcessId (hWnd, &dwWindowProcessID);
+
+	  if ((dwWindowProcessID == dwCurrentProcessID)
+	      && GetProp (hWnd, WIN_WINDOW_PROP))
+	    {
+	      if (hWnd == pRLNextWinPriv->hWnd)
+		{
+		  /* Enable interleave X window and Windows window */
+		  if (!fFirst)
+		    {
+#if CYGMULTIWINDOW_DEBUG
+		      ErrorF ("raise: Insert after Win %08x\n", pRLNextWinPriv);
+#endif
+		      SetWindowPos (pRLWinPriv->hWnd, pRLNextWinPriv->hWnd,
+				    0, 0, 0, 0,
+				    SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+		    }
+		  else
+		    {
+#if CYGMULTIWINDOW_DEBUG
+		      ErrorF ("No change\n");
+#endif
+		    }
+		  fNeedRestack = FALSE;
+		  break;
+		}
+	      if (fFirst) fFirst = FALSE;
+	    }
+	}
+
+      for (hWnd = GetNextWindow (pRLWinPriv->hWnd, GW_HWNDNEXT);
+	   fNeedRestack && hWnd != NULL;
+	   hWnd = GetNextWindow (hWnd, GW_HWNDNEXT))
+	{
+	  GetWindowThreadProcessId (hWnd, &dwWindowProcessID);
+
+	  if ((dwWindowProcessID == dwCurrentProcessID)
+	      && GetProp (hWnd, WIN_WINDOW_PROP))
+	    {
+	      if (hWnd == pRLNextWinPriv->hWnd)
+		{
+#if CYGMULTIWINDOW_DEBUG
+		  ErrorF ("lower: Insert after Win %08x\n", pRLNextWinPriv);
+#endif
+		  SetWindowPos (pRLWinPriv->hWnd, pRLNextWinPriv->hWnd,
+				0, 0, 0, 0,
+				SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+		  fNeedRestack = FALSE;
+		  break;
+		}
+	    }
+	}
+    }
 
   pRLWinPriv->fRestackingNow = FALSE;
 }

@@ -434,12 +434,11 @@ ProcWindowsWMFrameGetRect (register ClientPtr client)
 static int
 ProcWindowsWMFrameDraw (register ClientPtr client)
 {
-  BoxRec ir;
   REQUEST(xWindowsWMFrameDrawReq);
   WindowPtr pWin;
   win32RootlessWindowPtr pRLWinPriv;
   RECT rcNew;
-  WINDOWPLACEMENT wndpl;
+  int nCmdShow;
   RegionRec newShape;
   ScreenPtr pScreen;
 
@@ -457,31 +456,27 @@ ProcWindowsWMFrameDraw (register ClientPtr client)
   ErrorF ("ProcWindowsWMFrameDraw - Window found\n");
 #endif
 
-  ir = make_box (stuff->ix, stuff->iy, stuff->iw, stuff->ih);
-
   pRLWinPriv = (win32RootlessWindowPtr) RootlessFrameForWindow (pWin, TRUE);
   if (pRLWinPriv == 0) return BadWindow;
 
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("ProcWindowsWMFrameDraw - HWND 0x%08x 0x%08x 0x%08x",
+  ErrorF ("ProcWindowsWMFrameDraw - HWND 0x%08x 0x%08x 0x%08x\n",
 	  (int) pRLWinPriv->hWnd, (int) stuff->frame_style,
 	  (int) stuff->frame_style_ex);
   ErrorF ("ProcWindowsWMFrameDraw - %d %d %d %d\n",
 	  stuff->ix, stuff->iy, stuff->iw, stuff->ih);
 #endif
-    
-  GetWindowPlacement (pRLWinPriv->hWnd, &wndpl);
 
   /* Store the origin, height, and width in a rectangle structure */
   SetRect (&rcNew, stuff->ix, stuff->iy,
 	   stuff->ix + stuff->iw, stuff->iy + stuff->ih);
-    
+
   /*
    * Calculate the required size of the Windows window rectangle,
    * given the size of the Windows window client area.
    */
   AdjustWindowRectEx (&rcNew, stuff->frame_style, FALSE, stuff->frame_style_ex);
-    
+  
   /* Set the window extended style flags */
   if (!SetWindowLongPtr (pRLWinPriv->hWnd, GWL_EXSTYLE, stuff->frame_style_ex))
     {
@@ -493,7 +488,7 @@ ProcWindowsWMFrameDraw (register ClientPtr client)
     {
       return BadValue;
     }
-  
+
   /* Flush the window style */
   if (!SetWindowPos (pRLWinPriv->hWnd, NULL,
 		     rcNew.left, rcNew.top,
@@ -502,8 +497,12 @@ ProcWindowsWMFrameDraw (register ClientPtr client)
     {
       return BadValue;
     }
+  if (!IsWindowVisible(pRLWinPriv->hWnd))
+    nCmdShow = SW_HIDE;
+  else 
+    nCmdShow = SW_SHOWNA;
 
-  ShowWindow (pRLWinPriv->hWnd, wndpl.showCmd);
+  ShowWindow (pRLWinPriv->hWnd, nCmdShow);
 
   winWin32RootlessUpdateIcon (pWin->drawable.id);
 

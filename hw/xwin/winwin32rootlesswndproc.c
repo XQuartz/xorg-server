@@ -393,47 +393,6 @@ IsMouseActive (WindowPtr pWin)
 
 
 /*
- * WWMPropClientWindow
- */
-
-static WindowPtr
-WWMPropClientWindow (WindowPtr pWin)
-{
-
-  struct _Window	*pwin;
-  struct _Property	*prop;
-
-  if (!pWin)
-    {
-      ErrorF ("WWMPropClientWindow - pWin was NULL\n");
-      return 0;
-    } 
-
-  pwin = (struct _Window*) pWin;
-
-  if (pwin->optional)
-    prop = (struct _Property *) pwin->optional->userProps;
-  else
-    prop = NULL;
-
-  while (prop)
-    {
-      if (prop->propertyName == AtmWindowsWMClientWindow ()
-	  && prop->type == XA_INTEGER
-	  && prop->format == 32)
-	{
-	  pWin = LookupIDByType (*(int*)prop->data, RT_WINDOW);
-	  return pWin;
-	}
-      else
-	prop = prop->next;
-    }
-  
-  return 0;
-}
-
-
-/*
  * winWin32RootlessWindowProc - Window procedure
  */
 
@@ -453,8 +412,7 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
   PAINTSTRUCT		ps;
   LPWINDOWPOS		pWinPos = NULL;
   RECT			rcClient;
-  WindowPtr		pClientWin = NULL;
-  
+
   /* Check if the Windows window property for our X window pointer is valid */
   if ((pRLWinPriv = (win32RootlessWindowPtr)GetProp (hwnd, WIN_WINDOW_PROP)) != NULL)
     {
@@ -585,7 +543,7 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
       return 0;
       
     case WM_NCMOUSEMOVE:
-#if CYGMULTIWINDOW_DEBUG
+#if CYGMULTIWINDOW_DEBUG && 0
       ErrorF ("winWin32RootlessWindowProc - WM_NCMOUSEMOVE\n");
 #endif
       /*
@@ -890,29 +848,14 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 #if CYGMULTIWINDOW_DEBUG
       ErrorF ("\t(%d, %d)\n", (short) LOWORD(lParam), (short) HIWORD(lParam));
 #endif
-#if 0
-      winWindowsWMSendEvent(WindowsWMControllerNotify,
-			    WindowsWMControllerNotifyMask,
-			    1,
-			    WindowsWMMoveWindow,
-			    pWin->drawable.id,
-			    (LOWORD(lParam) - wBorderWidth (pWin) - GetSystemMetrics (SM_XVIRTUALSCREEN)),
-			    (HIWORD(lParam) - wBorderWidth (pWin) - GetSystemMetrics (SM_YVIRTUALSCREEN)),
-			    0, 0);
-#else
       if (!pRLWinPriv->fMovingOrSizing)
 	{
-	  WindowPtr pClientWin = WWMPropClientWindow (pWin);
-	  
-	  if (pClientWin == NULL) pClientWin = pWin;
-	  
-	  winWin32RootlessMoveXWindow (pClientWin,
+	  winWin32RootlessMoveXWindow (pWin,
 				       (LOWORD(lParam) - wBorderWidth (pWin)
 					- GetSystemMetrics (SM_XVIRTUALSCREEN)),
 				       (HIWORD(lParam) - wBorderWidth (pWin)
 					- GetSystemMetrics (SM_YVIRTUALSCREEN)));
 	}
-#endif
       return 0;
 
     case WM_SHOWWINDOW:
@@ -920,16 +863,9 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
       ErrorF ("winWin32RootlessWindowProc - WM_SHOWWINDOW - %d ms\n",
 	      (unsigned int)GetTickCount ());
 #endif
-      /* Bail out if the window is being hidden */
-      if (!wParam)
-	return 0;
-
-      /* Tell X to map the window */
-      MapWindow (pWin, wClient(pWin));
-
       if (pScreenPriv != NULL)
 	pScreenPriv->fWindowOrderChanged = TRUE;
-      return 0;
+      break;
 
     case WM_SIZING:
       /* Need to legalize the size according to WM_NORMAL_HINTS */
@@ -937,22 +873,113 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
       return ValidateSizing (hwnd, pWin, wParam, lParam);
 
     case WM_WINDOWPOSCHANGED:
-      {
-	LPWINDOWPOS pwindPos = (LPWINDOWPOS) lParam;
-
-	/* Bail if window z order was not changed */
-	if (pwindPos->flags & SWP_NOZORDER)
-	  break;
-
 #if CYGMULTIWINDOW_DEBUG
-	ErrorF ("winTopLevelWindowProc - hwndInsertAfter: %p\n",
-		pwindPos->hwndInsertAfter);
+      ErrorF ("winWin32RootlessWindowProc - WM_WINDOWPOSCHANGED\n");
 #endif
-	
-	if (pScreenPriv != NULL)
+      {
+	pWinPos = (LPWINDOWPOS) lParam;
+#if CYGMULTIWINDOW_DEBUG
+	ErrorF("flags: ");
+	if (pWinPos->flags & SWP_DRAWFRAME) ErrorF("SWP_DRAWFRAME ");
+	if (pWinPos->flags & SWP_FRAMECHANGED) ErrorF("SWP_FRAMECHANGED ");
+	if (pWinPos->flags & SWP_HIDEWINDOW) ErrorF("SWP_HIDEWINDOW ");
+	if (pWinPos->flags & SWP_NOACTIVATE) ErrorF("SWP_NOACTIVATE ");
+	if (pWinPos->flags & SWP_NOCOPYBITS) ErrorF("SWP_NOCOPYBITS ");
+	if (pWinPos->flags & SWP_NOMOVE) ErrorF("SWP_NOMOVE ");
+	if (pWinPos->flags & SWP_NOOWNERZORDER) ErrorF("SWP_NOOWNERZORDER ");
+	if (pWinPos->flags & SWP_NOSIZE) ErrorF("SWP_NOSIZE ");
+	if (pWinPos->flags & SWP_NOREDRAW) ErrorF("SWP_NOREDRAW ");
+	if (pWinPos->flags & SWP_NOSENDCHANGING) ErrorF("SWP_NOSENDCHANGING ");
+	if (pWinPos->flags & SWP_NOZORDER) ErrorF("SWP_NOZORDER ");
+	if (pWinPos->flags & SWP_SHOWWINDOW) ErrorF("SWP_SHOWWINDOW ");
+	ErrorF("\n");
+#endif
+	if (pWinPos->flags & SWP_HIDEWINDOW) break;
+
+	/* Reorder if window z order was changed */
+	if ((pScreenPriv != NULL)
+	    && !(pWinPos->flags & SWP_NOZORDER))
 	  pScreenPriv->fWindowOrderChanged = TRUE;
+
+	if (!(pWinPos->flags & SWP_NOSIZE)) {
+	  if (IsIconic(hwnd)){
+#if CYGMULTIWINDOW_DEBUG
+	    ErrorF ("\tIconic -> MINIMIZED\n");
+#endif
+	    winWindowsWMSendEvent(WindowsWMControllerNotify,
+				  WindowsWMControllerNotifyMask,
+				  1,
+				  WindowsWMMinimizeWindow,
+				  pWin->drawable.id,
+				  0, 0, 0, 0);
+	  } else if (IsZoomed(hwnd)){
+#if CYGMULTIWINDOW_DEBUG
+	    ErrorF ("\tZoomed -> MAXIMIZED\n");
+#endif
+	    winWindowsWMSendEvent(WindowsWMControllerNotify,
+				  WindowsWMControllerNotifyMask,
+				  1,
+				  WindowsWMMaximizeWindow,
+				  pWin->drawable.id,
+				  0, 0, 0, 0);
+	  } else {
+#if CYGMULTIWINDOW_DEBUG
+	    ErrorF ("\tnone -> RESTORED\n");
+#endif
+	    winWindowsWMSendEvent(WindowsWMControllerNotify,
+				  WindowsWMControllerNotifyMask,
+				  1,
+				  WindowsWMRestoreWindow,
+				  pWin->drawable.id,
+				  0, 0, 0, 0);
+	  }
+	}
+	if (!g_fNoConfigureWindow ) {
+
+	  if (!pRLWinPriv->fMovingOrSizing) {
+	    GetClientRect (hwnd, &rcClient);
+	    MapWindowPoints (hwnd, HWND_DESKTOP, (LPPOINT)&rcClient, 2);
+
+	    if (!(pWinPos->flags & SWP_NOMOVE)
+		&&!(pWinPos->flags & SWP_NOSIZE)) {
+#if CYGMULTIWINDOW_DEBUG
+	      ErrorF ("\tmove & resize\n");
+#endif
+	      winWin32RootlessMoveResizeXWindow (pWin,
+						 rcClient.left - wBorderWidth (pWin)
+						 - GetSystemMetrics (SM_XVIRTUALSCREEN),
+						 rcClient.top - wBorderWidth (pWin)
+						 - GetSystemMetrics (SM_YVIRTUALSCREEN),
+						 rcClient.right - rcClient.left
+						 - wBorderWidth (pWin)*2,
+						 rcClient.bottom - rcClient.top
+						 - wBorderWidth (pWin)*2);
+	    } else if (!(pWinPos->flags & SWP_NOMOVE)) {
+#if CYGMULTIWINDOW_DEBUG
+	      ErrorF ("\tmove\n");
+#endif
+	      winWin32RootlessMoveXWindow (pWin,
+					   rcClient.left - wBorderWidth (pWin)
+					   - GetSystemMetrics (SM_XVIRTUALSCREEN),
+					   rcClient.top - wBorderWidth (pWin)
+					   - GetSystemMetrics (SM_YVIRTUALSCREEN));
+	    } else if (!(pWinPos->flags & SWP_NOSIZE)) {
+#if CYGMULTIWINDOW_DEBUG
+	      ErrorF ("\tresize\n");
+#endif
+	      winWin32RootlessResizeXWindow (pWin,
+					     rcClient.right - rcClient.left
+					     - wBorderWidth (pWin)*2,
+					     rcClient.bottom - rcClient.top
+					     - wBorderWidth (pWin)*2);
+	    }
+	  }
+	}
       }
-      break;
+#if CYGMULTIWINDOW_DEBUG
+      ErrorF ("winWin32RootlessWindowProc - WM_WINDOWPOSCHANGED - done.\n");
+#endif
+      return 0;
 
     case WM_SIZE:
       /* see dix/window.c */
@@ -987,7 +1014,7 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 
 	case SIZE_RESTORED:
 #if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("\tSIZE_MINIMIZED\n");
+	  ErrorF ("\tSIZE_RESTORED\n");
 #endif
 	  winWindowsWMSendEvent(WindowsWMControllerNotify,
 				WindowsWMControllerNotifyMask,
@@ -1013,26 +1040,14 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 	}
 
       /* Perform the resize and notify the X client */
-#if 0
-      winWindowsWMSendEvent(WindowsWMControllerNotify,
-			    WindowsWMControllerNotifyMask,
-			    1,
-			    WindowsWMResizeWindow,
-			    pWin->drawable.id,
-			    0, 0,
-			    LOWORD(lParam), HIWORD(lParam));
-#else
       if (!pRLWinPriv->fMovingOrSizing)
 	{
-	  WindowPtr pClientWin = WWMPropClientWindow (pWin);
-	  
-	  if (pClientWin == NULL) pClientWin = pWin;
-	  
-	  winWin32RootlessResizeXWindow (pClientWin,
-					 (short) LOWORD(lParam),
-					 (short) HIWORD(lParam));
+	  winWin32RootlessResizeXWindow (pWin,
+					 (short) LOWORD(lParam)
+					 - wBorderWidth (pWin)*2,
+					 (short) HIWORD(lParam)
+					 - wBorderWidth (pWin)*2);
 	}
-#endif
       break;
 
     case WM_ACTIVATEAPP:
@@ -1067,19 +1082,24 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
       break;
 
     case WM_ENTERSIZEMOVE:
+#if CYGMULTIWINDOW_DEBUG
+      ErrorF ("winWin32RootlessWindowProc - WM_ENTERSIZEMOVE - %d ms\n",
+	      (unsigned int)GetTickCount ());
+#endif
       pRLWinPriv->fMovingOrSizing = TRUE;
       break;
 
     case WM_EXITSIZEMOVE:
+#if CYGMULTIWINDOW_DEBUG
+      ErrorF ("winWin32RootlessWindowProc - WM_EXITSIZEMOVE - %d ms\n",
+	      (unsigned int)GetTickCount ());
+#endif
       pRLWinPriv->fMovingOrSizing = FALSE;
 
       GetClientRect (hwnd, &rcClient);
-      
-      pClientWin = WWMPropClientWindow (pWin);
-      if (pClientWin == NULL) pClientWin = pWin;
 
       MapWindowPoints (hwnd, HWND_DESKTOP, (LPPOINT)&rcClient, 2);
-      winWin32RootlessMoveResizeXWindow (pClientWin,
+      winWin32RootlessMoveResizeXWindow (pWin,
 					 rcClient.left - wBorderWidth (pWin)
 					 - GetSystemMetrics (SM_XVIRTUALSCREEN),
 					 rcClient.top - wBorderWidth (pWin)

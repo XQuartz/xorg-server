@@ -142,6 +142,8 @@ KDKBDREP_ioctl_ok(int rate, int delay) {
 #endif /* KDKBDREP */
 }
 
+#undef rate
+
 static int
 KIOCSRATE_ioctl_ok(int rate, int delay) {
 #ifdef KIOCSRATE
@@ -168,8 +170,6 @@ KIOCSRATE_ioctl_ok(int rate, int delay) {
    return 0;
 #endif /* KIOCSRATE */
 }
-
-#undef rate
 
 static void
 SetKbdRepeat(InputInfoPtr pInfo, char rad)

@@ -256,6 +256,10 @@ winClipboardProc ()
       pthread_exit (NULL);
     }
 
+#if 0
+  ErrorF ("winClipboardProc - iWindow: %d\n", iWindow);
+#endif
+
   /* Save the window in the screen privates */
   g_iClipboardWindow = iWindow;
 

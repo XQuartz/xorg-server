@@ -32,7 +32,6 @@
 #include "dixstruct.h"
 #include "Xatom.h"
 
-
 /*
  * Constants
  */
@@ -46,7 +45,7 @@
  * Globals
  */
 
-static Window		g_iOwners[CLIP_NUM_SELECTIONS];
+static Window		g_iOwners[CLIP_NUM_SELECTIONS] = {None};
 
 
 /*
@@ -332,7 +331,7 @@ winProcSetSelectionOwner (ClientPtr client)
 	  
 	  /* Adjust last owned selection */
 	  if (None != g_iOwners[CLIP_OWN_CLIPBOARD])
-	    g_atomLastOwnedSelection = MakeAtom ("CLIPBOARD", 10, FALSE);
+	    g_atomLastOwnedSelection = MakeAtom ("CLIPBOARD", 9, FALSE);
 	  else
 	    g_atomLastOwnedSelection = None;
 	}
@@ -340,7 +339,7 @@ winProcSetSelectionOwner (ClientPtr client)
       /* Save new selection owner or None */
       g_iOwners[CLIP_OWN_PRIMARY] = stuff->window;
     }
-  else if (MakeAtom ("CLIPBOARD", 10, FALSE) == stuff->selection)
+  else if (MakeAtom ("CLIPBOARD", 9, FALSE) == stuff->selection)
     {
       /* Look for owned -> not owned transition */
       if (None == stuff->window
@@ -355,6 +354,7 @@ winProcSetSelectionOwner (ClientPtr client)
 	    g_atomLastOwnedSelection = None;
 	}
       
+      /* Save new selection owner or None */
       g_iOwners[CLIP_OWN_CLIPBOARD] = stuff->window;
     }
   else
@@ -391,7 +391,9 @@ winProcSetSelectionOwner (ClientPtr client)
   /* Abort if no window at this point */
   if (None == stuff->window)
     {
+#if 0
       ErrorF ("winProcSetSelectionOwner - No window, returning.\n");
+#endif
       goto winProcSetSelectionOwner_Done;
     }
 

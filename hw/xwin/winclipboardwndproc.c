@@ -164,8 +164,54 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	    && !IsClipboardFormatAvailable (CF_UNICODETEXT))
 	  {
 	    ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
-		    "Clipboard does not contain CF_TEXT nor CF_UNICODETEXT; "
-		    "not taking ownership of X11 selections.\n");
+		    "Clipboard does not contain CF_TEXT nor "
+		    "CF_UNICODETEXT.\n");
+
+	    /*
+	     * We need to make sure that the X Server has processed
+	     * previous XSetSelectionOwner messages.
+	     */
+	    XSync (pDisplay, FALSE);
+	    
+	    /* Release PRIMARY selection if owned */
+	    iReturn = XGetSelectionOwner (pDisplay, XA_PRIMARY);
+	    if (iReturn == g_iClipboardWindow)
+	      {
+#if 0
+		ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+			"PRIMARY selection is owned by us.\n");
+#endif
+		XSetSelectionOwner (pDisplay,
+				    XA_PRIMARY,
+				    None,
+				    CurrentTime);
+	      }
+	    else if (BadWindow == iReturn || BadAtom == iReturn)
+	      ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+		      "XGetSelection failed for PRIMARY: %d\n", iReturn);
+
+	    /* Release CLIPBOARD selection if owned */
+	    iReturn = XGetSelectionOwner (pDisplay,
+					  XInternAtom (pDisplay,
+						       "CLIPBOARD",
+						       FALSE));
+	    if (iReturn == g_iClipboardWindow)
+	      {
+#if 0
+		ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+			"CLIPBOARD selection is owned by us.\n");
+#endif
+		XSetSelectionOwner (pDisplay,
+				    XInternAtom (pDisplay,
+						 "CLIPBOARD",
+						 FALSE),
+				    None,
+				    CurrentTime);
+	      }
+	    else if (BadWindow == iReturn || BadAtom == iReturn)
+	      ErrorF ("winClipboardWindowProc - WM_DRAWCLIPBOARD - "
+		      "XGetSelection failed for CLIPBOARD: %d\n", iReturn);
+
 	    return 0;
 	  }
 

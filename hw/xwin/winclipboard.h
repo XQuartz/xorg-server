@@ -1,3 +1,5 @@
+#ifndef _WINCLIPBOARD_H_
+#define _WINCLIPBOARD_H_
 /*
  *Copyright (C) 1994-2000 The XFree86 Project, Inc. All Rights Reserved.
  *
@@ -28,10 +30,6 @@
  * Authors:	Harold Hunt
  */
 /* $XFree86: xc/programs/Xserver/hw/xwin/winclipboard.h,v 1.3 2003/10/02 13:30:10 eich Exp $ */
-
-
-#ifndef _WINCLIPBOARD_H_
-#define _WINCLIPBOARD_H_
 
 /* Standard library headers */
 #include <assert.h>

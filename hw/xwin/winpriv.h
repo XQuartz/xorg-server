@@ -1,3 +1,9 @@
+/*
+ * Export window information for the Windows-OpenGL GLX implementation.
+ *
+ * Authors: Alexander Gottwald
+ */
+/* $XDotOrg$ */
 #include <windows.h>
 
 typedef struct

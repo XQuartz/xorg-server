@@ -35,7 +35,7 @@
 #include "dixevents.h"
 #include "winmultiwindowclass.h"
 #include "winprefs.h"
-#ifdef CYGDEBUG
+#if CYGDEBUG
 #include "winmessages.h"
 #endif
 
@@ -948,7 +948,7 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
           WINDOWPOS *windowpos = (WINDOWPOS *)lParam;
           HWND hwndprev = GetNextWindow(hwnd, GW_HWNDPREV);
           HWND hwndafter = windowpos->hwndInsertAfter;
-#ifdef CYGDEBUG
+#if CYGDEBUG
           char buffer[1024];
           char buffer2[1024];
           GetWindowText(hwndafter, buffer, sizeof(buffer));

@@ -1003,7 +1003,14 @@ ddxProcessArgument (int argc, char *argv[], int i)
   if (IS_OPTION ("-xf86config"))
     {
       CHECK_ARGS (1);
+#ifdef XWIN_XF86CONFIG
       g_cmdline.configFile = argv[++i];
+#else
+      winMessageBoxF ("The -xf86config option is not supported in this "
+		      "release.\n"
+		      "Ignoring this option and continuing.\n",
+		      MB_ICONINFORMATION);
+#endif
       return 2;
     }
 
@@ -1012,8 +1019,15 @@ ddxProcessArgument (int argc, char *argv[], int i)
    */
   if (IS_OPTION ("-keyboard"))
     {
+#ifdef XWIN_XF86CONFIG
       CHECK_ARGS (1);
       g_cmdline.keyboard = argv[++i];
+#else
+      winMessageBoxF ("The -keyboard option is not supported in this "
+		      "release.\n"
+		      "Ignoring this option and continuing.\n",
+		      MB_ICONINFORMATION);
+#endif
       return 2;
     }
 

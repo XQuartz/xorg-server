@@ -57,10 +57,14 @@ XF86ConfigPtr g_xf86configptr = NULL;
 #endif
 
 WinCmdlineRec g_cmdline = {
+#ifdef XWIN_XF86CONFIG
   NULL,				/* configFile */
+#endif
   NULL,				/* fontPath */
   NULL,				/* rgbPath */
+#ifdef XWIN_XF86CONFIG
   NULL,				/* keyboard */
+#endif
 #ifdef XKB
   FALSE,			/* noXkbExtension */
   NULL,				/* xkbMap */
@@ -388,11 +392,10 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 #endif /* XKB */
 
   /* parse the configuration */
-
+#ifdef XWIN_XF86CONFIG
   if (g_cmdline.keyboard)
     kbdfrom = X_CMDLINE;
 
-#ifdef XWIN_XF86CONFIG
   /*
    * Until the layout code is finished, I search for the keyboard 
    * device and configure the server with it.

@@ -187,11 +187,15 @@ serverLayoutRec, *serverLayoutPtr;
 typedef struct
 {
   /* Files */
+#ifdef XWIN_XF86CONFIG
   char *configFile;
+#endif
   char *fontPath;
   char *rgbPath;
   /* input devices - keyboard */
+#ifdef XWIN_XF86CONFIG
   char *keyboard;
+#endif
 #ifdef XKB
   Bool noXkbExtension;
   char *xkbMap;
@@ -200,7 +204,6 @@ typedef struct
   char *xkbLayout;
   char *xkbVariant;
   char *xkbOptions;
-
 #endif
   /* layout */
   char *screenname;

@@ -147,7 +147,7 @@ static int
 winMultiWindowWMErrorHandler (Display *pDisplay, XErrorEvent *pErr);
 
 static int
-winMutliWindowWMIOErrorHandler (Display *pDisplay);
+winMultiWindowWMIOErrorHandler (Display *pDisplay);
 
 static void *
 winMultiWindowXMsgProc (void *pArg);
@@ -156,7 +156,7 @@ static int
 winMultiWindowXMsgProcErrorHandler (Display *pDisplay, XErrorEvent *pErr);
 
 static int
-winMutliWindowXMsgProcIOErrorHandler (Display *pDisplay);
+winMultiWindowXMsgProcIOErrorHandler (Display *pDisplay);
 
 static int
 winRedirectErrorHandler (Display *pDisplay, XErrorEvent *pErr);
@@ -853,7 +853,7 @@ winMultiWindowXMsgProc (void *pArg)
 
   /* Install our error handler */
   XSetErrorHandler (winMultiWindowXMsgProcErrorHandler);
-  XSetIOErrorHandler (winMutliWindowXMsgProcIOErrorHandler);
+  XSetIOErrorHandler (winMultiWindowXMsgProcIOErrorHandler);
 
   /* Setup the display connection string x */
   snprintf (pszDisplay,
@@ -1130,7 +1130,7 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
 
   /* Install our error handler */
   XSetErrorHandler (winMultiWindowWMErrorHandler);
-  XSetIOErrorHandler (winMutliWindowWMIOErrorHandler);
+  XSetIOErrorHandler (winMultiWindowWMIOErrorHandler);
 
   /* Setup the display connection string x */
   snprintf (pszDisplay,
@@ -1240,9 +1240,9 @@ winMultiWindowWMErrorHandler (Display *pDisplay, XErrorEvent *pErr)
  */
 
 static int
-winMutliWindowWMIOErrorHandler (Display *pDisplay)
+winMultiWindowWMIOErrorHandler (Display *pDisplay)
 {
-  printf ("\nwinMutliWindowWMIOErrorHandler!\n\n");
+  ErrorF ("\nwinMultiWindowWMIOErrorHandler!\n\n");
 
   /* Restart at the main entry point */
   longjmp (g_jmpWMEntry, WIN_JMP_ERROR_IO);
@@ -1275,9 +1275,9 @@ winMultiWindowXMsgProcErrorHandler (Display *pDisplay, XErrorEvent *pErr)
  */
 
 static int
-winMutliWindowXMsgProcIOErrorHandler (Display *pDisplay)
+winMultiWindowXMsgProcIOErrorHandler (Display *pDisplay)
 {
-  printf ("\nwinMutliWindowXMsgProcIOErrorHandler!\n\n");
+  ErrorF ("\nwinMultiWindowXMsgProcIOErrorHandler!\n\n");
 
   /* Restart at the main entry point */
   longjmp (g_jmpXMsgProcEntry, WIN_JMP_ERROR_IO);

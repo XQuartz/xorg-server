@@ -519,33 +519,12 @@ winWin32RootlessRestackFrame (RootlessFrameID wid, RootlessFrameID nextWid)
 
   pRLWinPriv->fRestackingNow = TRUE;
 
-  /* Show window */    
+  /* Show window */
   if(!IsWindowVisible (pRLWinPriv->hWnd))
-    ShowWindow (pRLWinPriv->hWnd, SW_SHOWNA);
+    ShowWindow (pRLWinPriv->hWnd, SW_SHOWNOACTIVATE);
 
-  if (pRLNextWinPriv == NULL)
-    {
-      //ErrorF ("Win %08x is top\n", pRLWinPriv);
-      pScreenPriv->widTop = wid;
-      SetWindowPos (pRLWinPriv->hWnd, HWND_TOP,
-		    0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
-    }
-  else
-    {
-      //ErrorF ("Win %08x is not top\n", pRLWinPriv);
-      hWnd = GetNextWindow (pRLWinPriv->hWnd, GW_HWNDPREV);
-      do
-	{
-	  if (hWnd == pRLNextWinPriv->hWnd)
-	    {
-	      SetWindowPos (pRLWinPriv->hWnd, pRLNextWinPriv->hWnd,
-			    0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
-	      break;
-	    }
-	  hWnd = GetNextWindow (hWnd, GW_HWNDPREV);
-	}
-      while (hWnd);
-    }
+  pScreenPriv->fWindowOrderChanged = TRUE;
+
   pRLWinPriv->fRestackingNow = FALSE;
 }
 

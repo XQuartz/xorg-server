@@ -496,10 +496,9 @@ ProcWindowsWMFrameDraw (register ClientPtr client)
   
   /* Flush the window style */
   if (!SetWindowPos (pRLWinPriv->hWnd, NULL,
-		     0, 0,
+		     rcNew.left, rcNew.top,
 		     rcNew.right - rcNew.left, rcNew.bottom - rcNew.top,
-		     SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED
-		     /* | SWP_SHOWWINDOW*/ | SWP_NOACTIVATE))
+		     SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE))
     {
       return BadValue;
     }

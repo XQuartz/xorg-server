@@ -840,7 +840,7 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 #if CYGMULTIWINDOW_DEBUG
 	      ErrorF ("Win %08x is now restacking.\n", (unsigned int)pRLWinPriv);
 #endif
-	      return 0;
+	      break;
 	    }
 
 	  if (IsRaiseOnClick (pWin))
@@ -848,7 +848,7 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 #if CYGMULTIWINDOW_DEBUG
 	      ErrorF ("Win %08x has WINDOWSWM_RAISE_ON_CLICK.\n", (unsigned int)pRLWinPriv);
 #endif
-	      return 0;
+	      break;
 	    }
 
 #if CYGMULTIWINDOW_DEBUG
@@ -952,7 +952,7 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 	if (pScreenPriv != NULL)
 	  pScreenPriv->fWindowOrderChanged = TRUE;
       }
-      return 0;
+      break;
 
     case WM_SIZE:
       /* see dix/window.c */
@@ -1089,7 +1089,7 @@ winWin32RootlessWindowProc (HWND hwnd, UINT message,
 					 rcClient.bottom - rcClient.top
 					 - wBorderWidth (pWin)*2);
       break;
-   
+
     default:
       break;
     }

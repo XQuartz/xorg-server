@@ -1,3 +1,8 @@
+2004-10-01  Alexander Gottwald  <ago at freedesktop dot org>
+
+	* wincreatewnd.c (winCreateBoundingWindowWindowed):
+	Do not adjust workarea if native windowmanager is used
+
 2004-09-22  Kensuke Matsuzaki
 
 	* winclipboardthread.c (winClipboardErrorHandler):

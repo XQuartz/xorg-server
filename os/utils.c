@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.6 2004/08/11 22:27:50 kem Exp $ */
+/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.6.2.1 2004/12/08 05:28:12 gisburn Exp $ */
 /* $Xorg: utils.c,v 1.5 2001/02/09 02:05:24 xorgcvs Exp $ */
 /*
 
@@ -1008,11 +1008,11 @@ ProcessCommandLine(int argc, char *argv[])
 	    defaultBackingStore = WhenMapped;
         else if ( strcmp( argv[i], "-maxbigreqsize") == 0) {
              if(++i < argc) {
-                 int reqSizeArg = atoi(argv[i]);
+                 long reqSizeArg = atol(argv[i]);
 
                  /* Request size > 128MB does not make much sense... */
-                 if( reqSizeArg > 0 && reqSizeArg < 128 ) {
-                     maxBigRequestSize = (reqSizeArg * 1048576) - 1;
+                 if( reqSizeArg > 0L && reqSizeArg < 128L ) {
+                     maxBigRequestSize = (reqSizeArg * 1048576L) - 1L;
                  }
                  else
                  {

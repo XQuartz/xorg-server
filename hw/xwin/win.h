@@ -767,14 +767,6 @@ winInitClipboard ();
 
 
 /*
- * winclipboardthread.c
- */
-
-void
-winDeinitClipboard (void);
-
-
-/*
  * wincmap.c
  */
 

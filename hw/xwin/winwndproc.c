@@ -1076,8 +1076,6 @@ winWindowProc (HWND hwnd, UINT message,
     case WM_ENDSESSION:
     case WM_GIVEUP:
       /* Tell X that we are giving up */
-      if (g_fClipboard)
-	winDeinitClipboard ();
       if (s_pScreenInfo->fMultiWindow)
 	winDeinitMultiWindowWM ();
       GiveUp (0);

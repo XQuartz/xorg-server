@@ -146,7 +146,6 @@ ddxGiveUp()
 #endif
 
   /* Notify the worker threads we're exiting */
-  winDeinitClipboard ();
   winDeinitMultiWindowWM ();
 
   /* Close our handle to our message queue */

@@ -402,17 +402,6 @@ winClipboardErrorHandler (Display *pDisplay, XErrorEvent *pErr)
 		 sizeof (pszErrorMsg));
   ErrorF ("winClipboardErrorHandler - ERROR: \n\t%s\n", pszErrorMsg);
 
-#if 0
-  if (pErr->error_code == BadWindow
-      || pErr->error_code == BadMatch
-      || pErr->error_code == BadDrawable)
-    {
-      pthread_exit (NULL);
-    }
-
-  pthread_exit (NULL);
-#endif
-
   return 0;
 }
 
@@ -430,18 +419,4 @@ winClipboardIOErrorHandler (Display *pDisplay)
   longjmp (g_jmpEntry, WIN_JMP_ERROR_IO);
   
   return 0;
-}
-
-
-/*
- * Notify the clipboard thread we're exiting and not to reconnect
- */
-
-void
-winDeinitClipboard ()
-{
-  ErrorF ("winDeinitClipboard - Noting shutdown in progress\n");
-#if 0
-  g_fShutdown = TRUE;
-#endif
 }

@@ -1,5 +1,5 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/common/xf86Configure.c,v 3.80 2003/10/08 14:58:27 dawes Exp $ */
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/common/xf86Configure.c,v 1.1.4.1.6.2 2004/03/04 17:47:34 eich Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/common/xf86Configure.c,v 1.1.4.1.2.1 2004/03/17 20:30:26 ago Exp $ */
 /*
  * Copyright 2000-2002 by Alan Hourihane, Flint Mountain, North Wales.
  *
@@ -742,6 +742,16 @@ configureDDCMonitorSection (int screennum)
 	    case DS_ASCII_STR:
 	    case DS_SERIAL:
 	    case DS_RANGES:
+		ptr->mon_hsync[ptr->mon_n_hsync].lo =
+		    ConfiguredMonitor->det_mon[i].section.ranges.min_h;
+		ptr->mon_hsync[ptr->mon_n_hsync].hi =
+		    ConfiguredMonitor->det_mon[i].section.ranges.max_h;
+		ptr->mon_n_vrefresh = 1;
+		ptr->mon_vrefresh[ptr->mon_n_hsync].lo =
+		    ConfiguredMonitor->det_mon[i].section.ranges.min_v;
+		ptr->mon_vrefresh[ptr->mon_n_hsync].hi =
+		ptr->mon_n_hsync++;
+		ConfiguredMonitor->det_mon[i].section.ranges.max_v;
 	    default:
 		break;
 	}

@@ -1,5 +1,5 @@
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/loader/elfloader.c,v 1.1.4.1.6.4 2004/03/18 02:18:27 alanc Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/loader/elfloader.c,v 1.61tsi Exp $ */
-
 /*
  *
  * Copyright 1995-1998 by Metro Link, Inc.
@@ -2695,6 +2695,8 @@ ELFCollectSections(ELFModulePtr elffile, int pass, int *totalsize,
 	    if (!strcmp(name, ".shstrtab"))	/* already loaded */
 		continue;
 	    if (!strcmp(name, ".stabstr"))	/* ignore debug info */
+		continue;
+	    if (!strcmp(name, ".stab.indexstr")) /* ignore more debug info */
 		continue;
 	case SHT_SYMTAB:
 	    if (pass)

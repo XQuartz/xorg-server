@@ -309,6 +309,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
   if (keyboardType > 0 && GetKeyboardLayoutName (layoutName)) 
   {
     WinKBLayoutPtr	pLayout;
+    bool                bfound = false;
 
     if (! layoutNum)
       layoutNum = strtoul (layoutName, (char **)NULL, 16);
@@ -339,6 +340,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	if (pLayout->winkbtype > 0 && pLayout->winkbtype != keyboardType)
 	  continue;
 	
+        bfound = true;
 	winMsg (X_PROBED,
 		"Using preset keyboard for \"%s\" (%x), type \"%d\"\n",
 		pLayout->layoutname, pLayout->winlayout, keyboardType);
@@ -348,6 +350,27 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	g_winInfo.xkb.variant = pLayout->xkbvariant;
 	g_winInfo.xkb.options = pLayout->xkboptions; 
 	break;
+      }
+    
+    if (!bfound)
+      {
+        HKEY                regkey;
+        const char          regtempl = 
+          "SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
+        char                *regpath;
+        char                lname[256];
+        unsigned short      namesize = sizeof(lname);
+
+        regpath = alloca(sizeof(regtempl) + KL_NAMELENGTH + 1);
+        strcpy(regpath, regtempl);
+        strcat(layoutName);
+
+        if (!RegOpenKey(HKEY_LOCAL_MACHINE, regpath, &regkey) &&
+          !RegQueryValueEx(regkey, "Layout Text", 0, NULL, lname, &namesize))
+          {
+	    winMsg (X_ERROR,
+		"Keyboardlayout \"%s\" (%s) is unknown\n", lname, layoutName);
+          }
       }
   }  
   

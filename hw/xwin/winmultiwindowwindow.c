@@ -103,6 +103,7 @@ winCreateWindowMultiWindow (WindowPtr pWin)
   pWinPriv->hWnd = NULL;
   pWinPriv->pScreenPriv = winGetScreenPriv(pWin->drawable.pScreen);
   pWinPriv->fXKilled = FALSE;
+  pWinPriv->fAlwaysOnTop = FALSE;
  
   return fResult;
 }
@@ -572,10 +573,12 @@ winCreateWindowsWindow (WindowPtr pWin)
  
   /* Change style back to popup, already placed... */
   SetWindowLong (hWnd, GWL_STYLE, WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+  SetWindowPos (hWnd, 0, 0, 0, 0, 0,
+                SWP_FRAMECHANGED | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE);
 
   pWinPriv->hWnd = hWnd;
 
-  /* Cause the "Always On Top" to be added in main WNDPROC */
+  /* Cause any .XWinrc menus to be added in main WNDPROC */
   PostMessage (hWnd, WM_INIT_SYS_MENU, 0, 0);
   
   SetProp (pWinPriv->hWnd, WIN_WID_PROP, (HANDLE) winGetWindowID(pWin));

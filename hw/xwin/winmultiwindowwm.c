@@ -164,6 +164,8 @@ winRedirectErrorHandler (Display *pDisplay, XErrorEvent *pErr);
 static void
 winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg);
 
+static void
+PreserveWin32Stack(WMInfoPtr pWMInfo, Window iWindow, UINT direction);
 
 /*
  * Local globals
@@ -512,6 +514,70 @@ UpdateName (WMInfoPtr pWMInfo, Window iWindow)
     }
 }
 
+/*
+ * Fix up any differences between the X11 and Win32 window stacks
+ * starting at the window passed in
+ */
+static void
+PreserveWin32Stack(WMInfoPtr pWMInfo, Window iWindow, UINT direction)
+{
+  Atom                  atmType;
+  int                   fmtRet;
+  unsigned long         items, remain;
+  HWND                  hWnd, *retHwnd;
+  DWORD                 myWinProcID, winProcID;
+  Window                xWindow;
+  WINDOWPLACEMENT       wndPlace;
+
+  hWnd = NULL;
+  /* See if we can get the cached HWND for this window... */
+  if (XGetWindowProperty (pWMInfo->pDisplay,
+			  iWindow,
+			  pWMInfo->atmPrivMap,
+			  0,
+			  1,
+			  False,
+			  pWMInfo->atmPrivMap,
+			  &atmType,
+			  &fmtRet,
+			  &items,
+			  &remain,
+			  (unsigned char **) &retHwnd) == Success)
+    {
+      if (retHwnd)
+        {
+          hWnd = *retHwnd;
+          XFree (retHwnd);
+        }
+    }
+  
+  if (!hWnd) return;
+
+  GetWindowThreadProcessId (hWnd, &myWinProcID);
+  hWnd = GetNextWindow (hWnd, direction);
+ 
+  while (hWnd) {
+    GetWindowThreadProcessId (hWnd, &winProcID);
+    if (winProcID == myWinProcID) 
+      {
+        wndPlace.length = sizeof(WINDOWPLACEMENT);
+        GetWindowPlacement (hWnd, &wndPlace);
+        if ( !(wndPlace.showCmd==SW_HIDE ||
+               wndPlace.showCmd==SW_MINIMIZE) )
+          {
+            xWindow = (Window)GetProp (hWnd, WIN_WID_PROP);
+            if (xWindow)
+              {
+                if (direction==GW_HWNDPREV)
+                  XRaiseWindow (pWMInfo->pDisplay, xWindow);
+                else
+                  XLowerWindow (pWMInfo->pDisplay, xWindow);
+              }
+          }
+      }
+    hWnd = GetNextWindow(hWnd, direction);
+  }
+}
 
 /*
  * winMultiWindowWMProc
@@ -567,9 +633,9 @@ winMultiWindowWMProc (void *pArg)
 #if CYGMULTIWINDOW_DEBUG
 	  ErrorF ("\tWM_WM_RAISE\n");
 #endif
-
 	  /* Raise the window */
 	  XRaiseWindow (pWMInfo->pDisplay, pNode->msg.iWindow);
+	  PreserveWin32Stack (pWMInfo, pNode->msg.iWindow, GW_HWNDPREV);
 	  break;
 
 	case WM_WM_LOWER:
@@ -596,6 +662,8 @@ winMultiWindowWMProc (void *pArg)
 			   1);
 	  UpdateName (pWMInfo, pNode->msg.iWindow);
 	  winUpdateIcon (pNode->msg.iWindow);
+          /* Handles the case where there are AOT windows above it in W32 */
+	  PreserveWin32Stack (pWMInfo, pNode->msg.iWindow, GW_HWNDPREV);
 	  break;
 
 	case WM_WM_UNMAP:

@@ -883,6 +883,9 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	      SetForegroundWindow (hwnd);
 	    }
 	}
+     else /* It is an overridden window so make it top of Z stack */
+       SetWindowPos (hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                     SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE);
 	  
       /* Setup the Window Manager message */
       wmMsg.msg = WM_WM_MAP;
@@ -931,6 +934,23 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 		(int)(GetTickCount ()));
       }
 #endif
+      if (wParam==SIZE_MINIMIZED) 
+        {
+          if (GetWindowLong (hwnd, GWL_EXSTYLE) & WS_EX_TOPMOST)
+             pWinPriv->fAlwaysOnTop = TRUE;
+           else
+             pWinPriv->fAlwaysOnTop = FALSE; 
+
+          SetWindowPos (hwnd, HWND_BOTTOM, 0, 0, 0, 0, 
+                        SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE );
+        }
+      else if (wParam==SIZE_RESTORED)
+        {
+          if (pWinPriv->fAlwaysOnTop)
+             SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+                          SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE );
+
+        }
       /* Adjust the X Window to the moved Windows window */
       winAdjustXWindow (pWin, hwnd);
       return 0; /* end of WM_SIZE handler */

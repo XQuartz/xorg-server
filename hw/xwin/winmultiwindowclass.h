@@ -110,4 +110,7 @@ winMultiWindowGetWMNormalHints (WindowPtr pWin, WinXSizeHints *hints);
 int
 winMultiWindowGetWMName (WindowPtr pWin, char **wmName);
 
+int
+winMultiWindowGetTransientFor (WindowPtr pWin, WindowPtr *ppDaddy);
+
 #endif

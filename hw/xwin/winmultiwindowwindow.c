@@ -60,7 +60,6 @@ winUpdateWindowsWindow (WindowPtr pWin);
 static void
 winFindWindow (pointer value, XID id, pointer cdata);
 
-
 /*
  * Constant defines
  */
@@ -478,12 +477,14 @@ winCreateWindowsWindow (WindowPtr pWin)
   /* Default positions if none specified */
   if (!winMultiWindowGetWMNormalHints(pWin, &hints))
     hints.flags = 0;
-  if ( !(hints.flags & (USPosition|PPosition)) )
+  if ( !(hints.flags & (USPosition|PPosition)) &&
+       !winMultiWindowGetTransientFor (pWin, NULL) &&
+       !pWin->overrideRedirect )
     {
       iX = CW_USEDEFAULT;
       iY = CW_USEDEFAULT;
     }
-  
+
   iWidth = pWin->drawable.width;
   iHeight = pWin->drawable.height;
 
@@ -907,3 +908,4 @@ winAdjustXWindow (WindowPtr pWin, HWND hwnd)
 #undef WIDTH
 #undef HEIGHT
 }
+

@@ -1266,8 +1266,8 @@ OsVendorFatalError()
     ErrorF("\nPlease refer to your Operating System Vendor support pages\n"
 	   "at %s for support on this crash.\n",VENDORSUPPORT);
 #else
-    ErrorF("\nPlease consult the X.org support \n"
-	   "\tat http://wiki.X.org\n for help. \n");
+    ErrorF("\nPlease consult the "XVENDORNAME" support \n"
+	   "\t at "__VENDORDWEBSUPPORT__"\n for help. \n");
 #endif
     if (xf86LogFile && xf86LogFileWasOpened)
 	ErrorF("Please also check the log file at \"%s\" for additional "
@@ -1719,13 +1719,13 @@ xf86PrintBanner()
 {
 #if PRE_RELEASE
   ErrorF("\n"
-    "This is a pre-release version of the X.org Foundation's X11.\n"
+    "This is a pre-release version of the " XVENDORNAME " X11.\n"
     "Portions of this release are based on XFree86 4.4RC2 and selected\n"
     "files from XFree86 4.4RC3. It is not supported in any way.\n"
     "Bugs may be filed in the bugzilla at http://bugs.freedesktop.org/.\n"
     "Select the \"xorg\" product for bugs you find in this release.\n"
     "Before reporting bugs in pre-release versions please check the\n"
-    "latest version in the X.org Foundation \"monolithic tree\" CVS\n"
+    "latest version in the " XVENDORNAME " \"monolithic tree\" CVS\n"
     "repository hosted at http://www.freedesktop.org/Software/xorg/");
 #endif
 #if XF86_VERSION_SNAP > 0
@@ -1785,7 +1785,7 @@ xf86PrintBanner()
 #if defined(BUILDERSTRING)
   ErrorF("%s \n",BUILDERSTRING);
 #endif
-  ErrorF("\tBefore reporting problems, check http://wiki.X.Org/\n"
+  ErrorF("\tBefore reporting problems, check "__VENDORDWEBSUPPORT__"\n"
 	 "\tto make sure that you have the latest version.\n");
 #ifdef XFree86LOADER
   ErrorF("Module Loader present\n");

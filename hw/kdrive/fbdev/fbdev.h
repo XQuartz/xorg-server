@@ -69,6 +69,12 @@ fbdevScreenInitialize (KdScreenInfo *screen, FbdevScrPriv *scrpriv);
 Bool
 fbdevInitScreen (ScreenPtr pScreen);
 
+Bool
+fbdevFinishInitScreen (ScreenPtr pScreen);
+
+Bool
+fbdevCreateResources (ScreenPtr pScreen);
+
 void
 fbdevPreserve (KdCardInfo *card);
 
@@ -95,8 +101,5 @@ fbdevGetColors (ScreenPtr pScreen, int fb, int n, xColorItem *pdefs);
 
 void
 fbdevPutColors (ScreenPtr pScreen, int fb, int n, xColorItem *pdefs);
-
-Bool
-fbdevFinishInitScreen (ScreenPtr pScreen);
 
 #endif /* _FBDEV_H_ */

@@ -336,6 +336,8 @@ KdCardFuncs	nvidiaFuncs = {
     nvidiaCardInit,	    /* cardinit */
     nvidiaScreenInit,	    /* scrinit */
     nvidiaInitScreen,	    /* initScreen */
+    nvidiaFinishInitScreen, /* finishInitScreen */
+    vesaCreateResources,    /* createRes */
     nvidiaPreserve,	    /* preserve */
     nvidiaEnable,	    /* enable */
     nvidiaDPMS,		    /* dpms */
@@ -358,6 +360,4 @@ KdCardFuncs	nvidiaFuncs = {
     
     vesaGetColors,    	    /* getColors */
     vesaPutColors,	    /* putColors */
-
-    nvidiaFinishInitScreen, /* finishInitScreen */
 };

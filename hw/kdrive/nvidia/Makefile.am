@@ -1,5 +1,5 @@
 INCLUDES = 					\
-	@KDRIVE_INCS@				\
+	$(KDRIVE_INCS)				\
 	-I$(top_srcdir)/hw/kdrive/vesa		\
 	$(XSERVER_CFLAGS)
 
@@ -23,4 +23,5 @@ Xnvidia_SOURCES = \
 Xnvidia_LDADD = \
 	libnvidia.a 				\
 	$(top_builddir)/hw/kdrive/vesa/libvesa.a \
-	@KDRIVE_LIBS@
+	$(KDRIVE_LIBS)				\
+	$(XSERVER_LIBS)

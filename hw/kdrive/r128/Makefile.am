@@ -1,5 +1,5 @@
 INCLUDES = 					\
-	@KDRIVE_INCS@				\
+	$(KDRIVE_INCS)				\
 	-I$(top_srcdir)/hw/kdrive/vesa		\
 	$(XSERVER_CFLAGS)
 
@@ -18,4 +18,5 @@ Xr128_SOURCES = \
 Xr128_LDADD = \
 	libr128.a 				\
 	$(top_builddir)/hw/kdrive/vesa/libvesa.a \
-	@KDRIVE_LIBS@
+	$(KDRIVE_LIBS)				\
+	$(XSERVER_LIBS)

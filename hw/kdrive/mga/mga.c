@@ -94,6 +94,12 @@ mgaFinishInitScreen (ScreenPtr pScreen)
     return ret;
 }
 
+Bool
+mgaCreateResources (ScreenPtr pScreen)
+{
+    return vesaCreateResources (pScreen);
+}
+
 void
 mgaPreserve (KdCardInfo *card)
 {
@@ -210,6 +216,8 @@ KdCardFuncs mgaFuncs = {
     mgaCardInit,	/* cardinit */
     mgaScreenInit,	/* scrinit */
     mgaInitScreen,	/* initScreen */
+    mgaFinishInitScreen, /* finishInitScreen */
+    mgaCreateResources,	/* createRes */
     mgaPreserve,	/* preserve */
     mgaEnable,		/* enable */
     mgaDPMS,		/* dpms */
@@ -232,7 +240,5 @@ KdCardFuncs mgaFuncs = {
     
     vesaGetColors,    	 /* getColors */
     vesaPutColors,	 /* putColors */
-
-    mgaFinishInitScreen, /* finishInitScreen */
 };
 

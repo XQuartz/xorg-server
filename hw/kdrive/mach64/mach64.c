@@ -133,6 +133,12 @@ mach64FinishInitScreen (ScreenPtr pScreen)
     return ret;
 }
 
+Bool
+mach64CreateResources (ScreenPtr pScreen)
+{
+    return vesaCreateResources (pScreen);
+}
+
 CARD32
 mach64ReadLCD (Reg *reg, int id)
 {
@@ -403,6 +409,7 @@ KdCardFuncs	mach64Funcs = {
     mach64CardInit,	    /* cardinit */
     mach64ScreenInit,	    /* scrinit */
     mach64InitScreen,	    /* initScreen */
+    mach64CreateResources,  /* createRes */
     mach64Preserve,	    /* preserve */
     mach64Enable,	    /* enable */
     mach64DPMS,		    /* dpms */

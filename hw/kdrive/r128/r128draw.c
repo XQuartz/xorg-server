@@ -130,12 +130,12 @@ r128Setup (ScreenPtr pScreen, int wait)
 }
 
 Bool
-r128PrepareSolid (DrawablePtr pDrawable, int alu, Pixel pm, Pixel fg)
+r128PrepareSolid (PixmapPtr pPixmap, int alu, Pixel pm, Pixel fg)
 {
-    KdScreenPriv (pDrawable->pScreen);
+    KdScreenPriv (pPixmap->drawable.pScreen);
     r128ScreenInfo (pScreenPriv);
 
-    r128Setup (pDrawable->pScreen, 4);
+    r128Setup (pPixmap->drawable.pScreen, 4);
     R128_OUT32 (mmio, R128_REG_DP_GUI_MASTER_CNTL, r128s->dp_gui_master_cntl
 		| R128_GMC_BRUSH_SOLID_COLOR
 		| R128_GMC_SRC_DATATYPE_COLOR
@@ -163,15 +163,15 @@ r128DoneSolid (void)
 }
 
 Bool
-r128PrepareCopy (DrawablePtr pSrcDrawable, DrawablePtr pDstDrawable, int dx, int dy, int alu, Pixel pm)
+r128PrepareCopy (PixmapPtr pSrc, PixmapPtr pDst, int dx, int dy, int alu, Pixel pm)
 {
-    KdScreenPriv (pSrcDrawable->pScreen);
+    KdScreenPriv (pSrc->drawable.pScreen);
     r128ScreenInfo (pScreenPriv);
     
     copydx = dx;
     copydy = dy;
 
-    r128Setup (pSrcDrawable->pScreen, 3);
+    r128Setup (pSrc->drawable.pScreen, 3);
     R128_OUT32 (mmio, R128_REG_DP_GUI_MASTER_CNTL, r128s->dp_gui_master_cntl
 		| R128_GMC_BRUSH_SOLID_COLOR
 		| R128_GMC_SRC_DATATYPE_COLOR

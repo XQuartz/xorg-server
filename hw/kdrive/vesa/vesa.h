@@ -157,6 +157,9 @@ Bool
 vesaFinishInitScreen(ScreenPtr pScreen);
 
 Bool
+vesaCreateResources (ScreenPtr pScreen);
+
+Bool
 vesaSetMode (ScreenPtr	    pScreen,
 	     VesaModePtr    mode);
 

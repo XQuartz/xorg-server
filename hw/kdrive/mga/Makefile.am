@@ -1,5 +1,5 @@
 INCLUDES = 					\
-	@KDRIVE_INCS@				\
+	$(KDRIVE_INCS)				\
 	-I$(top_srcdir)/hw/kdrive/vesa		\
 	$(XSERVER_CFLAGS)
 
@@ -16,6 +16,7 @@ Xmga_SOURCES = \
 	mgastub.c
 
 Xmga_LDADD = \
-	libmga.a 				\
-	$(top_builddir)/hw/kdrive/vesa/libvesa.a \
-	@KDRIVE_LIBS@
+	libmga.a 					\
+	$(top_builddir)/hw/kdrive/vesa/libvesa.a 	\
+	$(KDRIVE_LIBS)					\
+	$(XSERVER_LIBS)

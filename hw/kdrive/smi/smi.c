@@ -321,6 +321,8 @@ KdCardFuncs	smiFuncs = {
     smiCardInit,	    /* cardinit */
     smiScreenInit,	    /* scrinit */
     smiInitScreen,	    /* initScreen */
+    smiFinishInitScreen,    /* finishInitScreen */
+    subCreateResources,	    /* createRes */
     smiPreserve,	    /* preserve */
     smiEnable,		    /* enable */
     smiDPMS,		    /* dpms */
@@ -343,6 +345,4 @@ KdCardFuncs	smiFuncs = {
     
     subGetColors,    	    /* getColors */
     subPutColors,	    /* putColors */
-
-    smiFinishInitScreen,    /* finishInitScreen */
 };

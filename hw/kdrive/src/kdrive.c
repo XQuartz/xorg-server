@@ -833,6 +833,23 @@ KdAllocatePrivates (ScreenPtr pScreen)
 }
 
 Bool
+KdCreateScreenResources (ScreenPtr pScreen)
+{
+    KdScreenPriv(pScreen);
+    KdScreenInfo    *screen = pScreenPriv->screen;
+    KdCardInfo	    *card = pScreenPriv->card;
+    Bool ret;
+
+    pScreen->CreateScreenResources = pScreenPriv->CreateScreenResources;
+    ret = (*pScreen->CreateScreenResources) (pScreen);
+    pScreenPriv->CreateScreenResources = pScreen->CreateScreenResources;
+    pScreen->CreateScreenResources = KdCreateScreenResources;
+    if (ret && card->cfuncs->createRes)
+	ret = (*card->cfuncs->createRes) (pScreen);
+    return ret;
+}
+
+Bool
 KdCloseScreen (int index, ScreenPtr pScreen)
 {
     KdScreenPriv(pScreen);
@@ -1015,11 +1032,32 @@ KdScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
     KdCardInfo		*card = screen->card;
     KdPrivScreenPtr	pScreenPriv;
     int			fb;
+    /*
+     * note that screen->fb is set up for the nominal orientation
+     * of the screen; that means if randr is rotated, the values
+     * there should reflect a rotated frame buffer (or shadow).
+     */
+    Bool		rotated = (screen->randr & (RR_Rotate_90|RR_Rotate_270)) != 0;
+    int			width, height, *width_mmp, *height_mmp;
 
     KdAllocatePrivates (pScreen);
 
     pScreenPriv = KdGetScreenPriv(pScreen);
     
+    if (!rotated)
+    {
+	width = screen->width;
+	height = screen->height;
+	width_mmp = &screen->width_mm;
+	height_mmp = &screen->height_mm;
+    }
+    else
+    {
+	width = screen->height;
+	height = screen->width;
+	width_mmp = &screen->height_mm;
+	height_mmp = &screen->width_mm;
+    }
     screen->pScreen = pScreen;
     pScreenPriv->screen = screen;
     pScreenPriv->card = card;
@@ -1039,7 +1077,7 @@ KdScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
      */
     if (!fbSetupScreen (pScreen, 
 			screen->fb[0].frameBuffer, 
-			screen->width, screen->height, 
+			width, height, 
 			monitorResolution, monitorResolution, 
 			screen->fb[0].pixelStride,
 			screen->fb[0].bitsPerPixel))
@@ -1072,7 +1110,7 @@ KdScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
 	if (!fbOverlayFinishScreenInit (pScreen, 
 					screen->fb[0].frameBuffer, 
 					screen->fb[1].frameBuffer, 
-					screen->width, screen->height, 
+					width, height, 
 					monitorResolution, monitorResolution,
 					screen->fb[0].pixelStride,
 					screen->fb[1].pixelStride,
@@ -1089,7 +1127,7 @@ KdScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
     {
 	if (!fbFinishScreenInit (pScreen, 
 				 screen->fb[0].frameBuffer, 
-				 screen->width, screen->height,
+				 width, height,
 				 monitorResolution, monitorResolution,
 				 screen->fb[0].pixelStride,
 				 screen->fb[0].bitsPerPixel))
@@ -1102,14 +1140,14 @@ KdScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
      * Fix screen sizes; for some reason mi takes dpi instead of mm.
      * Rounding errors are annoying
      */
-    if (screen->width_mm)
-	pScreen->mmWidth = screen->width_mm;
+    if (*width_mmp)
+	pScreen->mmWidth = *width_mmp;
     else
-	screen->width_mm = pScreen->mmWidth;
-    if (screen->height_mm)
-	pScreen->mmHeight = screen->height_mm;
+	*width_mmp = pScreen->mmWidth;
+    if (*height_mmp)
+	pScreen->mmHeight = *height_mmp;
     else
-	screen->height_mm = pScreen->mmHeight;
+	*height_mmp = pScreen->mmHeight;
     
     /*
      * Plug in our own block/wakeup handlers.
@@ -1163,6 +1201,9 @@ KdScreenInit(int index, ScreenPtr pScreen, int argc, char **argv)
      */
     pScreenPriv->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = KdCloseScreen;
+
+    pScreenPriv->CreateScreenResources = pScreen->CreateScreenResources;
+    pScreen->CreateScreenResources = KdCreateScreenResources;
     
     if (screen->softCursor ||
 	!card->cfuncs->initCursor || 

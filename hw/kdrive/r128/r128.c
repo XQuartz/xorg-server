@@ -228,6 +228,8 @@ KdCardFuncs r128Funcs = {
     r128CardInit,	/* cardinit */
     r128ScreenInit,	/* scrinit */
     r128InitScreen,	/* initScreen */
+    r128FinishInitScreen, /* finishInitScreen */
+    vesaCreateResources,/* createRes */
     r128Preserve,	/* preserve */
     r128Enable,		/* enable */
     r128DPMS,		/* dpms */
@@ -250,7 +252,5 @@ KdCardFuncs r128Funcs = {
     
     vesaGetColors,    	 /* getColors */
     vesaPutColors,	 /* putColors */
-
-    r128FinishInitScreen, /* finishInitScreen */
 };
 

@@ -93,6 +93,7 @@ typedef struct _KdFrameBuffer {
     int		bitsPerPixel;
     int		pixelStride;
     int		byteStride;
+    Bool	shadow;
     unsigned long   visuals;
     Pixel       redMask, greenMask, blueMask;
     void	*closure;
@@ -128,6 +129,8 @@ typedef struct _KdCardFuncs {
     Bool	(*cardinit) (KdCardInfo *); /* detect and map device */
     Bool	(*scrinit) (KdScreenInfo *);/* initialize screen information */
     Bool	(*initScreen) (ScreenPtr);  /* initialize ScreenRec */
+    Bool	(*finishInitScreen) (ScreenPtr pScreen);
+    Bool	(*createRes) (ScreenPtr);   /* create screen resources */
     void	(*preserve) (KdCardInfo *); /* save graphics card state */
     Bool        (*enable) (ScreenPtr);      /* set up for rendering */
     Bool	(*dpms) (ScreenPtr, int);   /* set DPMS screen saver */
@@ -151,7 +154,6 @@ typedef struct _KdCardFuncs {
     void        (*getColors) (ScreenPtr, int, int, xColorItem *);
     void        (*putColors) (ScreenPtr, int, int, xColorItem *);
 
-    Bool	(*finishInitScreen) (ScreenPtr pScreen);
 } KdCardFuncs;
 
 #define KD_MAX_PSEUDO_DEPTH 8
@@ -170,6 +172,7 @@ typedef struct {
     ColormapPtr     pInstalledmap[KD_MAX_FB];         /* current colormap */
     xColorItem      systemPalette[KD_MAX_PSEUDO_SIZE];/* saved windows colors */
 
+    CreateScreenResourcesProcPtr    CreateScreenResources;
     CloseScreenProcPtr  CloseScreen;
 #ifdef FB_OLD_SCREEN
     miBSFuncRec	    BackingStoreFuncs;
@@ -568,6 +571,9 @@ Bool
 KdAllocatePrivates (ScreenPtr pScreen);
 
 Bool
+KdCreateScreenResources (ScreenPtr pScreen);
+
+Bool
 KdCloseScreen (int index, ScreenPtr pScreen);
 
 Bool
@@ -774,13 +780,16 @@ KdCheckComposite (CARD8      op,
 
 /* kshadow.c */
 Bool
-KdShadowScreenInit (KdScreenInfo *screen);
-
-Bool
-KdShadowInitScreen (ScreenPtr pScreen, ShadowUpdateProc update, ShadowWindowProc window);
+KdShadowFbAlloc (KdScreenInfo *screen, int fb, Bool rotate);
 
 void
-KdShadowScreenFini (KdScreenInfo *screen);
+KdShadowFbFree (KdScreenInfo *screen, int fb);
+
+Bool
+KdShadowSet (ScreenPtr pScreen, int randr, ShadowUpdateProc update, ShadowWindowProc window);
+    
+void
+KdShadowUnset (ScreenPtr pScreen);
 
 /* ktest.c */
 Bool

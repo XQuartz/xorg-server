@@ -1,10 +1,5 @@
 <!-- $XFree86: xc/programs/Xserver/hw/darwin/bundle/Japanese.lproj/XDarwinHelp.html.cpp,v 1.4 2001/11/27 07:27:46 torrey Exp $ -->
 
-#include "xf86Version.h"
-#ifndef PRE_RELEASE
-#define PRE_RELEASE XF86_VERSION_SNAP
-#endif
-
 <html>
 <head>
 <META http-equiv="Content-Type" content="text/html; charset=EUC-JP">
@@ -43,9 +38,7 @@ XDarwin Help</title></head>
 </blockquote>
 
 <h2><a NAME="usage">使用法</a></h2>
-<p>XDarwin は，によって作成された，再配布可能なオープンソースの <a HREF="http://www.x.org/">X Window System</a> の実装です。
-X.Org によって提供される Darwin と Mac OS X のための X Window サーバーを XDarwin と呼びます。
-XDarwin は，Mac OS X 上でフルスクリーンモードまたはルートレスモードで動作します。</p>
+<p>XDarwin は，再配布可能なオープンソースの <a HREF="http://www.x.org/">X Window System</a> のための X サーバーの実装です。このバージョンの XDarwin は X_VENDOR_LINK によって作成されました。XDarwin は，Mac OS X 上でフルスクリーンモードまたはルートレスモードで動作します。</p>
 
 <p>フルスクリーンモードでは，X Window System がアクティブな時，それは全画面を占有します。
 あなたは，Command-Option-A キーを押すことによって Mac OS X デスクトップへ切り替えることができます。このキーの組み合わせは，環境設定で変更可能です。
@@ -117,10 +110,9 @@ X11 のマニュアルページは <code>/usr/X11R6/man</code> に置かれます。そして <code>
 <h2>
 <a NAME="license">ライセンス</a>
 </h2>
-The XonX Project は，自由に再配布可能なバイナリとソースコードを提供することにコミットしています。
-私たちが使用する主なライセンスは，伝統的な MIT X11/X Consortium License に基づくものです。
-そして，それは修正または再配布されるソースコードまたはバイナリに，その Copyright/ライセンス告示がそのまま残されることを要求する以外の条件を強制しません。
-より多くの情報と，コードの一部をカバーする追加の Copyright/ライセンス告示のために， the code を参照して下さい。
+XDarwin の主要なライセンスは伝統的な MIT X11/X Consortium License に基づきます。
+それは修正または再配布されるソースコードまたはバイナリに，その著作権/ライセンス表示がそのまま残されることを要求する以外の条件を強制しません。
+より多くの情報と，コードの一部をカバーする追加の著作権/ライセンス表示のために，ソースコードを参照して下さい。
 <H3>
 <A NAME="3"></A>
 X  Consortium License</H3>

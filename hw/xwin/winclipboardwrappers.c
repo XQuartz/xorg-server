@@ -463,7 +463,7 @@ winProcSetSelectionOwner (ClientPtr client)
   if (!OpenClipboard (g_hwndClipboard))
     {
       ErrorF ("winProcSetSelectionOwner - OpenClipboard () failed: %08x\n",
-	      GetLastError ());
+	      (int) GetLastError ());
       goto winProcSetSelectionOwner_Done;
     }
 
@@ -471,7 +471,7 @@ winProcSetSelectionOwner (ClientPtr client)
   if (!EmptyClipboard ())
     {
       ErrorF ("winProcSetSelectionOwner - EmptyClipboard () failed: %08x\n",
-	      GetLastError ());
+	      (int) GetLastError ());
       goto winProcSetSelectionOwner_Done;
     }
 
@@ -490,7 +490,7 @@ winProcSetSelectionOwner (ClientPtr client)
     {
       ErrorF ("winProcSetSelectionOwner - CloseClipboard () failed: "
 	      "%08x\n",
-	      GetLastError ());
+	      (int) GetLastError ());
       goto winProcSetSelectionOwner_Done;
     }
 

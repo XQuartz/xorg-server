@@ -32,6 +32,7 @@ from The Open Group.
 #include "winmsg.h"
 #include "winconfig.h"
 #include "winprefs.h"
+#include "Xlocale.h"
 
 
 /*
@@ -117,8 +118,6 @@ extern Bool			g_fClipboard;
 void
 OsVendorReset ()
 {
-  int			i;
-
   ErrorF ("OsVendorReset - Hello\n");
 
   /* Close down clipboard resources */
@@ -453,6 +452,16 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   /* Generate a cookie used by internal clients for authorization */
   if (g_fXdmcpEnabled)
     winGenerateAuthorization ();
+
+  /* Perform some one time initialization */
+  if (1 == serverGeneration)
+    {
+      /*
+       * setlocale applies to all threads in the current process.
+       * Apply locale specified in LANG environment variable.
+       */
+      setlocale (LC_ALL, "");
+    }
 
 #if CYGDEBUG || YES
   winErrorFVerb (2, "InitOutput - Returning.\n");

@@ -60,11 +60,6 @@ winUpdateWindowsWindow (WindowPtr pWin);
 static void
 winFindWindow (pointer value, XID id, pointer cdata);
 
-#if 0
-static void
-winRestackXWindow (WindowPtr pWin, int smode);
-#endif
-
 
 /*
  * Constant defines
@@ -754,37 +749,6 @@ winFindWindow (pointer value, XID id, pointer cdata)
       wi->id = id;
     }
 }
-
-
-#if 0
-/*
- * winRestackXWindow - 
- */
-
-static void
-winRestackXWindow (WindowPtr pWin, int smode)
-{
-  XID *vlist = malloc(sizeof(unsigned long));
-
-  if (vlist == NULL)
-    {
-      ErrorF ("winRestackXWindow - malloc () failed\n");
-      return;
-    }
-
-  if (pWin == NULL)
-    {
-      ErrorF ("winRestackXWindow - NULL window\n");
-      free(vlist);
-      return;
-    }
-
-  *((unsigned long*)vlist) = smode;
-  ConfigureWindow (pWin, CWStackMode, vlist, wClient(pWin));
-
-  free(vlist);
-}
-#endif
 
 
 /*

@@ -44,7 +44,6 @@
  * References to external symbols
  */
 
-extern Bool		g_fCalledSetLocale;
 extern Bool		g_fUnicodeClipboard;
 extern unsigned long	serverGeneration;
 extern unsigned int	g_uiAuthDataLen;
@@ -102,28 +101,6 @@ winClipboardProc ()
   /* Save the Unicode support flag in a global */
   g_fUnicodeSupport = fUnicodeSupport;
 
-  /* Set the current locale?  What does this do? */
-  if (!g_fCalledSetLocale)
-    {
-      ErrorF ("winClipboardProc - Calling setlocale ()\n");
-      if (!setlocale (LC_ALL, ""))
-	{
-	  ErrorF ("winClipboardProc - setlocale () error\n");
-	  pthread_exit (NULL);
-	}
-      ErrorF ("winClipboardProc - setlocale () returned\n");
-
-      /* See if X supports the current locale */
-      if (XSupportsLocale () == False)
-	{
-	  ErrorF ("winClipboardProc - Locale not supported by X\n");
-	  pthread_exit (NULL);
-	}
-    }
-
-  /* Flag that we have called setlocale */
-  g_fCalledSetLocale = TRUE;
-
   /* Allow multiple threads to access Xlib */
   if (XInitThreads () == 0)
     {
@@ -131,7 +108,12 @@ winClipboardProc ()
       pthread_exit (NULL);
     }
 
-  ErrorF ("winClipboardProc - XInitThreads () returned.\n");
+  /* See if X supports the current locale */
+  if (XSupportsLocale () == False)
+    {
+      ErrorF ("winClipboardProc - Locale not supported by X.  Exiting.\n");
+      pthread_exit (NULL);
+    }
 
   /* Set jump point for Error exits */
   iReturn = setjmp (g_jmpEntry);

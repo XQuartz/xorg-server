@@ -51,7 +51,6 @@ DWORD		g_dwEnginesSupported = 0;
 HINSTANCE	g_hInstance = 0;
 HWND		g_hDlgDepthChange = NULL;
 HWND		g_hDlgExit = NULL;
-Bool		g_fCalledSetLocale = FALSE;
 const char *	g_pszQueryHost = NULL;
 Bool		g_fUnicodeClipboard = TRUE;
 Bool		g_fClipboard = FALSE;
@@ -91,9 +90,6 @@ HWND			g_hwndClipboard;
 void			*g_pClipboardDisplay;
 Window			g_iClipboardWindow;
 Atom			g_atomLastOwnedSelection;
-#if 0
-Window			g_iClipboardOwner[CLIP_NUM_SELECTIONS];
-#endif
 
 
 /*
@@ -104,6 +100,5 @@ Window			g_iClipboardOwner[CLIP_NUM_SELECTIONS];
 void
 winInitializeGlobals ()
 {
-  g_fCalledSetLocale = FALSE;
   g_fClipboardLaunched = FALSE;
 }

@@ -279,10 +279,12 @@ winProcEstablishConnection (ClientPtr client)
 int
 winProcSetSelectionOwner (ClientPtr client)
 {
+  int			i;
   DrawablePtr		pDrawable;
   WindowPtr		pWindow = None;
   Bool			fOwnedToNotOwned = FALSE;
-  static Window		g_iOwners[CLIP_NUM_SELECTIONS] = {None};
+  static Window		s_iOwners[CLIP_NUM_SELECTIONS] = {None};
+  static unsigned long	s_ulServerGeneration = 0;
   REQUEST(xSetSelectionOwnerReq);
   
   REQUEST_SIZE_MATCH(xSetSelectionOwnerReq);
@@ -290,6 +292,17 @@ winProcSetSelectionOwner (ClientPtr client)
 #if 0
   ErrorF ("winProcSetSelectionOwner - Hello.\n");
 #endif
+
+  /* Watch for server reset */
+  if (s_ulServerGeneration != serverGeneration)
+    {
+      /* Save new generation number */
+      s_ulServerGeneration = serverGeneration;
+
+      /* Initialize static variables */
+      for (i = 0; i < CLIP_NUM_SELECTIONS; ++i)
+	s_iOwners[i] = None;
+    }
 
   /* Abort if clipboard not completely initialized yet */
   if (!g_fClipboardStarted)
@@ -319,37 +332,37 @@ winProcSetSelectionOwner (ClientPtr client)
     {
       /* Look for owned -> not owned transition */
       if (None == stuff->window
-	  && None != g_iOwners[CLIP_OWN_PRIMARY])
+	  && None != s_iOwners[CLIP_OWN_PRIMARY])
 	{
 	  fOwnedToNotOwned = TRUE;
 	  
 	  /* Adjust last owned selection */
-	  if (None != g_iOwners[CLIP_OWN_CLIPBOARD])
+	  if (None != s_iOwners[CLIP_OWN_CLIPBOARD])
 	    g_atomLastOwnedSelection = MakeAtom ("CLIPBOARD", 9, FALSE);
 	  else
 	    g_atomLastOwnedSelection = None;
 	}
       
       /* Save new selection owner or None */
-      g_iOwners[CLIP_OWN_PRIMARY] = stuff->window;
+      s_iOwners[CLIP_OWN_PRIMARY] = stuff->window;
     }
   else if (MakeAtom ("CLIPBOARD", 9, FALSE) == stuff->selection)
     {
       /* Look for owned -> not owned transition */
       if (None == stuff->window
-	  && None != g_iOwners[CLIP_OWN_CLIPBOARD])
+	  && None != s_iOwners[CLIP_OWN_CLIPBOARD])
 	{
 	  fOwnedToNotOwned = TRUE;
 	  
 	   /* Adjust last owned selection */
-	  if (None != g_iOwners[CLIP_OWN_PRIMARY])
+	  if (None != s_iOwners[CLIP_OWN_PRIMARY])
 	    g_atomLastOwnedSelection = XA_PRIMARY;
 	  else
 	    g_atomLastOwnedSelection = None;
 	}
       
       /* Save new selection owner or None */
-      g_iOwners[CLIP_OWN_CLIPBOARD] = stuff->window;
+      s_iOwners[CLIP_OWN_CLIPBOARD] = stuff->window;
     }
   else
     goto winProcSetSelectionOwner_Done;
@@ -363,8 +376,8 @@ winProcSetSelectionOwner (ClientPtr client)
    */
   if (None == stuff->window
       && g_iClipboardWindow != client->lastDrawableID
-      && None == g_iOwners[CLIP_OWN_PRIMARY]
-      && None == g_iOwners[CLIP_OWN_CLIPBOARD]
+      && None == s_iOwners[CLIP_OWN_PRIMARY]
+      && None == s_iOwners[CLIP_OWN_CLIPBOARD]
       && fOwnedToNotOwned
       && g_hwndClipboard != NULL
       && g_hwndClipboard == GetClipboardOwner ())

@@ -84,6 +84,7 @@ typedef struct _WMMsgQueueRec {
   struct _WMMsgNodeRec	*pTail;
   pthread_mutex_t	pmMutex;
   pthread_cond_t	pcNotEmpty;
+  int			nQueueSize;
 } WMMsgQueueRec, *WMMsgQueuePtr;
 
 typedef struct _WMInfo {
@@ -101,9 +102,9 @@ typedef struct _WMProcArgRec {
 } WMProcArgRec, *WMProcArgPtr;
 
 typedef struct _XMsgProcArgRec {
-  Display      *pDisplay;
-  DWORD        dwScreen;
-  WMInfoPtr    pWMInfo;
+  Display		*pDisplay;
+  DWORD			dwScreen;
+  WMInfoPtr		pWMInfo;
   pthread_mutex_t	*ppmServerStarted;
 } XMsgProcArgRec, *XMsgProcArgPtr;
 
@@ -114,7 +115,6 @@ typedef struct _XMsgProcArgRec {
 
 extern char *display;
 extern void ErrorF (const char* /*f*/, ...);
-extern Bool g_fCalledSetLocale;
 
 
 /*
@@ -165,11 +165,9 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg);
  * Local globals
  */
 
-static int			g_nQueueSize;
 static jmp_buf			g_jmpWMEntry;
 static jmp_buf			g_jmpXMsgProcEntry;
 static Bool                     g_shutdown = FALSE;
-
 
 
 /*
@@ -225,7 +223,7 @@ PushMessage (WMMsgQueuePtr pQueue, WMMsgNodePtr pNode)
 #endif
 
   /* Increase the count of elements in the queue by one */
-  ++g_nQueueSize;
+  ++(pQueue->nQueueSize);
 
   /* Release the queue mutex */
   pthread_mutex_unlock (&pQueue->pmMutex);
@@ -285,10 +283,10 @@ PopMessage (WMMsgQueuePtr pQueue, WMInfoPtr pWMInfo)
     }
 
   /* Drop the number of elements in the queue by one */
-  --g_nQueueSize;
+  --(pQueue->nQueueSize);
 
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("Queue Size %d %d\n", g_nQueueSize, QueueSize(pQueue));
+  ErrorF ("Queue Size %d %d\n", pQueue->nQueueSize, QueueSize(pQueue));
 #endif
   
   /* Release the queue mutex */
@@ -339,10 +337,11 @@ InitQueue (WMMsgQueuePtr pQueue)
   pQueue->pTail = NULL;
 
   /* There are no elements initially */
-  g_nQueueSize = 0;
+  pQueue->nQueueSize = 0;
 
 #if CYGMULTIWINDOW_DEBUG
-  ErrorF ("InitQueue - Queue Size %d %d\n", g_nQueueSize, QueueSize(pQueue));
+  ErrorF ("InitQueue - Queue Size %d %d\n", pQueue->nQueueSize,
+	  QueueSize(pQueue));
 #endif
 
   ErrorF ("InitQueue - Calling pthread_mutex_init\n");
@@ -420,7 +419,6 @@ GetWindowName (Display *pDisplay, Window iWin, char **ppName)
 	      XGetAtomName (pDisplay, xtpName.encoding), *ppName);
 #endif
     }
-
 
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("GetWindowName - Returning\n");
@@ -538,7 +536,7 @@ winMultiWindowWMProc (void *pArg)
 	{
 	  /* Bail if PopMessage returns without a message */
 	  /* NOTE: Remember that PopMessage is a blocking function. */
-	  ErrorF ("winMultiWindowWMProc - Queue is Empty?\n");
+	  ErrorF ("winMultiWindowWMProc - Queue is Empty?  Exiting.\n");
 	  pthread_exit (NULL);
 	}
 
@@ -737,7 +735,15 @@ winMultiWindowXMsgProc (void *pArg)
       ErrorF ("winMultiWindowXMsgProc - XInitThreads () failed.\n");
       pthread_exit (NULL);
     }
-  
+
+  /* See if X supports the current locale */
+  if (XSupportsLocale () == False)
+    {
+      ErrorF ("winMultiWindowXMsgProc - Locale not supported by X.  "
+	      "Exiting.\n");
+      pthread_exit (NULL);
+    }
+
   /* Release the server started mutex */
   pthread_mutex_unlock (pProcArg->ppmServerStarted);
 
@@ -797,7 +803,7 @@ winMultiWindowXMsgProc (void *pArg)
   /* Make sure that the display opened */
   if (pProcArg->pDisplay == NULL)
     {
-      ErrorF ("winMultiWindowXMsgProcwinInitMultiWindowWM - "
+      ErrorF ("winMultiWindowXMsgProc - "
 	      "Failed opening the display, giving up.\n\f");
       pthread_exit (NULL);
     }
@@ -905,10 +911,15 @@ winInitWM (void **ppWMInfo,
   /* Bail if the input parameters are bad */
   if (pArg == NULL || pWMInfo == NULL)
     {
-      ErrorF ("winInitWM - malloc fail.\n");
+      ErrorF ("winInitWM - malloc failed.\n");
       return FALSE;
     }
   
+  /* Zero the allocated memory */
+  ZeroMemory (pArg, sizeof (WMProcArgRec));
+  ZeroMemory (pWMInfo, sizeof (WMInfoRec));
+  ZeroMemory (pXMsgArg, sizeof (XMsgProcArgRec));
+
   /* Set a return pointer to the Window Manager info structure */
   *ppWMInfo = pWMInfo;
 
@@ -984,32 +995,17 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
 
   ErrorF ("winInitMultiWindowWM - pthread_mutex_lock () returned.\n");
 
-  /* Set the current locale?  What does this do? */
-  if (!g_fCalledSetLocale)
-    {
-      ErrorF ("winInitMultiWindowWM - Calling setlocale ()\n");
-      if (!setlocale (LC_ALL, ""))
-	{
-	  ErrorF ("winInitMultiWindowWM - setlocale () error\n");
-	  pthread_exit (NULL);
-	}
-      ErrorF ("winInitMultiWindowWM - setlocale () returned\n");
-      
-      /* See if X supports the current locale */
-      if (XSupportsLocale () == False)
-	{
-	  ErrorF ("winInitMultiWindowWM - Locale not supported by X\n");
-	  pthread_exit (NULL);
-	}
-    }
-
-  /* Flag that we have called setlocale */
-  g_fCalledSetLocale = TRUE;
-  
   /* Allow multiple threads to access Xlib */
   if (XInitThreads () == 0)
     {
       ErrorF ("winInitMultiWindowWM - XInitThreads () failed.\n");
+      pthread_exit (NULL);
+    }
+
+  /* See if X supports the current locale */
+  if (XSupportsLocale () == False)
+    {
+      ErrorF ("winInitMultiWindowWM - Locale not supported by X.  Exiting.\n");
       pthread_exit (NULL);
     }
 

@@ -766,6 +766,8 @@ winReorderWindowsMultiWindow (void)
   WindowPtr pWinSib = NULL;
   XID vlist[2];
   static Bool fRestacking = FALSE; /* Avoid recusive calls to this function */
+  DWORD dwCurrentProcessID = GetCurrentProcessId ();
+  DWORD dwWindowProcessID = 0;
 
 #if CYGMULTIWINDOW_DEBUG || CYGWINDOWING_DEBUG
   ErrorF ("winReorderWindowsMultiWindow\n");
@@ -787,7 +789,10 @@ winReorderWindowsMultiWindow (void)
 	hwnd;
 	hwnd = GetNextWindow (hwnd, GW_HWNDNEXT) )
     {
+      GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
+
       if ( GetProp (hwnd, WIN_WINDOW_PROP)
+	   && (dwWindowProcessID == dwCurrentProcessID)
 	   && !IsIconic (hwnd) ) /* ignore minimized windows */
 	{
 	  pWinSib = pWin;

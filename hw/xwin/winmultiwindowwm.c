@@ -1124,7 +1124,7 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
     }
   else if (iReturn == WIN_JMP_ERROR_IO)
     {
-      ErrorF ("winInitMultiWindowWM - Caught IO Erro.  Exiting.\n");
+      ErrorF ("winInitMultiWindowWM - Caught IO Error.  Exiting.\n");
       pthread_exit (NULL);
     }
 

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/render/render.c,v 1.1.4.3 2004/02/25 21:47:08 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/render/render.c,v 1.1.4.3.2.2 2004/03/04 17:48:45 eich Exp $ */
 /*
  * $XFree86: xc/programs/Xserver/render/render.c,v 1.27tsi Exp $
  *
@@ -1123,8 +1123,10 @@ ProcRenderAddGlyphs (ClientPtr client)
 	goto bail;
     }
     glyphs = glyphsBase;
-    while (nglyphs--)
+    while (nglyphs--) {
 	AddGlyph (glyphSet, glyphs->glyph, glyphs->id);
+	glyphs++;
+    }
 
     if (glyphsBase != glyphsLocal)
 	DEALLOCATE_LOCAL (glyphsBase);

@@ -1,3 +1,12 @@
+2004-08-02  Kensuke Matsuzaki
+
+	* winclipboardthread.c winclipboardwndproc.c: 
+	* winclipboardxevents.c winwin32rootlesswndproc.c:
+	Fix the bug that we can't copy & paste multi-byte string to
+	Unicode-base Windows application.  Rename fUnicodeSupport to
+	fUseUnicode, because it don't mean wheather Windows support
+	Unicode or not.
+	
 2004-07-09  Alexander Gottwald  <ago@freedesktop.org>
 
 	* winconfig.c: Add entry for irish layout (ie)

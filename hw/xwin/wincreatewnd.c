@@ -145,9 +145,9 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   char			szTitle[256];
   
   ErrorF ("winCreateBoundingWindowWindowed - User w: %d h: %d\n",
-	  pScreenInfo->dwUserWidth, pScreenInfo->dwUserHeight);
+	  (int) pScreenInfo->dwUserWidth, (int) pScreenInfo->dwUserHeight);
   ErrorF ("winCreateBoundingWindowWindowed - Current w: %d h: %d\n",
-	  pScreenInfo->dwWidth, pScreenInfo->dwHeight);
+	  (int) pScreenInfo->dwWidth, (int) pScreenInfo->dwHeight);
   
   /* Set the common window style flags */
   dwWindowStyle = WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX;
@@ -447,8 +447,8 @@ winGetWorkArea (RECT *prcWorkArea, winScreenInfo *pScreenInfo)
     return TRUE;
   
   ErrorF ("winGetWorkArea - Original WorkArea: %d %d %d %d\n",
-	  prcWorkArea->top, prcWorkArea->left,
-	  prcWorkArea->bottom, prcWorkArea->right);
+	  (int) prcWorkArea->top, (int) prcWorkArea->left,
+	  (int) prcWorkArea->bottom, (int) prcWorkArea->right);
 
   /* Get size of full virtual screen */
   iWidth = GetSystemMetrics (SM_CXVIRTUALSCREEN);
@@ -491,8 +491,8 @@ winGetWorkArea (RECT *prcWorkArea, winScreenInfo *pScreenInfo)
   
   ErrorF ("winGetWorkArea - Adjusted WorkArea for multiple "
 	  "monitors: %d %d %d %d\n",
-	  prcWorkArea->top, prcWorkArea->left,
-	  prcWorkArea->bottom, prcWorkArea->right);
+	  (int) prcWorkArea->top, (int) prcWorkArea->left,
+	  (int) prcWorkArea->bottom, (int) prcWorkArea->right);
   
   return TRUE;
 }
@@ -510,8 +510,8 @@ winAdjustForAutoHide (RECT *prcWorkArea)
   HWND			hwndAutoHide;
 
   ErrorF ("winAdjustForAutoHide - Original WorkArea: %d %d %d %d\n",
-	  prcWorkArea->top, prcWorkArea->left,
-	  prcWorkArea->bottom, prcWorkArea->right);
+	  (int) prcWorkArea->top, (int) prcWorkArea->left,
+	  (int) prcWorkArea->bottom, (int) prcWorkArea->right);
 
   /* Find out if the Windows taskbar is set to auto-hide */
   ZeroMemory (&abd, sizeof (abd));
@@ -556,8 +556,8 @@ winAdjustForAutoHide (RECT *prcWorkArea)
     }
 
   ErrorF ("winAdjustForAutoHide - Adjusted WorkArea: %d %d %d %d\n",
-	  prcWorkArea->top, prcWorkArea->left,
-	  prcWorkArea->bottom, prcWorkArea->right);
+	  (int) prcWorkArea->top, (int) prcWorkArea->left,
+	  (int) prcWorkArea->bottom, (int) prcWorkArea->right);
   
 #if 0
   /* Obtain the task bar window dimensions */

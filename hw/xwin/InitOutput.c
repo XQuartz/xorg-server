@@ -128,7 +128,8 @@ winInitializeDefaultScreens (void)
   dwWidth = GetSystemMetrics (SM_CXSCREEN);
   dwHeight = GetSystemMetrics (SM_CYSCREEN);
 
-  ErrorF ("winInitializeDefaultScreens - w %d h %d\n", dwWidth, dwHeight);
+  ErrorF ("winInitializeDefaultScreens - w %d h %d\n",
+	  (int) dwWidth, (int) dwHeight);
 
   /* Set a default DPI, if no parameter was passed */
   if (monitorResolution == 0)
@@ -489,8 +490,8 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	{
 	  ErrorF ("ddxProcessArgument - screen - Did not find size arg. "
 		  "dwWidth: %d dwHeight: %d\n",
-		  g_ScreenInfo[nScreenNum].dwWidth,
-		  g_ScreenInfo[nScreenNum].dwHeight);
+		  (int) g_ScreenInfo[nScreenNum].dwWidth,
+		  (int) g_ScreenInfo[nScreenNum].dwHeight);
 	  iArgsProcessed = 2;
 	  g_ScreenInfo[nScreenNum].fUserGaveHeightAndWidth = FALSE;
 	}

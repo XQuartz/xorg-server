@@ -98,7 +98,7 @@ winScreenInit (int index,
       ErrorF ("winScreenInit - Unsupported display depth: %d\n" \
 	      "Change your Windows display depth to 15, 16, 24, or 32 bits "
 	      "per pixel.\n",
-	      pScreenInfo->dwBPP);
+	      (int) pScreenInfo->dwBPP);
       ErrorF ("winScreenInit - Supported depths: %08x\n",
 	      WIN_SUPPORTED_BPPS);
 #if WIN_CHECK_DEPTH
@@ -219,8 +219,9 @@ winFinishScreenInitFB (int index,
       + winCountBits (pScreenPriv->dwBlueMask);
   
   ErrorF ("winFinishScreenInitFB - Masks: %08x %08x %08x\n",
-	  pScreenPriv->dwRedMask, pScreenPriv->dwGreenMask,
-	  pScreenPriv->dwBlueMask);
+	  (unsigned int) pScreenPriv->dwRedMask,
+	  (unsigned int) pScreenPriv->dwGreenMask,
+	  (unsigned int) pScreenPriv->dwBlueMask);
 
   /* Init visuals */
   if (!(*pScreenPriv->pwinInitVisuals) (pScreen))
@@ -718,7 +719,7 @@ winFinishScreenInitNativeGDI (int index,
 
   ErrorF ("winFinishScreenInitNativeGDI - Successful addition of "
 	  "screen %08x\n",
-	  pScreen);
+	  (unsigned int) pScreen);
 
   return TRUE;
 }

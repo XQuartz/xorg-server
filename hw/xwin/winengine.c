@@ -133,7 +133,7 @@ winDetectSupportedEngines ()
     }
 
   ErrorF ("winDetectSupportedEngines - Returning, supported engines %08x\n",
-	  g_dwEnginesSupported);
+	  (unsigned int) g_dwEnginesSupported);
 }
 
 
@@ -196,7 +196,7 @@ winSetEngine (ScreenPtr pScreen)
   if (g_dwEnginesSupported & pScreenInfo->dwEnginePreferred)
     {
       ErrorF ("winSetEngine - Using user's preference: %d\n",
-	      pScreenInfo->dwEnginePreferred);
+	      (int) pScreenInfo->dwEnginePreferred);
       pScreenInfo->dwEngine = pScreenInfo->dwEnginePreferred;
 
       /* Setup engine function pointers */

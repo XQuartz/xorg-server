@@ -80,7 +80,7 @@ winCreatePrimarySurfaceShadowDD (ScreenPtr pScreen)
   if (FAILED (ddrval))
     {
       ErrorF ("winCreatePrimarySurfaceShadowDD - Could not create primary "
-	      "surface: %08x\n", ddrval);
+	      "surface: %08x\n", (unsigned int) ddrval);
       return FALSE;
     }
   
@@ -98,7 +98,7 @@ winCreatePrimarySurfaceShadowDD (ScreenPtr pScreen)
     {
       ErrorF ("winCreatePrimarySurfaceShadowDD - Primary attach clipper "
 	      "failed: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -175,7 +175,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
   if (FAILED (ddrval))
     {
       ErrorF ("winAllocateFBShadowDD - Could not create clipper: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -194,7 +194,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
     {
       ErrorF ("winAllocateFBShadowDD - Clipper not attached to "
 	      "window: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -207,7 +207,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
   if (FAILED (ddrval))
     {
       ErrorF ("winAllocateFBShadowDD - Could not start DirectDraw: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -222,7 +222,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
   if (FAILED (ddrval))
     {
       ErrorF ("winAllocateFBShadowDD - Failed DD2 query: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -242,7 +242,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
 	{
 	  ErrorF ("winAllocateFBShadowDD - Could not set "
 		  "cooperative level: %08x\n",
-		  ddrval);
+		  (unsigned int) ddrval);
 	  return FALSE;
 	}
 
@@ -262,7 +262,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
 	    {
 	      ErrorF ("winAllocateFBShadowDD - Could not get current "
 		      "refresh rate: %08x.  Continuing.\n",
-		      ddrval);
+		      (unsigned int) ddrval);
 	      dwRefreshRateCurrent = 0;
 	    }
 	  else
@@ -309,7 +309,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
 	    {
 	      ErrorF ("winAllocateFBShadowDD - Could not set "\
 		      "full screen display mode: %08x\n",
-		      ddrval);
+		      (unsigned int) ddrval);
 	      return FALSE;
 	    }
 	}
@@ -332,7 +332,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
 	{
 	  ErrorF ("winAllocateFBShadowDD - Could not set "\
 		  "cooperative level: %08x\n",
-		  ddrval);
+		  (unsigned int) ddrval);
 	  return FALSE;
 	}
     }
@@ -368,7 +368,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
   if (FAILED (ddrval))
     {
       ErrorF ("winAllocateFBShadowDD - Could not create shadow "\
-	      "surface: %08x\n", ddrval);
+	      "surface: %08x\n", (unsigned int) ddrval);
       return FALSE;
     }
   
@@ -400,7 +400,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
   if (FAILED (ddrval) || pddsdShadow->lpSurface == NULL)
     {
       ErrorF ("winAllocateFBShadowDD - Could not lock shadow "\
-	      "surface: %08x\n", ddrval);
+	      "surface: %08x\n", (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -737,12 +737,12 @@ winInitVisualsShadowDD (ScreenPtr pScreen)
   
   ErrorF ("winInitVisualsShadowDD - Masks %08x %08x %08x BPRGB %d d %d "
 	  "bpp %d\n",
-	  pScreenPriv->dwRedMask,
-	  pScreenPriv->dwGreenMask,
-	  pScreenPriv->dwBlueMask,
-	  pScreenPriv->dwBitsPerRGB,
-	  pScreenInfo->dwDepth,
-	  pScreenInfo->dwBPP);
+	  (unsigned int) pScreenPriv->dwRedMask,
+	  (unsigned int) pScreenPriv->dwGreenMask,
+	  (unsigned int) pScreenPriv->dwBlueMask,
+	  (int) pScreenPriv->dwBitsPerRGB,
+	  (int) pScreenInfo->dwDepth,
+	  (int) pScreenInfo->dwBPP);
 
   /* Create a single visual according to the Windows screen depth */
   switch (pScreenInfo->dwDepth)
@@ -890,7 +890,7 @@ winAdjustVideoModeShadowDD (ScreenPtr pScreen)
     {
       /* No -depth parameter passed, let the user know the depth being used */
       ErrorF ("winAdjustVideoModeShadowDD - Using Windows display "
-	      "depth of %d bits per pixel\n", dwBPP);
+	      "depth of %d bits per pixel\n", (int) dwBPP);
 
       /* Use GDI's depth */
       pScreenInfo->dwBPP = dwBPP;
@@ -900,13 +900,13 @@ winAdjustVideoModeShadowDD (ScreenPtr pScreen)
     {
       /* FullScreen, and GDI depth differs from -depth parameter */
       ErrorF ("winAdjustVideoModeShadowDD - FullScreen, using command line "
-	      "bpp: %d\n", pScreenInfo->dwBPP);
+	      "bpp: %d\n", (int) pScreenInfo->dwBPP);
     }
   else if (dwBPP != pScreenInfo->dwBPP)
     {
       /* Windowed, and GDI depth differs from -depth parameter */
       ErrorF ("winAdjustVideoModeShadowDD - Windowed, command line bpp: "
-	      "%d, using bpp: %d\n", pScreenInfo->dwBPP, dwBPP);
+	      "%d, using bpp: %d\n", (int) pScreenInfo->dwBPP, (int) dwBPP);
 
       /* We'll use GDI's depth */
       pScreenInfo->dwBPP = dwBPP;
@@ -1022,7 +1022,7 @@ winBltExposedRegionsShadowDD (ScreenPtr pScreen)
 	  else if (ddrval == DDERR_INVALIDOBJECT)
 	    ErrorF ("DDERR_INVALIDOBJECT\n");
 	  else
-	    ErrorF ("unknown error: %08x\n", ddrval);
+	    ErrorF ("unknown error: %08x\n", (unsigned int) ddrval);
 
 	  /* Loop around to try the blit one more time */
 	  continue;
@@ -1031,7 +1031,8 @@ winBltExposedRegionsShadowDD (ScreenPtr pScreen)
 	{
 	  fReturn = FALSE;
 	  ErrorF ("winBltExposedRegionsShadowDD - IDirectDrawSurface2_Blt "
-		  "failed, but surface not lost: %08x %d\n", ddrval, ddrval);
+		  "failed, but surface not lost: %08x %d\n",
+		  (unsigned int) ddrval, (int) ddrval);
 	  goto winBltExposedRegionsShadowDD_Exit;
 	}
       else
@@ -1160,7 +1161,7 @@ winRedrawScreenShadowDD (ScreenPtr pScreen)
     {
       ErrorF ("winRedrawScreenShadowDD - IDirectDrawSurface_Blt () "
 	      "failed: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
     }
 
   return TRUE;

@@ -77,7 +77,7 @@ winAllocateFBPrimaryDD (ScreenPtr pScreen)
   if (FAILED (ddrval))
     {
       ErrorF ("winAllocateFBShadowDD - Failed DD2 query: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -131,7 +131,7 @@ winAllocateFBPrimaryDD (ScreenPtr pScreen)
 				       NULL);
   if (FAILED (ddrval))
        FatalError ("winAllocateFBPrimaryDD - Could not create primary "
-		  "surface %08x\n", ddrval);
+		  "surface %08x\n", (unsigned int) ddrval);
 
   ErrorF ("winAllocateFBPrimaryDD - Created primary\n");
 
@@ -326,10 +326,10 @@ winInitVisualsPrimaryDD (ScreenPtr pScreen)
     pScreenPriv->dwBitsPerRGB = dwBlueBits;
   
   ErrorF ("winInitVisualsPrimaryDD - Masks: %08x %08x %08x bpRGB: %d\n",
-	  pScreenPriv->dwRedMask,
-	  pScreenPriv->dwGreenMask,
-	  pScreenPriv->dwBlueMask,
-	  pScreenPriv->dwBitsPerRGB);
+	  (unsigned int) pScreenPriv->dwRedMask,
+	  (unsigned int) pScreenPriv->dwGreenMask,
+	  (unsigned int) pScreenPriv->dwBlueMask,
+	  (int) pScreenPriv->dwBitsPerRGB);
 
   /* Create a single visual according to the Windows screen depth */
   switch (pScreenInfo->dwDepth)
@@ -408,7 +408,7 @@ winAdjustVideoModePrimaryDD (ScreenPtr pScreen)
     {
       /* No -depth parameter passed, let the user know the depth being used */
       ErrorF ("winAdjustVideoModePrimaryDD - Using Windows display "
-	      "depth of %d bits per pixel\n", dwBPP);
+	      "depth of %d bits per pixel\n", (int) dwBPP);
 
       /* Use GDI's depth */
       pScreenInfo->dwBPP = dwBPP;
@@ -418,14 +418,14 @@ winAdjustVideoModePrimaryDD (ScreenPtr pScreen)
     {
       /* FullScreen, and GDI depth differs from -depth parameter */
       ErrorF ("winAdjustVideoModePrimaryDD - FullScreen, using command "
-	      "line depth: %d\n", pScreenInfo->dwBPP);
+	      "line depth: %d\n", (int) pScreenInfo->dwBPP);
     }
   else if (dwBPP != pScreenInfo->dwBPP)
     {
       /* Windowed, and GDI depth differs from -depth parameter */
       ErrorF ("winAdjustVideoModePrimaryDD - Windowed, command line "
 	      "depth: %d, using depth: %d\n",
-	      pScreenInfo->dwBPP, dwBPP);
+	      (int) pScreenInfo->dwBPP, (int) dwBPP);
 
       /* We'll use GDI's depth */
       pScreenInfo->dwBPP = dwBPP;
@@ -498,7 +498,7 @@ winActivateAppPrimaryDD (ScreenPtr pScreen)
 				    NULL);
   if (ddrval != DD_OK)
     FatalError ("winActivateAppPrimaryDD () - Failed blitting offscreen "
-		"surface to primary surface %08x\n", ddrval);
+		"surface to primary surface %08x\n", (unsigned int) ddrval);
   
   /* Lock the primary surface */
   ddrval = IDirectDrawSurface2_Lock (pScreenPriv->pddsPrimary,
@@ -596,12 +596,12 @@ winHotKeyAltTabPrimaryDD (ScreenPtr pScreen)
       if (FAILED (ddrval))
 	FatalError ("winHotKeyAltTabPrimaryDD - Failed blitting primary "
 		    "surface to offscreen surface: %08x\n",
-		    ddrval);
+		    (unsigned int) ddrval);
     }
   else
     {
       FatalError ("winHotKeyAltTabPrimaryDD - Unknown error from "
-		  "Blt: %08dx\n", ddrval);
+		  "Blt: %08dx\n", (unsigned int) ddrval);
     }
 
   /* Lock the offscreen surface */

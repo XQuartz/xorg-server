@@ -149,7 +149,7 @@ winInitVisualsNativeGDI (ScreenPtr pScreen)
 
   /* Tell the user how many bits per RGB we are using */
   ErrorF ("winInitVisualsNativeGDI - Using dwBitsPerRGB: %d\n",
-	  pScreenPriv->dwBitsPerRGB);
+	  (int) pScreenPriv->dwBitsPerRGB);
 
   /* Create a single visual according to the Windows screen depth */
   switch (pScreenInfo->dwDepth)
@@ -239,7 +239,8 @@ winAdjustVideoModeNativeGDI (ScreenPtr pScreen)
     {
       /* No -depth parameter passed, let the user know the depth being used */
       ErrorF ("winAdjustVideoModeNativeGDI - Using Windows display "
-	      "depth of %d bits per pixel, %d depth\n", dwBPP, pScreenInfo->dwDepth);
+	      "depth of %d bits per pixel, %d depth\n",
+	      (int) dwBPP, (int) pScreenInfo->dwDepth);
 
       /* Use GDI's depth */
       pScreenInfo->dwBPP = dwBPP;
@@ -248,7 +249,8 @@ winAdjustVideoModeNativeGDI (ScreenPtr pScreen)
     {
       /* Warn user if GDI depth is different than -depth parameter */
       ErrorF ("winAdjustVideoModeNativeGDI - Command line bpp: %d, "\
-	      "using bpp: %d\n", pScreenInfo->dwBPP, dwBPP);
+	      "using bpp: %d\n",
+	      (int) pScreenInfo->dwBPP, (int) dwBPP);
 
       /* We'll use GDI's depth */
       pScreenInfo->dwBPP = dwBPP;

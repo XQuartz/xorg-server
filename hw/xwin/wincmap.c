@@ -366,7 +366,7 @@ winGetPaletteDIB (ScreenPtr pScreen, ColormapPtr pcmap)
 	{
 	  ErrorF ("winGetPaletteDIB - Got: %d; "
 		  "%d %d %d\n",
-		  pixel, nRed, nGreen, nBlue);
+		  (int) pixel, nRed, nGreen, nBlue);
 	}
 	  
       /* FIXME: Not sure that this bit is needed at all */

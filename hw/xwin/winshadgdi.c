@@ -261,7 +261,7 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
   
   ErrorF ("winAllocateFBShadowGDI - Creating DIB with width: %d height: %d "
 	  "depth: %d\n",
-	  pbmih->biWidth, -pbmih->biHeight, pbmih->biBitCount);
+	  (int) pbmih->biWidth, (int) -pbmih->biHeight, pbmih->biBitCount);
 
   /* Create a DI shadow bitmap with a bit pointer */
   pScreenPriv->hbmpShadow = CreateDIBSection (pScreenPriv->hdcScreen,
@@ -291,9 +291,9 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
   /* Print information about bitmap allocated */
   ErrorF ("winAllocateFBShadowGDI - Dibsection width: %d height: %d "
 	  "depth: %d size image: %d\n",
-	  dibsection.dsBmih.biWidth, dibsection.dsBmih.biHeight,
+	  (int) dibsection.dsBmih.biWidth, (int) dibsection.dsBmih.biHeight,
 	  dibsection.dsBmih.biBitCount,
-	  dibsection.dsBmih.biSizeImage);
+	  (int) dibsection.dsBmih.biSizeImage);
 #endif
 
   /* Select the shadow bitmap into the shadow DC */
@@ -330,7 +330,7 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
       ErrorF ("winAllocateFBShadowGDI - WEIRDNESS - biHeight "
 	      "still negative: %d\n"
 	      "winAllocateFBShadowGDI - WEIRDNESS - Flipping biHeight sign\n",
-	      dibsection.dsBmih.biHeight);
+	      (int) dibsection.dsBmih.biHeight);
       dibsection.dsBmih.biHeight = -dibsection.dsBmih.biHeight;
     }
 
@@ -341,7 +341,7 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
 
 #if CYGDEBUG || YES
   ErrorF ("winAllocateFBShadowGDI - Created shadow stride: %d\n",
-	  pScreenInfo->dwStride);
+	  (int) pScreenInfo->dwStride);
 #endif
 
   /* See if the shadow bitmap will be larger than the DIB size limit */
@@ -577,12 +577,12 @@ winInitVisualsShadowGDI (ScreenPtr pScreen)
   /* Display debugging information */
   ErrorF ("winInitVisualsShadowGDI - Masks %08x %08x %08x BPRGB %d d %d "
 	  "bpp %d\n",
-	  pScreenPriv->dwRedMask,
-	  pScreenPriv->dwGreenMask,
-	  pScreenPriv->dwBlueMask,
-	  pScreenPriv->dwBitsPerRGB,
-	  pScreenInfo->dwDepth,
-	  pScreenInfo->dwBPP);
+	  (unsigned int) pScreenPriv->dwRedMask,
+	  (unsigned int) pScreenPriv->dwGreenMask,
+	  (unsigned int) pScreenPriv->dwBlueMask,
+	  (int) pScreenPriv->dwBitsPerRGB,
+	  (int) pScreenInfo->dwDepth,
+	  (int) pScreenInfo->dwBPP);
 
   /* Create a single visual according to the Windows screen depth */
   switch (pScreenInfo->dwDepth)
@@ -728,7 +728,7 @@ winAdjustVideoModeShadowGDI (ScreenPtr pScreen)
     {
       /* No -depth parameter passed, let the user know the depth being used */
       ErrorF ("winAdjustVideoModeShadowGDI - Using Windows display "
-	      "depth of %d bits per pixel\n", dwBPP);
+	      "depth of %d bits per pixel\n", (int) dwBPP);
 
       /* Use GDI's depth */
       pScreenInfo->dwBPP = dwBPP;
@@ -737,7 +737,7 @@ winAdjustVideoModeShadowGDI (ScreenPtr pScreen)
     {
       /* Warn user if GDI depth is different than -depth parameter */
       ErrorF ("winAdjustVideoModeShadowGDI - Command line bpp: %d, "\
-	      "using bpp: %d\n", pScreenInfo->dwBPP, dwBPP);
+	      "using bpp: %d\n", (int) pScreenInfo->dwBPP, (int) dwBPP);
 
       /* We'll use GDI's depth */
       pScreenInfo->dwBPP = dwBPP;
@@ -1056,7 +1056,7 @@ winCreateColormapShadowGDI (ColormapPtr pColormap)
     {
       ErrorF ("winCreateColormapShadowGDI - Couldn't allocate palette "
 	      "with %d entries\n",
-	      dwEntriesMax);
+	      (int) dwEntriesMax);
       return FALSE;
     }
 

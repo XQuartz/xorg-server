@@ -84,7 +84,7 @@ winCreatePrimarySurfaceShadowDDNL (ScreenPtr pScreen)
     {
       ErrorF ("winCreatePrimarySurfaceShadowDDNL - Could not create primary "
 	      "surface: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
   
@@ -99,7 +99,7 @@ winCreatePrimarySurfaceShadowDDNL (ScreenPtr pScreen)
     {
       ErrorF ("winCreatePrimarySurfaceShadowDDNL - Primary attach clipper "
 	      "failed: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -192,7 +192,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
   if (FAILED (ddrval))
     {
       ErrorF ("winAllocateFBShadowDDNL - Could not attach clipper: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -211,7 +211,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
     {
       ErrorF ("winAllocateFBShadowDDNL - Clipper not attached "
 	      "to window: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -227,7 +227,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
     {
       ErrorF ("winAllocateFBShadowDDNL - Could not start "
 	      "DirectDraw: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -242,7 +242,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
   if (FAILED (ddrval))
     {
       ErrorF ("winAllocateFBShadowDDNL - Failed DD4 query: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -262,7 +262,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
 	{
 	  ErrorF ("winAllocateFBShadowDDNL - Could not set "
 		  "cooperative level: %08x\n",
-		  ddrval);
+		  (unsigned int) ddrval);
 	  return FALSE;
 	}
 
@@ -282,7 +282,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
 	    {
 	      ErrorF ("winAllocateFBShadowDDNL - Could not get current "
 		      "refresh rate: %08x.  Continuing.\n",
-		      ddrval);
+		      (unsigned int) ddrval);
 	      dwRefreshRateCurrent = 0;
 	    }
 	  else
@@ -329,7 +329,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
 	    {
 	      ErrorF ("winAllocateFBShadowDDNL - Could not set "
 		      "full screen display mode: %08x\n",
-		      ddrval);
+		      (unsigned int) ddrval);
 	      return FALSE;
 	    }
 	}
@@ -352,7 +352,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
 	{
 	  ErrorF ("winAllocateFBShadowDDNL - Could not set "
 		  "cooperative level: %08x\n",
-		  ddrval);
+		  (unsigned int) ddrval);
 	  return FALSE;
 	}
     }
@@ -374,7 +374,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
     {
       ErrorF ("winAllocateFBShadowDDNL - Could not get primary "
 	      "pixformat: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
       return FALSE;
     }
 
@@ -408,7 +408,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
   ddsdShadow.u4.ddpfPixelFormat = ddpfPrimary;
   
   ErrorF ("winAllocateFBShadowDDNL - lPitch: %d\n",
-	  pScreenInfo->dwPaddedWidth);
+	  (int) pScreenInfo->dwPaddedWidth);
 
   /* Create the shadow surface */
   ddrval = IDirectDraw4_CreateSurface (pScreenPriv->pdd4,
@@ -418,13 +418,13 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
   if (FAILED (ddrval))
     {
       ErrorF ("winAllocateFBShadowDDNL - Could not create shadow "
-	      "surface: %08x\n", ddrval);
+	      "surface: %08x\n", (unsigned int) ddrval);
       return FALSE;
     }
   
 #if CYGDEBUG || YES
   ErrorF ("winAllocateFBShadowDDNL - Created shadow pitch: %d\n",
-	  ddsdShadow.u1.lPitch);
+	  (int) ddsdShadow.u1.lPitch);
 #endif
 
   /* Grab the pitch from the surface desc */
@@ -433,7 +433,7 @@ winAllocateFBShadowDDNL (ScreenPtr pScreen)
 
 #if CYGDEBUG || YES
   ErrorF ("winAllocateFBShadowDDNL - Created shadow stride: %d\n",
-	  pScreenInfo->dwStride);
+	  (int) pScreenInfo->dwStride);
 #endif
 
   /* Save the pointer to our surface memory */
@@ -522,7 +522,7 @@ winShadowUpdateDDNL (ScreenPtr pScreen,
 		{
 		  ErrorF ("winShadowUpdateDDNL - IDirectDrawSurface4_Blt () "
 			  "failed: %08x\n",
-			  ddrval);
+			  (unsigned int) ddrval);
 		  
 		  ++s_iFailCount;
 
@@ -733,12 +733,12 @@ winInitVisualsShadowDDNL (ScreenPtr pScreen)
 
   ErrorF ("winInitVisualsShadowDDNL - Masks %08x %08x %08x BPRGB %d d %d "
 	  "bpp %d\n",
-	  pScreenPriv->dwRedMask,
-	  pScreenPriv->dwGreenMask,
-	  pScreenPriv->dwBlueMask,
-	  pScreenPriv->dwBitsPerRGB,
-	  pScreenInfo->dwDepth,
-	  pScreenInfo->dwBPP);
+	  (unsigned int) pScreenPriv->dwRedMask,
+	  (unsigned int) pScreenPriv->dwGreenMask,
+	  (unsigned int) pScreenPriv->dwBlueMask,
+	  (int) pScreenPriv->dwBitsPerRGB,
+	  (int) pScreenInfo->dwDepth,
+	  (int) pScreenInfo->dwBPP);
 
   /* Create a single visual according to the Windows screen depth */
   switch (pScreenInfo->dwDepth)
@@ -886,7 +886,7 @@ winAdjustVideoModeShadowDDNL (ScreenPtr pScreen)
     {
       /* No -depth parameter passed, let the user know the depth being used */
       ErrorF ("winAdjustVideoModeShadowDDNL - Using Windows display "
-	      "depth of %d bits per pixel\n", dwBPP);
+	      "depth of %d bits per pixel\n", (int) dwBPP);
 
       /* Use GDI's depth */
       pScreenInfo->dwBPP = dwBPP;
@@ -896,14 +896,14 @@ winAdjustVideoModeShadowDDNL (ScreenPtr pScreen)
     {
       /* FullScreen, and GDI depth differs from -depth parameter */
       ErrorF ("winAdjustVideoModeShadowDDNL - FullScreen, using command "
-	      "line bpp: %d\n", pScreenInfo->dwBPP);
+	      "line bpp: %d\n", (int) pScreenInfo->dwBPP);
     }
   else if (dwBPP != pScreenInfo->dwBPP)
     {
       /* Windowed, and GDI depth differs from -depth parameter */
       ErrorF ("winAdjustVideoModeShadowDDNL - Windowed, command line "
 	      "bpp: %d, using bpp: %d\n",
-	      pScreenInfo->dwBPP, dwBPP);
+	      (int) pScreenInfo->dwBPP, (int) dwBPP);
 
       /* We'll use GDI's depth */
       pScreenInfo->dwBPP = dwBPP;
@@ -1008,7 +1008,7 @@ winBltExposedRegionsShadowDDNL (ScreenPtr pScreen)
 	  else if (ddrval == DDERR_INVALIDOBJECT)
 	    ErrorF ("DDERR_INVALIDOBJECT\n");
 	  else
-	    ErrorF ("unknown error: %08x\n", ddrval);
+	    ErrorF ("unknown error: %08x\n", (unsigned int) ddrval);
 	  
 	  /* Loop around to try the blit one more time */
 	  continue;
@@ -1017,7 +1017,8 @@ winBltExposedRegionsShadowDDNL (ScreenPtr pScreen)
 	{
 	  fReturn = FALSE;
 	  ErrorF ("winBltExposedRegionsShadowDDNL - IDirectDrawSurface4_Blt "
-		  "failed, but surface not lost: %08x %d\n", ddrval, ddrval);
+		  "failed, but surface not lost: %08x %d\n",
+		  (unsigned int) ddrval, (int) ddrval);
 	  goto winBltExposedRegionsShadowDDNL_Exit;
 	}
       else
@@ -1102,7 +1103,7 @@ winRedrawScreenShadowDDNL (ScreenPtr pScreen)
     {
       ErrorF ("winRedrawScreenShadowDDNL - IDirectDrawSurface4_Blt () "
 	      "failed: %08x\n",
-	      ddrval);
+	      (unsigned int) ddrval);
     }
 
   return TRUE;

@@ -170,8 +170,8 @@ winWindowProc (HWND hwnd, UINT message,
       
       ErrorF ("winWindowProc - WM_DISPLAYCHANGE - orig bpp: %d, last bpp: %d, "
 	      "new bpp: %d\n",
-	      s_pScreenInfo->dwBPP,
-	      s_pScreenPriv->dwLastWindowsBitsPixel,
+	      (int) s_pScreenInfo->dwBPP,
+	      (int) s_pScreenPriv->dwLastWindowsBitsPixel,
 	      wParam);
 
       ErrorF ("winWindowProc - WM_DISPLAYCHANGE - new width: %d "

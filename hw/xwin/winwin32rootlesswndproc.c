@@ -982,7 +982,7 @@ winMWExtWMWindowProc (HWND hwnd, UINT message,
 	if (!g_fNoConfigureWindow ) {
 
 	  if (!pRLWinPriv->fMovingOrSizing
-	      && (pWinPos->flags & SWP_SHOWWINDOW)) {
+	      /*&& (pWinPos->flags & SWP_SHOWWINDOW)*/) {
 	    GetClientRect (hwnd, &rcClient);
 	    MapWindowPoints (hwnd, HWND_DESKTOP, (LPPOINT)&rcClient, 2);
 

@@ -52,6 +52,55 @@ extern Bool			g_fNoHelpMessageBox;
 extern Bool			g_fSoftwareCursor;
 extern Bool			g_fSilentDupError;
 
+/* globals required by callback function for monitor information */
+struct GetMonitorInfoData {
+    int  requestedMonitor;
+    int  monitorNum;
+    Bool bUserSpecifiedMonitor;
+    Bool bMonitorSpecifiedExists;
+    int  monitorOffsetX;
+    int  monitorOffsetY;
+    int  monitorHeight;
+    int  monitorWidth;
+};
+
+typedef BOOL (*ENUMDISPLAYMONITORSPROC)(HDC,LPCRECT,MONITORENUMPROC,LPARAM);
+ENUMDISPLAYMONITORSPROC _EnumDisplayMonitors;
+
+BOOL CALLBACK getMonitorInfo(HMONITOR hMonitor, HDC hdc, LPRECT rect, LPARAM _data);
+
+Bool QueryMonitor(int index, struct GetMonitorInfoData *data)
+{
+    /* Load EnumDisplayMonitors from DLL */
+    HMODULE user32;
+    FARPROC func;
+    user32 = LoadLibrary("user32.dll");
+    if (user32 == NULL)
+    {
+        winW32Error(2, "Could not open user32.dll");
+        return FALSE;
+    }
+    func = GetProcAddress(user32, "EnumDisplayMonitors");
+    if (func == NULL)
+    {
+        winW32Error(2, "Could not resolve EnumDisplayMonitors: ");
+        return FALSE;
+    }
+    _EnumDisplayMonitors = (ENUMDISPLAYMONITORSPROC)func;
+    
+    /* prepare data */
+    if (data == NULL)
+        return FALSE;
+    memset(data, 0, sizeof(*data));
+    data->requestedMonitor = index;
+
+    /* query information */
+    _EnumDisplayMonitors(NULL, NULL, getMonitorInfo, (LPARAM) data);
+
+    /* cleanup */
+    FreeLibrary(user32);
+    return TRUE;
+}
 
 /*
  * Function prototypes
@@ -69,7 +118,6 @@ void OsVendorVErrorF (const char *pszFormat, va_list va_args);
 
 void
 winInitializeDefaultScreens (void);
-
 
 /*
  * Process arguments on the command line
@@ -112,6 +160,7 @@ winInitializeDefaultScreens (void)
       g_ScreenInfo[i].dwUserHeight = dwHeight;
       g_ScreenInfo[i].fUserGaveHeightAndWidth
 	=  WIN_DEFAULT_USER_GAVE_HEIGHT_AND_WIDTH;
+      g_ScreenInfo[i].fUserGavePosition = FALSE;
       g_ScreenInfo[i].dwBPP = WIN_DEFAULT_BPP;
       g_ScreenInfo[i].dwClipUpdatesNBoxes = WIN_DEFAULT_CLIP_UPDATES_NBOXES;
 #ifdef XWIN_EMULATEPSEUDO
@@ -127,6 +176,9 @@ winInitializeDefaultScreens (void)
       g_ScreenInfo[i].fRootless = FALSE;
 #ifdef XWIN_MULTIWINDOW
       g_ScreenInfo[i].fMultiWindow = FALSE;
+#endif
+#if defined(XWIN_MULTIWINDOW) || defined(XWIN_MULTIWINDOWEXTWM)
+      g_ScreenInfo[i].fMultiMonitorOverride = FALSE;
 #endif
       g_ScreenInfo[i].fMultipleMonitors = FALSE;
       g_ScreenInfo[i].fLessPointer = FALSE;
@@ -247,7 +299,8 @@ ddxProcessArgument (int argc, char *argv[], int i)
     {
       int		iArgsProcessed = 1;
       int		nScreenNum;
-      int		iWidth, iHeight;
+      int		iWidth, iHeight, iX, iY;
+      int		iMonitor;
 
 #if CYGDEBUG
       winDebug ("ddxProcessArgument - screen - argc: %d i: %d\n",
@@ -272,8 +325,41 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  return 0;
         }
 
+	  /* look for @m where m is monitor number */
+	  if (i + 2 < argc
+		  && 1 == sscanf(argv[i + 2], "@%d", (int *) &iMonitor)) 
+      {
+        struct GetMonitorInfoData data;
+        if (!QueryMonitor(iMonitor, &data))
+        {
+            ErrorF ("ddxProcessArgument - screen - "
+                    "Querying monitors is not supported on NT4 and Win95\n");
+        } else if (data.bMonitorSpecifiedExists == TRUE) 
+        {
+		  winErrorFVerb(2, "ddxProcessArgument - screen - Found Valid ``@Monitor'' = %d arg\n", iMonitor);
+		  iArgsProcessed = 3;
+		  g_ScreenInfo[nScreenNum].fUserGaveHeightAndWidth = FALSE;
+		  g_ScreenInfo[nScreenNum].fUserGavePosition = TRUE;
+		  g_ScreenInfo[nScreenNum].dwWidth = data.monitorWidth;
+		  g_ScreenInfo[nScreenNum].dwHeight = data.monitorHeight;
+		  g_ScreenInfo[nScreenNum].dwUserWidth = data.monitorWidth;
+		  g_ScreenInfo[nScreenNum].dwUserHeight = data.monitorHeight;
+		  g_ScreenInfo[nScreenNum].dwInitialX = data.monitorOffsetX;
+		  g_ScreenInfo[nScreenNum].dwInitialY = data.monitorOffsetY;
+		}
+		else 
+        {
+		  /* monitor does not exist, error out */
+		  ErrorF ("ddxProcessArgument - screen - Invalid monitor number %d\n",
+				  iMonitor);
+		  UseMsg ();
+		  exit (0);
+		  return 0;
+		}
+	  }
+
       /* Look for 'WxD' or 'W D' */
-      if (i + 2 < argc
+      else if (i + 2 < argc
 	  && 2 == sscanf (argv[i + 2], "%dx%d",
 			  (int *) &iWidth,
 			  (int *) &iHeight))
@@ -285,6 +371,70 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  g_ScreenInfo[nScreenNum].dwHeight = iHeight;
 	  g_ScreenInfo[nScreenNum].dwUserWidth = iWidth;
 	  g_ScreenInfo[nScreenNum].dwUserHeight = iHeight;
+	  /* Look for WxD+X+Y */
+	  if (2 == sscanf (argv[i + 2], "%*dx%*d+%d+%d",
+			   (int *) &iX,
+			   (int *) &iY))
+	  {
+	    winErrorFVerb (2, "ddxProcessArgument - screen - Found ``X+Y'' arg\n");
+	    g_ScreenInfo[nScreenNum].fUserGavePosition = TRUE;
+	    g_ScreenInfo[nScreenNum].dwInitialX = iX;
+	    g_ScreenInfo[nScreenNum].dwInitialY = iY;
+
+		/* look for WxD+X+Y@m where m is monitor number. take X,Y to be offsets from monitor's root position */
+		if (1 == sscanf (argv[i + 2], "%*dx%*d+%*d+%*d@%d",
+						 (int *) &iMonitor)) 
+        {
+          struct GetMonitorInfoData data;
+          if (!QueryMonitor(iMonitor, &data))
+          {
+              ErrorF ("ddxProcessArgument - screen - "
+                      "Querying monitors is not supported on NT4 and Win95\n");
+          } else if (data.bMonitorSpecifiedExists == TRUE) 
+          {
+			g_ScreenInfo[nScreenNum].dwInitialX += data.monitorOffsetX;
+			g_ScreenInfo[nScreenNum].dwInitialY += data.monitorOffsetY;
+		  }
+		  else 
+          {
+			/* monitor does not exist, error out */
+			ErrorF ("ddxProcessArgument - screen - Invalid monitor number %d\n",
+					iMonitor);
+			UseMsg ();
+			exit (0);
+			return 0;
+		  }
+
+		}
+	  }
+
+	  /* look for WxD@m where m is monitor number */
+	  else if (1 == sscanf(argv[i + 2], "%*dx%*d@%d",
+						   (int *) &iMonitor)) 
+      {
+        struct GetMonitorInfoData data;
+        if (!QueryMonitor(iMonitor, &data))
+        {
+		  ErrorF ("ddxProcessArgument - screen - "
+                  "Querying monitors is not supported on NT4 and Win95\n");
+        } else if (data.bMonitorSpecifiedExists == TRUE) 
+        {
+		  winErrorFVerb (2, "ddxProcessArgument - screen - Found Valid ``@Monitor'' = %d arg\n", iMonitor);
+		  g_ScreenInfo[nScreenNum].fUserGavePosition = TRUE;
+		  g_ScreenInfo[nScreenNum].dwInitialX = data.monitorOffsetX;
+		  g_ScreenInfo[nScreenNum].dwInitialY = data.monitorOffsetY;
+		}
+		else 
+        {
+		  /* monitor does not exist, error out */
+		  ErrorF ("ddxProcessArgument - screen - Invalid monitor number %d\n",
+				  iMonitor);
+		  UseMsg ();
+		  exit (0);
+		  return 0;
+		}
+
+	  }
 	}
       else if (i + 3 < argc
 	       && 1 == sscanf (argv[i + 2], "%d",
@@ -299,6 +449,18 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  g_ScreenInfo[nScreenNum].dwHeight = iHeight;
 	  g_ScreenInfo[nScreenNum].dwUserWidth = iWidth;
 	  g_ScreenInfo[nScreenNum].dwUserHeight = iHeight;
+	  if (i + 5 < argc
+	      && 1 == sscanf (argv[i + 4], "%d",
+			      (int *) &iX)
+	      && 1 == sscanf (argv[i + 5], "%d",
+			      (int *) &iY))
+	  {
+	    winErrorFVerb (2, "ddxProcessArgument - screen - Found ``X Y'' arg\n");
+	    iArgsProcessed = 6;
+	    g_ScreenInfo[nScreenNum].fUserGavePosition = TRUE;
+	    g_ScreenInfo[nScreenNum].dwInitialX = iX;
+	    g_ScreenInfo[nScreenNum].dwInitialY = iY;
+	  }
 	}
       else
 	{
@@ -399,12 +561,16 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  /* Parameter is for all screens */
 	  for (j = 0; j < MAXSCREENS; j++)
 	    {
+              if (!g_ScreenInfo[j].fMultiMonitorOverride)
+                g_ScreenInfo[j].fMultipleMonitors = FALSE;
 	      g_ScreenInfo[j].fFullScreen = TRUE;
 	    }
 	}
       else
 	{
 	  /* Parameter is for a single screen */
+          if (!g_ScreenInfo[g_iLastScreen].fMultiMonitorOverride)
+            g_ScreenInfo[g_iLastScreen].fMultipleMonitors = FALSE;
 	  g_ScreenInfo[g_iLastScreen].fFullScreen = TRUE;
 	}
 
@@ -451,12 +617,16 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  /* Parameter is for all screens */
 	  for (j = 0; j < MAXSCREENS; j++)
 	    {
+              if (!g_ScreenInfo[j].fMultiMonitorOverride)
+                g_ScreenInfo[j].fMultipleMonitors = FALSE;
 	      g_ScreenInfo[j].fDecoration = FALSE;
 	    }
 	}
       else
 	{
 	  /* Parameter is for a single screen */
+          if (!g_ScreenInfo[g_iLastScreen].fMultiMonitorOverride)
+            g_ScreenInfo[g_iLastScreen].fMultipleMonitors = FALSE;
 	  g_ScreenInfo[g_iLastScreen].fDecoration = FALSE;
 	}
 
@@ -478,12 +648,16 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  /* Parameter is for all screens */
 	  for (j = 0; j < MAXSCREENS; j++)
 	    {
+              if (!g_ScreenInfo[j].fMultiMonitorOverride)
+                g_ScreenInfo[j].fMultipleMonitors = TRUE;
 	      g_ScreenInfo[j].fMWExtWM = TRUE;
 	    }
 	}
       else
 	{
 	  /* Parameter is for a single screen */
+          if (!g_ScreenInfo[g_iLastScreen].fMultiMonitorOverride)
+            g_ScreenInfo[g_iLastScreen].fMultipleMonitors = TRUE;
 	  g_ScreenInfo[g_iLastScreen].fMWExtWM = TRUE;
 	}
 
@@ -505,12 +679,16 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  /* Parameter is for all screens */
 	  for (j = 0; j < MAXSCREENS; j++)
 	    {
+              if (!g_ScreenInfo[j].fMultiMonitorOverride)
+                g_ScreenInfo[j].fMultipleMonitors = FALSE;
 	      g_ScreenInfo[j].fRootless = TRUE;
 	    }
 	}
       else
 	{
 	  /* Parameter is for a single screen */
+          if (!g_ScreenInfo[g_iLastScreen].fMultiMonitorOverride)
+            g_ScreenInfo[g_iLastScreen].fMultipleMonitors = FALSE;
 	  g_ScreenInfo[g_iLastScreen].fRootless = TRUE;
 	}
 
@@ -532,12 +710,16 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  /* Parameter is for all screens */
 	  for (j = 0; j < MAXSCREENS; j++)
 	    {
+              if (!g_ScreenInfo[j].fMultiMonitorOverride)
+                g_ScreenInfo[j].fMultipleMonitors = TRUE;
 	      g_ScreenInfo[j].fMultiWindow = TRUE;
 	    }
 	}
       else
 	{
 	  /* Parameter is for a single screen */
+          if (!g_ScreenInfo[g_iLastScreen].fMultiMonitorOverride)
+            g_ScreenInfo[g_iLastScreen].fMultipleMonitors = TRUE;
 	  g_ScreenInfo[g_iLastScreen].fMultiWindow = TRUE;
 	}
 
@@ -560,18 +742,50 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  /* Parameter is for all screens */
 	  for (j = 0; j < MAXSCREENS; j++)
 	    {
+              g_ScreenInfo[j].fMultiMonitorOverride = TRUE;
 	      g_ScreenInfo[j].fMultipleMonitors = TRUE;
 	    }
 	}
       else
 	{
 	  /* Parameter is for a single screen */
+          g_ScreenInfo[g_iLastScreen].fMultiMonitorOverride = TRUE;
 	  g_ScreenInfo[g_iLastScreen].fMultipleMonitors = TRUE;
 	}
 
       /* Indicate that we have processed this argument */
       return 1;
     }
+
+  /*
+   * Look for the '-nomultiplemonitors' argument
+   */
+  if (IS_OPTION ("-nomultiplemonitors")
+      || IS_OPTION ("-nomultimonitors"))
+    {
+      /* Is this parameter attached to a screen or is it global? */
+      if (-1 == g_iLastScreen)
+	{
+	  int			j;
+
+	  /* Parameter is for all screens */
+	  for (j = 0; j < MAXSCREENS; j++)
+	    {
+              g_ScreenInfo[j].fMultiMonitorOverride = TRUE;
+	      g_ScreenInfo[j].fMultipleMonitors = FALSE;
+	    }
+	}
+      else
+	{
+	  /* Parameter is for a single screen */
+          g_ScreenInfo[g_iLastScreen].fMultiMonitorOverride = TRUE;
+	  g_ScreenInfo[g_iLastScreen].fMultipleMonitors = FALSE;
+	}
+
+      /* Indicate that we have processed this argument */
+      return 1;
+    }
+
 
   /*
    * Look for the '-scrollbars' argument
@@ -1253,4 +1467,25 @@ winLogVersionInfo (void)
   ErrorF ("Vendor: %s\n", VENDOR_STRING);
   ErrorF ("Release: %s\n\n", VERSION_STRING);
   ErrorF ("Contact: %s\n\n", VENDOR_CONTACT);
+}
+
+/*
+ * getMonitorInfo - callback function used to return information from the enumeration of monitors attached
+ */
+
+BOOL CALLBACK getMonitorInfo(HMONITOR hMonitor, HDC hdc, LPRECT rect, LPARAM _data) 
+{
+  struct GetMonitorInfoData* data = (struct GetMonitorInfoData*)_data;
+  // only get data for monitor number specified in <data>
+  data->monitorNum++;
+  if (data->monitorNum == data->requestedMonitor) 
+  {
+	data->bMonitorSpecifiedExists = TRUE;
+	data->monitorOffsetX = rect->left;
+	data->monitorOffsetY = rect->top;
+	data->monitorHeight  = rect->bottom - rect->top;
+	data->monitorWidth   = rect->right  - rect->left;
+    return FALSE;
+  }
+  return TRUE;
 }

@@ -48,6 +48,17 @@
 #define CYGDEBUG				NO
 #endif
 
+/* WM_XBUTTON Messages. They should go into w32api. */
+#ifndef WM_XBUTTONDOWN
+# define WM_XBUTTONDOWN 523
+#endif
+#ifndef WM_XBUTTONUP
+# define WM_XBUTTONUP 524
+#endif
+#ifndef WM_XBUTTONDBLCLK
+# define WM_XBUTTONDBLCLK 525
+#endif
+
 #define NEED_EVENTS
 
 #define WIN_DEFAULT_BPP				0
@@ -384,6 +395,11 @@ typedef struct
   DWORD			dwHeight_mm;
   DWORD			dwPaddedWidth;
 
+  /* Did the user specify a screen position? */
+  Bool			fUserGavePosition;
+  DWORD                 dwInitialX;
+  DWORD                 dwInitialY;
+
   /*
    * dwStride is the number of whole pixels that occupy a scanline,
    * including those pixels that are not displayed.  This is basically
@@ -413,6 +429,9 @@ typedef struct
   Bool			fRootless;
 #ifdef XWIN_MULTIWINDOW
   Bool			fMultiWindow;
+#endif
+#if defined(XWIN_MULTIWINDOW) || defined(XWIN_MULTIWINDOWEXTWM)
+  Bool			fMultiMonitorOverride;
 #endif
   Bool                  fMultipleMonitors;
   Bool			fLessPointer;
@@ -497,6 +516,7 @@ typedef struct _winPrivScreenRec
   LPDIRECTDRAW4		pdd4;
   LPDIRECTDRAWSURFACE4	pddsShadow4;
   LPDIRECTDRAWSURFACE4	pddsPrimary4;
+  BOOL			fRetryCreateSurface;
 
   /* Privates used by both shadow fb DirectDraw servers */
   LPDIRECTDRAWCLIPPER	pddcPrimary;

@@ -64,23 +64,44 @@ winMouseCtrl (DeviceIntPtr pDevice, PtrCtrl *pCtrl)
 int
 winMouseProc (DeviceIntPtr pDeviceInt, int iState)
 {
-  CARD8			map[6];
+  int 			lngMouseButtons, i;
+  int			lngWheelEvents = 2;
+  CARD8			*map;
   DevicePtr		pDevice = (DevicePtr) pDeviceInt;
 
   switch (iState)
     {
     case DEVICE_INIT:
-      map[1] = 1;
-      map[2] = 2;
-      map[3] = 3;
-      map[4] = 4;
-      map[5] = 5;
+      /* Get number of mouse buttons */
+      lngMouseButtons = GetSystemMetrics(SM_CMOUSEBUTTONS);
+
+      /* Mapping of windows events to X events:
+       * LEFT:1 MIDDLE:2 RIGHT:3
+       * SCROLL_UP:4 SCROLL_DOWN:5
+       * XBUTTON 1:6 XBUTTON 2:7 ...
+       *
+       * To map scroll wheel correctly we need at least the 3 normal buttons
+       */
+      if (lngMouseButtons < 3)
+        lngMouseButtons = 3;
+      winMsg(X_PROBED, "%d mouse buttons found\n", lngMouseButtons);
+
+      /* allocate memory: 
+       * number of buttons + 2x mouse wheel event + 1 extra (offset for map) 
+       */
+      map = malloc(sizeof(CARD8) * (lngMouseButtons + lngWheelEvents + 1));
+    
+      /* initalize button map */ 
+      map[0] = 0;
+      for (i=1; i <= lngMouseButtons + lngWheelEvents; i++)
+      	map[i] = i;
       InitPointerDeviceStruct (pDevice,
 			       map,
-			       5, /* Buttons 4 and 5 are mouse wheel events */
+			       lngMouseButtons + lngWheelEvents,
 			       miPointerGetMotionEvents,
 			       winMouseCtrl,
 			       miPointerGetMotionBufferSize ());
+      free(map);
 
 #if defined(XFree86Server) && defined(XINPUT)
       g_winMouseButtonMap = pDeviceInt->button->map;

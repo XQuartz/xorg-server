@@ -1,3 +1,5 @@
+#ifndef _WINMS_H_
+#define _WINMS_H_
 /*
  *Copyright (C) 1994-2000 The XFree86 Project, Inc. All Rights Reserved.
  *
@@ -28,9 +30,6 @@
  * Authors:	Harold L Hunt II
  */
 /* $XFree86: xc/programs/Xserver/hw/xwin/winms.h,v 1.2 2001/04/18 17:14:06 dawes Exp $ */
-
-#ifndef _WINMS_H_
-#define _WINMS_H_
 
 #undef MINSHORT
 #undef MAXSHORT

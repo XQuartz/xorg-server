@@ -122,8 +122,6 @@ BeforeReset (void)
 {
   ErrorF ("BeforeReset - Hello\n");
 
-  glPixelStorei (0, 0);
-
 #ifdef XWIN_CLIPBOARD
   /* Close down clipboard resources */
   if (g_fClipboard && g_fClipboardLaunched && g_fClipboardStarted)

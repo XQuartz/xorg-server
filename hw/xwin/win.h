@@ -1559,6 +1559,14 @@ winHandleIconMessage (HWND hwnd, UINT message,
 
 
 /*
+ * winvalargs.c
+ */
+
+Bool
+winValidateArgs (void);
+
+
+/*
  * winwndproc.c
  */
 

@@ -351,24 +351,12 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  for (j = 0; j < MAXSCREENS; j++)
 	    {
 	      g_ScreenInfo[j].fFullScreen = TRUE;
-
-	      /*
-	       * No scrollbars in fullscreen mode. Later, we may want to have
-	       * a fullscreen with a bigger virtual screen?
-	       */
-	      g_ScreenInfo[j].fScrollbars = FALSE;
 	    }
 	}
       else
 	{
 	  /* Parameter is for a single screen */
 	  g_ScreenInfo[g_iLastScreen].fFullScreen = TRUE;
-
-	  /*
-	   * No scrollbars in fullscreen mode. Later, we may want to have
-	   * a fullscreen with a bigger virtual screen?
-	   */
-	  g_ScreenInfo[g_iLastScreen].fScrollbars = FALSE;
 	}
 
       /* Indicate that we have processed this argument */
@@ -549,19 +537,13 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	  /* Parameter is for all screens */
 	  for (j = 0; j < MAXSCREENS; j++)
 	    {
-	      /* No scrollbar in fullscreen mode */
-	      if (!g_ScreenInfo[j].fFullScreen)
-		g_ScreenInfo[j].fScrollbars = TRUE;
+	      g_ScreenInfo[j].fScrollbars = TRUE;
 	    }
 	}
       else
 	{
 	  /* Parameter is for a single screen */
-	  if (!g_ScreenInfo[g_iLastScreen].fFullScreen)
-	    {
-	      /* No scrollbar in fullscreen mode */
-	      g_ScreenInfo[g_iLastScreen].fScrollbars = TRUE;
-	    }
+	  g_ScreenInfo[g_iLastScreen].fScrollbars = TRUE;
 	}
 
       /* Indicate that we have processed this argument */

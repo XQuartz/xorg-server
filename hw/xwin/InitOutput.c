@@ -208,12 +208,6 @@ AbortDDX (void)
 void
 OsVendorInit (void)
 {
-  if (serverGeneration == 1 && !winCheckDisplayNumber ())
-    {
-      FatalError ("Duplicate invocation of Cygwin/X");
-      return;
-    }
-  
   /* Re-initialize global variables on server reset */
   winInitializeGlobals ();
 
@@ -228,6 +222,14 @@ OsVendorInit (void)
   }  
   LogSetParameter (XLOG_FLUSH, 1);
   LogSetParameter (XLOG_VERBOSITY, g_iLogVerbose);
+
+  /* Check for duplicate invocation on same display number.*/
+  if (serverGeneration == 1 && !winCheckDisplayNumber ())
+    {
+      FatalError ("OsVendorInit - Duplicate invocation on display "
+		  "number: %s.  Exiting.\n", display);
+      return;
+    }
 
   /* Add a default screen if no screens were specified */
   if (g_iNumScreens == 0)
@@ -251,6 +253,13 @@ OsVendorInit (void)
 
       /* We have to flag this as an explicit screen, even though it isn't */
       g_ScreenInfo[0].fExplicitScreen = TRUE;
+    }
+
+  /* Validate command-line arguments */
+  if (serverGeneration == 1 && !winValidateArgs ())
+    {
+      FatalError ("OsVendorInit - Invalid command-line arguments found.  "
+		  "Exiting.\n");
     }
 }
 
@@ -415,7 +424,6 @@ void
 InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
 {
   int		i;
-  int		iMaxConsecutiveScreen = 0;
 
 #if CYGDEBUG
   winErrorFVerb (2, "InitOutput\n");
@@ -466,29 +474,6 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
       /* Set function pointer to point to no operation function */
       g_fpTrackMouseEvent = (FARPROC) (void (*)(void))NoopDDA;
     }
-
-  /*
-   * Check for a malformed set of -screen parameters.
-   * Examples of malformed parameters:
-   *	XWin -screen 1
-   *	XWin -screen 0 -screen 2
-   *	XWin -screen 1 -screen 2
-   */
-  for (i = 0; i < MAXSCREENS; i++)
-    {
-      if (g_ScreenInfo[i].fExplicitScreen)
-	iMaxConsecutiveScreen = i + 1;
-    }
-  winErrorFVerb (2, "InitOutput - g_iNumScreens: %d iMaxConsecutiveScreen: %d\n",
-		 g_iNumScreens, iMaxConsecutiveScreen);
-  if (g_iNumScreens < iMaxConsecutiveScreen)
-    FatalError ("InitOutput - Malformed set of screen parameter(s).  "
-		"Screens must be specified consecutively starting with "
-		"screen 0.  That is, you cannot have only a screen 1, nor "
-		"could you have screen 0 and screen 2.  You instead must have "
-		"screen 0, or screen 0 and screen 1, respectively.  Of "
-		"you can specify as many screens as you want from 0 up to "
-		"%d.\n", MAXSCREENS - 1);
 
   /* Store the instance handle */
   g_hInstance = GetModuleHandle (NULL);

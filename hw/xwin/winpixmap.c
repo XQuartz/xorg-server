@@ -76,7 +76,7 @@ winCreatePixmapNativeGDI (ScreenPtr pScreen,
     }
 
 #if CYGDEBUG
-  ErrorF ("winCreatePixmap () - w %d h %d d %d bw %d\n",
+  winDebug ("winCreatePixmap () - w %d h %d d %d bw %d\n",
 	  iWidth, iHeight, iDepth,
 	  PixmapBytePad (iWidth, iDepth));
 #endif
@@ -119,7 +119,7 @@ winCreatePixmapNativeGDI (ScreenPtr pScreen,
 						(BITMAPINFO **) &pPixmapPriv->pbmih);
 
 #if CYGDEBUG
-  ErrorF ("winCreatePixmap () - Created a pixmap %08x, %dx%dx%d, for " \
+  winDebug ("winCreatePixmap () - Created a pixmap %08x, %dx%dx%d, for " \
 	  "screen: %08x\n",
 	  pPixmapPriv->hBitmap, iWidth, iHeight, iDepth, pScreen);
 #endif
@@ -140,7 +140,7 @@ winDestroyPixmapNativeGDI (PixmapPtr pPixmap)
   winPrivPixmapPtr		pPixmapPriv = NULL;
   
 #if CYGDEBUG
-  ErrorF ("winDestroyPixmapNativeGDI ()\n");
+  winDebug ("winDestroyPixmapNativeGDI ()\n");
 #endif
 
   /* Bail early if there is not a pixmap to destroy */
@@ -154,7 +154,7 @@ winDestroyPixmapNativeGDI (PixmapPtr pPixmap)
   pPixmapPriv = winGetPixmapPriv (pPixmap);
 
 #if CYGDEBUG
-  ErrorF ("winDestroyPixmapNativeGDI - pPixmapPriv->hBitmap: %08x\n",
+  winDebug ("winDestroyPixmapNativeGDI - pPixmapPriv->hBitmap: %08x\n",
 	  pPixmapPriv->hBitmap);
 #endif
 

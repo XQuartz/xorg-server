@@ -139,7 +139,7 @@ winQueryScreenDIBFormat (ScreenPtr pScreen, BITMAPINFOHEADER *pbmih)
   /* Get a pointer to bitfields */
   pdw = (DWORD*) ((CARD8*)pbmih + sizeof (BITMAPINFOHEADER));
 
-  ErrorF ("winQueryScreenDIBFormat - First call masks: %08x %08x %08x\n",
+  winDebug ("winQueryScreenDIBFormat - First call masks: %08x %08x %08x\n",
 	  pdw[0], pdw[1], pdw[2]);
 #endif
 
@@ -226,11 +226,11 @@ winQueryRGBBitsAndMasks (ScreenPtr pScreen)
       pdw = (DWORD*) ((CARD8*)pbmih + sizeof (BITMAPINFOHEADER));
       
 #if CYGDEBUG
-      ErrorF ("%s - Masks: %08x %08x %08x\n", __FUNCTION__,
+      winDebug ("%s - Masks: %08x %08x %08x\n", __FUNCTION__,
 	      pdw[0], pdw[1], pdw[2]);
-      ErrorF ("%s - Bitmap: %dx%d %d bpp %d planes\n", __FUNCTION__,
+      winDebug ("%s - Bitmap: %dx%d %d bpp %d planes\n", __FUNCTION__,
               pbmih->biWidth, pbmih->biHeight, pbmih->biBitCount, pbmih->biPlanes);
-      ErrorF ("%s - Compression: %d %s\n", __FUNCTION__,
+      winDebug ("%s - Compression: %d %s\n", __FUNCTION__,
               pbmih->biCompression,
               (pbmih->biCompression == BI_RGB?"(BI_RGB)":
                (pbmih->biCompression == BI_RLE8?"(BI_RLE8)":
@@ -388,7 +388,7 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
   else
     {
 #if CYGDEBUG
-      ErrorF ("winAllocateFBShadowGDI - Shadow buffer allocated\n");
+      winDebug ("winAllocateFBShadowGDI - Shadow buffer allocated\n");
 #endif
     }
 
@@ -399,7 +399,7 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
 
 #if CYGDEBUG || YES
   /* Print information about bitmap allocated */
-  ErrorF ("winAllocateFBShadowGDI - Dibsection width: %d height: %d "
+  winDebug ("winAllocateFBShadowGDI - Dibsection width: %d height: %d "
 	  "depth: %d size image: %d\n",
 	  (int) dibsection.dsBmih.biWidth, (int) dibsection.dsBmih.biHeight,
 	  dibsection.dsBmih.biBitCount,
@@ -411,7 +411,7 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
 		pScreenPriv->hbmpShadow);
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowGDI - Attempting a shadow blit\n");
+  winDebug ("winAllocateFBShadowGDI - Attempting a shadow blit\n");
 #endif
 
   /* Do a test blit from the shadow to the screen, I think */
@@ -424,7 +424,7 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
   if (fReturn)
     {
 #if CYGDEBUG
-      ErrorF ("winAllocateFBShadowGDI - Shadow blit success\n");
+      winDebug ("winAllocateFBShadowGDI - Shadow blit success\n");
 #endif
     }
   else
@@ -452,7 +452,7 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
 			   * 8) / pScreenInfo->dwBPP;
 
 #if CYGDEBUG || YES
-  ErrorF ("winAllocateFBShadowGDI - Created shadow stride: %d\n",
+  winDebug ("winAllocateFBShadowGDI - Created shadow stride: %d\n",
 	  (int) pScreenInfo->dwStride);
 #endif
 
@@ -622,7 +622,7 @@ winCloseScreenShadowGDI (int nIndex, ScreenPtr pScreen)
   Bool			fReturn;
 
 #if CYGDEBUG
-  ErrorF ("winCloseScreenShadowGDI - Freeing screen resources\n");
+  winDebug ("winCloseScreenShadowGDI - Freeing screen resources\n");
 #endif
 
   /* Flag that the screen is closed */
@@ -813,7 +813,7 @@ winInitVisualsShadowGDI (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winInitVisualsShadowGDI - Returning\n");
+  winDebug ("winInitVisualsShadowGDI - Returning\n");
 #endif
 
   return TRUE;
@@ -1007,14 +1007,14 @@ winRealizeInstalledPaletteShadowGDI (ScreenPtr pScreen)
   winPrivCmapPtr	pCmapPriv = NULL;
 
 #if CYGDEBUG
-  ErrorF ("winRealizeInstalledPaletteShadowGDI\n");
+  winDebug ("winRealizeInstalledPaletteShadowGDI\n");
 #endif
 
   /* Don't do anything if there is not a colormap */
   if (pScreenPriv->pcmapInstalled == NULL)
     {
 #if CYGDEBUG
-      ErrorF ("winRealizeInstalledPaletteShadowGDI - No colormap "
+      winDebug ("winRealizeInstalledPaletteShadowGDI - No colormap "
 	      "installed\n");
 #endif
       return TRUE;
@@ -1244,7 +1244,7 @@ winDestroyColormapShadowGDI (ColormapPtr pColormap)
   if (pColormap->flags & IsDefault)
     {
 #if CYGDEBUG
-      ErrorF ("winDestroyColormapShadowGDI - Destroying default "
+      winDebug ("winDestroyColormapShadowGDI - Destroying default "
 	      "colormap\n");
 #endif
       

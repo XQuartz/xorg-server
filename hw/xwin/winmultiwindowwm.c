@@ -1050,7 +1050,7 @@ winInitWM (void **ppWMInfo,
     }
 
 #if CYGDEBUG || YES
-  ErrorF ("winInitWM - Returning.\n");
+  winDebug ("winInitWM - Returning.\n");
 #endif
 
   return TRUE;

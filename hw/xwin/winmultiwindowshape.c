@@ -91,7 +91,7 @@ winReshapeMultiWindow (WindowPtr pWin)
   winWindowPriv(pWin);
 
 #if CYGDEBUG
-  ErrorF ("winReshape ()\n");
+  winDebug ("winReshape ()\n");
 #endif
   
   /* Bail if the window is the root window */

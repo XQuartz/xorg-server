@@ -146,7 +146,7 @@ winCreatePrimarySurfaceShadowDD (ScreenPtr pScreen)
     }
   
 #if CYGDEBUG
-  ErrorF ("winCreatePrimarySurfaceShadowDD - Created primary surface\n");
+  winDebug ("winCreatePrimarySurfaceShadowDD - Created primary surface\n");
 #endif
 
   /*
@@ -164,7 +164,7 @@ winCreatePrimarySurfaceShadowDD (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winCreatePrimarySurfaceShadowDD - Attached clipper to "
+  winDebug ("winCreatePrimarySurfaceShadowDD - Attached clipper to "
 	  "primary surface\n");
 #endif
 
@@ -226,7 +226,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
   DDSURFACEDESC		*pddsdShadow = NULL;
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDD\n");
+  winDebug ("winAllocateFBShadowDD\n");
 #endif
 
   /* Create a clipper */
@@ -241,7 +241,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDD - Created a clipper\n");
+  winDebug ("winAllocateFBShadowDD - Created a clipper\n");
 #endif
 
   /* Get a device context for the screen  */
@@ -260,7 +260,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDD - Attached clipper to window\n");
+  winDebug ("winAllocateFBShadowDD - Attached clipper to window\n");
 #endif
 
   /* Create a DirectDraw object, store the address at lpdd */
@@ -273,7 +273,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDD () - Created and initialized DD\n");
+  winDebug ("winAllocateFBShadowDD () - Created and initialized DD\n");
 #endif
 
   /* Get a DirectDraw2 interface pointer */
@@ -434,7 +434,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
     }
   
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDD - Created shadow\n");
+  winDebug ("winAllocateFBShadowDD - Created shadow\n");
 #endif
 
   /* Allocate a DD surface description for our screen privates */
@@ -449,7 +449,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
   pddsdShadow->dwSize = sizeof (*pddsdShadow);
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDD - Locking shadow\n");
+  winDebug ("winAllocateFBShadowDD - Locking shadow\n");
 #endif
 
   /* Lock the shadow surface */
@@ -466,7 +466,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDD - Locked shadow\n");
+  winDebug ("winAllocateFBShadowDD - Locked shadow\n");
 #endif
 
   /* We don't know how to deal with anything other than RGB */
@@ -489,7 +489,7 @@ winAllocateFBShadowDD (ScreenPtr pScreen)
   pScreenPriv->dwBlueMask = pddsdShadow->ddpfPixelFormat.u4.dwBBitMask;
 
 #if CYGDEBUG
-  ErrorF ("winAllocateFBShadowDD - Returning\n");
+  winDebug ("winAllocateFBShadowDD - Returning\n");
 #endif
 
   return TRUE;
@@ -673,7 +673,7 @@ winCloseScreenShadowDD (int nIndex, ScreenPtr pScreen)
   Bool			fReturn;
   
 #if CYGDEBUG
-  ErrorF ("winCloseScreenShadowDD - Freeing screen resources\n");
+  winDebug ("winCloseScreenShadowDD - Freeing screen resources\n");
 #endif
 
   /* Flag that the screen is closed */
@@ -918,7 +918,7 @@ winInitVisualsShadowDD (ScreenPtr pScreen)
     }
 
 #if CYGDEBUG
-  ErrorF ("winInitVisualsShadowDD - Returning\n");
+  winDebug ("winInitVisualsShadowDD - Returning\n");
 #endif
 
   return TRUE;
@@ -1365,7 +1365,7 @@ winDestroyColormapShadowDD (ColormapPtr pColormap)
   if (pColormap->flags & IsDefault)
     {
 #if CYGDEBUG
-      ErrorF ("winDestroyColormapShadowDD - Destroying default "
+      winDebug ("winDestroyColormapShadowDD - Destroying default "
 	      "colormap\n");
 #endif
       

@@ -214,7 +214,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
     }
 
 #if CYGDEBUG
-  winErrorFVerb (2, "ddxProcessArgument - arg: %s\n", argv[i]);
+  winDebug ("ddxProcessArgument - arg: %s\n", argv[i]);
 #endif
 
   /*
@@ -249,7 +249,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
       int		iWidth, iHeight;
 
 #if CYGDEBUG
-      winErrorFVerb (2, "ddxProcessArgument - screen - argc: %d i: %d\n",
+      winDebug ("ddxProcessArgument - screen - argc: %d i: %d\n",
 	      argc, i);
 #endif
 

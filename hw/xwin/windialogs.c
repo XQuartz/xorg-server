@@ -443,7 +443,7 @@ winChangeDepthDlgProc (HWND hwndDialog, UINT message,
   static ScreenPtr		s_pScreen = NULL;
 
 #if CYGDEBUG
-  ErrorF ("winChangeDepthDlgProc\n");
+  winDebug ("winChangeDepthDlgProc\n");
 #endif
 
   /* Branch on message type */
@@ -451,7 +451,7 @@ winChangeDepthDlgProc (HWND hwndDialog, UINT message,
     {
     case WM_INITDIALOG:
 #if CYGDEBUG
-      ErrorF ("winChangeDepthDlgProc - WM_INITDIALOG\n");
+      winDebug ("winChangeDepthDlgProc - WM_INITDIALOG\n");
 #endif
 
       /* Store pointers to private structures for future use */
@@ -460,13 +460,13 @@ winChangeDepthDlgProc (HWND hwndDialog, UINT message,
       s_pScreen = s_pScreenInfo->pScreen;
 
 #if CYGDEBUG
-      ErrorF ("winChangeDepthDlgProc - WM_INITDIALOG - s_pScreenPriv: %08x, "
+      winDebug ("winChangeDepthDlgProc - WM_INITDIALOG - s_pScreenPriv: %08x, "
 	      "s_pScreenInfo: %08x, s_pScreen: %08x\n",
 	      s_pScreenPriv, s_pScreenInfo, s_pScreen);
 #endif
 
 #if CYGDEBUG
-      ErrorF ("winChangeDepthDlgProc - WM_INITDIALOG - orig bpp: %d, "
+      winDebug ("winChangeDepthDlgProc - WM_INITDIALOG - orig bpp: %d, "
 	      "last bpp: %d\n",
 	      s_pScreenInfo->dwBPP,
 	      s_pScreenPriv->dwLastWindowsBitsPixel);
@@ -484,7 +484,7 @@ winChangeDepthDlgProc (HWND hwndDialog, UINT message,
 
     case WM_DISPLAYCHANGE:
 #if CYGDEBUG
-      ErrorF ("winChangeDepthDlgProc - WM_DISPLAYCHANGE - orig bpp: %d, "
+      winDebug ("winChangeDepthDlgProc - WM_DISPLAYCHANGE - orig bpp: %d, "
 	      "last bpp: %d, new bpp: %d\n",
 	      s_pScreenInfo->dwBPP,
 	      s_pScreenPriv->dwLastWindowsBitsPixel,
@@ -598,7 +598,7 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
   static ScreenPtr		s_pScreen = NULL;
 
 #if CYGDEBUG
-  ErrorF ("winAboutDlgProc\n");
+  winDebug ("winAboutDlgProc\n");
 #endif
 
   /* Branch on message type */
@@ -606,7 +606,7 @@ winAboutDlgProc (HWND hwndDialog, UINT message,
     {
     case WM_INITDIALOG:
 #if CYGDEBUG
-      ErrorF ("winAboutDlgProc - WM_INITDIALOG\n");
+      winDebug ("winAboutDlgProc - WM_INITDIALOG\n");
 #endif
 
       /* Store pointers to private structures for future use */

@@ -377,7 +377,7 @@ winInitVisualsPrimaryDD (ScreenPtr pScreen)
 
     case 8:
 #if CYGDEBUG
-      ErrorF ("winInitVisuals - Calling miSetVisualTypesAndMasks\n");
+      winDebug ("winInitVisuals - Calling miSetVisualTypesAndMasks\n");
 #endif /* CYGDEBUG */
       if (!miSetVisualTypesAndMasks (pScreenInfo->dwDepth,
 				     PseudoColorMask,
@@ -392,7 +392,7 @@ winInitVisualsPrimaryDD (ScreenPtr pScreen)
 	  return FALSE;
 	}
 #if CYGDEBUG
-      ErrorF ("winInitVisualsPrimaryDD - Returned from "
+      winDebug ("winInitVisualsPrimaryDD - Returned from "
 	      "miSetVisualTypesAndMasks\n");
 #endif /* CYGDEBUG */
       break;

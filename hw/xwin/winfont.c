@@ -36,7 +36,7 @@ Bool
 winRealizeFontNativeGDI (ScreenPtr pScreen, FontPtr pFont)
 {
 #if CYGDEBUG
-  ErrorF ("winRealizeFont()\n");
+  winDebug ("winRealizeFont()\n");
 #endif
   return TRUE;
 }
@@ -47,7 +47,7 @@ Bool
 winUnrealizeFontNativeGDI (ScreenPtr pScreen, FontPtr pFont)
 {
 #if CYGDEBUG
-  ErrorF ("winUnrealizeFont()\n");
+  winDebug ("winUnrealizeFont()\n");
 #endif
   return TRUE;
 }

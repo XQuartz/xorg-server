@@ -118,7 +118,7 @@ InitInput (int argc, char *argv[])
   DeviceIntPtr		pMouse, pKeyboard;
 
 #if CYGDEBUG
-  ErrorF ("InitInput\n");
+  winDebug ("InitInput\n");
 #endif
 
 #ifdef XWIN_CLIPBOARD
@@ -167,7 +167,7 @@ InitInput (int argc, char *argv[])
     }
 
 #if CYGDEBUG
-  ErrorF ("InitInput - returning\n");
+  winDebug ("InitInput - returning\n");
 #endif
 }
 

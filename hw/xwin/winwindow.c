@@ -227,7 +227,7 @@ winCreateWindowRootless (WindowPtr pWin)
   winWindowPriv(pWin);
 
 #if CYGDEBUG
-  ErrorF ("winCreateWindowRootless ()\n");
+  winDebug ("winCreateWindowRootless ()\n");
 #endif
 
   fResult = winGetScreenPriv(pWin->drawable.pScreen)->CreateWindow(pWin);
@@ -248,7 +248,7 @@ winDestroyWindowRootless (WindowPtr pWin)
   winWindowPriv(pWin);
 
 #if CYGDEBUG
-  ErrorF ("winDestroyWindowRootless ()\n");
+  winDebug ("winDestroyWindowRootless ()\n");
 #endif
 
   fResult = winGetScreenPriv(pWin->drawable.pScreen)->DestroyWindow(pWin);
@@ -274,7 +274,7 @@ winPositionWindowRootless (WindowPtr pWin, int x, int y)
   Bool			fResult = FALSE;
 
 #if CYGDEBUG
-  ErrorF ("winPositionWindowRootless ()\n");
+  winDebug ("winPositionWindowRootless ()\n");
 #endif
 
   fResult = winGetScreenPriv(pWin->drawable.pScreen)->PositionWindow(pWin, x, y);
@@ -294,7 +294,7 @@ winChangeWindowAttributesRootless (WindowPtr pWin, unsigned long mask)
   Bool			fResult = FALSE;
 
 #if CYGDEBUG
-  ErrorF ("winChangeWindowAttributesRootless ()\n");
+  winDebug ("winChangeWindowAttributesRootless ()\n");
 #endif
 
   fResult = winGetScreenPriv(pWin->drawable.pScreen)->ChangeWindowAttributes(pWin, mask);
@@ -316,7 +316,7 @@ winUnmapWindowRootless (WindowPtr pWin)
   winWindowPriv(pWin);
 
 #if CYGDEBUG
-  ErrorF ("winUnmapWindowRootless ()\n");
+  winDebug ("winUnmapWindowRootless ()\n");
 #endif
 
   fResult = winGetScreenPriv(pWin->drawable.pScreen)->UnrealizeWindow(pWin);
@@ -343,7 +343,7 @@ winMapWindowRootless (WindowPtr pWin)
   Bool			fResult = FALSE;
 
 #if CYGDEBUG
-  ErrorF ("winMapWindowRootless ()\n");
+  winDebug ("winMapWindowRootless ()\n");
 #endif
 
   fResult = winGetScreenPriv(pWin->drawable.pScreen)->RealizeWindow(pWin);
@@ -363,7 +363,7 @@ void
 winSetShapeRootless (WindowPtr pWin)
 {
 #if CYGDEBUG
-  ErrorF ("winSetShapeRootless ()\n");
+  winDebug ("winSetShapeRootless ()\n");
 #endif
 
   winGetScreenPriv(pWin->drawable.pScreen)->SetShape(pWin);
@@ -393,7 +393,7 @@ winAddRgn (WindowPtr pWin, pointer data)
   if (pWin->parent != NULL) 
     {
 #if CYGDEBUG
-      ErrorF ("winAddRgn ()\n");
+      winDebug ("winAddRgn ()\n");
 #endif
       if (pWin->mapped)
 	{
@@ -477,7 +477,7 @@ winReshapeRootless (WindowPtr pWin)
   winWindowPriv(pWin);
 
 #if CYGDEBUG
-  ErrorF ("winReshapeRootless ()\n");
+  winDebug ("winReshapeRootless ()\n");
 #endif
 
   /* Bail if the window is the root window */

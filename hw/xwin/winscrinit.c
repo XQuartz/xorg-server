@@ -108,7 +108,7 @@ winScreenInit (int index,
   HDC			hdc;
 
 #if CYGDEBUG || YES
-  winErrorFVerb (2, "winScreenInit - dwWidth: %ld dwHeight: %ld\n",
+  winDebug ("winScreenInit - dwWidth: %ld dwHeight: %ld\n",
 	  pScreenInfo->dwWidth, pScreenInfo->dwHeight);
 #endif
 

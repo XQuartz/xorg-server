@@ -88,7 +88,7 @@ winWindowProc (HWND hwnd, UINT message,
       && (s_pScreenPriv = GetProp (hwnd, WIN_SCR_PROP)) != NULL)
     {
 #if CYGDEBUG
-      ErrorF ("winWindowProc - Setting privates handle\n");
+      winDebug ("winWindowProc - Setting privates handle\n");
 #endif
       s_pScreenInfo = s_pScreenPriv->pScreenInfo;
       s_pScreen = s_pScreenInfo->pScreen;
@@ -111,7 +111,7 @@ winWindowProc (HWND hwnd, UINT message,
 
     case WM_CREATE:
 #if CYGDEBUG
-      ErrorF ("winWindowProc - WM_CREATE\n");
+      winDebug ("winWindowProc - WM_CREATE\n");
 #endif
       
       /*
@@ -261,14 +261,14 @@ winWindowProc (HWND hwnd, UINT message,
 	   */
 
 #if CYGDEBUG
-	  ErrorF ("winWindowProc - WM_DISPLAYCHANGE - Dimensions changed\n");
+	  winDebug ("winWindowProc - WM_DISPLAYCHANGE - Dimensions changed\n");
 #endif
 	  
 	  /* Release the old primary surface */
 	  (*s_pScreenPriv->pwinReleasePrimarySurface) (s_pScreen);
 
 #if CYGDEBUG
-	  ErrorF ("winWindowProc - WM_DISPLAYCHANGE - Released "
+	  winDebug ("winWindowProc - WM_DISPLAYCHANGE - Released "
 		  "primary surface\n");
 #endif
 
@@ -276,7 +276,7 @@ winWindowProc (HWND hwnd, UINT message,
 	  (*s_pScreenPriv->pwinCreatePrimarySurface) (s_pScreen);
 
 #if CYGDEBUG
-	  ErrorF ("winWindowProc - WM_DISPLAYCHANGE - Recreated "
+	  winDebug ("winWindowProc - WM_DISPLAYCHANGE - Recreated "
 		  "primary surface\n");
 #endif
 
@@ -291,7 +291,7 @@ winWindowProc (HWND hwnd, UINT message,
       else
 	{
 #if CYGDEBUG
-	  ErrorF ("winWindowProc - WM_DISPLAYCHANGE - Dimensions did not "
+	  winDebug ("winWindowProc - WM_DISPLAYCHANGE - Dimensions did not "
 		  "change\n");
 #endif
 	}
@@ -322,7 +322,7 @@ winWindowProc (HWND hwnd, UINT message,
 	int			iWidth, iHeight;
 
 #if CYGDEBUG
-	ErrorF ("winWindowProc - WM_SIZE\n");
+	winDebug ("winWindowProc - WM_SIZE\n");
 #endif
 
 	/* Break if we do not use scrollbars */
@@ -424,7 +424,7 @@ winWindowProc (HWND hwnd, UINT message,
 	int			iVertPos;
 
 #if CYGDEBUG
-	ErrorF ("winWindowProc - WM_VSCROLL\n");
+	winDebug ("winWindowProc - WM_VSCROLL\n");
 #endif
       
 	/* Get vertical scroll bar info */
@@ -509,7 +509,7 @@ winWindowProc (HWND hwnd, UINT message,
 	int			iHorzPos;
 
 #if CYGDEBUG
-	ErrorF ("winWindowProc - WM_HSCROLL\n");
+	winDebug ("winWindowProc - WM_HSCROLL\n");
 #endif
       
 	/* Get horizontal scroll bar info */
@@ -595,7 +595,7 @@ winWindowProc (HWND hwnd, UINT message,
 	int			iBorderHeight, iBorderWidth;
 
 #if CYGDEBUG	
-	ErrorF ("winWindowProc - WM_GETMINMAXINFO - pScreenInfo: %08x\n",
+	winDebug ("winWindowProc - WM_GETMINMAXINFO - pScreenInfo: %08x\n",
 		s_pScreenInfo);
 #endif
 
@@ -641,7 +641,7 @@ winWindowProc (HWND hwnd, UINT message,
 
     case WM_ERASEBKGND:
 #if CYGDEBUG
-      ErrorF ("winWindowProc - WM_ERASEBKGND\n");
+      winDebug ("winWindowProc - WM_ERASEBKGND\n");
 #endif
       /*
        * Pretend that we did erase the background but we don't care,
@@ -652,7 +652,7 @@ winWindowProc (HWND hwnd, UINT message,
 
     case WM_PAINT:
 #if CYGDEBUG
-      ErrorF ("winWindowProc - WM_PAINT\n");
+      winDebug ("winWindowProc - WM_PAINT\n");
 #endif
       /* Only paint if we have privates and the server is enabled */
       if (s_pScreenPriv == NULL
@@ -675,7 +675,7 @@ winWindowProc (HWND hwnd, UINT message,
     case WM_PALETTECHANGED:
       {
 #if CYGDEBUG
-	ErrorF ("winWindowProc - WM_PALETTECHANGED\n");
+	winDebug ("winWindowProc - WM_PALETTECHANGED\n");
 #endif
 	/*
 	 * Don't process if we don't have privates or a colormap,
@@ -904,7 +904,7 @@ winWindowProc (HWND hwnd, UINT message,
       if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
 	break;
 #if CYGDEBUG
-      ErrorF ("winWindowProc - WM_MOUSEWHEEL\n");
+      winDebug ("winWindowProc - WM_MOUSEWHEEL\n");
 #endif
       winMouseWheel (s_pScreen, GET_WHEEL_DELTA_WPARAM(wParam));
       break;
@@ -1067,7 +1067,7 @@ winWindowProc (HWND hwnd, UINT message,
 	}
 
 #if CYGDEBUG
-      ErrorF ("winWindowProc - WM_ACTIVATE\n");
+      winDebug ("winWindowProc - WM_ACTIVATE\n");
 #endif
 
       /*
@@ -1095,7 +1095,7 @@ winWindowProc (HWND hwnd, UINT message,
 	break;
 
 #if CYGDEBUG
-      ErrorF ("winWindowProc - WM_ACTIVATEAPP\n");
+      winDebug ("winWindowProc - WM_ACTIVATEAPP\n");
 #endif
 
       /* Activate or deactivate */

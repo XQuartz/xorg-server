@@ -588,8 +588,8 @@ DefineSelf (int fd)
 		      ((addr[0] == 127 && addr[1] == 0 &&
 			addr[2] == 0 && addr[3] == 1) ||
 		       (addr[0] == 0 && addr[1] == 0 &&
-			addr[2] == 0 && addr[3] == 0))
-		   )
+			addr[2] == 0 && addr[3] == 0)))
+		      )
 		{
 		    XdmcpRegisterConnection (family, (char *)addr, len);
 		    broad_addr = *inetaddr;

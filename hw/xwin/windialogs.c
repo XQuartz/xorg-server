@@ -43,6 +43,36 @@ winChangeDepthDlgProc (HWND hDialog, UINT message,
 
 
 /*
+ * Center a dialog window in the desktop window
+ */
+static void
+winCenterDialog (HWND hwndDlg)
+{
+  HWND hwndDesk; 
+  RECT rc, rcDlg, rcDesk; 
+ 
+  hwndDesk = GetParent (hwndDlg);
+  if (!hwndDesk)
+    hwndDesk = GetDesktopWindow (); 
+  
+  GetWindowRect (hwndDesk, &rcDesk); 
+  GetWindowRect (hwndDlg, &rcDlg); 
+  CopyRect (&rc, &rcDesk); 
+  
+  OffsetRect (&rcDlg, -rcDlg.left, -rcDlg.top); 
+  OffsetRect (&rc, -rc.left, -rc.top); 
+  OffsetRect (&rc, -rcDlg.right, -rcDlg.bottom); 
+  
+  SetWindowPos (hwndDlg, 
+		HWND_TOP, 
+		rcDesk.left + (rc.right / 2), 
+		rcDesk.top + (rc.bottom / 2), 
+		0, 0,
+		SWP_NOSIZE | SWP_NOZORDER); 
+}
+
+
+/*
  * Display the Exit dialog box
  */
 
@@ -109,6 +139,8 @@ winExitDlgProc (HWND hDialog, UINT message,
       s_pScreenPriv = (winPrivScreenPtr) lParam;
       s_pScreenInfo = s_pScreenPriv->pScreenInfo;
       s_pScreen = s_pScreenInfo->pScreen;
+
+      winCenterDialog( hDialog );
 
       /* Set icon to standard app icon */
       PostMessage (hDialog,
@@ -258,6 +290,8 @@ winChangeDepthDlgProc (HWND hwndDialog, UINT message,
 	      s_pScreenInfo->dwBPP,
 	      s_pScreenPriv->dwLastWindowsBitsPixel);
 #endif
+      
+      winCenterDialog( hwndDialog );
 
       /* Set icon to standard app icon */
       PostMessage (hwndDialog,

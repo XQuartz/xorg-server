@@ -75,6 +75,7 @@ typedef struct
   Bool			fXKilled;
   Bool                  fNeedRestore;
   POINT                 ptRestore;
+  Bool                  fAlwaysOnTop;
 
   /* Privates used by primary fb DirectDraw server */
   LPDDSURFACEDESC	pddsdPrimary;

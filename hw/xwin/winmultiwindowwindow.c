@@ -105,7 +105,8 @@ winCreateWindowMultiWindow (WindowPtr pWin)
   pWinPriv->pScreenPriv = winGetScreenPriv(pWin->drawable.pScreen);
   pWinPriv->fXKilled = FALSE;
   pWinPriv->fNeedRestore = FALSE;
-  
+  pWinPriv->fAlwaysOnTop = FALSE;
+ 
   return fResult;
 }
 

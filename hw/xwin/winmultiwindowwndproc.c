@@ -387,6 +387,22 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       /*
        * Any window menu items go through here
        */
+      /* If minimizing then remove always-on-top, and store the setting */
+      if (wParam == SC_MINIMIZE)
+	{
+	  if (GetWindowLong (hwnd, GWL_EXSTYLE) & WS_EX_TOPMOST)
+	    pWinPriv->fAlwaysOnTop = TRUE;
+	  else
+	    pWinPriv->fAlwaysOnTop = FALSE;
+	  SetWindowPos(hwnd, HWND_BOTTOM, 0, 0, 0, 0,
+		       SWP_NOMOVE|SWP_NOSIZE);
+	}
+      else if (wParam == SC_RESTORE)
+	{
+	  if (pWinPriv->fAlwaysOnTop)
+	    SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
+			 SWP_NOMOVE|SWP_NOSIZE);
+	}
       HandleCustomWM_COMMAND ((unsigned long)hwnd, LOWORD(wParam));
       break;
 
@@ -893,7 +909,7 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	if (s_pScreenPriv != NULL)
 	  s_pScreenPriv->fWindowOrderChanged = TRUE;
       }
-      return 0;
+      break;
 
     case WM_SIZE:
       /* see dix/window.c */

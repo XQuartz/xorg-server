@@ -1561,19 +1561,6 @@ damageDestroyPixmap (PixmapPtr pPixmap)
     return TRUE;
 }
 
-#ifdef LG3D
-/* 
-** RUDE HACK: need to find a cleaner way to do this!
-** This variable is set by routines in lgwindow.c
-** in order to skip the wrappee paint window call from
-** this routine. This is necessary in order to keep the
-** DDX from preparing the DIDs where the X server thinks
-** the window is. But this isn't where the 3D window 
-** avatar really is.
-*/ 
-Bool damagePaintWindowCallWrappee = TRUE;
-#endif /* LG3D */
-
 static void
 damagePaintWindow(WindowPtr pWindow,
 		  RegionPtr prgn,
@@ -1590,11 +1577,6 @@ damagePaintWindow(WindowPtr pWindow,
 	getWindowDamage (pWindow))
 	damageDamageRegion (&pWindow->drawable, prgn, FALSE);
 
-#ifdef LG3D
-    /* RUDE HACK: see comment above */
-    if (damagePaintWindowCallWrappee) {
-#endif /* LG3D */
-
     if(what == PW_BACKGROUND) {
 	unwrap (pScrPriv, pScreen, PaintWindowBackground);
 	(*pScreen->PaintWindowBackground) (pWindow, prgn, what);
@@ -1604,11 +1586,6 @@ damagePaintWindow(WindowPtr pWindow,
 	(*pScreen->PaintWindowBorder) (pWindow, prgn, what);
 	wrap (pScrPriv, pScreen, PaintWindowBorder, damagePaintWindow);
     }
-
-#ifdef LG3D
-    /* RUDE HACK: see comment above */
-    }
-#endif /* LG3D */
 }
 
 

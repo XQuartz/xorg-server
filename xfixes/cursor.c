@@ -32,6 +32,9 @@
 #include "servermd.h"
 #include "inputstr.h"
 #include "windowstr.h"
+#ifdef LG3D
+#include "../Xext/lgeint.h"
+#endif /* LG3D */
 
 static RESTYPE		CursorClientType;
 static RESTYPE		CursorWindowType;
@@ -87,7 +90,39 @@ CursorDisplayCursor (ScreenPtr pScreen,
     Bool		ret;
 
     Unwrap (cs, pScreen, DisplayCursor);
+#ifdef LG3D
+    if (lgeDisplayServerIsAlive) {
+	ret = (*pScreen->DisplayCursor) (pScreen, pInvisibleCursor);        
+    } else
+#endif 
     ret = (*pScreen->DisplayCursor) (pScreen, pCursor);
+
+#ifdef LG3D
+    {
+	CursorEventPtr	e;
+
+	CursorCurrent = pCursor;
+
+	/* Always send events, except when cursor is null */
+	if (pCursor != NULL) {
+	    for (e = cursorEvents; e; e = e->next)
+	    {
+		if (e->eventMask & XFixesDisplayCursorNotifyMask)
+		{
+		    xXFixesCursorNotifyEvent	ev;
+		    ev.type = XFixesEventBase + XFixesCursorNotify;
+		    ev.subtype = XFixesDisplayCursorNotify;
+		    ev.sequenceNumber = e->pClient->sequence;
+		    ev.window = e->pWindow->drawable.id;
+		    ev.cursorSerial = pCursor->serialNumber;
+		    ev.timestamp = currentTime.milliseconds;
+		    ev.name = pCursor->name;
+		    WriteEventsToClient (e->pClient, 1, (xEvent *) &ev);
+		}
+	    }
+	}
+    }
+#else
     if (pCursor != CursorCurrent)
     {
 	CursorEventPtr	e;
@@ -109,6 +144,8 @@ CursorDisplayCursor (ScreenPtr pScreen,
 	    }
 	}
     }
+#endif /* LG3D */
+
     Wrap (cs, pScreen, DisplayCursor, CursorDisplayCursor);
     return ret;
 }
@@ -303,6 +340,7 @@ ProcXFixesGetCursorImage (ClientPtr client)
     int				x, y;
 
     REQUEST_SIZE_MATCH(xXFixesGetCursorImageReq);
+
     pCursor = CursorCurrent;
     if (!pCursor)
 	return BadCursor;

@@ -46,6 +46,7 @@
     pGCPrivate->wrapOps = (pGC)->ops; \
     (pGC)->funcs = &cwGCFuncs; \
     (pGC)->ops = &cwGCOps; \
+    COMPOSITE_DEBUGVIS_BACKING_PIXMAP(pBackingDst); \
 } while (0)
 
 extern GCFuncs cwGCFuncs;
@@ -192,6 +193,8 @@ cwCopyArea(DrawablePtr pSrc, DrawablePtr pDst, GCPtr pGC, int srcx, int srcy,
 
     if (exposed != NULL)
 	REGION_TRANSLATE(pDst->pScreen, exposed, odstx - dstx, odsty - dsty);
+
+    COMPOSITE_DEBUGVIS_SHARED_PIXMAP(pBackingDst, pSrc);
 
     EPILOGUE(pGC);
 

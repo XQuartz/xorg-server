@@ -49,7 +49,7 @@
 #endif
 #include "compint.h"
 
-#ifdef LG3D
+#ifdef xLG3D
 #include "../Xext/lgeint.h"
 #endif /* LG3D */
 
@@ -507,7 +507,7 @@ compAllocPixmap (WindowPtr pWin)
 	cw->damageRegistered = TRUE;
     }
 
-#ifdef LG3D
+#ifdef xLG3D
     /*
     ** Applications which use shaped windows (e.g. xeyes) don't 
     ** always clear the entire backing pixmap. We should clear the

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/dix/window.c,v 1.6 2004/07/31 08:24:13 anholt Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/window.c,v 1.6.4.1.10.1 2005/01/10 03:45:03 deronj Exp $ */
 /* $Xorg: window.c,v 1.4 2001/02/09 02:04:41 xorgcvs Exp $ */
 /*
 
@@ -833,6 +833,7 @@ CreateWindow(wid, pParent, x, y, w, h, bw, class, vmask, vlist,
 	event.u.createNotify.override = pWin->overrideRedirect;
 	DeliverEvents(pParent, &event, 1, NullWindow);		
     }
+
     return pWin;
 }
 
@@ -2269,9 +2270,6 @@ ConfigureWindow(pWin, mask, vlist, client)
     ClientPtr ag_leader = NULL;
 #endif
     xEvent event;
-#ifdef LG3D
-    Bool   redirToWm;
-#endif /* LG3D */
 
     if ((pWin->drawable.class == InputOnly) && (mask & IllegalInputOnlyConfigureMask))
 	return(BadMatch);
@@ -2372,23 +2370,8 @@ ConfigureWindow(pWin, mask, vlist, client)
     ag_leader = XagLeader (win_owner);
 #endif
 
-#ifdef LG3D
-    if (lgeDisplayServerIsAlive) {
-
-	/* TODO: RedirectSend is not always true for prw; I don't know why. */
-	redirToWm = RedirectSend(pParent) || (pParent->drawable.id == lgeDisplayServerPRW);
-
-	/* Note: even send notifications for override redirect window */
-
-    } else {
-	redirToWm =  !pWin->overrideRedirect && RedirectSend(pParent);
-    }
-
-    if ((redirToWm
-#else
     if ((!pWin->overrideRedirect) && 
 	(RedirectSend(pParent)
-#endif /* LG3D */
 #ifdef XAPPGROUP
 	|| (win_owner->appgroup && ag_leader && 
 	    XagIsControlledRoot (client, pParent))
@@ -2660,6 +2643,28 @@ ReparentWindow(pWin, pParent, x, y, client)
     event.u.reparent.override = pWin->overrideRedirect;
     DeliverEvents(pWin, &event, 1, pParent);
 
+#ifdef LG3D
+    /* 
+    ** HACK ALERT:
+    ** Bug fix for lg3d bug 213. If the window is override redirect,
+    ** and the old parent is the root window, and the new parent is
+    ** the PRW, have QueryTree lie about the parent and say that the
+    ** parent is still the root window. For more info refer to the
+    ** comment in ProcQueryTree.
+    **
+    ** TODO: someday: it would be nice to fix the client bug and
+    ** get rid of this hack.
+    */
+    if (pWin->overrideRedirect &&
+	pWin->parent == WindowTable[pWin->drawable.pScreen->myNum] &&
+	pParent == pLgeDisplayServerPRWWin) {
+	pWin->optional->ovRedirLieAboutRootParent = 1;
+	/*ErrorF("Lying about parent for window %d\n", pWin->drawable.id);*/
+    }  else {
+	pWin->optional->ovRedirLieAboutRootParent = 0;
+    }
+#endif /* LG3D */
+
     /* take out of sibling chain */
 
     pPriorParent = pPrev = pWin->parent;
@@ -2752,6 +2757,68 @@ RealizeTree(WindowPtr pWin)
     }
 }
 
+#ifdef LG3D
+
+/*
+** The mapping of ordinary, non-override redirect windows is redirected to the 
+** window manager. This gives the window manager a chance to reparent the window 
+** to the pseudo-root-window and to redirect rendering to the composite backing
+** pixmap. However, since override redirect windows are never redirected to 
+** the window manager we must perform these vital actions in the X server.
+**
+** Historical Note: in the early days of LG3D, we experimented with forcing
+** the mapping of override redirect windows to be redirected to the window
+** manager. This failed. This made the mapping of override redirect windows
+** non-atomic. Many X applications assume that MapWindow for an override
+** redirect window is atomic, such as GNOME and Mozilla.. For example, after 
+** the MapWindow request these apps send rendering requests without waiting
+** for an expose, or they can send an UnmapWindow request almost immediately
+** after the MapWindow request. Making MapWindow non-atomic meant that these
+** succeeding requests would get lost while the WM was in the process of mapping
+** the window. This manifested itself with GNOME tooltips that were stuck on 
+** the screen and tooltips or menus appearing that were blank or garbaged.
+** Therefore, although it seems strange to perform the reparent and composite 
+** redirect operations in the X server for override redirect windows, this 
+** has proven to be the best approach available; it avoids altering client 
+** assumptions about the behavior of MapWindow on these types of windows.
+*/
+
+#include "composite.h"
+
+extern int
+compRedirectWindow (ClientPtr pClient, WindowPtr pWin, int update);
+
+extern int
+compUnredirectWindow (ClientPtr pClient, WindowPtr pWin, int update);
+
+static void 
+lg3dMapWindowOverrideRedirect (WindowPtr pWin, ClientPtr client)
+{
+    WindowPtr pParent = pLgeDisplayServerPRWWin;
+
+    ReparentWindow(pWin, pParent,
+		   pWin->drawable.x - wBorderWidth (pWin) - pParent->drawable.x,
+		   pWin->drawable.y - wBorderWidth (pWin) - pParent->drawable.y,
+		   client);
+
+    compRedirectWindow(client, pWin, CompositeRedirectManual);
+
+    if (pWin->optional == NULL) {
+	if (!MakeWindowOptional(pWin)) {
+	    FatalError("lg3dMapWindowOverrideRedirect: MakeWindowOptional out of memory\n");
+	}
+    }
+    pWin->optional->ovRedirCompRedirClient = client;
+}
+
+static void 
+lg3dUnmapWindowOverrideRedirect (WindowPtr pWin)
+{
+    compUnredirectWindow(wOvRedirCompRedirClient(pWin), pWin, CompositeRedirectManual);
+}
+
+#endif /* LG3D */
+
 /*****
  * MapWindow
  *    If some other client has selected SubStructureReDirect on the parent
@@ -2772,9 +2839,6 @@ MapWindow(pWin, client)
     Bool	dosave = FALSE;
 #endif
     WindowPtr  pLayerWin;
-#ifdef LG3D
-    Bool   redirToWm;
-#endif /* LG3D */
 
     if (pWin->mapped)
 	return(Success);
@@ -2799,22 +2863,8 @@ MapWindow(pWin, client)
 	ClientPtr ag_leader = XagLeader (win_owner);
 #endif
 
-#ifdef LG3D
-	if (lgeDisplayServerIsAlive) {
-
-	    /* TODO: RedirectSend is not always true for prw; I don't know why. */
-	    redirToWm = RedirectSend(pParent) || (pParent->drawable.id == lgeDisplayServerPRW);
-
-	    /* Note: even send notifications for override redirect window */
-	} else {
-	    redirToWm =  !pWin->overrideRedirect && RedirectSend(pParent);
-	}
-
-	if ((redirToWm
-#else
 	if ((!pWin->overrideRedirect) && 
 	    (RedirectSend(pParent)
-#endif /* LG3D */
 #ifdef XAPPGROUP
 	    || (win_owner->appgroup && ag_leader &&
 		XagIsControlledRoot (client, pParent))
@@ -2836,11 +2886,18 @@ MapWindow(pWin, client)
 	    event.u.mapRequest.parent = pParent->drawable.id;
 
 	    if (MaybeDeliverEventsToClient(pParent, &event, 1,
-		SubstructureRedirectMask, client) == 1)
+     	        SubstructureRedirectMask, client) == 1) {
 		return(Success);
+	    }
 	}
+#ifdef LG3D
+	else if (lgeDisplayServerIsAlive && pWin->overrideRedirect) {
+	    lg3dMapWindowOverrideRedirect(pWin, client);
+        }
+#endif /* LG3D */
 
 	pWin->mapped = TRUE;
+
 	if (SubStrSend(pWin, pParent))
 	{
 	    event.u.u.type = MapNotify;
@@ -2924,9 +2981,6 @@ MapSubwindows(pParent, client)
     Bool	dosave = FALSE;
 #endif
     WindowPtr		pLayerWin;
-#ifdef LG3D
-    Bool   redirToWm;
-#endif /* LG3D */
 
     pScreen = pParent->drawable.pScreen;
     parentRedirect = RedirectSend(pParent);
@@ -2936,22 +2990,7 @@ MapSubwindows(pParent, client)
     {
 	if (!pWin->mapped)
 	{
-#ifdef LG3D
-	    if (lgeDisplayServerIsAlive) {
-
-		/* TODO: RedirectSend is not always true for prw; I don't know why. */
-		redirToWm = parentRedirect || (pParent->drawable.id == lgeDisplayServerPRW);
-    
-		/* Note: even send notifications for override redirect window */
-
-	    } else {
-		redirToWm = parentRedirect && !pWin->overrideRedirect;
-	    }
-    
-	    if (redirToWm) 
-#else
 	    if (parentRedirect && !pWin->overrideRedirect)
-#endif /* LG3D */
 	    {
 		event.u.u.type = MapRequest;
 		event.u.mapRequest.window = pWin->drawable.id;
@@ -2961,6 +3000,11 @@ MapSubwindows(pParent, client)
 		    SubstructureRedirectMask, client) == 1)
 		    continue;
 	    }
+#ifdef LG3D
+	    else if (lgeDisplayServerIsAlive && pWin->overrideRedirect) {
+		lg3dMapWindowOverrideRedirect(pWin, client);
+	    }
+#endif /* LG3D */
     
 	    pWin->mapped = TRUE;
 	    if (parentNotify || StrSend(pWin))
@@ -3131,7 +3175,15 @@ UnmapWindow(pWin, fromConfigure)
 	(*pScreen->MarkOverlappedWindows)(pWin, pWin->nextSib, &pLayerWin);
 	(*pScreen->MarkWindow)(pLayerWin->parent);
     }
+
     pWin->mapped = FALSE;
+
+#ifdef LG3D
+     if (lgeDisplayServerIsAlive && pWin->overrideRedirect) {
+	 lg3dUnmapWindowOverrideRedirect(pWin);
+     }
+#endif /* LG3D */
+
     if (wasRealized)
 	UnrealizeTree(pWin, fromConfigure);
     if (wasViewable)
@@ -3202,6 +3254,13 @@ UnmapSubwindows(pWin)
 		pChild->valdata = UnmapValData;
 		anyMarked = TRUE;
 	    }
+
+#ifdef LG3D
+	    if (lgeDisplayServerIsAlive && pWin->overrideRedirect) {
+		lg3dUnmapWindowOverrideRedirect(pWin);
+	    }
+#endif /* LG3D */
+
 	    pChild->mapped = FALSE;
 	    if (pChild->realized)
 		UnrealizeTree(pChild, FALSE);
@@ -3718,6 +3777,14 @@ CheckWindowOptionalNeed (w)
 	return;
     if (optional->colormap != parentOptional->colormap)
 	return;
+#ifdef LG3D
+    if (optional->ovRedirCompRedirClient != NULL) {
+	return;
+    }
+    if (optional->ovRedirLieAboutRootParent != 0) {
+	return;
+    }
+#endif /* LG3D */
     DisposeWindowOptional (w);
 }
 
@@ -3766,6 +3833,10 @@ MakeWindowOptional (pWin)
 	optional->cursor = None;
     }
     optional->colormap = parentOptional->colormap;
+#ifdef LG3D
+    optional->ovRedirCompRedirClient = NULL;
+    optional->ovRedirLieAboutRootParent = 0;
+#endif /* LG3D */
     pWin->optional = optional;
     return TRUE;
 }

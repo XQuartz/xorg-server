@@ -67,6 +67,10 @@ lgeTryClientEvents (ClientPtr client, xEvent *pEvents, int count, Mask mask,
 		    Mask filter, GrabPtr grab);
 #endif /* LG3D */
 
+/*
+int numevent = 0;
+*/
+
 static void
 DamageExtNotify (DamageExtPtr pDamageExt, BoxPtr pBoxes, int nBoxes)
 {
@@ -75,6 +79,17 @@ DamageExtNotify (DamageExtPtr pDamageExt, BoxPtr pBoxes, int nBoxes)
     DrawablePtr		pDrawable = pDamageExt->pDrawable;
     xDamageNotifyEvent	ev;
     int			i;
+
+#ifdef LG3D
+    /* 
+    ** Force damage events to go to the damage grabbing client rather
+    ** than the client who created the damage record.
+    */
+    if (lgeDisplayServerIsAlive && lgeGrabDamageEventsClient != NULL) {
+	pClient = lgeGrabDamageEventsClient;
+
+    }
+#endif /* LG3D */
 
     UpdateCurrentTimeIf ();
     ev.type = DamageEventBase + XDamageNotify;
@@ -98,10 +113,14 @@ DamageExtNotify (DamageExtPtr pDamageExt, BoxPtr pBoxes, int nBoxes)
 	    ev.area.y = pBoxes[i].y1;
 	    ev.area.width = pBoxes[i].x2 - pBoxes[i].x1;
 	    ev.area.height = pBoxes[i].y2 - pBoxes[i].y1;
+/*
+ErrorF("Construct DamageNotify event %d: xywh = %d, %d, %d, %d\n",
+       ++numevent, ev.area.x, ev.area.y, ev.area.width, ev.area.height);
+*/
 	    if (!pClient->clientGone) {
 #ifdef LG3D
 	        if (lgeDisplayServerIsAlive) {
-		    if (lgeTryClientEvents (NULL, (xEvent *) &ev, 1, 0, 0, NULL) == 0) {
+		    if (lgeTryClientEvents (pClient, (xEvent *) &ev, 1, 0, 0, NULL) == 0) {
 			ErrorF("DamageExtNotify: warning: call to lgeTryWriteEventsToClients failed.\n");
 			ErrorF("Couldn't deliver DamageNotify event.\n");
 		    }
@@ -120,10 +139,14 @@ DamageExtNotify (DamageExtPtr pDamageExt, BoxPtr pBoxes, int nBoxes)
 	ev.area.y = 0;
 	ev.area.width = pDrawable->width;
 	ev.area.height = pDrawable->height;
+/*
+ErrorF("Construct DamageNotify event %d: xywh = %d, %d, %d, %d\n",
+       ++numevent, ev.area.x, ev.area.y, ev.area.width, ev.area.height);
+*/
 	if (!pClient->clientGone) {
 #ifdef LG3D
 	    if (lgeDisplayServerIsAlive) {
-		if (lgeTryClientEvents (NULL, (xEvent *) &ev, 1, 0, 0, NULL) == 0) {
+		if (lgeTryClientEvents (pClient, (xEvent *) &ev, 1, 0, 0, NULL) == 0) {
 		    ErrorF("DamageExtNotify: warning: call to lgeTryWriteEventsToClients failed.\n");
 		    ErrorF("Couldn't deliver DamageNotify event.\n");
 		}

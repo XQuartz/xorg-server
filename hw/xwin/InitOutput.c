@@ -425,6 +425,7 @@ ddxUseMsg (void)
 	  "\tSpecify a keyboard device from the configuration file.\n");
 #endif
 
+#ifdef XKB
   ErrorF ("-xkbrules XKBRules\n"
 	  "\tEquivalent to XKBRules in XF86Config files.\n");
 
@@ -441,6 +442,22 @@ ddxUseMsg (void)
 
   ErrorF ("-xkboptions XKBOptions\n"
 	  "\tEquivalent to XKBOptions in XF86Config files.\n");
+#endif
+
+  ErrorF ("-logfile filename\n"
+	  "\tWrite logmessages to <filename> instead of /tmp/Xwin.log.\n");
+
+  ErrorF ("-logverbose verbosity\n"
+	  "\tSet the verbosity of logmessages. [NOTE: Only a few messages\n"
+      "\trespect the settings yet]\n"
+      "\t\t0 - only print fatal error.\n"
+      "\t\t1 - print additional configuration information.\n"
+      "\t\t2 - print additional runtime information [default].\n"
+      "\t\t3 - print debugging and tracing information.\n");
+
+  ErrorF ("-[no]keyhook\n"
+      "\tGrab special windows key combinations like Alt-Tab or the Menu key.\n" 
+      "\tThese keys are discarded by default.\n");
 
   /* Log file will not be opened for UseMsg unless we open it now */
   if (!g_fLogInited) {

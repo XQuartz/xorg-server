@@ -815,7 +815,6 @@ Bool
 vesaSetShadow (ScreenPtr pScreen)
 {
     KdScreenPriv(pScreen);
-    KdScreenInfo	*screen = pScreenPriv->screen;
     VesaScreenPrivPtr	pscr = pScreenPriv->screen->driver;
     ShadowUpdateProc	update;
     ShadowWindowProc	window = 0;
@@ -1006,10 +1005,10 @@ vesaMapFramebuffer (KdScreenInfo    *screen)
     else
     {
 	screen->fb[0].frameBuffer = (CARD8 *) (pscr->fb);
-	screen->off_screen_base = screen->fb[0].byteStride * screen->height;
 	screen->fb[0].byteStride = pscr->mode.BytesPerScanLine;
 	screen->fb[0].pixelStride = ((pscr->mode.BytesPerScanLine * 8) / 
 				     screen->fb[0].bitsPerPixel);
+	screen->off_screen_base = screen->fb[0].byteStride * screen->height;
     }
     
     return TRUE;
@@ -1127,7 +1126,6 @@ vesaRandRSetConfig (ScreenPtr		pScreen,
     int			oldmmwidth;
     int			oldmmheight;
     int			newwidth, newheight;
-    PixmapPtr		pPixmap;
 
     if (screen->randr & (RR_Rotate_0|RR_Rotate_180))
     {
@@ -1273,8 +1271,6 @@ vesaRandRInit (ScreenPtr pScreen)
 Bool
 vesaInitScreen(ScreenPtr pScreen)
 {
-    KdScreenPriv(pScreen);
-
     return TRUE;
 }
 

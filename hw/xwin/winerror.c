@@ -93,7 +93,7 @@ winMessageBoxF (const char *pszError, UINT uType, ...)
   va_list	args;
 
   /* Get length of formatted error string */
-  va_start (args, pszError);
+  va_start (args, uType);
   i = sprintf (NULL, pszError, args);
   va_end (args);
   
@@ -103,7 +103,7 @@ winMessageBoxF (const char *pszError, UINT uType, ...)
     goto winMessageBoxF_Cleanup;
 
   /* Create the formatted error string */
-  va_start (args, pszError);
+  va_start (args, uType);
   sprintf (pszErrorF, pszError, args);
   va_end (args);
 

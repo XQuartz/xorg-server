@@ -232,9 +232,6 @@ kaaPixmapUseMemory (PixmapPtr pPixmap)
 static Bool
 kaaDestroyPixmap (PixmapPtr pPixmap)
 {
-    ScreenPtr pScreen = pPixmap->drawable.pScreen;
-    Bool ret;
-    
     if (pPixmap->refcnt == 1)
     {
 	KaaPixmapPriv (pPixmap);
@@ -251,10 +248,7 @@ kaaDestroyPixmap (PixmapPtr pPixmap)
 	    pPixmap->devKind = pKaaPixmap->devKind;
 	}
     }
-
-    ret = fbDestroyPixmap (pPixmap);
-    
-    return ret;
+    return fbDestroyPixmap (pPixmap);
 }
 
 static PixmapPtr 
@@ -304,17 +298,19 @@ static PixmapPtr
 kaaGetOffscreenPixmap (DrawablePtr pDrawable, int *xp, int *yp)
 {
     PixmapPtr	pPixmap;
-    int		x = 0, y = 0;
+    int		x, y;
     
     if (pDrawable->type == DRAWABLE_WINDOW) {
 	pPixmap = (*pDrawable->pScreen->GetWindowPixmap) ((WindowPtr) pDrawable);
-	if (x)
-	    x += pDrawable->x;
-	if (y)
-	    y += pDrawable->y;
+	x = pDrawable->x;
+	y = pDrawable->y;
     }
     else
+    {
 	pPixmap = (PixmapPtr) pDrawable;
+	x = 0;
+	y = 0;
+    }
     if (kaaPixmapIsOffscreen (pPixmap))
     {
 	x += pPixmap->drawable.x;

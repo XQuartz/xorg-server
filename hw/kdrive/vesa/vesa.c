@@ -1334,7 +1334,7 @@ vesaRandRInit (ScreenPtr pScreen)
 Bool
 vesaInitScreen(ScreenPtr pScreen)
 {
-    return shadowSetup (pScreen);
+    return TRUE;
 }
 
 Bool
@@ -1344,6 +1344,9 @@ vesaFinishInitScreen (ScreenPtr pScreen)
     
     vesaConfigureScreen (pScreen);
 
+    if (!shadowSetup (pScreen))
+	return FALSE;
+    
     pPixmap = vesaGetPixmap (pScreen);
     if (!pPixmap)
 	return FALSE;

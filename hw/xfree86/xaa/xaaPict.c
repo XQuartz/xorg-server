@@ -172,6 +172,10 @@ XAA_888_plus_PICT_a8_to_8888 (
     } 
 }
 
+#define DRAWABLE_IS_ON_CARD(pDraw) \
+    (pDraw->type == DRAWABLE_WINDOW || \
+     (pDraw->type == DRAWABLE_PIXMAP && IS_OFFSCREEN_PIXMAP(pDraw)))
+
 Bool
 XAADoComposite (
     CARD8      op,
@@ -190,7 +194,7 @@ XAADoComposite (
     ScreenPtr pScreen = pDst->pDrawable->pScreen;
     XAAInfoRecPtr infoRec = GET_XAAINFORECPTR_FROM_SCREEN(pScreen);
     RegionRec region;
-    CARD32 *formats;
+    CARD32 *formats, *dstformats;
     int flags = 0;
     BoxPtr pbox;
     int nbox, w, h;
@@ -198,13 +202,10 @@ XAADoComposite (
     if(!REGION_NUM_RECTS(pDst->pCompositeClip))
         return TRUE;
 
-    if(!infoRec->pScrn->vtSema || 
-      ((pDst->pDrawable->type != DRAWABLE_WINDOW) &&
-	!IS_OFFSCREEN_PIXMAP(pDst->pDrawable)))
+    if(!infoRec->pScrn->vtSema || !DRAWABLE_IS_ON_CARD(pDst->pDrawable))
 	return FALSE;
 
-    if((pSrc->pDrawable->type != DRAWABLE_PIXMAP) ||
-        IS_OFFSCREEN_PIXMAP(pSrc->pDrawable))
+    if(DRAWABLE_IS_ON_CARD(pSrc->pDrawable))
 	return FALSE;
 
     if (pSrc->transform || (pMask && pMask->transform))
@@ -279,7 +280,9 @@ XAADoComposite (
 		return TRUE;
 	  }
 
-	  if(!(formats = infoRec->CPUToScreenAlphaTextureFormats))
+	  formats = infoRec->CPUToScreenAlphaTextureFormats;
+	  dstformats = infoRec->CPUToScreenAlphaTextureDstFormats;
+	  if(!formats || !dstformats)
 		return FALSE;
 
 	  w = pMask->pDrawable->width;
@@ -304,6 +307,11 @@ XAADoComposite (
 		if(!(*formats)) return FALSE;
 		formats++;
           }
+	  while(*dstformats != pDst->format) {
+		if(!(*dstformats))
+		    return FALSE;
+		dstformats++;
+          }
 
 	  if (!miComputeCompositeRegion (&region, pSrc, pMask, pDst,
                                    xSrc, ySrc, xMask, yMask, xDst, yDst,
@@ -318,8 +326,9 @@ XAADoComposite (
 		return TRUE;
 	  }
 
-	  if(!(infoRec->SetupForCPUToScreenAlphaTexture)(infoRec->pScrn,
-			op, red, green, blue, alpha, pMask->format, 
+	  if(!(infoRec->SetupForCPUToScreenAlphaTexture2)(infoRec->pScrn,
+			op, red, green, blue, alpha, pMask->format,
+			pDst->format,
 			((PixmapPtr)(pMask->pDrawable))->devPrivate.ptr,
 			((PixmapPtr)(pMask->pDrawable))->devKind, 
 			w, h, flags))
@@ -343,8 +352,10 @@ XAADoComposite (
 	   REGION_UNINIT(pScreen, &region);
 	   return TRUE;
 	}
-    } else {	
-	if(!(formats = infoRec->CPUToScreenTextureFormats))
+    } else {
+	formats = infoRec->CPUToScreenTextureFormats;
+	dstformats = infoRec->CPUToScreenTextureDstFormats;
+	if(!formats || !dstformats)
 	    return FALSE;
 
         w = pSrc->pDrawable->width;
@@ -361,10 +372,14 @@ XAADoComposite (
               flags |= XAA_RENDER_REPEAT;
         }
 
-
 	while(*formats != pSrc->format) {
 	    if(!(*formats)) return FALSE;
 	    formats++;
+	}
+	while(*dstformats != pDst->format) {
+	    if(!(*dstformats))
+		return FALSE;
+	    dstformats++;
 	}
 
 	if (!miComputeCompositeRegion (&region, pSrc, pMask, pDst,
@@ -380,8 +395,8 @@ XAADoComposite (
              return TRUE;
         }
 
-	if(!(infoRec->SetupForCPUToScreenTexture)(infoRec->pScrn,
-			op, pSrc->format, 
+	if(!(infoRec->SetupForCPUToScreenTexture2)(infoRec->pScrn,
+			op, pSrc->format, pDst->format, 
 			((PixmapPtr)(pSrc->pDrawable))->devPrivate.ptr,
 			((PixmapPtr)(pSrc->pDrawable))->devKind, 
 			w, h, flags))
@@ -411,6 +426,63 @@ XAADoComposite (
     return FALSE;
 }
 
+static void
+XAACompositeSrcCopy (PicturePtr pSrc,
+		     PicturePtr pDst,
+		     INT16      xSrc,
+		     INT16      ySrc,
+		     INT16      xDst,
+		     INT16      yDst,
+		     CARD16     width,
+		     CARD16     height)
+{
+    ScreenPtr	pScreen = pDst->pDrawable->pScreen;
+    XAAInfoRecPtr infoRec = GET_XAAINFORECPTR_FROM_SCREEN(pScreen);
+    int i, nbox;
+    int xoff, yoff;
+    BoxPtr pbox;
+    DDXPointPtr pptSrc;
+    RegionRec region;
+
+    xDst += pDst->pDrawable->x;
+    yDst += pDst->pDrawable->y;
+    xSrc += pSrc->pDrawable->x;
+    ySrc += pSrc->pDrawable->y;
+
+    if (!miComputeCompositeRegion (&region, pSrc, NULL, pDst,
+				   xSrc, ySrc, 0, 0, xDst, yDst,
+				   width, height))
+	return;
+
+    nbox = REGION_NUM_RECTS(&region);
+    pbox = REGION_RECTS(&region);   
+
+    if(!nbox) {
+	REGION_UNINIT(pScreen, &region);
+	return;
+    }
+    pptSrc = ALLOCATE_LOCAL(sizeof(DDXPointRec) * nbox);
+    if (!pptSrc) {
+	REGION_UNINIT(pScreen, &region);
+	return;
+    }
+    xoff = xSrc - xDst;
+    yoff = ySrc - yDst;
+    for (i = 0; i < nbox; i++) {
+	pptSrc[i].x = pbox[i].x1 + xoff;
+	pptSrc[i].y = pbox[i].y1 + yoff; 
+    }
+
+    infoRec->ScratchGC.planemask = ~0L;
+    infoRec->ScratchGC.alu = GXcopy;
+
+    XAADoBitBlt(pSrc->pDrawable, pDst->pDrawable, &infoRec->ScratchGC, &region,
+		pptSrc);
+
+    DEALLOCATE_LOCAL(pptSrc);
+    REGION_UNINIT(pScreen, &region);
+    return;
+}
 
 void
 XAAComposite (CARD8      op,
@@ -430,7 +502,14 @@ XAAComposite (CARD8      op,
     XAAInfoRecPtr infoRec = GET_XAAINFORECPTR_FROM_SCREEN(pScreen);
     XAA_RENDER_PROLOGUE(pScreen, Composite);
 
-    if(!infoRec->Composite ||
+    if((op == PictOpSrc) && !pMask && infoRec->pScrn->vtSema &&
+	infoRec->ScreenToScreenBitBlt &&
+	DRAWABLE_IS_ON_CARD(pSrc->pDrawable) &&
+	DRAWABLE_IS_ON_CARD(pDst->pDrawable) &&
+	!pSrc->transform && !pSrc->repeat && (pSrc->format == pDst->format))
+    {
+	XAACompositeSrcCopy(pSrc, pDst, xSrc, ySrc, xDst, yDst, width, height);
+    } else if(!infoRec->Composite ||
        !(*infoRec->Composite)(op, pSrc, pMask, pDst,
                        xSrc, ySrc, xMask, yMask, xDst, yDst,
                        width, height))

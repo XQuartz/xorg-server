@@ -118,6 +118,16 @@ DPMSClose(int i, ScreenPtr pScreen)
 
     pScreen->CloseScreen = pDPMS->CloseScreen;
 
+    /*
+     * Turn on DPMS when shutting down. If this function can be used
+     * depends on the order the driver wraps things. If this is called
+     * after the driver has shut down everything the driver will have
+     * to deal with this internally.
+     */
+    if (xf86Screens[i]->vtSema && xf86Screens[i]->DPMSSet) {
+ 	xf86Screens[i]->DPMSSet(xf86Screens[i],DPMSModeOn,0);
+    }
+    
     xfree((pointer)pDPMS);
     pScreen->devPrivates[DPMSIndex].ptr = NULL;
     if (--DPMSCount == 0)

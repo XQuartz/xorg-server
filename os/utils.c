@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.1.4.6.2.4 2004/03/04 17:48:31 eich Exp $ */
+/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.6 2004/08/11 22:27:50 kem Exp $ */
 /* $Xorg: utils.c,v 1.5 2001/02/09 02:05:24 xorgcvs Exp $ */
 /*
 
@@ -119,6 +119,7 @@ OR PERFORMANCE OF THIS SOFTWARE.
 
 #ifdef RENDER
 #include "picture.h"
+Bool noRenderExtension = FALSE;
 #endif
 
 #define X_INCLUDE_NETDB_H
@@ -135,6 +136,14 @@ Bool PanoramiXVisibilityNotifySent = FALSE;
 Bool PanoramiXMapped = FALSE;
 Bool PanoramiXWindowExposureSent = FALSE;
 Bool PanoramiXOneExposeRequest = FALSE;
+#endif
+
+#ifdef XEVIE
+Bool noXevieExtension = TRUE;
+#endif
+
+#ifdef COMPOSITE
+Bool noCompositeExtension = TRUE;
 #endif
 
 int auditTrailLevel = 1;
@@ -169,6 +178,10 @@ int userdefinedfontpath = 0;
 char *dev_tty_from_init = NULL;		/* since we need to parse it anyway */
 
 extern char dispatchExceptionAtReset;
+
+/* Extension enable/disable in miinitext.c */
+extern Bool EnableDisableExtension(char *name, Bool enable);
+extern void EnableDisableExtensionError(char *name, Bool enable);
 
 OsSigHandlerPtr
 OsSignal(sig, handler)
@@ -516,6 +529,8 @@ void UseMsg(void)
     ErrorF("nologo                 disable logo in screen saver\n");
 #endif
     ErrorF("-nolisten string       don't listen on protocol\n");
+    ErrorF("-noreset               don't reset after last client exists\n");
+    ErrorF("-reset                 reset after last client exists\n");
     ErrorF("-p #                   screen-saver pattern duration (minutes)\n");
     ErrorF("-pn                    accept failure to listen on all ports\n");
     ErrorF("-nopn                  reject failure to listen on all ports\n");
@@ -547,6 +562,8 @@ void UseMsg(void)
     ErrorF("-dumbSched             Disable smart scheduling, enable old behavior\n");
     ErrorF("-schedInterval int     Set scheduler interval in msec\n");
 #endif
+    ErrorF("+extension name        Enable extension\n");
+    ErrorF("-extension name        Disable extension\n");
 #ifdef XDMCP
     XdmcpUseMsg();
 #endif
@@ -574,6 +591,17 @@ VerifyDisplayName(const char *d)
     if ( strchr(d, '/') != (char *)0 ) return( 0 );  /*  very important!!!  */
     return( 1 );
 }
+
+/*
+ * This function is responsible for doing initalisation of any global
+ * variables at an very early point of server startup (even before
+ * |ProcessCommandLine()|. 
+ */
+void InitGlobals(void)
+{
+    ddxInitGlobals();
+}
+
 
 /*
  * This function parses the command line. Handles device-independent fields
@@ -812,6 +840,10 @@ ProcessCommandLine(int argc, char *argv[])
 	{
 	    dispatchExceptionAtReset = 0;
 	}
+	else if ( strcmp( argv[i], "-reset") == 0)
+	{
+	    dispatchExceptionAtReset = DE_RESET;
+	}
 	else if ( strcmp( argv[i], "-p") == 0)
 	{
 	    if(++i < argc)
@@ -982,6 +1014,26 @@ ProcessCommandLine(int argc, char *argv[])
 		UseMsg ();
 	}
 #endif
+	else if ( strcmp( argv[i], "+extension") == 0)
+	{
+	    if (++i < argc)
+	    {
+		if (!EnableDisableExtension(argv[i], TRUE))
+		    EnableDisableExtensionError(argv[i], TRUE);
+	    }
+	    else
+		UseMsg();
+	}
+	else if ( strcmp( argv[i], "-extension") == 0)
+	{
+	    if (++i < argc)
+	    {
+		if (!EnableDisableExtension(argv[i], FALSE))
+		    EnableDisableExtensionError(argv[i], FALSE);
+	    }
+	    else
+		UseMsg();
+	}
  	else
  	{
 	    ErrorF("Unrecognized option: %s\n", argv[i]);
@@ -1846,16 +1898,24 @@ enum BadCode {
     InternalError
 };
 
+#if defined(VENDORSUPPORT)
+#define BUGADDRESS VENDORSUPPORT
+#elif defined(BUILDERADDR)
+#define BUGADDRESS BUILDERADDR
+#else
+#define BUGADDRESS "xorg@freedesktop.org"
+#endif
+
 #define ARGMSG \
     "\nIf the arguments used are valid, and have been rejected incorrectly\n" \
       "please send details of the arguments and why they are valid to\n" \
-      "&&&&&@X.org.  In the meantime, you can start the Xserver as\n" \
+      "%s.  In the meantime, you can start the Xserver as\n" \
       "the \"super user\" (root).\n"   
 
 #define ENVMSG \
     "\nIf the environment is valid, and have been rejected incorrectly\n" \
       "please send details of the environment and why it is valid to\n" \
-      "&&&&&@X.org.  In the meantime, you can start the Xserver as\n" \
+      "%s.  In the meantime, you can start the Xserver as\n" \
       "the \"super user\" (root).\n"
 
 void
@@ -1963,20 +2023,20 @@ CheckUserParameters(int argc, char **argv, char **envp)
 	return;
     case UnsafeArg:
 	ErrorF("Command line argument number %d is unsafe\n", i);
-	ErrorF(ARGMSG);
+	ErrorF(ARGMSG, BUGADDRESS);
 	break;
     case ArgTooLong:
 	ErrorF("Command line argument number %d is too long\n", i);
-	ErrorF(ARGMSG);
+	ErrorF(ARGMSG, BUGADDRESS);
 	break;
     case UnprintableArg:
 	ErrorF("Command line argument number %d contains unprintable"
 		" characters\n", i);
-	ErrorF(ARGMSG);
+	ErrorF(ARGMSG, BUGADDRESS);
 	break;
     case EnvTooLong:
 	ErrorF("Environment variable `%s' is too long\n", e);
-	ErrorF(ENVMSG);
+	ErrorF(ENVMSG, BUGADDRESS);
 	break;
     case OutputIsPipe:
 	ErrorF("Stdout and/or stderr is a pipe\n");
@@ -1986,8 +2046,8 @@ CheckUserParameters(int argc, char **argv, char **envp)
 	break;
     default:
 	ErrorF("Unknown error\n");
-	ErrorF(ARGMSG);
-	ErrorF(ENVMSG);
+	ErrorF(ARGMSG, BUGADDRESS);
+	ErrorF(ENVMSG, BUGADDRESS);
 	break;
     }
     FatalError("X server aborted because of unsafe environment\n");

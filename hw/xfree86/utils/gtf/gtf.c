@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/etc/gtf.c,v 1.1.10.1.4.1 2004/03/19 17:09:00 eich Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/etc/gtf.c,v 1.2 2004/04/23 19:53:57 eich Exp $ */
 /* gtf.c  Generate mode timings using the GTF Timing Standard
  *
  * gcc gtf.c -o gtf -lm -Wall

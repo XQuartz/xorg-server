@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/xf86Version.h,v 1.1.4.3 2003/12/06 13:24:23 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/xorgVersion.h,v 1.3 2004/08/16 02:07:53 kem Exp $ */
 
 /*
  * Copyright (c) 2004, X.Org Foundation
@@ -45,7 +45,7 @@
 # define XORG_VERSION_MAJOR	XORG_GET_MAJOR_VERSION(XORG_VERSION_CURRENT)
 # define XORG_VERSION_MINOR	XORG_GET_MINOR_VERSION(XORG_VERSION_CURRENT)
 # define XORG_VERSION_PATCH	XORG_GET_PATCH_VERSION(XORG_VERSION_CURRENT)
-# define XORG_VERSION_SNAP	XORG_GET_PATCH_VERSION(XORG_VERSION_CURRENT)
+# define XORG_VERSION_SNAP	XORG_GET_SNAP_VERSION(XORG_VERSION_CURRENT)
 
 #endif
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/xf86Version.h,v 1.1.4.3 2003/12/06 13:24:23 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/xorgVersion.h,v 1.3 2004/08/16 02:07:53 kem Exp $ */

@@ -92,6 +92,7 @@ typedef struct __GLXclientStateRec __GLXclientState;
 
 extern __GLXscreenInfo *__glXActiveScreens;
 extern GLint __glXNumActiveScreens;
+extern __GLXscreenInfo *__glXgetActiveScreen(int num);
 
 /************************************************************************/
 

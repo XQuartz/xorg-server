@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/loader/dixsym.c,v 1.1.4.4.4.2 2004/03/04 17:48:07 eich Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/loader/dixsym.c,v 1.5 2004/08/19 04:08:40 kem Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/loader/dixsym.c,v 1.63 2003/12/03
  * 17:11:29 tsi Exp $ */
 
@@ -81,6 +81,7 @@
 #include "dgaproc.h"
 #ifdef RENDER
 #include "mipict.h"
+#include "renderedge.h"
 #endif
 #include "selection.h"
 #ifdef XKB
@@ -198,6 +199,7 @@ LOOKUP dixLookupTab[] = {
     SYMFUNC(VerifyRectOrder)
     SYMFUNC(SetDashes)
     /* globals.c */
+#ifdef DPMSExtension
     SYMVAR(DPMSEnabled)
     SYMVAR(DPMSCapableFlag)
     SYMVAR(DPMSOffTime)
@@ -207,6 +209,7 @@ LOOKUP dixLookupTab[] = {
     SYMVAR(DPMSEnabledSwitch)
     SYMVAR(DPMSDisabledSwitch)
     SYMVAR(defaultDPMSEnabled)
+#endif
     /* bigreq */
     SYMVAR(maxBigRequestSize)
 #ifdef XV
@@ -322,6 +325,16 @@ LOOKUP dixLookupTab[] = {
     SYMFUNC(AdjustWaitForDelay)
     SYMVAR(noTestExtensions)
     SYMFUNC(GiveUp)
+#ifdef COMPOSITE
+    SYMVAR(noCompositeExtension)
+#endif
+#ifdef RENDER
+    SYMVAR(noRenderExtension)
+#endif
+#ifdef XEVIE
+    SYMVAR(noXevieExtension)
+#endif
+
     /* log.c */
     SYMFUNC(LogVWrite)
     SYMFUNC(LogWrite)
@@ -345,7 +358,9 @@ LOOKUP dixLookupTab[] = {
     SYMFUNC(TimerFree)
     SYMFUNC(TimerSet)
     SYMFUNC(TimerCancel)
+#ifdef DPMSExtension
     SYMFUNC(SetDPMSTimers)
+#endif
     /* io.c */
     SYMFUNC(WriteToClient)
     SYMFUNC(SetCriticalOutputPending)
@@ -400,6 +415,11 @@ LOOKUP dixLookupTab[] = {
     SYMFUNC(PictureSetFilterAlias)
     SYMFUNC(PictureGetSubpixelOrder)
     SYMFUNC(PictureSetSubpixelOrder)
+    SYMFUNC(RenderSampleCeilY)
+    SYMFUNC(RenderSampleFloorY)
+    SYMFUNC(RenderEdgeStep)
+    SYMFUNC(RenderEdgeInit)
+    SYMFUNC(RenderLineFixedEdgeInit)
 #endif
 
     {0, 0}

@@ -136,6 +136,9 @@ typedef struct _Window {
     unsigned		dstBuffer:1;	/* destination buffer for rendering */
     unsigned		srcBuffer:1;	/* source buffer for rendering */
 #endif
+#ifdef COMPOSITE
+    unsigned		redirectDraw:1;	/* rendering is redirected from here */
+#endif
     DevUnion		*devPrivates;
 } WindowRec;
 
@@ -221,5 +224,9 @@ extern ScreenSaverStuffRec savedScreenInfo[MAXSCREENS];
 
 extern int numSaveUndersViewable;
 extern int deltaSaveUndersViewable;
+
+#ifdef XEVIE
+extern WindowPtr xeviewin;
+#endif
 
 #endif /* WINDOWSTRUCT_H */

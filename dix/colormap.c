@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/dix/colormap.c,v 1.1.4.4.2.3 2004/03/04 20:16:04 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/colormap.c,v 1.5 2004/08/13 08:16:14 keithp Exp $ */
 /* $XFree86: xc/programs/Xserver/dix/colormap.c,v 3.11 2003/11/03 05:10:59 tsi Exp $ */
 /***********************************************************
 
@@ -190,7 +190,14 @@ static void FindColorInRootCmap (
 #define NUMRED(vis) ((vis->redMask >> vis->offsetRed) + 1)
 #define NUMGREEN(vis) ((vis->greenMask >> vis->offsetGreen) + 1)
 #define NUMBLUE(vis) ((vis->blueMask >> vis->offsetBlue) + 1)
-#define RGBMASK(vis) (vis->redMask | vis->greenMask | vis->blueMask)
+#if COMPOSITE
+#define ALPHAMASK(vis)	((vis)->nplanes < 32 ? 0 : \
+			 (CARD32) ~((vis)->redMask|(vis)->greenMask|(vis)->blueMask))
+#else
+#define ALPHAMASK(vis)	0
+#endif
+
+#define RGBMASK(vis) (vis->redMask | vis->greenMask | vis->blueMask | ALPHAMASK(vis))
 
 /* GetNextBitsOrBreak(bits, mask, base)  -- 
  * (Suggestion: First read the macro, then read this explanation.
@@ -865,7 +872,9 @@ AllocColor (pmap, pred, pgreen, pblue, pPix, client)
 	pixB = FindBestPixel(pmap->blue, NUMBLUE(pVisual), &rgb, BLUEMAP);
 	*pPix = (pixR << pVisual->offsetRed) |
 		(pixG << pVisual->offsetGreen) |
-		(pixB << pVisual->offsetBlue);
+		(pixB << pVisual->offsetBlue) |
+		ALPHAMASK(pVisual);
+	
 	*pred = pmap->red[pixR].co.local.red;
 	*pgreen = pmap->green[pixG].co.local.green;
 	*pblue = pmap->blue[pixB].co.local.blue;
@@ -955,7 +964,8 @@ AllocColor (pmap, pred, pgreen, pblue, pPix, client)
 	    (void)FreeCo(pmap, client, REDMAP, 1, &pixR, (Pixel)0);
 	    return (BadAlloc);
 	}
-	*pPix = pixR | pixG | pixB;
+	*pPix = pixR | pixG | pixB | ALPHAMASK(pVisual);
+
 	break;
     }
 
@@ -1928,6 +1938,10 @@ AllocDirect (client, pmap, c, r, g, b, contig, pixels, prmask, pgmask, pbmask)
     }
     pmap->numPixelsBlue[client] += npixB;
     pmap->freeBlue -= npixB;
+
+
+    for (pDst = pixels; pDst < pixels + c; pDst++)
+	*pDst |= ALPHAMASK(pmap->pVisual);
 
     DEALLOCATE_LOCAL(ppixBlue);
     DEALLOCATE_LOCAL(ppixGreen);

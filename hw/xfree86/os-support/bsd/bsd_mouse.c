@@ -430,6 +430,7 @@ wsconsReadInput(InputInfoPtr pInfo)
 	default:
 	    xf86Msg(X_WARNING, "%s: bad wsmouse event type=%d\n", pInfo->name,
 		    event->type);
+	    ++event;
 	    continue;
 	}
 
@@ -472,6 +473,7 @@ wsconsPreInit(InputInfoPtr pInfo, const char *protocol, int flags)
 
     /* Setup the local input proc. */
     pInfo->read_input = wsconsReadInput;
+    pMse->xisbscale = sizeof(struct wscons_event);
 
     pInfo->flags |= XI86_CONFIGURED;
     return TRUE;

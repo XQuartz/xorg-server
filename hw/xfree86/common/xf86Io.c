@@ -49,6 +49,7 @@
  */
 
 /* $XConsortium: xf86Io.c /main/27 1996/10/19 17:58:55 kaleb $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/common/xf86Io.c,v 1.2 2004/07/28 03:57:19 alanc Exp $ */
 
 #define NEED_EVENTS
 #include "X.h"
@@ -147,6 +148,10 @@ xf86KbdLeds ()
 #else
   if (leds & XLED4)  real_leds |= LED_SCR;
 #endif
+#endif
+#ifdef sun
+  /* Pass through any additional LEDs, such as Kana LED on Sun Japanese kbd */
+  real_leds |= (leds & 0xFFFFFFF0);
 #endif
   xf86SetKbdLeds(real_leds);
   (void)leds;

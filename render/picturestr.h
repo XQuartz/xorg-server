@@ -1,6 +1,5 @@
-/* $XdotOrg: xc/programs/Xserver/render/picturestr.h,v 1.1.4.2.2.2 2004/03/04 17:48:45 eich Exp $ */
 /*
- * $XFree86: xc/programs/Xserver/render/picturestr.h,v 1.21 2002/11/06 22:45:36 keithp Exp $
+ * $Id$
  *
  * Copyright © 2000 SuSE, Inc.
  *
@@ -39,7 +38,7 @@ typedef struct _DirectFormat {
 } DirectFormatRec;
 
 typedef struct _IndexFormat {
-    VisualPtr	    pVisual;
+    VisualID	    vid;
     ColormapPtr	    pColormap;
     int		    nvalues;
     xIndexValue	    *pValues;
@@ -103,11 +102,12 @@ typedef struct _Picture {
     int		    filter_nparams;
 } PictureRec;
 
+typedef Bool (*PictFilterValidateParamsProcPtr) (PicturePtr pPicture, int id,
+						 xFixed *params, int nparams);
 typedef struct {
-    char	    *name;
-    xFixed	    *params;
-    int		    nparams;
-    int		    id;
+    char			    *name;
+    int				    id;
+    PictFilterValidateParamsProcPtr ValidateParams;
 } PictFilterRec, *PictFilterPtr;
 
 #define PictFilterNearest	0
@@ -226,6 +226,18 @@ typedef void	(*UpdateIndexedProcPtr)	    (ScreenPtr	    pScreen,
 					     int	    ndef,
 					     xColorItem	    *pdef);
 
+typedef void	(*AddTrapsProcPtr)	    (PicturePtr	    pPicture,
+					     INT16	    xOff,
+					     INT16	    yOff,
+					     int	    ntrap,
+					     xTrap	    *traps);
+
+typedef void	(*AddTrianglesProcPtr)	    (PicturePtr	    pPicture,
+					     INT16	    xOff,
+					     INT16	    yOff,
+					     int	    ntri,
+					     xTriangle	    *tris);
+
 typedef struct _PictureScreen {
     int				totalPictureSize;
     unsigned int		*PicturePrivateSizes;
@@ -273,6 +285,11 @@ typedef struct _PictureScreen {
     TriFanProcPtr		TriFan;
 
     RasterizeTrapezoidProcPtr	RasterizeTrapezoid;
+
+    AddTrianglesProcPtr		AddTriangles;
+
+    AddTrapsProcPtr		AddTraps;
+
 } PictureScreenRec, *PictureScreenPtr;
 
 extern int		PictureScreenPrivateIndex;
@@ -302,6 +319,15 @@ extern RESTYPE		GlyphSetType;
 	VERIFY_PICTURE(pPicture, pid, client, mode, err); \
     } \
 } \
+
+void
+ResetPicturePrivateIndex (void);
+
+int
+AllocatePicturePrivateIndex (void);
+
+Bool
+AllocatePicturePrivate (ScreenPtr pScreen, int index2, unsigned int amount);
 
 Bool
 PictureDestroyWindow (WindowPtr pWindow);
@@ -340,7 +366,9 @@ char *
 PictureGetFilterName (int id);
 
 int
-PictureAddFilter (ScreenPtr pScreen, char *filter, xFixed *params, int nparams);
+PictureAddFilter (ScreenPtr			    pScreen,
+		  char				    *filter,
+		  PictFilterValidateParamsProcPtr   ValidateParams);
 
 Bool
 PictureSetFilterAlias (ScreenPtr pScreen, char *filter, char *alias);
@@ -396,9 +424,20 @@ SetPictureClipRects (PicturePtr	pPicture,
 		     xRectangle	*rects);
 
 int
+SetPictureClipRegion (PicturePtr    pPicture,
+		      int	    xOrigin,
+		      int	    yOrigin,
+		      RegionPtr	    pRegion);
+
+int
 SetPictureTransform (PicturePtr	    pPicture,
 		     PictTransform  *transform);
-		     
+
+void
+CopyPicture (PicturePtr	pSrc,
+	     Mask	mask,
+	     PicturePtr	pDst);
+
 void
 ValidatePicture(PicturePtr pPicture);
 
@@ -493,6 +532,13 @@ AnimCurInit (ScreenPtr pScreen);
 
 int
 AnimCursorCreate (CursorPtr *cursors, CARD32 *deltas, int ncursor, CursorPtr *ppCursor);
+
+void
+AddTraps (PicturePtr	pPicture, 
+	  INT16		xOff,
+	  INT16		yOff,
+	  int		ntraps,
+	  xTrap		*traps);
 
 #ifdef PANORAMIX
 void PanoramiXRenderInit (void);

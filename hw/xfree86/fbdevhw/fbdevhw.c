@@ -14,13 +14,20 @@
 #include "fbdevhw.h"
 #include "fbpriv.h"
 
-#include "asm/page.h"	/* #define for PAGE_* */
+#if 0
+/* kernel header doesn't work with -ansi */
+# include "asm/page.h"	/* #define for PAGE_* */
+#else
+# define PAGE_MASK               (~(getpagesize() - 1))
+#endif
 
 #include "globals.h"
 #define DPMS_SERVER
 #include "extensions/dpms.h"
 
 #define DEBUG 0
+
+#define PAGE_MASK               (~(getpagesize() - 1))
 
 #if DEBUG
 # define TRACE_ENTER(str)	ErrorF("fbdevHW: " str " %d\n",pScrn->scrnIndex)
@@ -40,7 +47,7 @@ static XF86ModuleVersionInfo fbdevHWVersRec =
 	MODULEVENDORSTRING,
 	MODINFOSTRING1,
 	MODINFOSTRING2,
-	XF86_VERSION_CURRENT,
+	XORG_VERSION_CURRENT,
 	0, 0, 2,
 	ABI_CLASS_VIDEODRV,
 	ABI_VIDEODRV_VERSION,
@@ -724,7 +731,7 @@ fbdevHWLoadPalette(ScrnInfoPtr pScrn, int numColors, int *indices,
 	unsigned short red,green,blue;
 	int i;
 
-	TRACE_ENTER("ModeInit");
+	TRACE_ENTER("LoadPalette");
 	cmap.len   = 1;
 	cmap.red   = &red;
 	cmap.green = &green;
@@ -789,7 +796,6 @@ fbdevHWAdjustFrame(int scrnIndex, int x, int y, int flags)
 	fbdevHWPtr fPtr = FBDEVHWPTR(pScrn);
 
 	TRACE_ENTER("AdjustFrame");
-
 	if ( x < 0 || x + fPtr->var.xres > fPtr->var.xres_virtual || 
 	     y < 0 || y + fPtr->var.yres > fPtr->var.yres_virtual )
 		return;
@@ -828,6 +834,7 @@ fbdevHWDPMSSet(ScrnInfoPtr pScrn, int mode, int flags)
 	fbdevHWPtr fPtr = FBDEVHWPTR(pScrn);
 	unsigned long fbmode;
 
+	TRACE_ENTER("DPMSSet");
 	if (!pScrn->vtSema)
 		return;
 
@@ -860,6 +867,7 @@ fbdevHWSaveScreen(ScreenPtr pScreen, int mode)
 	fbdevHWPtr fPtr = FBDEVHWPTR(pScrn);
 	unsigned long unblank;
 
+	TRACE_ENTER("HWSaveScreen");
 	if (!pScrn->vtSema)
 		return TRUE;
 
@@ -873,3 +881,27 @@ fbdevHWSaveScreen(ScreenPtr pScreen, int mode)
 
 	return TRUE;
 }
+
+xf86SwitchModeProc *
+fbdevHWSwitchModeWeak(void) { return fbdevHWSwitchMode; }
+
+xf86AdjustFrameProc *
+fbdevHWAdjustFrameWeak(void) { return fbdevHWAdjustFrame; }
+
+xf86EnterVTProc *
+fbdevHWEnterVTWeak(void) { return fbdevHWEnterVT; }
+
+xf86LeaveVTProc *
+fbdevHWLeaveVTWeak(void) { return fbdevHWLeaveVT; }
+
+xf86ValidModeProc *
+fbdevHWValidModeWeak(void) { return fbdevHWValidMode; }
+
+xf86DPMSSetProc *
+fbdevHWDPMSSetWeak(void) { return fbdevHWDPMSSet; }
+
+xf86LoadPaletteProc *
+fbdevHWLoadPaletteWeak(void) { return fbdevHWLoadPalette; }
+
+SaveScreenProcPtr
+fbdevHWSaveScreenWeak(void) { return fbdevHWSaveScreen; }

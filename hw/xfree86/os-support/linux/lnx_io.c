@@ -1,5 +1,4 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/linux/lnx_io.c,v 3.25 2003/08/19 17:32:34 tsi Exp $ */
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/os-support/linux/lnx_io.c,v 1.1.4.2.6.2 2004/03/04 17:48:09 eich Exp $ */
 /*
  * Copyright 1992 by Orest Zborowski <obz@Kodak.com>
  * Copyright 1993 by David Dawes <dawes@xfree86.org>

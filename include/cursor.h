@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/include/cursor.h,v 1.1.4.4.4.3 2004/03/04 20:17:01 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/include/cursor.h,v 1.2 2004/04/23 19:54:23 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/include/cursor.h,v 1.6 2002/09/17 01:15:14 dawes Exp $ */
 /***********************************************************
 

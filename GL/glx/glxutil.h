@@ -55,7 +55,6 @@ extern void __glXGetDrawableSize(__GLdrawablePrivate *glPriv,
 				 GLuint *width, GLuint *height);
 extern GLboolean __glXResizeDrawable(__GLdrawablePrivate *glPriv);
 extern GLboolean __glXResizeDrawableBuffers(__GLXdrawablePrivate *glxPriv);
-extern void __glXFormatGLModes(__GLcontextModes *modes, __GLXvisualConfig *config);
 
 /* drawable management */
 extern void __glXRefDrawablePrivate(__GLXdrawablePrivate *glxPriv);
@@ -73,6 +72,9 @@ extern void __glXCacheDrawableSize(__GLXdrawablePrivate *glxPriv);
 /* context helper routines */
 extern __GLXcontext *__glXLookupContextByTag(__GLXclientState*, GLXContextTag);
 
+/* init helper routines */
+extern void *__glXglDDXScreenInfo(void);
+extern void *__glXglDDXExtensionInfo(void);
 
 #endif /* _glxcmds_h_ */
 

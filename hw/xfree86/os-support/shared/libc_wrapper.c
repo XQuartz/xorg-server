@@ -1884,7 +1884,8 @@ int
 xf86shmget(xf86key_t key, int size, int xf86shmflg)
 {
     int shmflg;
-
+    int ret;
+    
     /* This copies the permissions (SHM_R, SHM_W for u, g, o). */
     shmflg = xf86shmflg & 0777;
 
@@ -1893,14 +1894,20 @@ xf86shmget(xf86key_t key, int size, int xf86shmflg)
     if (xf86shmflg & XF86IPC_CREAT) shmflg |= IPC_CREAT;
     if (xf86shmflg & XF86IPC_EXCL) shmflg |= IPC_EXCL;
     if (xf86shmflg & XF86IPC_NOWAIT) shmflg |= IPC_NOWAIT;
-    return shmget((key_t) key, size, shmflg);
+    ret = shmget((key_t) key, size, shmflg);
+
+    if (ret == -1)
+	xf86errno = xf86GetErrno();
+
+    return ret;
 }
 
 char *
 xf86shmat(int id, char *addr, int xf86shmflg)
 {
     int shmflg = 0;
-
+    pointer ret;
+    
 #ifdef SHM_RDONLY
     if (xf86shmflg & XF86SHM_RDONLY) shmflg |= SHM_RDONLY;
 #endif
@@ -1911,13 +1918,25 @@ xf86shmat(int id, char *addr, int xf86shmflg)
     if (xf86shmflg & XF86SHM_REMAP)  shmflg |= SHM_REMAP;
 #endif
 
-    return shmat(id,addr,shmflg);
+    ret = shmat(id,addr,shmflg);
+
+    if (ret == (pointer) -1)
+	xf86errno = xf86GetErrno();
+
+    return ret;
 }
 
 int
 xf86shmdt(char *addr)
 {
-    return shmdt(addr);
+    int ret;
+
+    ret = shmdt(addr);
+
+    if (ret == -1) 
+	xf86errno = xf86GetErrno();
+
+    return ret;
 }
 
 /*
@@ -1927,7 +1946,8 @@ int
 xf86shmctl(int id, int xf86cmd, pointer buf)
 {
     int cmd;
-
+    int ret;
+    
     switch (xf86cmd) {
     case XF86IPC_RMID:
 	cmd = IPC_RMID;
@@ -1936,32 +1956,44 @@ xf86shmctl(int id, int xf86cmd, pointer buf)
 	return 0;
     }
     
-    return shmctl(id, cmd, buf);
+    ret = shmctl(id, cmd, buf);
+
+    if (ret == -1)
+	xf86errno = xf86GetErrno();
+
+    return ret;
 }
 #else
 
 int
 xf86shmget(xf86key_t key, int size, int xf86shmflg)
 {
-    return -1;
+    xf86errno = ENOSYS;
     
+    return -1;
 }
 
 char *
 xf86shmat(int id, char *addr, int xf86shmflg)
 {
+    xf86errno = ENOSYS;
+
     return (char *)-1;
 }
 
 int
 xf86shmctl(int id, int xf86cmd, pointer buf)
 {
+    xf86errno = ENOSYS;
+
     return -1;
 }
 
 int
 xf86shmdt(char *addr)
 {
+    xf86errno = ENOSYS;
+
     return -1;
 }
 #endif /* HAVE_SYSV_IPC */

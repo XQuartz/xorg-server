@@ -1,5 +1,5 @@
 /* $Xorg: Keyboard.c,v 1.3 2000/08/17 19:53:28 cpqbld Exp $ */
-/* $XdotOrg$ */
+/* $XdotOrg: xc/programs/Xserver/hw/xnest/Keyboard.c,v 1.2 2004/04/23 19:54:21 eich Exp $ */
 /*
 
 Copyright 1993 by Davor Matic
@@ -14,6 +14,7 @@ is" without express or implied warranty.
 
 */
 /* $XFree86: xc/programs/Xserver/hw/xnest/Keyboard.c,v 1.9 2003/09/13 21:33:09 dawes Exp $ */
+
 #define NEED_EVENTS
 #include "X.h"
 #include "Xproto.h"

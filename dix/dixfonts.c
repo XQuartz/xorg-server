@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/dix/dixfonts.c,v 1.1.4.4.2.4 2004/03/08 00:36:56 alanc Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/dixfonts.c,v 1.2 2004/04/23 19:04:44 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/dix/dixfonts.c,v 3.28 2003/11/08 02:02:03 dawes Exp $ */
 /************************************************************************
 Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -23,8 +23,7 @@ SOFTWARE.
 
 ************************************************************************/
 /* The panoramix components contained the following notice */
-/*****************************************************************
-
+/*
 Copyright (c) 1991, 1997 Digital Equipment Corporation, Maynard, Massachusetts.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -50,7 +49,6 @@ dealings in this Software without prior written authorization from Digital
 Equipment Corporation.
 
 ******************************************************************/
-
 /* $Xorg: dixfonts.c,v 1.4 2000/08/17 19:48:18 cpqbld Exp $ */
 
 #define NEED_REPLIES

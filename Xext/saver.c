@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/Xext/saver.c,v 1.1.4.3.2.2 2004/03/04 17:47:20 eich Exp $ */
+/* $XdotOrg: xc/programs/Xserver/Xext/saver.c,v 1.2 2004/04/23 18:44:41 eich Exp $ */
 /*
  * $XConsortium: saver.c,v 1.12 94/04/17 20:59:36 dpw Exp $
  *

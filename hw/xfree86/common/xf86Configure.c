@@ -1,5 +1,4 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/common/xf86Configure.c,v 3.80 2003/10/08 14:58:27 dawes Exp $ */
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/common/xf86Configure.c,v 1.1.4.1.2.1 2004/03/17 20:30:26 ago Exp $ */
 /*
  * Copyright 2000-2002 by Alan Hourihane, Flint Mountain, North Wales.
  *
@@ -258,7 +257,11 @@ configureInputSection (void)
     parsePrologue (XF86ConfInputPtr, XF86ConfInputRec)
 
     ptr->inp_identifier = "Keyboard0";
+#ifdef USE_DEPRECATED_KEYBOARD_DRIVER
     ptr->inp_driver = "keyboard";
+#else
+    ptr->inp_driver = "kbd";
+#endif
     ptr->list.next = NULL;
 
     /* Crude mechanism to auto-detect mouse (os dependent) */
@@ -750,8 +753,8 @@ configureDDCMonitorSection (int screennum)
 		ptr->mon_vrefresh[ptr->mon_n_hsync].lo =
 		    ConfiguredMonitor->det_mon[i].section.ranges.min_v;
 		ptr->mon_vrefresh[ptr->mon_n_hsync].hi =
+		    ConfiguredMonitor->det_mon[i].section.ranges.max_v;
 		ptr->mon_n_hsync++;
-		ConfiguredMonitor->det_mon[i].section.ranges.max_v;
 	    default:
 		break;
 	}
@@ -1004,7 +1007,7 @@ DoConfigure()
     }
 
     ErrorF("\nYour %s file is %s\n\n", XF86CONFIGFILE ,filename);
-    ErrorF("To test the server, run 'X -xf86config %s'\n\n", filename);
+    ErrorF("To test the server, run 'X -config %s'\n\n", filename);
 
 bail:
     OsCleanup(TRUE);

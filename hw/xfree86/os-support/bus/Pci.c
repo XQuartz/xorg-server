@@ -1203,7 +1203,8 @@ handlePciBIOS(PCITAG Tag, int basereg,
 	if ((xf86ReadDomainMemory(Tag, hostbase, sizeof(tmp), tmp) !=
 	     sizeof(tmp)) ||
 	    (tmp[0] != 0x55) || (tmp[1] != 0xaa) || !tmp[2] ) {
-	  /* Restore the base register if it was changed. */
+	  /* Restore the base registers if they were changed. */
+	    pciWriteLong(Tag, PCI_MAP_ROM_REG, romsave);
 	    if (savebase) pciWriteLong(Tag, PCI_MAP_REG_START + (b_reg << 2),
 				       (CARD32) savebase);
 

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/os/xdmcp.c,v 1.1.4.3.2.4 2004/07/19 18:59:05 ago Exp $ */
+/* $XdotOrg: xc/programs/Xserver/os/xdmcp.c,v 1.3 2004/07/20 15:15:13 ago Exp $ */
 /* $Xorg: xdmcp.c,v 1.4 2001/01/31 13:37:19 pookie Exp $ */
 /*
  * Copyright 1989 Network Computing Devices, Inc., Mountain View, California.

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/dix/dispatch.c,v 1.1.4.4.2.3 2004/03/08 00:36:56 alanc Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/dispatch.c,v 1.5 2004/07/31 01:48:27 anholt Exp $ */
 /* $Xorg: dispatch.c,v 1.5 2001/02/09 02:04:40 xorgcvs Exp $ */
 /************************************************************
 
@@ -132,6 +132,7 @@ extern char *ConnectionInfo;
 
 Selection *CurrentSelections;
 int NumCurrentSelections;
+CallbackListPtr SelectionCallback = NULL;
 
 static ClientPtr grabClient;
 #define GrabNone 0
@@ -253,7 +254,7 @@ FlushClientCaches(id)
 #define SMART_SCHEDULE_DEFAULT_INTERVAL	20	    /* ms */
 #define SMART_SCHEDULE_MAX_SLICE	200	    /* ms */
 
-Bool	    SmartScheduleDisable;
+Bool	    SmartScheduleDisable = FALSE;
 long	    SmartScheduleSlice = SMART_SCHEDULE_DEFAULT_INTERVAL;
 long	    SmartScheduleInterval = SMART_SCHEDULE_DEFAULT_INTERVAL;
 long	    SmartScheduleMaxSlice = SMART_SCHEDULE_MAX_SLICE;
@@ -463,6 +464,9 @@ Dispatch(void)
 					  client->errorValue, result);
 		    break;
 	        }
+#ifdef DAMAGEEXT
+		FlushIfCriticalOutputPending ();
+#endif
 	    }
 	    FlushAllOutput();
 #ifdef SMART_SCHEDULE
@@ -631,7 +635,7 @@ ProcChangeSaveSet(client)
         return BadMatch;
     if ((stuff->mode == SetModeInsert) || (stuff->mode == SetModeDelete))
     {
-        result = AlterSaveSetForClient(client, pWin, stuff->mode);
+        result = AlterSaveSetForClient(client, pWin, stuff->mode, FALSE, TRUE);
 	if (client->noClientException != Success)
 	    return(client->noClientException);
 	else
@@ -1044,6 +1048,14 @@ ProcSetSelectionOwner(client)
 	CurrentSelections[i].window = stuff->window;
 	CurrentSelections[i].pWin = pWin;
 	CurrentSelections[i].client = (pWin ? client : NullClient);
+	if (SelectionCallback)
+	{
+	    SelectionInfoRec	info;
+
+	    info.selection = &CurrentSelections[i];
+	    info.kind= SelectionSetOwner;
+	    CallCallbacks(&SelectionCallback, &info);
+	}
 	return (client->noClientException);
     }
     else 
@@ -2117,7 +2129,9 @@ DoGetImage(client, format, drawable, x, y, width, height, planemask, im_return)
     Mask		plane = 0;
     char		*pBuf;
     xGetImageReply	xgi;
+#ifdef XCSECURITY
     RegionPtr pVisibleRegion = NULL;
+#endif
 
     if ((format != XYPixmap) && (format != ZPixmap))
     {
@@ -3724,7 +3738,7 @@ void InitClient(client, i, ospriv)
     client->lastGC = (GCPtr) NULL;
     client->lastGCID = INVALID;
     client->numSaved = 0;
-    client->saveSet = (pointer *)NULL;
+    client->saveSet = (SaveSetElt *)NULL;
     client->noClientException = Success;
 #ifdef DEBUG
     client->requestLogIndex = 0;
@@ -4057,6 +4071,14 @@ DeleteWindowFromAnySelections(pWin)
     for (i = 0; i< NumCurrentSelections; i++)
         if (CurrentSelections[i].pWin == pWin)
         {
+	    if (SelectionCallback)
+	    {
+	        SelectionInfoRec    info;
+
+		info.selection = &CurrentSelections[i];
+		info.kind = SelectionWindowDestroy;
+		CallCallbacks(&SelectionCallback, &info);
+	    }
             CurrentSelections[i].pWin = (WindowPtr)NULL;
             CurrentSelections[i].window = None;
 	    CurrentSelections[i].client = NullClient;
@@ -4072,6 +4094,14 @@ DeleteClientFromAnySelections(client)
     for (i = 0; i< NumCurrentSelections; i++)
         if (CurrentSelections[i].client == client)
         {
+	    if (SelectionCallback)
+	    {
+	        SelectionInfoRec    info;
+
+		info.selection = &CurrentSelections[i];
+		info.kind = SelectionWindowDestroy;
+		CallCallbacks(&SelectionCallback, &info);
+	    }
             CurrentSelections[i].pWin = (WindowPtr)NULL;
             CurrentSelections[i].window = None;
 	    CurrentSelections[i].client = NullClient;

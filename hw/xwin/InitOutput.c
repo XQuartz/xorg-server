@@ -375,7 +375,7 @@ OsVendorInit (void)
   }  
   LogSetParameter (XLOG_FLUSH, 1);
   LogSetParameter (XLOG_VERBOSITY, g_iLogVerbose);
-  LogSetParameter (XLOG_FILE_VERBOSITY, g_iLogVerbose);
+  LogSetParameter (XLOG_FILE_VERBOSITY, 1);
 
   /* Log the version information */
   if (serverGeneration == 1)
@@ -578,6 +578,10 @@ ddxUseMsg(void)
 		  MB_ICONINFORMATION);
 }
 
+/* ddxInitGlobals - called by |InitGlobals| from os/util.c */
+void ddxInitGlobals(void)
+{
+}
 
 #ifdef DDXTIME /* from ServerOSDefines */
 CARD32

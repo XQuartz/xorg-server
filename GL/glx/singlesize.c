@@ -81,7 +81,7 @@ GLint __glGetTexEnvfv_size(GLenum pname)
       case GL_ALPHA_SCALE:
 	
       /* GL_ARB_point_sprite / GL_NV_point_sprite */
-      case GL_COORD_REPLACE_NV:
+      case GL_COORD_REPLACE_ARB:
 
       /* GL_NV_texture_env_combine4 */
       case GL_SOURCE3_RGB_NV:
@@ -179,6 +179,9 @@ GLint __glGetTexParameterfv_size(GLenum pname)
 
       /* GL_EXT_texture_filter_anisotropic */
       case GL_TEXTURE_MAX_ANISOTROPY_EXT:
+
+      /* GL_NV_texture_expand_normal */
+      case GL_TEXTURE_UNSIGNED_REMAP_MODE_NV:
 	return 1;
 
       default:
@@ -898,11 +901,11 @@ GLint __glGet_size(GLenum sq)
       case GL_BLEND_SRC_ALPHA:
 
       /* GL_EXT_fog_coord / GL 1.4 */
-      case GL_CURRENT_FOG_COORDINATE:
-      case GL_FOG_COORDINATE_ARRAY_TYPE:
-      case GL_FOG_COORDINATE_ARRAY_STRIDE:
-      case GL_FOG_COORDINATE_ARRAY:
-      case GL_FOG_COORDINATE_SOURCE:
+      case GL_CURRENT_FOG_COORD:
+      case GL_FOG_COORD_ARRAY_TYPE:
+      case GL_FOG_COORD_ARRAY_STRIDE:
+      case GL_FOG_COORD_ARRAY:
+      case GL_FOG_COORD_SRC:
 
       /* GL_EXT_secondary_color / GL 1.4 */
       case GL_COLOR_SUM:
@@ -915,7 +918,7 @@ GLint __glGet_size(GLenum sq)
       case GL_MAX_TEXTURE_LOD_BIAS:
 
       /* GL_ARB_point_sprite */
-      case GL_POINT_SPRITE_NV:
+      case GL_POINT_SPRITE_ARB:
 
       /* GL_ARB_vertex_blend */
       case GL_MAX_VERTEX_UNITS_ARB:
@@ -942,6 +945,9 @@ GLint __glGet_size(GLenum sq)
       /* GL_EXT_clip_volume_hint */
       case GL_CLIP_VOLUME_CLIPPING_HINT_EXT:
 
+      /* GL_EXT_depth_bounds_test */
+      case GL_DEPTH_BOUNDS_TEST_EXT:
+
       /* GL_EXT_stencil_two_size */
       case GL_STENCIL_TEST_TWO_SIDE_EXT:
       case GL_ACTIVE_STENCIL_FACE_EXT:
@@ -958,8 +964,37 @@ GLint __glGet_size(GLenum sq)
       /* case GL_MODELVIEW0_STACK_DEPTH_EXT: */ /* alias */
       case GL_MODELVIEW1_STACK_DEPTH_EXT:
 
+      /* GL_EXT_blend_equation_separate */
+      /* case GL_BLEND_EQUATION_RGB_EXT: */ /* alias */
+      case GL_BLEND_EQUATION_ALPHA_EXT:
+
       /* GL_ATI_vertex_streams */
       case GL_MAX_VERTEX_STREAMS_ATI:
+
+      /* GL_ATI_draw_buffers */
+      case GL_MAX_DRAW_BUFFERS_ATI:
+      case GL_DRAW_BUFFER0_ATI:
+      case GL_DRAW_BUFFER1_ATI:
+      case GL_DRAW_BUFFER2_ATI:
+      case GL_DRAW_BUFFER3_ATI:
+      case GL_DRAW_BUFFER4_ATI:
+      case GL_DRAW_BUFFER5_ATI:
+      case GL_DRAW_BUFFER6_ATI:
+      case GL_DRAW_BUFFER7_ATI:
+      case GL_DRAW_BUFFER8_ATI:
+      case GL_DRAW_BUFFER9_ATI:
+      case GL_DRAW_BUFFER10_ATI:
+      case GL_DRAW_BUFFER11_ATI:
+      case GL_DRAW_BUFFER12_ATI:
+      case GL_DRAW_BUFFER13_ATI:
+      case GL_DRAW_BUFFER14_ATI:
+      case GL_DRAW_BUFFER15_ATI:
+
+      /* GL_ATI_separate_stencil */
+      case GL_STENCIL_BACK_FUNC_ATI:
+      case GL_STENCIL_BACK_FAIL_ATI:
+      case GL_STENCIL_BACK_PASS_DEPTH_FAIL_ATI:
+      case GL_STENCIL_BACK_PASS_DEPTH_PASS_ATI:
 
       /* GL_NV_depth_clamp */
       case GL_DEPTH_CLAMP_NV:
@@ -978,6 +1013,10 @@ GLint __glGet_size(GLenum sq)
       /* case GL_POINT_SPRITE_NV: */ /* alias */
       case GL_POINT_SPRITE_R_MODE_NV:
 
+      /* GL_NV_primitive_restart */
+      case GL_PRIMITIVE_RESTART_NV:
+      case GL_PRIMITIVE_RESTART_INDEX_NV:
+
       /* GL_NV_register_combiners */
       case GL_REGISTER_COMBINERS_NV:
       case GL_NUM_GENERAL_COMBINERS_NV:
@@ -992,6 +1031,10 @@ GLint __glGet_size(GLenum sq)
       case GL_TEXTURE_BINDING_RECTANGLE_NV:
       case GL_MAX_RECTANGLE_TEXTURE_SIZE_NV:
 	return 1;
+
+      /* GL_EXT_depth_bounds_test */
+      case GL_DEPTH_BOUNDS_EXT:
+	return 2;
 
       /* GL_EXT_secondary_color / GL 1.4 */
       case GL_CURRENT_SECONDARY_COLOR:

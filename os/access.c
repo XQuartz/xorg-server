@@ -1,5 +1,5 @@
 /* $Xorg: access.c,v 1.5 2001/02/09 02:05:23 xorgcvs Exp $ */
-/* $XdotOrg$ */
+/* $XdotOrg: xc/programs/Xserver/os/access.c,v 1.5 2004/07/17 01:13:31 alanc Exp $ */
 /***********************************************************
 
 Copyright 1987, 1998  The Open Group
@@ -88,6 +88,12 @@ SOFTWARE.
 #include <netdnet/dnetdb.h>
 #endif
 
+#ifdef HAS_GETPEERUCRED
+# include <ucred.h>
+# ifdef sun
+#  include <zone.h>
+# endif
+#endif
 
 #if defined(DGUX)
 #include <sys/ioctl.h>
@@ -224,6 +230,10 @@ static Bool NewHost(int /*family*/,
 		    int /*len*/,
 		    int /* addingLocalHosts */);
 
+int LocalClientCredAndGroups(ClientPtr client, int *pUid, int *pGid, 
+                             int **pSuppGids, int *nSuppGids);
+
+
 /* XFree86 bug #156: To keep track of which hosts were explicitly requested in
    /etc/X<display>.hosts, we've added a requested field to the HOST struct,
    and a LocalHostRequested variable.  These default to FALSE, but are set
@@ -302,7 +312,7 @@ AccessUsingXdmcp (void)
 }
 
 
-#if ((defined(SVR4) && !defined(DGUX) && !defined(SCO325) && !defined(sun) && !defined(NCR)) || defined(ISC)) && defined(SIOCGIFCONF) && !defined(USE_SIOCGLIFCONF)
+#if ((defined(SVR4) && !defined(DGUX) && !defined(SCO325) && !defined(sun) && !defined(NCR)) || defined(ISC)) && !defined(__sgi) && defined(SIOCGIFCONF) && !defined(USE_SIOCGLIFCONF)
 
 /* Deal with different SIOCGIFCONF ioctl semantics on these OSs */
 
@@ -1393,19 +1403,38 @@ Bool LocalClient(ClientPtr client)
 
 /*
  * Return the uid and gid of a connected local client
- * or the uid/gid for nobody those ids cannot be determinded
+ * or the uid/gid for nobody those ids cannot be determined
  * 
  * Used by XShm to test access rights to shared memory segments
  */
 int
 LocalClientCred(ClientPtr client, int *pUid, int *pGid)
 {
-#if defined(HAS_GETPEEREID) || defined(SO_PEERCRED)
+    return LocalClientCredAndGroups(client, pUid, pGid, NULL, NULL);
+}
+
+/*
+ * Return the uid and all gids of a connected local client
+ * or the uid/gid for nobody those ids cannot be determined
+ * 
+ * If the caller passes non-NULL values for pSuppGids & nSuppGids,
+ * they are responsible for calling XFree(*pSuppGids) to release the
+ * memory allocated for the supplemental group ids list.
+ *
+ * Used by localuser & localgroup ServerInterpreted access control forms below
+ */
+int
+LocalClientCredAndGroups(ClientPtr client, int *pUid, int *pGid, 
+			 int **pSuppGids, int *nSuppGids)
+{
+#if defined(HAS_GETPEEREID) || defined(HAS_GETPEERUCRED) || defined(SO_PEERCRED)
     int fd;
     XtransConnInfo ci;
 #ifdef HAS_GETPEEREID
     uid_t uid;
     gid_t gid;
+#elif defined(HAS_GETPEERUCRED)
+    ucred_t *peercred = NULL;
 #elif defined(SO_PEERCRED)
     struct ucred peercred;
     socklen_t so_len = sizeof(peercred);
@@ -1414,10 +1443,21 @@ LocalClientCred(ClientPtr client, int *pUid, int *pGid)
     if (client == NULL)
 	return -1;
     ci = ((OsCommPtr)client->osPrivate)->trans_conn;
-    /* We can only determine peer credentials for Unix domain sockets */
+#if !(defined(sun) && defined(HAS_GETPEERUCRED))
+    /* Most implementations can only determine peer credentials for Unix 
+     * domain sockets - Solaris getpeerucred can work with a bit more, so 
+     * we just let it tell us if the connection type is supported or not
+     */
     if (!_XSERVTransIsLocal(ci)) {
 	return -1;
     }
+#endif
+
+    if (pSuppGids != NULL)
+	*pSuppGids = NULL;
+    if (nSuppGids != NULL)
+	*nSuppGids = 0;
+
     fd = _XSERVTransGetConnectionNumber(ci);
 #ifdef HAS_GETPEEREID
     if (getpeereid(fd, &uid, &gid) == -1) 
@@ -1426,6 +1466,36 @@ LocalClientCred(ClientPtr client, int *pUid, int *pGid)
 	    *pUid = uid;
     if (pGid != NULL)
 	    *pGid = gid;
+    return 0;
+#elif defined(HAS_GETPEERUCRED)
+    if (getpeerucred(fd, &peercred) < 0)
+    	return -1;
+#ifdef sun /* Ensure process is in the same zone */
+    if (getzoneid() != ucred_getzoneid(peercred)) {
+	ucred_free(peercred);
+	return -1;
+    }
+#endif
+    if (pUid != NULL)
+	*pUid = ucred_geteuid(peercred);
+    if (pGid != NULL)
+	*pGid = ucred_getegid(peercred);
+    if (pSuppGids != NULL && nSuppGids != NULL) {
+	const gid_t *gids;
+	*nSuppGids = ucred_getgroups(peercred, &gids);
+	if (*nSuppGids > 0) {
+	    *pSuppGids = xalloc(sizeof(int) * (*nSuppGids));
+	    if (*pSuppGids == NULL) {
+		*nSuppGids = 0;
+	    } else {
+		int i;
+		for (i = 0 ; i < *nSuppGids; i++) {
+		    (*pSuppGids)[i] = (int) gids[i];
+		}
+	    }
+	}
+    }
+    ucred_free(peercred);
     return 0;
 #elif defined(SO_PEERCRED)
     if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &peercred, &so_len) == -1) 
@@ -1438,6 +1508,7 @@ LocalClientCred(ClientPtr client, int *pUid, int *pGid)
 #endif
 #else
     /* No system call available to get the credentials of the peer */
+#define NO_LOCAL_CLIENT_CRED
     return -1;
 #endif
 }
@@ -1743,7 +1814,6 @@ InvalidHost (
 			return 0;
 		}
 	    }
-	    return 1;
 	} else
 	    return 0;
     }
@@ -2206,11 +2276,132 @@ siIPv6CheckAddr(const char *addrString, int length, void *typePriv)
 }
 #endif /* IPv6 */
 
+#if !defined(NO_LOCAL_CLIENT_CRED)
+/***
+ * "localuser" & "localgroup" server interpreted types
+ *
+ * Allows local connections from a given local user or group
+ */
+
+#include <pwd.h>
+#include <grp.h>
+
+#define LOCAL_USER 1
+#define LOCAL_GROUP 2
+
+typedef struct {
+    int credType;
+} siLocalCredPrivRec, *siLocalCredPrivPtr;
+
+static siLocalCredPrivRec siLocalUserPriv = { LOCAL_USER };
+static siLocalCredPrivRec siLocalGroupPriv = { LOCAL_GROUP };
+
+static Bool
+siLocalCredGetId(const char *addr, int len, siLocalCredPrivPtr lcPriv, int *id)
+{
+    Bool parsedOK = FALSE;
+    char *addrbuf = xalloc(len + 1);
+
+    if (addrbuf == NULL) {
+	return FALSE;
+    }
+
+    memcpy(addrbuf, addr, len);
+    addrbuf[len] = '\0';
+
+    if (addr[0] == '#') { /* numeric id */
+	char *cp;
+	errno = 0;
+	*id = strtol(addrbuf + 1, &cp, 0);
+	if ((errno == 0) && (cp != (addrbuf+1))) {
+	    parsedOK = TRUE;
+	}
+    } else { /* non-numeric name */
+	if (lcPriv->credType == LOCAL_USER) {
+	    struct passwd *pw = getpwnam(addrbuf);
+
+	    if (pw != NULL) {
+		*id = (int) pw->pw_uid;
+		parsedOK = TRUE;
+	    }
+	} else { /* group */
+	    struct group *gr = getgrnam(addrbuf);
+
+	    if (gr != NULL) {
+		*id = (int) gr->gr_gid;
+		parsedOK = TRUE;
+	    }
+	}
+    }
+
+    xfree(addrbuf);
+    return parsedOK;
+}
+
+static Bool 
+siLocalCredAddrMatch(int family, pointer addr, int len,
+  const char *siAddr, int siAddrlen, ClientPtr client, void *typePriv)
+{
+    int connUid, connGid, *connSuppGids, connNumSuppGids, siAddrId;
+    siLocalCredPrivPtr lcPriv = (siLocalCredPrivPtr) typePriv;
+
+    if (LocalClientCredAndGroups(client, &connUid, &connGid,
+      &connSuppGids, &connNumSuppGids) == -1) {
+	return FALSE;
+    }
+
+    if (siLocalCredGetId(siAddr, siAddrlen, lcPriv, &siAddrId) == FALSE) {
+	return FALSE;
+    }
+
+    if (lcPriv->credType == LOCAL_USER) {
+	if (connUid == siAddrId) {
+	    return TRUE;
+	}
+    } else {
+	if (connGid == siAddrId) {
+	    return TRUE;
+	}
+	if (connSuppGids != NULL) {
+	    int i;
+
+	    for (i = 0 ; i < connNumSuppGids; i++) {
+		if (connSuppGids[i] == siAddrId) {
+		    xfree(connSuppGids);
+		    return TRUE;
+		}
+	    }
+	    xfree(connSuppGids);
+	}
+    }
+    return FALSE;
+}
+
+static int
+siLocalCredCheckAddr(const char *addrString, int length, void *typePriv)
+{
+    int len = length;
+    int id;
+
+    if (siLocalCredGetId(addrString, length, 
+	(siLocalCredPrivPtr)typePriv, &id) == FALSE) {
+	len = -1;
+    }
+    return len;
+}
+#endif /* localuser */
+
 static void
 siTypesInitialize(void)
 {
     siTypeAdd("hostname", siHostnameAddrMatch, siHostnameCheckAddr, NULL);
 #if defined(IPv6) && defined(AF_INET6)
     siTypeAdd("ipv6", siIPv6AddrMatch, siIPv6CheckAddr, NULL);
+#endif
+#if !defined(NO_LOCAL_CLIENT_CRED)
+    siTypeAdd("localuser", siLocalCredAddrMatch, siLocalCredCheckAddr, 
+      &siLocalUserPriv);
+    siTypeAdd("localgroup", siLocalCredAddrMatch, siLocalCredCheckAddr, 
+      &siLocalGroupPriv);
 #endif
 }

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/Xext/xvmain.c,v 1.1.4.3.2.2 2004/03/04 17:47:20 eich Exp $ */
+/* $XdotOrg: xc/programs/Xserver/Xext/xvmain.c,v 1.2 2004/04/23 18:44:42 eich Exp $ */
 /***********************************************************
 Copyright 1991 by Digital Equipment Corporation, Maynard, Massachusetts,
 and the Massachusetts Institute of Technology, Cambridge, Massachusetts.

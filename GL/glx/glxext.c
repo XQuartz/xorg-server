@@ -30,12 +30,11 @@
 #include "micmap.h"
 
 
-extern __GLXextensionInfo __glDDXExtensionInfo;
 void GlxWrapInitVisuals(miInitVisualsProcPtr *);
 void GlxSetVisualConfigs(int nconfigs, 
                          __GLXvisualConfig *configs, void **privates);
 
-__GLXextensionInfo *__glXExt = &__glDDXExtensionInfo;
+static __GLXextensionInfo *__glXExt /* = &__glDDXExtensionInfo */;
 
 /*
 ** Forward declarations.
@@ -314,6 +313,8 @@ GlxWrapInitVisuals(miInitVisualsProcPtr *initVisProc)
 {
     saveInitVisualsProc = *initVisProc;
     *initVisProc = GlxInitVisuals;
+    /* HACK: this shouldn't be done here but it's the earliest time */
+    __glXExt = __glXglDDXExtensionInfo();       /* from GLcore */
 }
 
 /************************************************************************/

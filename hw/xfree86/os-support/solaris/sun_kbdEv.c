@@ -23,6 +23,7 @@
  */
 
 /* [JCH-96/01/21] Extended std reverse map to four buttons. */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/os-support/sunos/sun_kbdEv.c,v 1.3 2004/07/28 03:57:19 alanc Exp $ */
 
 #include "xf86.h"
 #include "xf86Priv.h"
@@ -107,6 +108,11 @@ static OsTimerPtr sunTimer = NULL;
  * This doesn't seem right.  It probably needs to be dependent on a keyboard
  * type.
  */
+
+/* Additional Sun Japanese Keyboard Keys not defined in common/atKeynames.h */
+#define KEY_Kanji	0x82
+#define KEY_Execute	0x83
+
 static unsigned char map[256] = {
 #if defined(i386) || defined(__i386) || defined(__i386__)
 	KEY_NOTUSED,		/*   0 */
@@ -519,11 +525,11 @@ static unsigned char usbmap[256] = {
 	/* 132 */ KEY_NOTUSED,
 	/* 133 */ KEY_NOTUSED,
 	/* 134 */ KEY_NOTUSED,
-	/* 135 */ KEY_NOTUSED,
-	/* 136 */ KEY_NOTUSED,
-	/* 137 */ KEY_NOTUSED,
-	/* 138 */ KEY_NOTUSED,
-	/* 139 */ KEY_NOTUSED,
+	/* 135 */ KEY_BSlash2,	/* Sun Japanese Kbd: Backslash / Underscore */
+	/* 136 */ KEY_XFER,	/* Sun Japanese Kbd: Henkan Mode */
+	/* 137 */ KEY_Yen,	/* Sun Japanese Kbd: Yen / Brokenbar */
+	/* 138 */ KEY_Kanji,	/* Sun Japanese Kbd: Kanji */
+	/* 139 */ KEY_Execute,	/* Sun Japanese Kbd: Execute */
 	/* 140 */ KEY_NOTUSED,
 	/* 141 */ KEY_NOTUSED,
 	/* 142 */ KEY_NOTUSED,

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/GL/dri/drimodule.c,v 1.1.4.1.4.2 2004/03/04 17:47:18 eich Exp $ */
+/* $XdotOrg: xc/programs/Xserver/GL/dri/drimodule.c,v 1.2 2004/04/23 18:44:36 eich Exp $ */
 /**************************************************************************
 
 Copyright 1999 Precision Insight, Inc., Cedar Park, Texas.
@@ -44,7 +44,7 @@ static XF86ModuleVersionInfo VersRec =
         MODULEVENDORSTRING,
         MODINFOSTRING1,
         MODINFOSTRING2,
-        XF86_VERSION_CURRENT,
+        XORG_VERSION_CURRENT,
         1, 0, 0,
         ABI_CLASS_EXTENSION,
         ABI_EXTENSION_VERSION,

@@ -450,7 +450,7 @@ mapVidMem(int ScreenNum, unsigned long Base, unsigned long Size, int flags)
 
     /* This requires linux-0.99.pl10 or above */
     base = mmap((caddr_t)0, Size + alignOff, prot, mapflags, fd,
- 		(off_t)(off_t)realBase  + BUS_BASE);
+ 		(off_t)realBase  + BUS_BASE);
     close(fd);
     if (base == MAP_FAILED) {
         FatalError("xf86MapVidMem: Could not mmap framebuffer"

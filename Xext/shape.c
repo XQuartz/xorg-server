@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/Xext/shape.c,v 1.1.4.4.2.3 2004/03/04 20:16:01 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/Xext/shape.c,v 1.4 2004/07/29 23:43:39 kem Exp $ */
 /* $XFree86: xc/programs/Xserver/Xext/shape.c,v 3.18 2003/10/28 23:08:43 tsi Exp $ */
 /************************************************************
 
@@ -61,10 +61,6 @@ static int ShapeFreeEvents(
 	pointer /* data */,
 	XID /* id */
 	);
-static void SendShapeNotify(
-	WindowPtr /* pWin */,
-	int /* which */
-	);
 static void ShapeResetProc(
 	ExtensionEntry * /* extEntry */
 	);
@@ -85,12 +81,9 @@ RegionOperate (
 	CreateDftPtr /* create */
 	);
 
-#define CREATE_PROC(func) RegionPtr func(WindowPtr /* pWin */)
-
-static CREATE_PROC(CreateBoundingShape);
-static CREATE_PROC(CreateClipShape);
-
-#undef CREATE_PROC
+/* SendShapeNotify, CreateBoundingShape and CreateClipShape are used
+ * externally by the Xfixes extension and are now defined in window.h
+ */
 
 static DISPATCH_PROC(ProcShapeCombine);
 static DISPATCH_PROC(ProcShapeDispatch);
@@ -261,7 +254,7 @@ RegionOperate (client, pWin, kind, destRgnp, srcRgn, op, xoff, yoff, create)
     return Success;
 }
 
-static RegionPtr
+RegionPtr
 CreateBoundingShape (pWin)
     WindowPtr	pWin;
 {
@@ -274,7 +267,7 @@ CreateBoundingShape (pWin)
     return REGION_CREATE(pWin->drawable.pScreen, &extents, 1);
 }
 
-static RegionPtr
+RegionPtr
 CreateClipShape (pWin)
     WindowPtr	pWin;
 {
@@ -880,7 +873,7 @@ ProcShapeSelectInput (client)
  * deliver the event
  */
 
-static void
+void
 SendShapeNotify (pWin, which)
     WindowPtr	pWin;
     int		which;

@@ -2273,7 +2273,6 @@ void __glXDisp_WindowPos3fARB(GLbyte *pc)
 		*(GLfloat *)(pc + 8)
 	);
 }
-
 #endif /* !MISSING_GL_EXTS */
 
 void __glXDisp_SampleCoverageARB(GLbyte *pc)

@@ -57,7 +57,7 @@ in this Software without prior written authorization from The Open Group.
  * or other dealings in this Software without prior written authorization
  * from said copyright holders.
  */
-/* $XFree86: xc/programs/Xserver/Xprint/ps/PsPixmap.c,v 1.4 2001/01/17 22:36:32 dawes Exp $ */
+
 /*******************************************************************
 **
 **    *********************************************************
@@ -79,6 +79,10 @@ in this Software without prior written authorization from The Open Group.
 
 #include "Ps.h"
 
+#define _BitsPerPixel(d) (\
+  (1 << PixmapWidthPaddingInfo[d].padBytesLog2) * 8 / \
+  (PixmapWidthPaddingInfo[d].padRoundUp+1))
+
 PixmapPtr
 PsCreatePixmap(
   ScreenPtr pScreen,
@@ -94,7 +98,7 @@ PsCreatePixmap(
   pPixmap->drawable.class        = 0;
   pPixmap->drawable.pScreen      = pScreen;
   pPixmap->drawable.depth        = depth;
-  pPixmap->drawable.bitsPerPixel = BitsPerPixel(depth);
+  pPixmap->drawable.bitsPerPixel = _BitsPerPixel(depth);
   pPixmap->drawable.id           = 0;
   pPixmap->drawable.serialNumber = NEXT_SERIAL_NUMBER;
   pPixmap->drawable.x            = 0;
@@ -199,7 +203,7 @@ PsGetFreeDisplayBlock(PsPixmapPrivPtr priv)
   return(disp);
 }
 
-static void
+void
 PsReplay(DisplayElmPtr elm, DrawablePtr pDrawable)
 {
   switch(elm->type)
@@ -488,8 +492,6 @@ PsCreateFillElementList(PixmapPtr pix, int *nElms)
         case PolyFillArcCmd:
           *nElms += elm->c.arcs.nArcs;
           break;
-        default:
-          break;
       }
     }
   }
@@ -551,8 +553,6 @@ PsCreateFillElementList(PixmapPtr pix, int *nElms)
                 elms[*nElms].c.arc.style = styl;
                 *nElms += 1;
               }
-              break;
-            default:
               break;
           }
         }

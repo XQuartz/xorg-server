@@ -1,4 +1,3 @@
-/* $XdotOrg: xc/programs/Xserver/Xprint/attributes.c,v 1.1.4.3.4.1 2004/03/04 17:47:23 eich Exp $ */
 /* $Xorg: attributes.c,v 1.3 2000/08/17 19:48:07 cpqbld Exp $ */
 /*
 (c) Copyright 1996 Hewlett-Packard Company
@@ -45,18 +44,15 @@ copyright holders.
 **    *********************************************************
 ** 
 ********************************************************************/
-/* $XFree86: xc/programs/Xserver/Xprint/attributes.c,v 1.20 2003/10/29 22:11:54 tsi Exp $ */
 
-#include <X11/Xproto.h>
+#include <Xproto.h>
 #include <string.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <sys/wait.h>
 #include <pwd.h>
 #if (defined(sun) && defined(SVR4)) || (defined(SCO))
 #include <wchar.h>
 #endif
-
 #include "scrnintstr.h"
 
 #include <X11/extensions/Printstr.h>
@@ -67,11 +63,13 @@ copyright holders.
 #include "Xresource.h"
 #include "Xrm.c"
 
+#include "spooler.h"
+
 static XrmDatabase CopyDb(XrmDatabase inDb);
 
 extern XrmDatabase XpSpoolerGetServerAttributes(void);
 
-static unsigned long attrGeneration = 0;
+static int attrGeneration = 0;
 
 typedef struct {
     XrmDatabase *pDb;
@@ -138,6 +136,26 @@ static const char XPMODELDIR[] = "/models";
 static char NULL_STRING[] = "\0";
 
 /*
+ * XpGetConfigDirBase returns a string containing the path name of the base
+ * where the print server configuration directory is localed.
+ */
+static
+char *XpGetConfigDirBase()
+{
+    char **configDir;
+
+    /*
+     * If the XPCONFIGDIR environment variable is not set, then use the
+     * compile-time constant XPRINTDIR.  XPRINTDIR is passed in on the
+     * compile command line, and is defined in $(TOP)/config/cf/Project.tmpl.
+     */
+    if((configDir = getenv("XPCONFIGDIR")) == (char *)NULL)
+	configDir = XPRINTDIR;
+
+    return configDir;
+}
+
+/*
  * XpGetConfigDir returns a string containing the path name of the print
  * server configuration directory.  If the useLocale parameter is False
  * the it returns the path to the "/C" directory.  If the useLocale
@@ -153,7 +171,12 @@ XpGetConfigDir(Bool useLocale)
     if(useLocale == False) langDir = "/C";
     else 
     {
-	if((langName = getenv("LANG")) == (char *)NULL)
+        langName = getenv("LC_ALL");
+        if (langName == NULL) {
+            langName = getenv("LANG");
+        }
+        
+	if(langName == (char *)NULL)
 	    return (char *)NULL;
 	else
 	{
@@ -165,13 +188,7 @@ XpGetConfigDir(Bool useLocale)
 	}
     }
     
-    /*
-     * If the XPCONFIGDIR environment variable is not set, then use the
-     * compile-time constant XPRINTDIR.  XPRINTDIR is passed in on the
-     * compile command line, and is defined in $(TOP)/config/cf/Project.tmpl.
-     */
-    if((configDir = getenv("XPCONFIGDIR")) == (char *)NULL)
-	configDir = XPRINTDIR;
+    configDir = XpGetConfigDirBase();
 
     dirName = (char *)xalloc(strlen(configDir) + strlen(XPDIR) + 
 			      strlen(langDir) + 1);
@@ -307,7 +324,7 @@ BuildPrinterAttrs(
 
     if(systemAttributes.printers != (XrmDatabase)NULL)
     {
-        char *fileName;
+        char *dirName, *fileName;
         XrmDatabase modelDB = (XrmDatabase)NULL;
         XrmName xrm_name[5], xrm_class[2];
         XrmRepresentation rep_type;
@@ -607,6 +624,7 @@ XpGetOneAttribute(
 {
     ContextAttrPtr pCtxtAttrs;
     XrmDatabase db = (XrmDatabase)NULL;
+    char *retVal;
     XrmName xrm_name[3];
     XrmRepresentation rep_type;
     XrmValue value;
@@ -670,10 +688,10 @@ XpGetOneAttribute(
  */
 void
 XpPutOneAttribute(
-	XpContextPtr pContext,
-	XPAttributes class,
-	const char* attributeName,
-	const char* value)
+       XpContextPtr pContext,
+       XPAttributes class,
+       const char* attributeName,
+       const char* value)
 {
     ContextAttrPtr pCtxtAttrs;
     XrmDatabase db;
@@ -798,7 +816,7 @@ AppendEntry(
     char *s, c;
 
     if (*type != XrmQString)
-	return False;
+	return;
 
     for (firstNameSeen = False; *quarks; bindings++, quarks++) {
         if (*bindings == XrmBindLoosely) {
@@ -857,6 +875,7 @@ XpGetAttributes(
 {
     ContextAttrPtr pCtxtAttrs;
     XrmDatabase db = (XrmDatabase)NULL;
+    char *retVal;
     StringDbStruct enumStruct;
     XrmQuark empty = NULLQUARK;
 
@@ -1065,6 +1084,34 @@ XpSpoolerGetServerAttributes(void)
 }
 
 /*
+ * ExecuteCommand takes two pointers - the command to execute,
+ * and the "argv" style NULL-terminated vector of arguments for the command.
+ * We wait for the command to terminate before continuing to ensure that
+ * we don't delete the job file before the spooler has made a copy.
+ */
+static void
+ExecCommand(pCommand, argVector)
+    char *pCommand;
+    char **argVector;
+{
+    pid_t childPid;
+    int status;
+
+    if((childPid = fork()) == 0)
+    {
+	/* return BadAlloc? */
+	if (execv(pCommand, argVector) == -1) {
+	    FatalError("unable to exec '%s'", pCommand);
+	}
+    }
+    else
+    {
+        (void) waitpid(childPid, &status, 0);
+    }
+    return;
+}
+
+/*
  * SendFileToCommand takes three character pointers - the file name,
  * the command to execute,
  * and the "argv" style NULL-terminated vector of arguments for the command.
@@ -1107,11 +1154,17 @@ SendFileToCommand(
     
     if((childPid = fork()) == 0)
     {
-        close(pipefd[1]);      
+        close(pipefd[1]);
+
+        /* Replace current stdin with input from the pipe */
 	close(0);
 	dup(pipefd[0]);
 	close(pipefd[0]);
 
+        /* Close current stdout and redirect it to stderr */
+        close(1);
+        dup(2);
+        
 	/*
 	 * If a user name is specified, try to set our uid to match that
 	 * user name.  This is to allow e.g. a banner page to show the
@@ -1120,13 +1173,22 @@ SendFileToCommand(
 	 */
 	if(userName)
 	{
-	    if(geteuid() == (uid_t)0)
+	    uid_t myUid;
+
+	    if((myUid = geteuid()) == (uid_t)0)
 	    {
 	        struct passwd *pPasswd;
 
 	        if((pPasswd = getpwnam(userName)))
 	        {
-		    setuid((uid_t)pPasswd->pw_uid);
+                    if (setgid((gid_t)pPasswd->pw_gid) != 0)
+                        perror("SendFileToCommand: setgid() failure.");
+
+                    if (initgroups(userName, (gid_t)pPasswd->pw_gid) != 0)
+                        perror("SendFileToCommand: initgroups() failure.");
+
+                    if (setuid((uid_t)pPasswd->pw_uid) != 0)
+                        perror("SendFileToCommand: setuid() failure.");
 	        }
 	    }
 	}
@@ -1137,6 +1199,8 @@ SendFileToCommand(
     }
     else
     {
+	int res;
+
 	(void) close(pipefd[0]);
 
  	outPipe = fdopen(pipefd[1], "w");
@@ -1156,6 +1220,7 @@ SendFileToCommand(
  * store for the supplied print context.  The ReplaceAnyString utility
  * routine is used to perform the actual replacements.
  */
+extern char *ReplaceAnyString(char *, char *, char *);
 
 static char *
 ReplaceAllKeywords(
@@ -1196,6 +1261,10 @@ ReplaceAllKeywords(
         command = ReplaceAnyString(command, "%options%", cmdOpt);
     else
         command = ReplaceAnyString(command, "%options%", "");
+
+    /* New in xprint.mozdev.org release 007 - replace "%xpconfigdir%" with
+     * location of $XPCONFIGDIR */
+    command = ReplaceAnyString(command, "%xpconfigdir%", XpGetConfigDirBase());
 
     return command;
 }
@@ -1367,43 +1436,58 @@ VectorizeCommand(
     char ***pVector,
     XpContextPtr pContext)
 {
-    char *cmdName;
+    char *cmdName, *curTok;
+    int i, numChars;
 
     if(command == (char *)NULL)
 	return (char *)NULL;
     
-    (void) GetToken(command, &cmdName);
+    numChars = GetToken(command, &cmdName);
+
+    if(cmdName == (char *)NULL)
+	return (char *)NULL;
+
+    /* Mangle the command name, too... */
+    cmdName = ReplaceAllKeywords(pContext, cmdName);
 
     if(cmdName == (char *)NULL)
 	return (char *)NULL;
 
     *pVector = BuildArgVector(command, pContext);
-
+    
     return cmdName;
 }
 
-#ifdef hpux
-static char DEFAULT_SPOOL_COMMAND[] = "/usr/bin/lp -d %printer-name% -o raw -n %copy-count% -t %job-name% %options%";
-#else
-static char DEFAULT_SPOOL_COMMAND[] = "/usr/bin/lp -d %printer-name% -n %copy-count% -t %job-name% %options%";
-#endif
-
 int
-XpSubmitJob(
-     char *fileName,
-     XpContextPtr pContext)
+XpSubmitJob(fileName, pContext)
+     char *fileName;
+     XpContextPtr pContext;
 {
-    char **vector, *cmdNam, *command, *userName;
+    char **vector, *cmdNam, *cmdOpt, *command, *userName;
     int i;
 
     command = XpGetOneAttribute(pContext, XPPrinterAttr, "xp-spooler-command");
     if(command == (char *)NULL || strlen(command) == 0)
-	command = strdup(DEFAULT_SPOOL_COMMAND);
+    {
+        if( spooler_type )
+        {
+	    command = strdup(spooler_type->spool_command);
+        }
+        else
+        {
+            ErrorF("XpSubmitJob: No default spool command defined.\n");
+        }
+    }
     else
+    {
 	command = strdup(command);
+    }
     if(command == (char *)NULL)
+    {
+        ErrorF("XpSubmitJob: No spooler command found, cannot submit job.\n");
 	return BadAlloc;
-
+    }
+    
     cmdNam = VectorizeCommand(command, &vector, pContext);
     xfree(command);
 
@@ -1431,7 +1515,6 @@ XpSubmitJob(
 
     FreeVector(vector);
     xfree(cmdNam);
-    return Success;
 }
 
 /*
@@ -1504,6 +1587,7 @@ XpGetTrayMediumFromContext(XpContextPtr pCon,
 {
     char *defMedium, *defTray;
     char *t, *m;
+    char *pS, *pE, *pLast;
     
     defMedium = XpGetOneAttribute( pCon, XPPageAttr, 
 				  "default-medium" );

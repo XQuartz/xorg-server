@@ -1,4 +1,3 @@
-/* $XdotOrg: xc/programs/Xserver/Xext/shm.c,v 1.1.4.5.2.3 2004/03/04 20:16:01 kaleb Exp $ */
 /* $XFree86: xc/programs/Xserver/Xext/shm.c,v 3.41 2003/12/17 23:28:56 alanh Exp $ */
 /************************************************************
 

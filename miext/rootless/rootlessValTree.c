@@ -81,7 +81,6 @@ dealings in this Software without prior written authorization from Digital
 Equipment Corporation.
 
 ******************************************************************/
-
  /* 
   * Aug '86: Susan Angebranndt -- original code
   * July '87: Adam de Boor -- substantially modified and commented

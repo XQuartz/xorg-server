@@ -169,11 +169,12 @@ extern OSMouseInfoPtr xf86OSMouseInit(int flags);
  *
  *  1.0.0 - Everything up to when versioning was started.
  *  1.1.0 - FindDevice and GuessProtocol added to OSMouseInfoRec
+ *  1.2.0 - xisbscale added to MouseDevRec
  *
  */
 
 #define OS_MOUSE_VERSION_MAJOR 1
-#define OS_MOUSE_VERSION_MINOR 1
+#define OS_MOUSE_VERSION_MINOR 2
 #define OS_MOUSE_VERSION_PATCH 0
 
 #define OS_MOUSE_VERSION_CURRENT					\
@@ -267,6 +268,7 @@ typedef struct _MouseDevRec {
     dataGoodProc	dataGood;
     int			angleOffset;
     pointer		pDragLock;	/* drag lock area */
+    int			xisbscale;	/* buffer size for 1 event */
 } MouseDevRec, *MouseDevPtr;
 
 /* Z axis mapping */

@@ -272,10 +272,16 @@ void ix86PciSelectCfgmech(void)
      */
     switch (xf86Info.pciFlags) {
 
-    case PCIProbe1: /* { */
+	case PCIOsConfig:
+#if ARCH_PCI_OS_INIT
+	    return;
+#endif
+	    
+	case PCIProbe1:
 
-      xf86MsgVerb(X_INFO, 2, "PCI: Probing config type using method 1\n");
-      oldVal1 = inl(PCI_CFGMECH1_ADDRESS_REG);
+	    xf86MsgVerb(X_INFO, 2,
+			"PCI: Probing config type using method 1\n");
+	    oldVal1 = inl(PCI_CFGMECH1_ADDRESS_REG);
 
 #ifdef DEBUGPCI
       if (xf86Verbose > 2) {
@@ -491,9 +497,6 @@ void ix86PciSelectCfgmech(void)
       ix86Pci0.numDevices = PCI_CFGMECH2_MAXDEV;
       ix86Pci0.funcs = &ix86Funcs2;
       return;
-
-    case PCIOsConfig:
-	return;
 
     case PCIForceNone:
 	break;

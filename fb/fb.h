@@ -22,6 +22,8 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+/* $XdotOrg: xc/programs/Xserver/fb/fb.h,v 1.6 2004/08/11 21:14:17 kem Exp $ */
+
 #ifndef _FB_H_
 #define _FB_H_
 
@@ -103,9 +105,10 @@ typedef unsigned __int64    FbBits;
 # else
 #  if defined(__alpha__) || defined(__alpha) || \
       defined(ia64) || defined(__ia64__) || \
-      defined(__sparc64__) || \
+      defined(__sparc64__) || defined(_LP64) || \
       defined(__s390x__) || \
       defined(amd64) || defined (__amd64__) || \
+      defined (__powerpc64__) || \
       (defined(sgi) && (_MIPS_SZLONG == 64))
 typedef unsigned long	    FbBits;
 #  else
@@ -562,9 +565,13 @@ extern void fbSetBits (FbStip *bits, int stride, FbStip data);
     }							    \
 }
 
+/* XXX fb*PrivateIndex should be static, but it breaks the ABI */
+
 extern int	fbGCPrivateIndex;
+extern int	fbGetGCPrivateIndex(void);
 #ifndef FB_NO_WINDOW_PIXMAPS
 extern int	fbWinPrivateIndex;
+extern int	fbGetWinPrivateIndex(void);
 #endif
 extern const GCOps	fbGCOps;
 extern const GCFuncs	fbGCFuncs;
@@ -575,6 +582,7 @@ extern const GCFuncs	fbGCFuncs;
 #endif
 
 #ifdef FB_OLD_SCREEN
+# define FB_OLD_MISCREENINIT	/* miScreenInit requires 14 args, not 13 */
 extern WindowPtr    *WindowTable;
 #endif
 
@@ -584,6 +592,7 @@ extern WindowPtr    *WindowTable;
 
 #ifdef FB_SCREEN_PRIVATE
 extern int	fbScreenPrivateIndex;
+extern int	fbGetScreenPrivateIndex(void);
 
 /* private field of a screen */
 typedef struct {
@@ -592,7 +601,7 @@ typedef struct {
 } FbScreenPrivRec, *FbScreenPrivPtr;
 
 #define fbGetScreenPrivate(pScreen) ((FbScreenPrivPtr) \
-				     (pScreen)->devPrivates[fbScreenPrivateIndex].ptr)
+				     (pScreen)->devPrivates[fbGetScreenPrivateIndex()].ptr)
 #endif
 
 /* private field of GC */
@@ -616,7 +625,7 @@ typedef struct {
 } FbGCPrivRec, *FbGCPrivPtr;
 
 #define fbGetGCPrivate(pGC)	((FbGCPrivPtr)\
-	(pGC)->devPrivates[fbGCPrivateIndex].ptr)
+	(pGC)->devPrivates[fbGetGCPrivateIndex()].ptr)
 
 #ifdef FB_OLD_GC
 #define fbGetCompositeClip(pGC) (fbGetGCPrivate(pGC)->pCompositeClip)
@@ -635,7 +644,7 @@ typedef struct {
 #define fbGetWindowPixmap(d)	fbGetScreenPixmap(((DrawablePtr) (d))->pScreen)
 #else
 #define fbGetWindowPixmap(pWin)	((PixmapPtr)\
-	((WindowPtr) (pWin))->devPrivates[fbWinPrivateIndex].ptr)
+	((WindowPtr) (pWin))->devPrivates[fbGetWinPrivateIndex()].ptr)
 #endif
 
 #if defined(__DARWIN__)||defined(__CYGWIN__)

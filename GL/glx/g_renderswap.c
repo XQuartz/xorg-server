@@ -3368,7 +3368,6 @@ void __glXDispSwap_WindowPos3fARB(GLbyte *pc)
 		*(GLfloat *)(pc + 8)
 	);
 }
-
 #endif /* !MISSING_GL_EXTS */
 
 void __glXDispSwap_SampleCoverageARB(GLbyte *pc)

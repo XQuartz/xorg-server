@@ -133,104 +133,34 @@ static char GLXServerExtensions[] =
 			"GLX_EXT_visual_info "
 			"GLX_EXT_visual_rating "
 			"GLX_EXT_import_context "
+			"GLX_OML_swap_method "
 			"GLX_SGI_make_current_read "
 #ifndef __DARWIN__
 			"GLX_SGIS_multisample "
 #endif
+			"GLX_SGIX_fbconfig "
 			;
 
 /*
-** This comes from the GL library that the server will link with.  Right
-** now, that is the DDX Sample OpenGL.
-*/
-extern __GLXscreenInfo __glDDXScreenInfo;
-
-__GLXscreenInfo *__glXScreens[] = {
-    &__glDDXScreenInfo,
+ * __glDDXScreenInfo comes from GLcore, so we can't resolve this symbol at
+ * module open time.  Leave a placeholder, and fill this in when we first
+ * need it (in __glXScreenInit).  XXX Why make this an array?
+ */
+static __GLXscreenInfo *__glXScreens[] = {
+    NULL /* &__glDDXScreenInfo */ ,
 };
 
-GLint __glXNumStaticScreens = (sizeof __glXScreens / sizeof __glXScreens[0]);
+static GLint __glXNumStaticScreens =
+	(sizeof __glXScreens / sizeof __glXScreens[0]);
 
 __GLXscreenInfo *__glXActiveScreens;
 GLint __glXNumActiveScreens;
 
 RESTYPE __glXDrawableRes;
 
-#if 0
-static int
-CountBits(unsigned long mask)
-{
-    int count = 0;
-
-    while(mask) {
-	count += (mask&1);
-	mask >>= 1;
-    }
-
-    return count;
+__GLXscreenInfo *__glXgetActiveScreen(int num) {
+	return &__glXActiveScreens[num];
 }
-#endif
-
-#if 0
-/*
-** A typical implementation would not probably not run through the screen's
-** visuals to find ones that match the visual configs supplied by the DDX
-** Sample OpenGL as we do here; we have done this to make this code easy to
-** drop into an existing X server.
-*/
-static int matchVisuals(__GLXvisualConfig *pGlxVisual, int numVisuals,
-			 int screen)
-{
-    int i, j;
-    __GLXvisualConfig *pvis = pGlxVisual;
-    ScreenPtr pScreen = screenInfo.screens[screen];
-    VisualPtr pVisual;
-    int numMatchingVisuals = 0; 
-    int *used;
-
-    used = (int *)__glXMalloc(pScreen->numVisuals*sizeof(int));
-    __glXMemset(used, 0, pScreen->numVisuals*sizeof(int));
-
-    for (i=0; i < numVisuals; i++, pvis++) {
-	/*
-	** Look through all the server's visuals to see which match.
-	*/
-	pvis->vid = 0;
-	pVisual = pScreen->visuals;
-	for (j=0; j < pScreen->numVisuals; j++, pVisual++) {
-	    if (pvis->class == pVisual->class &&
-		pvis->bufferSize == pVisual->nplanes &&
-		!used[j]) {
-		int rBits, gBits, bBits, aBits;
-
-		/* count bits per rgb */
-		rBits = CountBits(pVisual->redMask);
-		gBits = CountBits(pVisual->greenMask);
-		bBits = CountBits(pVisual->blueMask);
-		aBits = 0;
-		if ((pvis->redSize == rBits) &&
-		    (pvis->greenSize == gBits) &&
-		    (pvis->blueSize == bBits) &&
-		    (pvis->alphaSize == aBits)) {
-		    /*
-		    ** We'll consider this a match.
-		    */
-		    pvis->vid = pVisual->vid;
-		    pvis->redMask = pVisual->redMask;
-		    pvis->greenMask = pVisual->greenMask;
-		    pvis->blueMask = pVisual->blueMask;
-		    pvis->alphaMask = 0;
-		    numMatchingVisuals++;
-		    used[j] = 1;
-		    break;
-		}
-	    }
-	}
-    }
-    __glXFree(used);
-    return numMatchingVisuals;
-}
-#endif
 
 /*
 ** Destroy routine that gets called when a drawable is freed.  A drawable
@@ -346,6 +276,8 @@ void __glXScreenInit(GLint numscreens)
 {
     GLint i,j;
 
+    __glXScreens[0] = __glXglDDXScreenInfo(); /* from GLcore */
+
     /*
     ** This alloc has to work or else the server might as well core dump.
     */
@@ -360,14 +292,7 @@ void __glXScreenInit(GLint numscreens)
 	    if ((*__glXScreens[j]->screenProbe)(i)) {
 		__glXActiveScreens[i] = *__glXScreens[j];
 
-#if 0
-                /* we don't use this since matchVisuals doesn't allow alpha */
-		__glXActiveScreens[i].numUsableVisuals =
-		    matchVisuals(__glXActiveScreens[i].pGlxVisual,
-			         __glXActiveScreens[i].numVisuals, i); 
-#else
 		__glXActiveScreens[i].numUsableVisuals = __glXActiveScreens[i].numVisuals;
-#endif
 		__glXActiveScreens[i].GLextensions = __glXStrdup(GLServerExtensions);
 		__glXActiveScreens[i].GLXvendor = __glXStrdup(GLXServerVendorName);
 		__glXActiveScreens[i].GLXversion = __glXStrdup(GLXServerVersion);

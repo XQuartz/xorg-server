@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/include/globals.h,v 1.1.4.2.2.3 2004/03/04 20:17:01 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/include/globals.h,v 1.4 2004/07/31 09:14:06 kem Exp $ */
 /* $XFree86: xc/programs/Xserver/include/globals.h,v 1.3 1999/09/25 14:38:21 dawes Exp $ */
 
 #ifndef _XSERV_GLOBAL_H_
@@ -49,5 +49,16 @@ extern Bool PanoramiXWindowExposureSent;
 extern Bool PanoramiXOneExposeRequest;
 #endif
 
+#ifdef RENDER
+extern Bool noRenderExtension;
+#endif
+
+#ifdef XEVIE
+extern Bool noXevieExtension;
+#endif
+
+#ifdef COMPOSITE
+extern Bool noCompositeExtension;
+#endif
 
 #endif /* _XSERV_GLOBAL_H_ */

@@ -1,5 +1,4 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/os-support/linux/lnx_kbd.c,v 1.4 2003/11/03 05:11:52 tsi Exp $ */
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/os-support/linux/lnx_kbd.c,v 1.1.4.1.6.2 2004/03/04 17:48:09 eich Exp $ */
 
 /*
  * Copyright (c) 2002 by The XFree86 Project, Inc.

@@ -558,7 +558,7 @@ int __glXDrawArraysSize( GLbyte *pc, Bool swap )
 		return -1;
 	    }
 	    break;
-	  case GL_FOG_COORDINATE_ARRAY:
+	  case GL_FOG_COORD_ARRAY:
 	  case GL_INDEX_ARRAY:
 	    if (numVals != 1) {
 		/* bad size */

@@ -25,6 +25,7 @@
  * the sale, use or other dealings in this Software without prior written
  * authorization from the copyright holder(s) and author(s).
  */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/os-support/shared/sigiostubs.c,v 1.2 2004/06/28 18:08:26 alanc Exp $ */
 
 #ifdef XFree86Server
 #ifdef __UNIXOS2__
@@ -32,10 +33,8 @@
 #endif
 # include "X.h"
 # include "xf86.h"
-# include "xf86drm.h"
 # include "xf86Priv.h"
 # include "xf86_OSlib.h"
-# include "xf86drm.h"
 #else
 # include <unistd.h>
 # include <signal.h>

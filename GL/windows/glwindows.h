@@ -4,8 +4,6 @@
 #include <glxserver.h>
 #include <glxext.h>
 
-#include <mipointrst.h>
-#include <miscstruct.h>
 #include <windowstr.h>
 #include <resource.h>
 #include <GL/glxint.h>
@@ -35,7 +33,7 @@ extern glWinDebugSettingsRec glWinDebugSettings;
 
 typedef struct {
     int num_vis;
-    __GLXvisualConfig *glx_vis;
+    __GLcontextModes *modes;
     void **priv;
 
     /* wrapped screen functions */

@@ -104,6 +104,7 @@ linuxPciOpenFile(PCITAG tag)
 	static int	lbus,ldev,lfunc,fd = -1;
 	int		bus, dev, func;
 	char		file[32];
+	struct stat	ignored;
 
 	bus  = PCI_BUS_FROM_TAG(tag);
 	dev  = PCI_DEV_FROM_TAG(tag);
@@ -111,12 +112,21 @@ linuxPciOpenFile(PCITAG tag)
 	if (fd == -1 || bus != lbus || dev != ldev || func != lfunc) {
 		if (fd != -1)
 			close(fd);
-		if (bus < 256)
-			sprintf(file, "/proc/bus/pci/%02x/%02x.%1x",
-				bus, dev, func);
-		else
-			sprintf(file, "/proc/bus/pci/%04x/%02x.%1x",
-				bus, dev, func);
+		if (bus < 256) {
+			if (stat("/proc/bus/pci/00", &ignored) < 0)
+				sprintf(file, "/proc/bus/pci/0000:%02x/%02x.%1x",
+					bus, dev, func);
+			else
+				sprintf(file, "/proc/bus/pci/%02x/%02x.%1x",
+					bus, dev, func);
+		} else {
+			if (stat("/proc/bus/pci/00", &ignored) < 0)
+				sprintf(file, "/proc/bus/pci/0000:%04x/%02x.%1x",
+					bus, dev, func);
+			else
+				sprintf(file, "/proc/bus/pci/%04x/%02x.%1x",
+					bus, dev, func);
+		}
 		fd = open(file,O_RDWR);
 		lbus  = bus;
 		ldev  = dev;

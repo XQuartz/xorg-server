@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/mi/miinitext.c,v 1.1.4.3.2.3 2004/03/04 20:17:04 kaleb Exp $ */
+/* $XdotOrg: xc/programs/Xserver/mi/miinitext.c,v 1.12 2004/08/12 08:45:33 anholt Exp $ */
 /* $XFree86: xc/programs/Xserver/mi/miinitext.c,v 3.67 2003/01/12 02:44:27 dawes Exp $ */
 /***********************************************************
 
@@ -62,12 +62,47 @@ SOFTWARE.
 #undef GLXEXT
 #endif
 
+/* Make sure Xprt only announces extensions it supports */
+#ifdef PRINT_ONLY_SERVER
+#undef MITSHM /* this is incompatible to the vector-based Xprint DDX */
+#undef XKB
+#undef PANORAMIX
+#undef RES
+#undef XIE
+#undef XINPUT
+#undef XV
+#undef SCREENSAVER
+#undef XIDLE
+#undef XRECORD
+#undef DBE
+#undef XF86VIDMODE
+#undef XF86MISC
+#undef XFreeXDGA
+#undef XF86DRI
+#undef DPMSExtension
+#undef DPSEXT
+#undef FONTCACHE
+#undef RENDER /* not yet */
+#undef DAMAGE
+#undef XFIXES
+#undef XEVIE
+#endif /* PRINT_ONLY_SERVER */
+
 #ifdef PANORAMIX
 extern Bool noPanoramiXExtension;
 #endif
 extern Bool noTestExtensions;
 #ifdef XKB
 extern Bool noXkbExtension;
+#endif
+#ifdef RENDER
+extern Bool noRenderExtension;
+#endif
+#ifdef XEVIE
+extern Bool noXevieExtension;
+#endif
+#ifdef COMPOSITE
+extern Bool noCompositeExtension;
 #endif
 
 #ifndef XFree86LOADER
@@ -238,6 +273,75 @@ extern void RRExtensionInit(INITARGS);
 #ifdef RES
 extern void ResExtensionInit(INITARGS);
 #endif
+#ifdef DMXEXT
+extern void DMXExtensionInit(INITARGS);
+#endif
+#ifdef XEVIE
+extern void XevieExtensionInit(INITARGS);
+#endif
+#ifdef XFIXES
+extern void XFixesExtensionInit(INITARGS);
+#endif
+#ifdef DAMAGE
+extern void DamageExtensionInit(INITARGS);
+#endif
+#ifdef COMPOSITE
+extern void CompositeExtensionInit(INITARGS);
+#endif
+
+/* The following is only a small first step towards run-time
+ * configurable extensions.
+ */
+typedef struct {
+    char *name;
+    Bool *disablePtr;
+} ExtensionToggle;
+
+static ExtensionToggle ExtensionToggleList[] =
+{
+    { "XTEST", &noTestExtensions },
+#ifdef PANORAMIX
+    { "XINERAMA", &noPanoramiXExtension },
+#endif
+#ifdef RENDER
+    { "RENDER", &noRenderExtension },
+#endif
+#ifdef XKB
+    { "XKEYBOARD", &noXkbExtension },
+#endif
+#ifdef XEVIE
+    { "XEVIE", &noXevieExtension },
+#endif
+#ifdef COMPOSITE
+    { "Composite", &noCompositeExtension },
+#endif
+    { NULL, NULL }
+};
+
+Bool EnableDisableExtension(char *name, Bool enable)
+{
+    ExtensionToggle *ext = &ExtensionToggleList[0];
+
+    for (ext = &ExtensionToggleList[0]; ext->name != NULL; ext++) {
+	if (strcmp(name, ext->name) == 0) {
+	    *ext->disablePtr = !enable;
+	    return TRUE;
+	}
+    }
+
+    return FALSE;
+}
+
+void EnableDisableExtensionError(char *name, Bool enable)
+{
+    ExtensionToggle *ext = &ExtensionToggleList[0];
+
+    ErrorF("Extension \"%s\" is not recognized\n", name);
+    ErrorF("Only the following extensions can be run-time %s:\n",
+	   enable ? "enabled" : "disabled");
+    for (ext = &ExtensionToggleList[0]; ext->name != NULL; ext++)
+	ErrorF("    %s\n", ext->name);
+}
 
 #ifndef XFree86LOADER
 
@@ -355,12 +459,10 @@ InitExtensions(argc, argv)
 #endif
 #endif
 #ifdef GLXEXT
-#ifndef XPRINT	/* we don't want Glx in the Xprint server */
 #ifndef __DARWIN__
     GlxExtensionInit();
 #else
     DarwinGlxExtensionInit();
-#endif
 #endif
 #endif
 #ifdef DPSEXT
@@ -368,14 +470,30 @@ InitExtensions(argc, argv)
     DPSExtensionInit();
 #endif
 #endif
+#ifdef XFIXES
+    /* must be before Render to layer DisplayCursor correctly */
+    XFixesExtensionInit();
+#endif
 #ifdef RENDER
-    RenderExtensionInit();
+    if (!noRenderExtension) RenderExtensionInit();
 #endif
 #ifdef RANDR
     RRExtensionInit();
 #endif
 #ifdef RES
     ResExtensionInit();
+#endif
+#ifdef DMXEXT
+    DMXExtensionInit();
+#endif
+#ifdef XEVIE
+    if (!noXevieExtension) XevieExtensionInit();
+#endif
+#ifdef COMPOSITE
+    if (!noCompositeExtension) CompositeExtensionInit();
+#endif
+#ifdef DAMAGE
+    DamageExtensionInit();
 #endif
 }
 
@@ -384,12 +502,10 @@ InitVisualWrap()
 {
     miResetInitVisuals();
 #ifdef GLXEXT
-#ifndef XPRINT
 #ifndef __DARWIN__
     GlxWrapInitVisuals(&miInitVisualsProc);
 #else
     DarwinGlxWrapInitVisuals(&miInitVisualsProc);
-#endif
 #endif
 #endif
 }
@@ -449,6 +565,7 @@ ExtensionModule extension[] =
     { NULL, "RENDER", NULL, NULL },
     { NULL, "RANDR", NULL, NULL },
     { NULL, "X-Resource", NULL, NULL },
+    { NULL, "DMX", NULL, NULL },
     { NULL, NULL, NULL, NULL }
 };
 #endif
@@ -491,15 +608,28 @@ static ExtensionModule staticExtensions[] = {
 #ifdef PANORAMIX
     { PanoramiXExtensionInit, PANORAMIX_PROTOCOL_NAME, &noPanoramiXExtension, NULL, NULL },
 #endif
+#ifdef XFIXES
+    /* must be before Render to layer DisplayCursor correctly */
+    { XFixesExtensionInit, "XFIXES", NULL, NULL, NULL },
+#endif
 #ifdef XF86BIGFONT
     { XFree86BigfontExtensionInit, XF86BIGFONTNAME, NULL, NULL, NULL },
 #endif
 #ifdef RENDER
-    { RenderExtensionInit, "RENDER", NULL, NULL, NULL },
+    { RenderExtensionInit, "RENDER", &noRenderExtension, NULL, NULL },
 #endif
 #ifdef RANDR
     { RRExtensionInit, "RANDR", NULL, NULL, NULL },
 #endif
+#ifdef COMPOSITE
+    { CompositeExtensionInit, "COMPOSITE", &noCompositeExtension, NULL },
+#endif
+#ifdef DAMAGE
+    { DamageExtensionInit, "DAMAGE", NULL, NULL },
+#endif
+#ifdef XEVIE
+    { XevieExtensionInit, "XEVIE", &noXevieExtension, NULL },
+#endif 
     { NULL, NULL, NULL, NULL, NULL }
 };
     

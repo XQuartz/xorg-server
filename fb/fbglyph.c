@@ -1,5 +1,5 @@
 /*
- * $XdotOrg: xc/programs/Xserver/fb/fbglyph.c,v 1.1.4.1.4.2 2004/03/04 20:16:09 kaleb Exp $
+ * $XdotOrg: xc/programs/Xserver/fb/fbglyph.c,v 1.2 2004/04/23 19:05:14 eich Exp $
  * $XFree86: xc/programs/Xserver/fb/fbglyph.c,v 1.12tsi Exp $
  *
  * Copyright © 1998 Keith Packard

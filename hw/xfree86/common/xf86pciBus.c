@@ -424,7 +424,7 @@ FindPCIVideoInfo(void)
 	    if ((pcrp->pci_command & PCI_CMD_MEM_ENABLE) &&
 		(num == 1 ||
 		 ((info->class == PCI_CLASS_DISPLAY) &&
-		  (info->subclass == PCI_SUBCLASS_DISPLAY_MISC)))) {
+		  (info->subclass == PCI_SUBCLASS_DISPLAY_VGA)))) {
 		if (primaryBus.type == BUS_NONE) {
 		    primaryBus.type = BUS_PCI;
 		    primaryBus.id.pci.bus = pcrp->busnum;
@@ -3230,10 +3230,14 @@ pciVideoPtr
 xf86GetPciInfoForEntity(int entityIndex)
 {
     pciVideoPtr *ppPci;
-    EntityPtr p = xf86Entities[entityIndex];
+    EntityPtr p;
     
-    if (entityIndex >= xf86NumEntities
-	|| p->busType != BUS_PCI) return NULL;
+    if (entityIndex >= xf86NumEntities)
+	return NULL;
+
+    p = xf86Entities[entityIndex];
+    if (p->busType != BUS_PCI)
+	return NULL;
     
     for (ppPci = xf86PciVideoInfo; *ppPci != NULL; ppPci++) {
 	if (p->pciBusId.bus == (*ppPci)->bus &&

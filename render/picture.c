@@ -23,6 +23,9 @@
  * Author:  Keith Packard, SuSE, Inc.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include "misc.h"
 #include "scrnintstr.h"
 #include "os.h"
@@ -45,6 +48,57 @@ RESTYPE		PictureType;
 RESTYPE		PictFormatType;
 RESTYPE		GlyphSetType;
 int		PictureCmapPolicy = PictureCmapPolicyDefault;
+
+/* Picture Private machinery */
+
+static int picturePrivateCount;
+
+void
+ResetPicturePrivateIndex (void)
+{
+    picturePrivateCount = 0;
+}
+
+int
+AllocatePicturePrivateIndex (void)
+{
+    return picturePrivateCount++;
+}
+
+Bool
+AllocatePicturePrivate (ScreenPtr pScreen, int index2, unsigned int amount)
+{
+    PictureScreenPtr	ps = GetPictureScreen(pScreen);
+    unsigned int	oldamount;
+
+    /* Round up sizes for proper alignment */
+    amount = ((amount + (sizeof(long) - 1)) / sizeof(long)) * sizeof(long);
+
+    if (index2 >= ps->PicturePrivateLen)
+    {
+	unsigned int *nsizes;
+
+	nsizes = (unsigned int *)xrealloc(ps->PicturePrivateSizes,
+					  (index2 + 1) * sizeof(unsigned int));
+	if (!nsizes)
+	    return FALSE;
+	while (ps->PicturePrivateLen <= index2)
+	{
+	    nsizes[ps->PicturePrivateLen++] = 0;
+	    ps->totalPictureSize += sizeof(DevUnion);
+	}
+	ps->PicturePrivateSizes = nsizes;
+    }
+    oldamount = ps->PicturePrivateSizes[index2];
+    if (amount > oldamount)
+    {
+	ps->PicturePrivateSizes[index2] = amount;
+	ps->totalPictureSize += (amount - oldamount);
+    }
+
+    return TRUE;
+}
+
 
 Bool
 PictureDestroyWindow (WindowPtr pWindow)
@@ -82,6 +136,8 @@ PictureCloseScreen (int index, ScreenPtr pScreen)
 	if (ps->formats[n].type == PictTypeIndexed)
 	    (*ps->CloseIndexed) (pScreen, &ps->formats[n]);
     SetPictureScreen(pScreen, 0);
+    if (ps->PicturePrivateSizes)
+	xfree (ps->PicturePrivateSizes);
     xfree (ps->formats);
     xfree (ps);
     return ret;
@@ -367,12 +423,27 @@ PictureCreateDefaultFormats (ScreenPtr pScreen, int *nformatp)
 	case PICT_TYPE_COLOR:
 	case PICT_TYPE_GRAY:
 	    pFormats[f].type = PictTypeIndexed;
-	    pFormats[f].index.pVisual = &pScreen->visuals[PICT_FORMAT_VIS(format)];
+	    pFormats[f].index.vid = pScreen->visuals[PICT_FORMAT_VIS(format)].vid;
 	    break;
 	}
     }
     *nformatp = nformats;
     return pFormats;
+}
+
+static VisualPtr
+PictureFindVisual (ScreenPtr pScreen, VisualID visual)
+{
+    int         i;
+    VisualPtr   pVisual;
+    for (i = 0, pVisual = pScreen->visuals;
+         i < pScreen->numVisuals;
+         i++, pVisual++)
+    {
+        if (pVisual->vid == visual)
+            return pVisual;
+    }
+    return 0;
 }
 
 Bool
@@ -390,13 +461,16 @@ PictureInitIndexedFormats (ScreenPtr pScreen)
     {
 	if (format->type == PictTypeIndexed && !format->index.pColormap)
 	{
-	    if (format->index.pVisual->vid == pScreen->rootVisual)
+	    if (format->index.vid == pScreen->rootVisual)
 		format->index.pColormap = (ColormapPtr) LookupIDByType(pScreen->defColormap,
 								       RT_COLORMAP);
 	    else
 	    {
+                VisualPtr   pVisual;
+
+                pVisual = PictureFindVisual (pScreen, format->index.vid);
 		if (CreateColormap (FakeClientID (0), pScreen,
-				    format->index.pVisual,
+				    pVisual,
 				    &format->index.pColormap, AllocNone,
 				    0) != Success)
 		{
@@ -480,7 +554,7 @@ PictureMatchVisual (ScreenPtr pScreen, int depth, VisualPtr pVisual)
 	{
 	    if (type == PictTypeIndexed)
 	    {
-		if (format->index.pVisual == pVisual)
+		if (format->index.vid == pVisual->vid)
 		    return format;
 	    }
 	    else
@@ -585,7 +659,8 @@ PictureInit (ScreenPtr pScreen, PictFormatPtr formats, int nformats)
 	}
 	if (formats[n].type == PictTypeIndexed)
 	{
-	    if ((formats[n].index.pVisual->class | DynamicClass) == PseudoColor)
+            VisualPtr   pVisual = PictureFindVisual (pScreen, formats[n].index.vid);
+	    if ((pVisual->class | DynamicClass) == PseudoColor)
 		type = PICT_TYPE_COLOR;
 	    else
 		type = PICT_TYPE_GRAY;
@@ -1027,6 +1102,51 @@ SetPictureClipRects (PicturePtr	pPicture,
 }
 
 int
+SetPictureClipRegion (PicturePtr    pPicture,
+                      int           xOrigin,
+                      int           yOrigin,
+                      RegionPtr     pRegion)
+{
+    ScreenPtr           pScreen = pPicture->pDrawable->pScreen;
+    PictureScreenPtr    ps = GetPictureScreen(pScreen);
+    RegionPtr           clientClip;
+    int                 result;
+    int                 type;
+
+    if (pRegion)
+    {
+        type = CT_REGION;
+        clientClip = REGION_CREATE (pScreen,
+                                    REGION_EXTENTS(pScreen, pRegion),
+                                    REGION_NUM_RECTS(pRegion));
+        if (!clientClip)
+            return BadAlloc;
+        if (!REGION_COPY (pSCreen, clientClip, pRegion))
+        {
+            REGION_DESTROY (pScreen, clientClip);
+            return BadAlloc;
+        }
+    }
+    else
+    {
+        type = CT_NONE;
+        clientClip = 0;
+    }
+
+    result =(*ps->ChangePictureClip) (pPicture, type,
+                                      (pointer) clientClip, 0);
+    if (result == Success)
+    {
+        pPicture->clipOrigin.x = xOrigin;
+        pPicture->clipOrigin.y = yOrigin;
+        pPicture->stateChanges |= CPClipXOrigin|CPClipYOrigin|CPClipMask;
+        pPicture->serialNumber |= GC_CHANGE_SERIAL_BIT;
+    }
+    return result;
+}
+
+
+int
 SetPictureTransform (PicturePtr	    pPicture,
 		     PictTransform  *transform)
 {
@@ -1057,7 +1177,92 @@ SetPictureTransform (PicturePtr	    pPicture,
 	    pPicture->transform = 0;
 	}
     }
+    pPicture->serialNumber |= GC_CHANGE_SERIAL_BIT;
+
     return Success;
+}
+
+void
+CopyPicture (PicturePtr	pSrc,
+	     Mask	mask,
+	     PicturePtr	pDst)
+{
+    PictureScreenPtr ps = GetPictureScreen(pSrc->pDrawable->pScreen);
+    Mask origMask = mask;
+
+    pDst->serialNumber |= GC_CHANGE_SERIAL_BIT;
+    pDst->stateChanges |= mask;
+
+    while (mask) {
+	Mask bit = lowbit(mask);
+
+	switch (bit)
+	{
+	case CPRepeat:
+	    pDst->repeat = pSrc->repeat;
+	    break;
+	case CPAlphaMap:
+	    if (pSrc->alphaMap && pSrc->alphaMap->pDrawable->type == DRAWABLE_PIXMAP)
+		pSrc->alphaMap->refcnt++;
+	    if (pDst->alphaMap)
+		FreePicture ((pointer) pDst->alphaMap, (XID) 0);
+	    pDst->alphaMap = pSrc->alphaMap;
+	    break;
+	case CPAlphaXOrigin:
+	    pDst->alphaOrigin.x = pSrc->alphaOrigin.x;
+	    break;
+	case CPAlphaYOrigin:
+	    pDst->alphaOrigin.y = pSrc->alphaOrigin.y;
+	    break;
+	case CPClipXOrigin:
+	    pDst->clipOrigin.x = pSrc->clipOrigin.x;
+	    break;
+	case CPClipYOrigin:
+	    pDst->clipOrigin.y = pSrc->clipOrigin.y;
+	    break;
+	case CPClipMask:
+	    switch (pSrc->clientClipType) {
+	    case CT_NONE:
+		(*ps->ChangePictureClip)(pDst, CT_NONE, NULL, 0);
+		break;
+	    case CT_REGION:
+		if (!pSrc->clientClip) {
+		    (*ps->ChangePictureClip)(pDst, CT_NONE, NULL, 0);
+		} else {
+		    RegionPtr clientClip;
+		    RegionPtr srcClientClip = (RegionPtr)pSrc->clientClip;
+
+		    clientClip = REGION_CREATE(pSrc->pDrawable->pScreen,
+			REGION_EXTENTS(pSrc->pDrawable->pScreen, srcClientClip),
+			REGION_NUM_RECTS(srcClientClip));
+		    (*ps->ChangePictureClip)(pDst, CT_REGION, clientClip, 0);
+		}
+		break;
+	    default:
+		/* XXX: CT_PIXMAP unimplemented */
+		break;
+	    }
+	    break;
+	case CPGraphicsExposure:
+	    pDst->graphicsExposures = pSrc->graphicsExposures;
+	    break;
+	case CPPolyEdge:
+	    pDst->polyEdge = pSrc->polyEdge;
+	    break;
+	case CPPolyMode:
+	    pDst->polyMode = pSrc->polyMode;
+	    break;
+	case CPDither:
+	    pDst->dither = pSrc->dither;
+	    break;
+	case CPComponentAlpha:
+	    pDst->componentAlpha = pSrc->componentAlpha;
+	    break;
+	}
+	mask &= ~bit;
+    }
+
+    (*ps->ChangePicture)(pDst, origMask);
 }
 
 static void
@@ -1263,7 +1468,18 @@ CompositeTriFan (CARD8		op,
     (*ps->TriFan) (op, pSrc, pDst, maskFormat, xSrc, ySrc, npoints, points);
 }
 
-typedef xFixed_32_32	xFixed_48_16;
+void
+AddTraps (PicturePtr	pPicture,
+	  INT16		xOff,
+	  INT16		yOff,
+	  int		ntrap,
+	  xTrap		*traps)
+{
+    PictureScreenPtr	ps = GetPictureScreen(pPicture->pDrawable->pScreen);
+    
+    ValidatePicture (pPicture);
+    (*ps->AddTraps) (pPicture, xOff, yOff, ntrap, traps);
+}
 
 #define MAX_FIXED_48_16	    ((xFixed_48_16) 0x7fffffff)
 #define MIN_FIXED_48_16	    (-((xFixed_48_16) 1 << 31))

@@ -29,7 +29,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-/* $XdotOrg: xc/programs/Xserver/hw/darwin/darwin.c,v 1.1.4.2.4.1 2004/03/04 17:47:29 eich Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/darwin/darwin.c,v 1.4 2004/08/11 23:53:36 torrey Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/darwin/darwin.c,v 1.55 2003/11/15 00:07:09 torrey Exp $ */
 
 #include "X.h"
@@ -47,6 +47,13 @@
 #include "xorgVersion.h"
 #include "xf86Date.h"
 #include "dix.h"
+
+#ifdef XINPUT
+# include "XI.h"
+# include "XIproto.h"
+# include "exevents.h"
+# include "extinit.h"
+#endif
 
 #include <sys/types.h>
 #include <sys/time.h>
@@ -131,7 +138,7 @@ DarwinPrintBanner()
     "repository hosted at http://www.freedesktop.org/Software/xorg/");
 #endif
 #if XORG_VERSION_SNAP > 0
-  ErrorF(".%d", XF86_VERSION_SNAP);
+  ErrorF(".%d", XORG_VERSION_SNAP);
 #endif
 
 #if XORG_VERSION_SNAP >= 900
@@ -404,6 +411,22 @@ static int DarwinMouseProc(
                         miPointerGetMotionEvents,
                         DarwinChangePointerControl,
                         0 );
+#ifdef XINPUT
+            InitValuatorAxisStruct( pPointer,
+                                    0,     // X axis
+                                    0,     // min value
+                                    16000, // max value (fixme screen size?)
+                                    1,     // resolution (fixme ?)
+                                    1,     // min resolution
+                                    1 );   // max resolution
+            InitValuatorAxisStruct( pPointer,
+                                    1,     // X axis
+                                    0,     // min value
+                                    16000, // max value (fixme screen size?)
+                                    1,     // resolution (fixme ?)
+                                    1,     // min resolution
+                                    1 );   // max resolution
+#endif
             break;
 
         case DEVICE_ON:
@@ -699,7 +722,16 @@ void OsVendorInit(void)
 
 
 /*
- * ddxProcessArgument --
+ * ddxInitGlobals
+ *  Called by InitGlobals() from os/util.c.
+ */
+void ddxInitGlobals(void)
+{
+}
+
+
+/*
+ * ddxProcessArgument
  *  Process device-dependent command line args. Returns 0 if argument is
  *  not device dependent, otherwise Count of number of elements of argv
  *  that are part of a device dependent commandline option.

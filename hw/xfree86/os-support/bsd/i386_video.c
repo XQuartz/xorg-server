@@ -46,6 +46,11 @@
 #include <sys/queue.h>
 #endif
 
+#if defined(__OpenBSD__) && defined(__amd64__)
+#include <machine/mtrr.h>
+#include <machine/sysarch.h>
+#endif
+
 #include "xf86_OSlib.h"
 #include "xf86OSpriv.h"
 
@@ -94,7 +99,11 @@ static pointer NetBSDsetWC(int, unsigned long, unsigned long, Bool,
 			   MessageType);
 static void NetBSDundoWC(int, pointer);
 #endif
-
+#if defined(__amd64__) && defined(__OpenBSD__)
+static pointer amd64setWC(int, unsigned long, unsigned long, Bool, 
+    MessageType);
+static void amd64undoWC(int, pointer);
+#endif
 
 /*
  * Check if /dev/mem can be mmap'd.  If it can't print a warning when
@@ -206,6 +215,10 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 	pVidMem->setWC = NetBSDsetWC;
 	pVidMem->undoWC = NetBSDundoWC;
 #endif
+#if defined(__amd64__) && defined(__OpenBSD__)
+	pVidMem->setWC = amd64setWC;
+	pVidMem->undoWC = amd64undoWC;
+#endif
 	pVidMem->initialised = TRUE;
 }
 
@@ -311,7 +324,6 @@ xf86ReadBIOS(unsigned long Base, unsigned long Offset, unsigned char *Buf,
 	return(Len);
 }
 
-
 #ifdef USE_I386_IOPL
 /***************************************************************************/
 /* I/O Permissions section                                                 */
@@ -353,6 +365,51 @@ xf86DisableIO()
 }
 
 #endif /* USE_I386_IOPL */
+
+#ifdef USE_AMD64_IOPL
+/***************************************************************************/
+/* I/O Permissions section                                                 */
+/***************************************************************************/
+
+static Bool ExtendedEnabled = FALSE;
+
+void
+xf86EnableIO()
+{
+	if (ExtendedEnabled)
+		return;
+
+	if (amd64_iopl(TRUE) < 0)
+	{
+#ifndef __OpenBSD__
+		FatalError("%s: Failed to set IOPL for extended I/O",
+			   "xf86EnableIO");
+#else
+		FatalError("%s: Failed to set IOPL for extended I/O\n%s",
+			   "xf86EnableIO", SYSCTL_MSG);
+#endif
+	}
+	ExtendedEnabled = TRUE;
+
+	return;
+}
+	
+void
+xf86DisableIO()
+{
+	if (!ExtendedEnabled)
+		return;
+
+	if (amd64_iopl(FALSE) == 0) {
+		ExtendedEnabled = FALSE;
+	}
+	/* Otherwise, the X server has revoqued its root uid, 
+	   and thus cannot give up IO privileges any more */
+	   
+	return;
+}
+
+#endif /* USE_AMD64_IOPL */
 
 #ifdef USE_DEV_IO
 static int IoFd = -1;
@@ -470,7 +527,6 @@ xf86SetRGBOut()
     return;
 }
 #endif
-
 
 #ifdef HAS_MTRR_SUPPORT
 /* memory range (MTRR) support for FreeBSD */
@@ -879,3 +935,55 @@ NetBSDundoWC(int screenNum, pointer list)
 	xfree(mtrrp);
 }
 #endif
+
+#if defined(__OpenBSD__) && defined(__amd64__)
+static pointer
+amd64setWC(int screenNum, unsigned long base, unsigned long size, Bool enable,
+	    MessageType from)
+{
+	struct mtrr *mtrrp;
+	int n;
+
+	xf86DrvMsg(screenNum, X_WARNING,
+		   "%s MTRR %lx - %lx\n", enable ? "set" : "remove",
+		   base, (base + size));
+
+	mtrrp = xnfalloc(sizeof (struct mtrr));
+	mtrrp->base = base;
+	mtrrp->len = size;
+	mtrrp->type = MTRR_TYPE_WC;
+
+	/*
+	 * MTRR_PRIVATE will make this MTRR get reset automatically
+	 * if this process exits, so we have no need for an explicit
+	 * cleanup operation when starting a new server.
+	 */
+
+	if (enable)
+		mtrrp->flags = MTRR_VALID | MTRR_PRIVATE;
+	else
+		mtrrp->flags = 0;
+	n = 1;
+
+	if (amd64_set_mtrr(mtrrp, &n) < 0) {
+		xfree(mtrrp);
+		return NULL;
+	}
+	return mtrrp;
+}
+
+static void
+amd64undoWC(int screenNum, pointer list)
+{
+	struct mtrr *mtrrp = (struct mtrr *)list;
+	int n;
+
+	if (mtrrp == NULL)
+		return;
+	n = 1;
+	mtrrp->flags &= ~MTRR_VALID;
+	amd64_set_mtrr(mtrrp, &n);
+	xfree(mtrrp);
+}
+#endif /* OpenBSD/amd64 */
+

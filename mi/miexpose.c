@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/mi/miexpose.c,v 1.1.4.4.2.4 2004/03/08 00:36:57 alanc Exp $ */
+/* $XdotOrg: xc/programs/Xserver/mi/miexpose.c,v 1.2 2004/04/23 19:54:26 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/mi/miexpose.c,v 3.9tsi Exp $ */
 /***********************************************************
 

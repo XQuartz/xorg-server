@@ -79,7 +79,7 @@ winClipboardIOErrorHandler (Display *pDisplay);
  */
 
 void *
-winClipboardProc ()
+winClipboardProc (void *pvNotUsed)
 {
   Atom			atomClipboard, atomClipboardManager;
   int			iReturn;

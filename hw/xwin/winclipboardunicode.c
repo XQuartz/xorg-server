@@ -28,16 +28,7 @@
  * Authors:	Harold L Hunt II
  */
 
-#include "win.h"
-
-Bool
-winClipboardDetectUnicodeSupport (void);
-
-void
-winClipboardDOStoUNIX (char *pszData, int iLength);
- 
-void
-winClipboardUNIXtoDOS (unsigned char **ppszData, int iLength);
+#include "winclipboard.h"
 
 
 /*

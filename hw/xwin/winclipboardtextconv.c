@@ -40,8 +40,8 @@ winClipboardUNIXtoDOS (unsigned char **ppszData, int iLength);
 /*
  * Convert \r\n to \n
  *
- * NOTE: This was heavily inspired by, if not down right stolen from,
- *       Cygwin's winsup/cygwin/fhandler.cc/fhandler_base::read ()
+ * NOTE: This was heavily inspired by, Cygwin's
+ * winsup/cygwin/fhandler.cc/fhandler_base::read ()
  */
 
 void

@@ -1558,13 +1558,7 @@ get_addr_by_name(
 	memmove(&addr->sin_addr, hep->h_addr, hep->h_length);
 	*addrlen = sizeof(struct sockaddr_in);
 	addr->sin_family = AF_INET;
-	if (argtype && (strcmp(argtype, "-from") == 0))
-	{
-	    addr->sin_port = 0;
-	} else
-	{
-	    addr->sin_port = htons (xdm_udp_port);
-	}
+	addr->sin_port = htons (xdm_udp_port);
     }
     else
     {

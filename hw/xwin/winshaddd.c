@@ -1011,7 +1011,7 @@ winBltExposedRegionsShadowDD (ScreenPtr pScreen)
 
 	  /* Try to restore the surface, once */
 	  ddrval = IDirectDrawSurface2_Restore (pScreenPriv->pddsPrimary);
-	  ErrorF ("winBltExposedRegionsShadowDDNL - "
+	  ErrorF ("winBltExposedRegionsShadowDD - "
 		  "IDirectDrawSurface2_Restore returned: ");
 	  if (ddrval == DD_OK)
 	    ErrorF ("DD_OK\n");
@@ -1236,7 +1236,7 @@ winStoreColorsShadowDD (ColormapPtr pColormap,
 					  + pdefs[0].pixel);
   if (FAILED (ddrval))
     {
-      ErrorF ("winStoreColorsShadowDDNL - SetEntries () failed\n");
+      ErrorF ("winStoreColorsShadowDD - SetEntries () failed\n");
       return FALSE;
     }
 
@@ -1248,7 +1248,7 @@ winStoreColorsShadowDD (ColormapPtr pColormap,
 
   if (!winInstallColormapShadowDD (pColormap))
     {
-      ErrorF ("winStoreColorsShadowDDNL - Failed installing colormap\n");
+      ErrorF ("winStoreColorsShadowDD - Failed installing colormap\n");
       return FALSE;
     }
 
@@ -1276,7 +1276,7 @@ winCreateColormapShadowDD (ColormapPtr pColormap)
 				       NULL);
   if (FAILED (ddrval))
     {
-      ErrorF ("winCreateColormapShadowDDNL - CreatePalette failed\n");
+      ErrorF ("winCreateColormapShadowDD - CreatePalette failed\n");
       return FALSE;
     }
 
@@ -1306,7 +1306,7 @@ winDestroyColormapShadowDD (ColormapPtr pColormap)
   if (pColormap->flags & IsDefault)
     {
 #if CYGDEBUG
-      ErrorF ("winDestroyColormapShadowDDNL - Destroying default "
+      ErrorF ("winDestroyColormapShadowDD - Destroying default "
 	      "colormap\n");
 #endif
       
@@ -1320,7 +1320,7 @@ winDestroyColormapShadowDD (ColormapPtr pColormap)
 					       NULL);
       if (FAILED (ddrval))
 	{
-	  ErrorF ("winDestroyColormapShadowDDNL - Failed freeing the "
+	  ErrorF ("winDestroyColormapShadowDD - Failed freeing the "
 		  "default colormap DirectDraw palette.\n");
 	  return FALSE;
 	}

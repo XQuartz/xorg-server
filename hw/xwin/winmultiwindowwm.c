@@ -43,6 +43,7 @@
 #include <X11/Xlocale.h>
 #include <X11/Xproto.h>
 #include <X11/Xutil.h>
+#include <X11/cursorfont.h>
 
 /* Fixups to prevent collisions between Windows and X headers */
 #define ATOM DWORD
@@ -179,7 +180,6 @@ static jmp_buf			g_jmpWMEntry;
 static jmp_buf			g_jmpXMsgProcEntry;
 static Bool                     g_shutdown = FALSE;
 static Bool			redirectError = FALSE;
-
 
 /*
  * PushMessage - Push a message onto the queue
@@ -1184,6 +1184,16 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg)
   pWMInfo->atmPrivMap  = XInternAtom (pWMInfo->pDisplay,
 				      WIN_HWND_CACHE,
 				      False);
+
+
+  if (1) {
+    Cursor cursor = XCreateFontCursor (pWMInfo->pDisplay, XC_left_ptr);
+    if (cursor)
+    {
+      XDefineCursor (pWMInfo->pDisplay, DefaultRootWindow(pWMInfo->pDisplay), cursor);
+      XFreeCursor (pWMInfo->pDisplay, cursor);
+    }
+  }
 }
 
 

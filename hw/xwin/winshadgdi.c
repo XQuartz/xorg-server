@@ -34,7 +34,10 @@
 /*
  * External global variables
  */
+#ifdef XWIN_MULTIWINDOW
 extern DWORD		g_dwCurrentProcessID;
+extern DWORD		g_dwCurrentThreadID;
+#endif
 
 /*
  * Local function prototypes
@@ -246,12 +249,7 @@ winRedrawDamagedWindowShadowGDI (HWND hwnd, LPARAM lParam)
   BoxPtr pDamage = (BoxPtr)lParam;
   RECT rcClient, rcDamage, rcRedraw;
   POINT topLeft, bottomRight;
-  DWORD dwWindowProcessID;
   
-  GetWindowThreadProcessId (hwnd, &dwWindowProcessID);
-  if (dwWindowProcessID != g_dwCurrentProcessID)
-    return TRUE; /* This window is not ours */
-
   if (IsIconic (hwnd))
     return TRUE; /* Don't care minimized windows */
   
@@ -431,7 +429,8 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
 
 #ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
-  if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawAllProcShadowGDI, 0);
+  if (pScreenInfo->fMultiWindow)
+    EnumThreadWindows (g_dwCurrentThreadID, winRedrawAllProcShadowGDI, 0);
 #endif
 
   return fReturn;
@@ -552,9 +551,11 @@ winShadowUpdateGDI (ScreenPtr pScreen,
     }
 
 #ifdef XWIN_MULTIWINDOW
-  /* Redraw all windows */
-  if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawDamagedWindowShadowGDI,
-					     (LPARAM)pBoxExtents);
+  /* Redraw all multiwindow windows */
+  if (pScreenInfo->fMultiWindow)
+    EnumThreadWindows (g_dwCurrentThreadID,
+		       winRedrawDamagedWindowShadowGDI,
+		       (LPARAM)pBoxExtents);
 #endif
 }
 
@@ -861,7 +862,8 @@ winBltExposedRegionsShadowGDI (ScreenPtr pScreen)
 
 #ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
-  if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawAllProcShadowGDI, 0);
+  if (pScreenInfo->fMultiWindow)
+    EnumThreadWindows(g_dwCurrentThreadID, winRedrawAllProcShadowGDI, 0);
 #endif
 
   return TRUE;
@@ -933,7 +935,8 @@ winRedrawScreenShadowGDI (ScreenPtr pScreen)
 
 #ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
-  if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawAllProcShadowGDI, 0);
+  if (pScreenInfo->fMultiWindow)
+    EnumThreadWindows(g_dwCurrentThreadID, winRedrawAllProcShadowGDI, 0);
 #endif
 
   return TRUE;
@@ -1043,7 +1046,8 @@ winInstallColormapShadowGDI (ColormapPtr pColormap)
 
 #ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
-  if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawAllProcShadowGDI, 0);
+  if (pScreenInfo->fMultiWindow)
+    EnumThreadWindows (g_dwCurrentThreadID, winRedrawAllProcShadowGDI, 0);
 #endif
 
   return TRUE;

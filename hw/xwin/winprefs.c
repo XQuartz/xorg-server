@@ -44,6 +44,11 @@
 /* Where will the custom menu commands start counting from? */
 #define STARTMENUID WM_USER
 
+/* External global variables */
+#ifdef XWIN_MULTIWINDOW
+extern DWORD g_dwCurrentThreadID;
+#endif
+
 /* From winmultiwindowflex.l, the real parser */
 extern void parse_file (FILE *fp);
 
@@ -153,16 +158,8 @@ MakeMenu (char *name,
 static BOOL CALLBACK
 ReloadEnumWindowsProc (HWND hwnd, LPARAM lParam)
 {
-  char    szClassName[1024];
   HICON   hicon;
 
-  if (!GetClassName (hwnd, szClassName, 1024))
-    return TRUE;
-
-  if (strncmp (szClassName, WINDOW_CLASS_X, strlen (WINDOW_CLASS_X)))
-    /* Not one of our windows... */
-    return TRUE;
-  
   /* It's our baby, either clean or dirty it */
   if (lParam==FALSE) 
     {
@@ -210,7 +207,7 @@ ReloadPrefs (void)
 #ifdef XWIN_MULTIWINDOW
   /* First, iterate over all windows replacing their icon with system */
   /* default one and deleting any custom system menus                 */
-  EnumWindows (ReloadEnumWindowsProc, FALSE);
+  EnumThreadWindows (g_dwCurrentThreadID, ReloadEnumWindowsProc, FALSE);
 #endif
   
   /* Now, free/clear all info from our prefs structure */
@@ -254,7 +251,7 @@ ReloadPrefs (void)
   
 #ifdef XWIN_MULTIWINDOW
   /* Rebuild the icons and menus */
-  EnumWindows (ReloadEnumWindowsProc, TRUE);
+  EnumThreadWindows (g_dwCurrentThreadID, ReloadEnumWindowsProc, TRUE);
 #endif
 
   /* Whew, done */

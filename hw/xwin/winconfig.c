@@ -110,6 +110,8 @@ winInfoRec g_winInfo = {
    50}
 };
 
+#define NULL_IF_EMPTY(x) (winNameCompare(x,"")?x:NULL)
+
 #ifdef XWIN_XF86CONFIG
 serverLayoutRec g_winConfigLayout;
 
@@ -118,8 +120,6 @@ static Bool ParseOptionValue (int scrnIndex, pointer options,
 static Bool configLayout (serverLayoutPtr, XF86ConfLayoutPtr, char *);
 static Bool configImpliedLayout (serverLayoutPtr, XF86ConfScreenPtr);
 static Bool GetBoolValue (OptionInfoPtr p, const char *s);
-
-#define NULL_IF_EMPTY(x) (winNameCompare(x,"")?x:NULL)
 
 
 Bool
@@ -263,9 +263,10 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 #ifdef XWIN_XF86CONFIG
   XF86ConfInputPtr		kbd = NULL;
   XF86ConfInputPtr		input_list = NULL;
-  MessageType			from = X_DEFAULT;
-#endif
   MessageType			kbdfrom = X_CONFIG;
+#endif
+  MessageType			from = X_DEFAULT;
+  char				*s = NULL;
 
   /* Setup defaults */
 #ifdef XKB
@@ -420,7 +421,6 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 
   if (kbd != NULL)
     {
-      char *s;
 
       if (kbd->inp_identifier)
 	winMsg (kbdfrom, "Using keyboard \"%s\" as primary keyboard\n",
@@ -442,6 +442,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
           winMsg (X_CONFIG, "AutoRepeat: %ld %ld\n", 
                   g_winInfo.keyboard.delay, g_winInfo.keyboard.rate);
         }
+#endif
       
 #ifdef XKB
       from = X_DEFAULT;
@@ -450,6 +451,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	  from = X_CMDLINE;
 	  g_winInfo.xkb.disable = TRUE;
 	}
+#ifdef XWIN_XF86CONFIG
       else if (kbd->inp_option_lst)
 	{
 	  int b = winSetBoolOption (kbd->inp_option_lst, "XkbDisable", FALSE);
@@ -459,6 +461,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	      g_winInfo.xkb.disable = TRUE;
 	    }
 	}
+#endif
       if (g_winInfo.xkb.disable)
 	{
 	  winMsg (from, "XkbExtension disabled\n");
@@ -470,11 +473,13 @@ winConfigKeyboard (DeviceIntPtr pDevice)
               s = g_cmdline.xkbRules;
               from = X_CMDLINE;  
             }
+#ifdef XWIN_XF86CONFIG
           else 
-            {   
+            {
               s = winSetStrOption (kbd->inp_option_lst, "XkbRules", NULL);
               from = X_CONFIG;  
             }
+#endif
           if (s)
 	    {
 	      g_winInfo.xkb.rules = NULL_IF_EMPTY (s);
@@ -486,11 +491,13 @@ winConfigKeyboard (DeviceIntPtr pDevice)
               s = g_cmdline.xkbModel;
               from = X_CMDLINE;
             }
+#ifdef XWIN_XF86CONFIG
           else
             {
               s = winSetStrOption (kbd->inp_option_lst, "XkbModel", NULL);
               from = X_CONFIG;
             }  
+#endif
 	  if (s)
 	    {
 	      g_winInfo.xkb.model = NULL_IF_EMPTY (s);
@@ -501,12 +508,14 @@ winConfigKeyboard (DeviceIntPtr pDevice)
             {
               s = g_cmdline.xkbLayout;
               from = X_CMDLINE;
-            } 
+            }
+#ifdef XWIN_XF86CONFIG
           else
             {
               s = winSetStrOption (kbd->inp_option_lst, "XkbLayout", NULL);
               from = X_CONFIG;
             }
+#endif
           if (s)  
 	    {
 	      g_winInfo.xkb.layout = NULL_IF_EMPTY (s);
@@ -518,11 +527,13 @@ winConfigKeyboard (DeviceIntPtr pDevice)
               s = g_cmdline.xkbVariant;
               from = X_CMDLINE;
             }
+#ifdef XWIN_XF86CONFIG
           else
             { 
               s = winSetStrOption (kbd->inp_option_lst, "XkbVariant", NULL);
               from = X_CONFIG;
             }
+#endif
 	  if (s)
 	    {
 	      g_winInfo.xkb.variant = NULL_IF_EMPTY (s);
@@ -531,20 +542,23 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 
           if (g_cmdline.xkbOptions)
             {
-              s=g_cmdline.xkbOptions;
+              s = g_cmdline.xkbOptions;
               from = X_CMDLINE;
-            } 
+            }
+#ifdef XWIN_XF86CONFIG
           else
             { 
               s = winSetStrOption (kbd->inp_option_lst, "XkbOptions", NULL);
               from = X_CONFIG;
             }
+#endif
           if (s)
 	    {
 	      g_winInfo.xkb.options = NULL_IF_EMPTY (s);
 	      winMsg (from, "XKB: options: \"%s\"\n", s);
 	    }
 
+#ifdef XWIN_XF86CONFIG
 	  from = X_CMDLINE;
 	  if (!XkbInitialMap)
 	    {
@@ -576,16 +590,14 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	      winMsg (X_CONFIG, "XKB: types: \"%s\"\n", s);
 	    }
 
-	  if (
-	      (s =
+	  if ((s =
 	       winSetStrOption (kbd->inp_option_lst, "XkbKeycodes", NULL)))
 	    {
 	      g_winInfo.xkb.keycodes = NULL_IF_EMPTY (s);
 	      winMsg (X_CONFIG, "XKB: keycodes: \"%s\"\n", s);
 	    }
 
-	  if (
-	      (s =
+	  if ((s =
 	       winSetStrOption (kbd->inp_option_lst, "XkbGeometry", NULL)))
 	    {
 	      g_winInfo.xkb.geometry = NULL_IF_EMPTY (s);
@@ -597,46 +609,10 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	      g_winInfo.xkb.symbols = NULL_IF_EMPTY (s);
 	      winMsg (X_CONFIG, "XKB: symbols: \"%s\"\n", s);
 	    }
+#endif
+#endif
 	}
-#endif
-    }
-  else
-    {
-      winMsg (X_ERROR, "No primary keyboard configured\n");
-      winMsg (X_DEFAULT, "Using compiletime defaults for keyboard\n");
-#ifdef XKB
-      if (g_cmdline.noXkbExtension)
-        {
-          g_winInfo.xkb.disable = TRUE;
-          winMsg (X_CMDLINE, "XkbExtension disabled\n");
-        }
-#endif
-    }
-#else
-  if (g_cmdline.xkbRules) 
-    {
-      g_winInfo.xkb.rules = g_cmdline.xkbRules;
-      winMsg (X_CMDLINE, "XKB: rules: \"%s\"\n", g_cmdline.xkbRules);
-    }
-  if (g_cmdline.xkbModel) 
-    {
-      g_winInfo.xkb.model = g_cmdline.xkbModel;
-      winMsg (X_CMDLINE, "XKB: model: \"%s\"\n", g_cmdline.xkbModel);
-    }
-  if (g_cmdline.xkbLayout) 
-    {
-      g_winInfo.xkb.layout = g_cmdline.xkbLayout;
-      winMsg (X_CMDLINE, "XKB: layout: \"%s\"\n", g_cmdline.xkbLayout);
-    }
-  if (g_cmdline.xkbVariant) 
-    {
-      g_winInfo.xkb.variant = g_cmdline.xkbVariant;
-      winMsg (X_CMDLINE, "XKB: variant: \"%s\"\n", g_cmdline.xkbVariant);
-    }
-  if (g_cmdline.xkbOptions) 
-    {
-      g_winInfo.xkb.options = g_cmdline.xkbOptions;
-      winMsg (X_CMDLINE, "XKB: options: \"%s\"\n", g_cmdline.xkbOptions);
+#ifdef XWIN_XF86CONFIG
     }
 #endif
 

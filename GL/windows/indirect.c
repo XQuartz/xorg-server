@@ -73,7 +73,7 @@ static void glWinInitDebugSettings(void)
 }
 
 static char errorbuffer[1024];
-const char *winErrorMessage(void)
+const char *glWinErrorMessage(void)
 {
     if (!FormatMessage( 
                 FORMAT_MESSAGE_FROM_SYSTEM | 
@@ -85,7 +85,7 @@ const char *winErrorMessage(void)
                 sizeof(errorbuffer),
                 NULL ))
     {
-        snprintf(errorbuffer, sizeof(errorbuffer), "Unknown error in FormatMessage!\n"); 
+        snprintf(errorbuffer, sizeof(errorbuffer), "Unknown error in FormatMessage: %08x!\n", (unsigned)GetLastError()); 
     }
     return errorbuffer; 
 }
@@ -267,7 +267,7 @@ static HDC glWinMakeDC(__GLcontext *gc)
     /*dc = GetWindowDC(gc->winInfo.hwnd);*/
 
     if (dc == NULL)
-        ErrorF("GetDC error: %s\n", winErrorMessage());
+        ErrorF("GetDC error: %s\n", glWinErrorMessage());
     return dc;
 }
 
@@ -286,7 +286,7 @@ static void unattach(__GLcontext *gc)
     {
         ret = wglDeleteContext(gc->ctx);
         if (!ret)
-            ErrorF("wglDeleteContext error: %s\n", winErrorMessage());
+            ErrorF("wglDeleteContext error: %s\n", glWinErrorMessage());
         gc->ctx = NULL;
     }
 
@@ -294,7 +294,7 @@ static void unattach(__GLcontext *gc)
     {
         ret = DeleteObject(gc->winInfo.hrgn);
         if (!ret)
-            ErrorF("DeleteObject error: %s\n", winErrorMessage());
+            ErrorF("DeleteObject error: %s\n", glWinErrorMessage());
         gc->winInfo.hrgn = NULL;
     }
 #endif
@@ -333,13 +333,13 @@ static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
     gc->pixelFormat = ChoosePixelFormat(dc, &gc->pfd);
     if (gc->pixelFormat == 0)
     {
-        ErrorF("ChoosePixelFormat error: %s\n", winErrorMessage());
+        ErrorF("ChoosePixelFormat error: %s\n", glWinErrorMessage());
         return;  
     }
 
     ret = SetPixelFormat(dc, gc->pixelFormat, &gc->pfd);
     if (!ret) {
-        ErrorF("SetPixelFormat error: %s\n", winErrorMessage());
+        ErrorF("SetPixelFormat error: %s\n", glWinErrorMessage());
     }
 
 #if 0
@@ -347,7 +347,7 @@ static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
     gc->ctx = wglCreateContext(dc);
     
     if (gc->ctx == NULL) {
-        ErrorF("wglCreateContext error: %s\n", winErrorMessage());
+        ErrorF("wglCreateContext error: %s\n", glWinErrorMessage());
         ReleaseDC(gc->winInfo.hwnd, dc);
         return;
     }
@@ -358,10 +358,10 @@ static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
         /* copy all rendering states to the new context */
         ret = wglCopyContext(old_ctx, gc->ctx, GL_ALL_ATTRIB_BITS);
         if (!ret)
-            ErrorF("wglCopyContext error: %s\n", winErrorMessage());
+            ErrorF("wglCopyContext error: %s\n", glWinErrorMessage());
         ret = wglDeleteContext(old_ctx);
         if (!ret)
-            ErrorF("wglDeleteContext error: %s\n", winErrorMessage());
+            ErrorF("wglDeleteContext error: %s\n", glWinErrorMessage());
     }
 #endif
     
@@ -411,7 +411,7 @@ static GLboolean glWinMakeCurrent(__GLcontext *gc)
     /*    GLWIN_DEBUG_MSG("Got HDC %p\n", dc);*/
     ret = wglMakeCurrent(dc, gc->ctx);
     if (!ret)
-        ErrorF("glMakeCurrent error: %s\n", winErrorMessage());
+        ErrorF("glMakeCurrent error: %s\n", glWinErrorMessage());
     ReleaseDC(gc->winInfo.hwnd, dc);
 
     return ret?GL_TRUE:GL_FALSE;
@@ -436,7 +436,7 @@ static GLboolean glWinCopyContext(__GLcontext *dst, const __GLcontext *src,
     ret = wglCopyContext(src->ctx, dst->ctx, mask);
     if (!ret) 
     {
-        ErrorF("wglCopyContext error: %s\n", winErrorMessage());
+        ErrorF("wglCopyContext error: %s\n", glWinErrorMessage());
         return GL_FALSE;
     }
 
@@ -451,7 +451,7 @@ static GLboolean glWinForceCurrent(__GLcontext *gc)
     dc = glWinMakeDC(gc);
     ret = wglMakeCurrent(dc, gc->ctx);
     if (!ret)
-        ErrorF("wglSetCurrent error: %s\n", winErrorMessage());
+        ErrorF("wglSetCurrent error: %s\n", glWinErrorMessage());
     ReleaseDC(gc->winInfo.hwnd, dc);
 
     return ret?GL_TRUE:GL_FALSE;
@@ -670,7 +670,7 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
     dc = CreateDC("DISPLAY",NULL,NULL,NULL);
     if (dc == NULL)
     {
-        ErrorF("CreateDC error: %s\n", winErrorMessage());
+        ErrorF("CreateDC error: %s\n", glWinErrorMessage());
         free(result);
         return NULL;
     }
@@ -693,7 +693,7 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
     result->pixelFormat = ChoosePixelFormat(dc, &result->pfd);
     if (result->pixelFormat == 0)
     {
-        ErrorF("ChoosePixelFormat error: %s\n", winErrorMessage());
+        ErrorF("ChoosePixelFormat error: %s\n", glWinErrorMessage());
         ReleaseDC(result->winInfo.hwnd, dc);
         free(result);
         return NULL;
@@ -703,7 +703,7 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
 
     ret = SetPixelFormat(dc, result->pixelFormat, &result->pfd);
     if (!ret) {
-        ErrorF("SetPixelFormat error: %s\n", winErrorMessage());
+        ErrorF("SetPixelFormat error: %s\n", glWinErrorMessage());
         ReleaseDC(result->winInfo.hwnd, dc);
         free(result);
         return NULL;
@@ -713,7 +713,7 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
     result->isAttached = 0;
 
     if (result->ctx == NULL) {
-        ErrorF("wglCreateContext error: %s\n", winErrorMessage());
+        ErrorF("wglCreateContext error: %s\n", glWinErrorMessage());
         ReleaseDC(result->winInfo.hwnd, dc);
         free(result);
         return NULL;
@@ -1356,7 +1356,7 @@ static GLboolean glWinSwapBuffers(__GLXdrawablePrivate *glxPriv)
 
         ret = SwapBuffers(dc);
         if (!ret)
-            ErrorF("SwapBuffers failed: %s\n", winErrorMessage());
+            ErrorF("SwapBuffers failed: %s\n", glWinErrorMessage());
         
         ReleaseDC(gc->winInfo.hwnd, dc);
         if (!ret)

@@ -1089,3 +1089,4 @@ winNormalizeName (const char *s)
   *q = '\0';
   return ret;
 }
+

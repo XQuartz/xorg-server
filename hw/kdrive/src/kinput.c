@@ -21,7 +21,7 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-/* $XFree86: xc/programs/Xserver/hw/kdrive/kinput.c,v 1.12 2001/01/23 06:25:05 keithp Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/kdrive/kinput.c,v 1.13 2001/03/30 02:15:20 keithp Exp $ */
 
 #include "kdrive.h"
 #include "inputstr.h"
@@ -1452,7 +1452,7 @@ miPointerScreenFuncRec kdPointerScreenFuncs =
 void
 ProcessInputEvents ()
 {
-    (void)mieqProcessInputEvents();
+    mieqProcessInputEvents();
     miPointerUpdate();
     if (kdSwitchPending)
 	KdProcessSwitch ();

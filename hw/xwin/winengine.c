@@ -30,6 +30,7 @@
 /* $XFree86: xc/programs/Xserver/hw/xwin/winengine.c,v 1.5 2003/07/29 21:25:17 dawes Exp $ */
 
 #include "win.h"
+#include "winmsg.h"
 
 
 /*
@@ -184,7 +185,10 @@ winSetEngine (ScreenPtr pScreen)
     }
 
   /* ShadowGDI is the only engine that supports Multi Window Mode */
-  if (pScreenInfo->fRootless
+  if (TRUE
+#ifdef XWIN_MULTIWINDOWEXTWM
+      || pScreenInfo->fRootless
+#endif
 #ifdef XWIN_MULTIWINDOW
       || pScreenInfo->fMultiWindow
 #endif

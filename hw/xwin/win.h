@@ -202,13 +202,6 @@
 #include "winwindow.h"
 
 
-/* Cygwin's winuser.h does not define VK_KANA as of 28Mar2001 */
-/* NOTE: Cygwin's winuser.h was fixed shortly after 28Mar2001. */
-#ifndef VK_KANA
-#define VK_KANA 15
-#endif
-
-
 /*
  * Debugging macros
  */
@@ -396,7 +389,9 @@ typedef struct
 #endif
   Bool			fFullScreen;
   Bool			fDecoration;
+#ifdef XWIN_MULTIWINDOWEXTWM
   Bool			fRootless;
+#endif
   Bool			fPseudoRootless;
 #ifdef XWIN_MULTIWINDOW
   Bool			fMultiWindow;
@@ -570,6 +565,7 @@ typedef struct _winPrivScreenRec
 } winPrivScreenRec;
 
 
+#ifdef XWIN_MULTIWINDOWEXTWM
 typedef struct {
   RootlessWindowPtr	pFrame;
   HWND			hWnd;
@@ -585,6 +581,7 @@ typedef struct {
   BOOL			fDestroyed;//for debug
   char			*pfb;
 } win32RootlessWindowRec, *win32RootlessWindowPtr;
+#endif
 
 
 typedef struct {
@@ -1526,9 +1523,6 @@ void
 winCopyWindowMultiWindow (WindowPtr pWin, DDXPointRec oldpt,
 			  RegionPtr oldRegion);
 
-void
-winWin32RootlessMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h);
-
 XID
 winGetWindowID (WindowPtr pWin);
 
@@ -1573,6 +1567,7 @@ winWindowProc (HWND hWnd, UINT message,
 	       WPARAM wParam, LPARAM lParam);
 
 
+#ifdef XWIN_MULTIWINDOWEXTWM
 /*
  * winwin32rootless.c
  */
@@ -1635,8 +1630,10 @@ winWin32RootlessCompositePixels (unsigned int width, unsigned int height, unsign
 void
 winWin32RootlessCopyWindow (RootlessFrameID wid, int dstNrects, const BoxRec *dstRects,
 			    int dx, int dy);
+#endif
 
 
+#ifdef XWIN_MULTIWINDOWEXTWM
 /*
  * winwin32rootlesswindow.c
  */
@@ -1651,17 +1648,24 @@ void
 winWin32RootlessResizeXWindow (WindowPtr pWin, int w, int h);
 
 void
+winWin32RootlessMoveResizeXWindow (WindowPtr pWin, int x, int y, int w, int h);
+
+void
 winWin32RootlessUpdateIcon (Window id);
+#endif
 
 
+#ifdef XWIN_MULTIWINDOWEXTWM
 /*
  * winwin32rootlesscursor.c
  */
 
 Bool
 winWin32RootlessInitCursor (ScreenPtr pScreen);
+#endif
 
 
+#ifdef XWIN_MULTIWINDOWEXTWM
 /*
  * winwin32rootlesswndproc.c
  */
@@ -1669,6 +1673,7 @@ winWin32RootlessInitCursor (ScreenPtr pScreen);
 LRESULT CALLBACK
 winWin32RootlessWindowProc (HWND hwnd, UINT message, 
 			    WPARAM wParam, LPARAM lParam);
+#endif
 
 
 /*

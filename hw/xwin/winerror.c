@@ -45,7 +45,7 @@ OsVendorVErrorF (const char *pszFormat, va_list va_args)
   pthread_mutex_lock (&s_pmPrinting);
 
   /* Print the error message to a log file, could be stderr */
-  LogVWrite(0, pszFormat, va_args);
+  LogVWrite (0, pszFormat, va_args);
 
   /* Unlock the printing mutex */
   pthread_mutex_unlock (&s_pmPrinting);

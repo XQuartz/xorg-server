@@ -37,6 +37,7 @@
 #include "safeAlpha.h"	
 
 
+#ifdef XWIN_MULTIWINDOWEXTWM
 static RootlessFrameProcsRec
 winWin32RootlessProcs = {	
   winWin32RootlessCreateFrame,
@@ -61,6 +62,7 @@ winWin32RootlessProcs = {
   NULL,//winWin32RootlessCompositePixels,
   winWin32RootlessCopyWindow
 };
+#endif
 
 
 /*
@@ -100,9 +102,9 @@ winScreenInit (int index,
 	  pScreenInfo->dwWidth, pScreenInfo->dwHeight);
 #endif
 
-#ifdef XWIN_MULTIWINDOW
-  /* Bail if -rootless and -multiwindow flags both present */
-  if (pScreenInfo->fRootless && pScreenInfo->fMultiWindow)
+#if defined(XWIN_MULTIWINDOW)
+  /* Bail if -pseudorootless and -multiwindow flags both present */
+  if (pScreenInfo->fPseudoRootless && pScreenInfo->fMultiWindow)
     {
       ErrorF ("winScreenInit - The -rootless and -multiwindow parameters\n"
 	      "\tcannot be used together.  Note that the -rootless parameter\n"
@@ -452,7 +454,10 @@ winFinishScreenInitFB (int index,
   if ((pScreenInfo->dwEngine == WIN_SERVER_SHADOW_GDI
        || pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD
        || pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL)
-      &&(!pScreenInfo->fRootless))
+#ifdef XWIN_MULTIWINDOWEXTWM
+      && !pScreenInfo->fRootless
+#endif
+      )
     {
 #if CYGDEBUG
       ErrorF ("winFinishScreenInitFB - Calling shadowInit ()\n");
@@ -467,7 +472,7 @@ winFinishScreenInitFB (int index,
     }
 #endif
 
-
+#ifdef XWIN_MULTIWINDOWEXTWM
   /* Handle rootless mode */
   if (pScreenInfo->fRootless)
     {
@@ -488,8 +493,10 @@ winFinishScreenInitFB (int index,
 	}
       winWindowsWMExtensionInit ();
     }
+#endif
+
   /* Handle pseudo-rootless mode */
-  else if (pScreenInfo->fPseudoRootless)
+  if (pScreenInfo->fPseudoRootless)
     {
       /* Define the WRAP macro temporarily for local use */
 #define WRAP(a) \
@@ -525,6 +532,8 @@ winFinishScreenInitFB (int index,
       /* Undefine the WRAP macro, as it is not needed elsewhere */
 #undef WRAP
     }
+
+
 #ifdef XWIN_MULTIWINDOW
   /* Handle multi window mode */
   else if (pScreenInfo->fMultiWindow)

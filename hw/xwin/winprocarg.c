@@ -107,7 +107,9 @@ winInitializeDefaultScreens (void)
       g_ScreenInfo[i].pfb = NULL;
       g_ScreenInfo[i].fFullScreen = FALSE;
       g_ScreenInfo[i].fDecoration = TRUE;
+#ifdef XWIN_MULTIWINDOWEXTWM
       g_ScreenInfo[i].fRootless = FALSE;
+#endif
       g_ScreenInfo[i].fPseudoRootless = FALSE;
 #ifdef XWIN_MULTIWINDOW
       g_ScreenInfo[i].fMultiWindow = FALSE;
@@ -163,8 +165,8 @@ ddxProcessArgument (int argc, char *argv[], int i)
 {
   static Bool		s_fBeenHere = FALSE;
 
-  /* Initialize once */
-  if (!s_fBeenHere)
+  /* Initialize once - only if option is not -help */
+  if (!s_fBeenHere && !IS_OPTION ("-help"))
     {
 #ifdef DDXOSVERRORF
       /*
@@ -425,6 +427,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
       return 1;
     }
 
+#ifdef XWIN_MULTIWINDOWEXTWM
   /*
    * Look for the '-rootless' argument
    */
@@ -450,6 +453,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
       /* Indicate that we have processed this argument */
       return 1;
     }
+#endif
 
   /*
    * Look for the '-pseudorootless' argument

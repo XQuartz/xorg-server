@@ -47,7 +47,6 @@
 #define WINDOW_TITLE_X		"Cygwin/X X"
 #define WIN_WINDOW_PROP		"cyg_window_prop_rl"
 #define WIN_MSG_QUEUE_FNAME	"/dev/windows"
-#define WIN_LOG_FNAME		"/tmp/XWin.log"
 #define WIN_WID_PROP		"cyg_wid_prop_rl"
 #define WIN_NEEDMANAGE_PROP	"cyg_override_redirect_prop_rl"
 #define WIN_HWND_CACHE		"cyg_privmap_rl"

@@ -69,7 +69,9 @@ winWakeupHandler (int nScreen,
   if (pScreenPriv->pScreenInfo->fMultiWindow)
     winReorderWindowsMultiWindow ((ScreenPtr)pWakeupData);
 #endif
-  
+
+#ifdef XWIN_MULTIWINDOWEXTWM
   if (pScreenPriv->pScreenInfo->fRootless)
     winWin32RootlessReorderWindows ((ScreenPtr)pWakeupData);
+#endif
 }

@@ -36,6 +36,7 @@
 #include "win.h"
 #include "winkeybd.h"
 #include "winconfig.h"
+#include "winmsg.h"
  
 #ifdef XKB
 #define XKB_IN_SERVER

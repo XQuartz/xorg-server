@@ -44,16 +44,15 @@ from The Open Group.
 extern int			g_iNumScreens;
 extern winScreenInfo		g_ScreenInfo[];
 extern int			g_iLastScreen;
-extern FILE			*g_pfLog;
+
+extern char *			g_pszLogFile;
+extern int			g_iLogVerbose;
+Bool				g_fLogInited;
 
 extern Bool			g_fXdmcpEnabled;
 extern int			g_fdMessageQueue;
 extern const char *		g_pszQueryHost;
 extern HINSTANCE		g_hInstance;
-
-int		g_iLogVerbose = 4;
-char *		g_pszLogFile = WIN_LOG_FNAME;
-Bool		g_fLogInited = FALSE;
 
 #ifdef XWIN_CLIPBOARD
 extern Bool			g_fUnicodeClipboard;
@@ -164,10 +163,10 @@ ddxGiveUp (void)
     }
 
   if (!g_fLogInited) {
-    LogInit(g_pszLogFile, NULL);
+    LogInit (g_pszLogFile, NULL);
     g_fLogInited = TRUE;
   }  
-  LogClose();
+  LogClose ();
 
   /*
    * At this point we aren't creating any new screens, so
@@ -224,11 +223,11 @@ OsVendorInit (void)
 #endif
 
   if (!g_fLogInited) {
-    LogInit(g_pszLogFile, NULL);
+    LogInit (g_pszLogFile, NULL);
     g_fLogInited = TRUE;
   }  
-  LogSetParameter(XLOG_FLUSH, 1);
-  LogSetParameter(XLOG_VERBOSITY, g_iLogVerbose);
+  LogSetParameter (XLOG_FLUSH, 1);
+  LogSetParameter (XLOG_VERBOSITY, g_iLogVerbose);
 
   /* Add a default screen if no screens were specified */
   if (g_iNumScreens == 0)
@@ -298,8 +297,10 @@ ddxUseMsg (void)
           "\tDo not draw a window border, title bar, etc.  Windowed\n"
 	  "\tmode only.\n");
 
+#ifdef XWIN_MULTIWINDOWEXTWM
   ErrorF ("-rootless\n"
 	  "\tRun the server in rootless mode.\n");
+#endif
 
   ErrorF ("-pseudorootless\n"
 	  "\tRun the server in pseudo-rootless mode.\n");
@@ -350,16 +351,24 @@ ddxUseMsg (void)
   ErrorF ("-[no]winkill\n"
           "\tAlt+F4 exits the X Server.\n");
 
+#ifdef XWIN_XF86CONFIG
   ErrorF ("-xf86config\n"
           "\tSpecify a configuration file.\n");
 
   ErrorF ("-keyboard\n"
 	  "\tSpecify a keyboard device from the configuration file.\n");
+#endif
 
 #ifdef XWIN_CLIPBOARD
   ErrorF ("-nounicodeclipboard\n"
 	  "\tDo not use Unicode clipboard even if NT-based platform.\n");
 #endif
+
+  if (!g_fLogInited) {
+    LogInit (g_pszLogFile, NULL);
+    g_fLogInited = TRUE;
+  }  
+  LogClose ();
 }
 
 

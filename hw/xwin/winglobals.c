@@ -46,7 +46,6 @@ int		g_iPixmapPrivateIndex = -1;
 int		g_iWindowPrivateIndex = -1;
 unsigned long	g_ulServerGeneration = 0;
 Bool		g_fInitializedDefaultScreens = FALSE;
-FILE		*g_pfLog = NULL;
 DWORD		g_dwEnginesSupported = 0;
 HINSTANCE	g_hInstance = 0;
 HWND		g_hDlgDepthChange = NULL;
@@ -54,6 +53,9 @@ HWND		g_hDlgExit = NULL;
 const char *	g_pszQueryHost = NULL;
 Bool		g_fXdmcpEnabled = FALSE;
 HICON		g_hiconX = NULL;
+char *		g_pszLogFile = "/tmp/XWin.log";
+int		g_iLogVerbose = 4;
+Bool		g_fLogInited = FALSE;
 
 
 /*

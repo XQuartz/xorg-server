@@ -1,6 +1,5 @@
-2004-05-09  Alexander Gottwald <ago@freedesktop.org>
-
-	* Patch by Dan Wilks <Dan_Wilks@intuit.com>
+2004-05-09  Dan Wilks  <Dan_Wilks@intuit.com>
+    
 	* winclipboard.h: Add extern prototypes for winDebug, winErrorFVerb
 	copied from winmsg.h.
 	* winclipboardinit.c (winFixClipboardChain): Post rather than send the
@@ -14,5 +13,3 @@
 	logging api's.  Add some additional debug logging.  Make best effort 
 	to prevent our window appearing twice in the clipboard chain.  Also 
 	detect loops when they occur and try to behave in a reasonable way.
-
-  	  

@@ -468,6 +468,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	}
       else
 	{
+          s = NULL;  
           if (g_cmdline.xkbRules)
             {
               s = g_cmdline.xkbRules;
@@ -485,7 +486,8 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	      g_winInfo.xkb.rules = NULL_IF_EMPTY (s);
 	      winMsg (from, "XKB: rules: \"%s\"\n", s);
 	    }
-
+          
+          s = NULL;
           if (g_cmdline.xkbModel)
             {
               s = g_cmdline.xkbModel;
@@ -504,6 +506,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	      winMsg (from, "XKB: model: \"%s\"\n", s);
 	    }
 
+          s = NULL;
           if (g_cmdline.xkbLayout)
             {
               s = g_cmdline.xkbLayout;
@@ -522,6 +525,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	      winMsg (from, "XKB: layout: \"%s\"\n", s);
 	    }
 
+          s = NULL;
           if (g_cmdline.xkbVariant)
             {
               s = g_cmdline.xkbVariant;
@@ -540,6 +544,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	      winMsg (from, "XKB: variant: \"%s\"\n", s);
 	    }
 
+          s = NULL;
           if (g_cmdline.xkbOptions)
             {
               s = g_cmdline.xkbOptions;

@@ -71,7 +71,7 @@ winScaleXBitmapToWindows (int iconSize,
   unsigned int		zero;
   unsigned int		color;
 
-  effXBPP = pixmap->drawable.bitsPerPixel;
+  effXBPP = BitsPerPixel(pixmap->drawable.depth);
   effXDepth = pixmap->drawable.depth;
 
   if (pixmap->drawable.bitsPerPixel == 15)

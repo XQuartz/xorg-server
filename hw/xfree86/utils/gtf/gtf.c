@@ -1,4 +1,4 @@
-/* $XdotOrg$ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/etc/gtf.c,v 1.1.10.1.4.1 2004/03/19 17:09:00 eich Exp $ */
 /* gtf.c  Generate mode timings using the GTF Timing Standard
  *
  * gcc gtf.c -o gtf -lm -Wall
@@ -146,7 +146,7 @@ typedef struct __mode
 typedef struct __options
 {
     int x, y;
-    int xf86mode, fbmode;
+    int xorgmode, fbmode;
     float v_freq;
 } options;
 
@@ -675,8 +675,9 @@ options *parse_command_line (int argc, char *argv[])
                    (strcmp (argv[n], "--fbmode") == 0)) {
             o->fbmode = 1;
         } else if ((strcmp (argv[n], "-x") == 0) ||
+		   (strcmp (argv[n], "--xorgmode") == 0) ||
                    (strcmp (argv[n], "--xf86mode") == 0)) {
-            o->xf86mode = 1;
+            o->xorgmode = 1;
         } else {
             goto bad_option;
         }
@@ -684,10 +685,10 @@ options *parse_command_line (int argc, char *argv[])
         n++;
     }
 
-    /* if neither xf86mode nor fbmode were requested, default to
-       xf86mode */
+    /* if neither xorgmode nor fbmode were requested, default to
+       xorgmode */
 
-    if (!o->fbmode && !o->xf86mode) o->xf86mode = 1;
+    if (!o->fbmode && !o->xorgmode) o->xorgmode = 1;
     
     return (o);
     
@@ -695,7 +696,7 @@ options *parse_command_line (int argc, char *argv[])
 
     fprintf (stderr, "\n");
     fprintf (stderr, "usage: %s x y refresh [-v|--verbose] "
-             "[-f|--fbmode] [-x|-xf86mode]\n", argv[0]);
+             "[-f|--fbmode] [-x|--xorgmode]\n", argv[0]);
 
     fprintf (stderr, "\n");
     
@@ -709,7 +710,7 @@ options *parse_command_line (int argc, char *argv[])
              "(traces each step of the computation)\n");
     fprintf (stderr, "  -f|--fbmode : output an fbset(8)-style mode "
              "description\n");
-    fprintf (stderr, " -x|-xf86mode : output an "__XSERVERNAME__"-style mode "
+    fprintf (stderr, " -x|--xorgmode : output an "__XSERVERNAME__"-style mode "
              "description (this is the default\n"
              "                if no mode description is requested)\n");
     
@@ -733,7 +734,7 @@ int main (int argc, char *argv[])
     m = vert_refresh (o->x, o->y, o->v_freq, 0, 0);
     if (!m) exit (1);
 
-    if (o->xf86mode)
+    if (o->xorgmode)
         print_xf86_mode(m);
     
     if (o->fbmode)

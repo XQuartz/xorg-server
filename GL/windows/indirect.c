@@ -1,3 +1,46 @@
+/*
+ * GLX implementation that uses Windows OpenGL library
+ * (Indirect rendering path)
+ *
+ * Authors: Alexander Gottwald 
+ */
+/* 
+ * Portions of this file are copied from GL/apple/indirect.c,
+ * which contains the following copyright:
+ *  
+ * Copyright (c) 2002 Greg Parker. All Rights Reserved.
+ * Copyright (c) 2002 Apple Computer, Inc.
+ *
+ * Portions of this file are copied from xf86glx.c,
+ * which contains the following copyright:
+ *
+ * Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.
+ * All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+ * THE ABOVE LISTED COPYRIGHT HOLDER(S) BE LIABLE FOR ANY CLAIM, DAMAGES OR
+ * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above copyright
+ * holders shall not be used in advertising or otherwise to promote the sale,
+ * use or other dealings in this Software without prior written authorization.
+ */
+/* $XDotOrg$ */
+
 
 #include <GL/gl.h>
 #include <GL/glext.h>
@@ -86,30 +129,30 @@ const char *winErrorMessage(void)
 GLint __glEvalComputeK(GLenum target)
 {
     switch (target) {
-    case GL_MAP1_VERTEX_4:
-    case GL_MAP1_COLOR_4:
-    case GL_MAP1_TEXTURE_COORD_4:
-    case GL_MAP2_VERTEX_4:
-    case GL_MAP2_COLOR_4:
-    case GL_MAP2_TEXTURE_COORD_4:
-	return 4;
-    case GL_MAP1_VERTEX_3:
-    case GL_MAP1_TEXTURE_COORD_3:
-    case GL_MAP1_NORMAL:
-    case GL_MAP2_VERTEX_3:
-    case GL_MAP2_TEXTURE_COORD_3:
-    case GL_MAP2_NORMAL:
-	return 3;
-    case GL_MAP1_TEXTURE_COORD_2:
-    case GL_MAP2_TEXTURE_COORD_2:
-	return 2;
-    case GL_MAP1_TEXTURE_COORD_1:
-    case GL_MAP2_TEXTURE_COORD_1:
-    case GL_MAP1_INDEX:
-    case GL_MAP2_INDEX:
-	return 1;
-    default:
-	return 0;
+        case GL_MAP1_VERTEX_4:
+        case GL_MAP1_COLOR_4:
+        case GL_MAP1_TEXTURE_COORD_4:
+        case GL_MAP2_VERTEX_4:
+        case GL_MAP2_COLOR_4:
+        case GL_MAP2_TEXTURE_COORD_4:
+            return 4;
+        case GL_MAP1_VERTEX_3:
+        case GL_MAP1_TEXTURE_COORD_3:
+        case GL_MAP1_NORMAL:
+        case GL_MAP2_VERTEX_3:
+        case GL_MAP2_TEXTURE_COORD_3:
+        case GL_MAP2_NORMAL:
+            return 3;
+        case GL_MAP1_TEXTURE_COORD_2:
+        case GL_MAP2_TEXTURE_COORD_2:
+            return 2;
+        case GL_MAP1_TEXTURE_COORD_1:
+        case GL_MAP2_TEXTURE_COORD_1:
+        case GL_MAP1_INDEX:
+        case GL_MAP2_INDEX:
+            return 1;
+        default:
+            return 0;
     }
 }
 
@@ -222,6 +265,7 @@ typedef struct {
     /* wrapped screen functions */
     RealizeWindowProcPtr RealizeWindow;
     UnrealizeWindowProcPtr UnrealizeWindow;
+    CopyWindowProcPtr CopyWindow;
 } glWinScreenRec;
 
 static glWinScreenRec glWinScreens[MAXSCREENS];
@@ -315,7 +359,10 @@ static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
     }
 
     if (glxPriv->type == DRAWABLE_WINDOW)
-        winGetWindowInfo((WindowPtr) glxPriv->pDraw, &gc->winInfo);
+    {
+        WindowPtr pWin = (WindowPtr) glxPriv->pDraw;
+        winGetWindowInfo(pWin, &gc->winInfo);
+    }
     
     if (debugSettings.dumpHWND)
         GLWIN_DEBUG_MSG("Got HWND %p\n", gc->winInfo.hwnd);
@@ -705,6 +752,41 @@ glWinRealizeWindow(WindowPtr pWin)
     }
 
     return result;
+}
+
+
+void 
+glWinCopyWindow(WindowPtr pWindow, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
+{
+    ScreenPtr pScreen = pWindow->drawable.pScreen;
+    glWinScreenRec *screenPriv = &glWinScreens[pScreen->myNum];
+    __GLXdrawablePrivate *glxPriv;
+
+    /* Check if the window is attached and discard any drawing request */
+    glxPriv = __glXFindDrawablePrivate(pWindow->drawable.id);
+    if (glxPriv) {
+        __GLXcontext *gx;
+        __GLcontext *gc;
+        GLWIN_DEBUG_MSG("glWinUnealizeWindow is GL drawable!\n");
+
+        /* GL contexts bound to this window for drawing */
+        for (gx = glxPriv->drawGlxc; gx != NULL; gx = gx->next) {
+            gc = (__GLcontext *)gx->gc;
+            if (gc->isAttached)
+                return;
+        }
+
+        /* GL contexts bound to this window for reading */
+        for (gx = glxPriv->readGlxc; gx != NULL; gx = gx->next) {
+            gc = (__GLcontext *)gx->gc;
+            if (gc->isAttached)
+                return;
+        }
+    }
+
+    pScreen->CopyWindow = screenPriv->CopyWindow;
+    pScreen->CopyWindow(pWindow, ptOldOrg, prgnSrc);
+    pScreen->CopyWindow = glWinCopyWindow;
 }
 
 Bool
@@ -1238,6 +1320,8 @@ static Bool glWinScreenProbe(int screen)
     pScreen->RealizeWindow = glWinRealizeWindow;
     screenPriv->UnrealizeWindow = pScreen->UnrealizeWindow;
     pScreen->UnrealizeWindow = glWinUnrealizeWindow;
+    screenPriv->CopyWindow = pScreen->CopyWindow;
+    pScreen->CopyWindow = glWinCopyWindow;
 
     return TRUE;
 }
@@ -1418,4 +1502,3 @@ static Bool glWinInitVisuals(VisualPtr *visualp, DepthPtr *depthp,
     return init_visuals(nvisualp, visualp, defaultVisp,
 			*ndepthp, *depthp, *rootDepthp);
 }
-

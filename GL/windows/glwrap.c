@@ -1,3 +1,10 @@
+/*
+ * GLX implementation that uses Win32's OpenGL
+ * Wrapper functions for Win32's OpenGL
+ *
+ * Authors: Alexander Gottwald
+ */
+/* $XDotOrg$ */
 
 #include <GL/gl.h>
 #include <GL/glext.h>
@@ -6,13 +13,7 @@
 
 #define WINDOWS_LEAN_AND_CLEAN
 #include <windows.h>
-/*
- * GLX implementation that uses Win32's OpenGL
- */
 
-/*
- * Wrapper functions for Win32's OpenGL
- */
 
 #define RESOLVE_RET(procname, symbol, retval) \
     static Bool init = TRUE; \

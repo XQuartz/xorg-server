@@ -69,7 +69,7 @@
 #include "xf86Priv.h"
 #include "xf86Config.h"
 #include "xf86_OSlib.h"
-#include "xf86Version.h"
+#include "xorgVersion.h"
 #include "xf86Date.h"
 #include "xf86Build.h"
 #include "mipointer.h"
@@ -1711,7 +1711,7 @@ ddxUseMsg()
 #define OSVENDOR ""
 #endif
 #ifndef PRE_RELEASE
-#define PRE_RELEASE XF86_VERSION_SNAP
+#define PRE_RELEASE XORG_VERSION_SNAP
 #endif
 
 static void
@@ -1728,16 +1728,16 @@ xf86PrintBanner()
     "latest version in the " XVENDORNAME " \"monolithic tree\" CVS\n"
     "repository hosted at http://www.freedesktop.org/Software/xorg/");
 #endif
-#if XF86_VERSION_SNAP > 0
+#if XORG_VERSION_SNAP > 0
   ErrorF(".%d", XF86_VERSION_SNAP);
 #endif
 
-#if XF86_VERSION_SNAP >= 900
-  ErrorF(" (%d.%d.0 RC %d)", XF86_VERSION_MAJOR, XF86_VERSION_MINOR + 1,
-				XF86_VERSION_SNAP - 900);
+#if XORG_VERSION_SNAP >= 900
+  ErrorF(" (%d.%d.0 RC %d)", XORG_VERSION_MAJOR, XORG_VERSION_MINOR + 1,
+				XORG_VERSION_SNAP - 900);
 #endif
 
-#ifdef XF86_CUSTOM_VERSION
+#ifdef XORG_CUSTOM_VERSION
   ErrorF(" (%s)", XF86_CUSTOM_VERSION);
 #endif
   ErrorF("\nRelease Date: %s\n", XF86_DATE);

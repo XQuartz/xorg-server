@@ -278,7 +278,8 @@ kaaCreatePixmap(ScreenPtr pScreen, int w, int h, int depth)
     pKaaPixmap->score = 0;
     pKaaPixmap->area = NULL;
     
-    if ((pPixmap->devKind * h) >= MIN_OFFPIX_SIZE)
+    if (depth == pScreen->rootDepth &&
+	(pPixmap->devKind * h) >= MIN_OFFPIX_SIZE)
 	kaaPixmapAllocArea (pPixmap);
     return pPixmap;
 }

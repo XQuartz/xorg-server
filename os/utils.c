@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.6.2.1 2004/12/08 05:28:12 gisburn Exp $ */
+/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.6.2.2 2004/12/08 06:29:59 gisburn Exp $ */
 /* $Xorg: utils.c,v 1.5 2001/02/09 02:05:24 xorgcvs Exp $ */
 /*
 
@@ -661,7 +661,7 @@ void UseMsg(void)
     ErrorF("-v                     screen-saver without video blanking\n");
     ErrorF("-wm                    WhenMapped default backing-store\n");
     ErrorF("-x string              loads named extension at init time \n");
-    ErrorF("-maxbigreqsize	   set maximal bigrequest size \n");
+    ErrorF("-maxbigreqsize         set maximal bigrequest size \n");
 #ifdef PANORAMIX
     ErrorF("+xinerama              Enable XINERAMA extension\n");
     ErrorF("-xinerama              Disable XINERAMA extension\n");

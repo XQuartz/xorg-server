@@ -58,6 +58,7 @@ winValidateArgs (void)
 {
   int		i;
   int		iMaxConsecutiveScreen = 0;
+  BOOL		fHasNormalScreen0 = FALSE;
 
   /*
    * Check for a malformed set of -screen parameters.
@@ -108,6 +109,10 @@ winValidateArgs (void)
 	if (g_ScreenInfo[i].fRootless)
 	  ++iCount;
 
+	/* Check if the first screen is without rootless and multiwindow */ 
+	if (iCount == 0 && i == 0)
+	  fHasNormalScreen0 = TRUE;  
+
 	/* Fail if two or more conflicting options */
 	if (iCount > 1)
 	  {
@@ -118,7 +123,8 @@ winValidateArgs (void)
       }
 
       /* Check for -multiwindow or -mwextwm and Xdmcp */
-      if (g_fXdmcpEnabled
+      /* allow xdmcp if screen 0 is normal. */
+      if (g_fXdmcpEnabled && !fHasNormalScreen0
 	  && (FALSE
 #ifdef XWIN_MULTIWINDOW
 	      || g_ScreenInfo[i].fMultiWindow

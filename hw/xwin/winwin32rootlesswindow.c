@@ -33,14 +33,6 @@
 #include "win.h"
 #include "winprefs.h"
 
-
-/*
- * External global variables
- */
-
-extern HICON		g_hiconX;
-
-
 #if 0
 /*
  * winMWExtWMReorderWindows
@@ -173,7 +165,7 @@ winMWExtWMUpdateIcon (Window id)
   hIcon = (HICON)winOverrideIcon ((unsigned long)pWin);
 
   if (!hIcon)
-    hIcon = winXIconToHICON (pWin);
+    hIcon = winXIconToHICON (pWin, GetSystemMetrics(SM_CXICON));
 
   if (hIcon)
     {
@@ -186,10 +178,7 @@ winMWExtWMUpdateIcon (Window id)
 					   GCL_HICON,
 					   (int) hIcon);
 	  
-	  /* Delete the icon if its not the default */
-	  if (hiconOld != g_hiconX &&
-	      !winIconIsOverride((unsigned long)hiconOld))
-	    DestroyIcon (hiconOld);
+          winDestroyIcon(hiconOld);
 	}
     }
 }

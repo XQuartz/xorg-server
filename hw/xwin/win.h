@@ -1181,7 +1181,7 @@ winSetShapeRootless (WindowPtr pWindow);
  */
 
 HICON
-winXIconToHICON (WindowPtr pWin);
+winXIconToHICON (WindowPtr pWin, int iconSize);
 
 
 #ifdef XWIN_MULTIWINDOW

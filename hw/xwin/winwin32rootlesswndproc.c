@@ -53,7 +53,6 @@
  * Global variables
  */
 
-extern HICON			g_hiconX;
 extern Bool			g_fNoConfigureWindow;
 extern Bool			g_fSoftwareCursor;
 

@@ -129,5 +129,11 @@ winMinimizeWindow (Window id);
 void
 winUpdateIcon (Window id);
 
+void 
+winInitGlobalIcons (void);
+
+void 
+winDestroyIcon(HICON hIcon);
+
 #endif /* XWIN_MULTIWINDOW */
 #endif

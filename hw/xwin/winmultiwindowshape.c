@@ -36,13 +36,6 @@
 
 
 /*
- * External global variables
- */
-
-extern HICON		g_hiconX;
-
-
-/*
  * winSetShapeMultiWindow - See Porting Layer Definition - p. 42
  */
 

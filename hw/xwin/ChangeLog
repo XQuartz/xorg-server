@@ -1,3 +1,28 @@
+2004-05-19  Alexander Gottwald  <ago@freedesktop.org>
+
+	* win.h, winmultiwindowicons.c (winXIconToHICON): Takes iconsize
+	as parameter 
+	* winglobals.c, winmultiwindowicons.c: Rename g_hiconX to g_hIconX.
+	Added new variable g_hSmallIconX for 16x16 icon.
+	* winwindow.h, winmultiwindowicons.c (winInitGlobalIcons): Inits the 
+	global g_hIconX handles.
+	* winwindow.h, winmultiwindowicons.c (winDestroyIcon): Free the icon
+	without messing with the global icon handle. 
+	* winmultiwindowicons.c (winSelectIcons): Generate a custom icon from
+	window settigns or set them to globals.
+	* winmultiwindowshape.c, winmultiwindowwindow.c, winwin32rootless.c,
+	  winwin32rootlesswindow.c, winwin32rootlesswndproc.c: Remove 
+	declaration of g_hiconX;
+	* winmultiwindowwindow.c (winCreateWindowsWindow),
+	  winwin32rootless.c (winMWExtWMCreateFrame): Use winSelectIcons 
+	to get the window icons. Set the small icon too.
+	* winmultiwindowwindow.c (winDestroyWindowsWindow),
+	  winmultiwindowicons.c (winUpdateIcon), 
+	  winprefs.c (ReloadEnumWindowsProc),
+	  winwin32rootlesswindow.c (winMWExtWMUpdateIcon),
+	  winwin32rootless.c (winMWExtWMDestroyFrame): Use winDestroyIcon
+	to free the icon without destroying the global icon.  
+	  
 2004-05-17  Alexander Gottwald  <ago@freedesktop.org>
 
 	* windialogs.c (winExitDlgProc, winAboutDlgProc),

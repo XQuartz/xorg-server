@@ -57,7 +57,8 @@ extern void parse_file (FILE *fp);
 extern WINPREFS pref;
 
 /* The global X default icon */
-extern HICON		g_hiconX;
+extern HICON		g_hIconX;
+extern HICON		g_hSmallIconX;
 
 /* Currently in use command ID, incremented each new menu item created */
 static int g_cmdid = STARTMENUID;
@@ -188,9 +189,15 @@ ReloadEnumWindowsProc (HWND hwnd, LPARAM lParam)
       SetClassLong (hwnd, GCL_HICON, (LONG)LoadIcon (NULL, IDI_APPLICATION));
 
       /* If it's generated on-the-fly, get rid of it, will regen */
-      if (!winIconIsOverride((unsigned long)hicon) && (hicon!=g_hiconX))
-	DestroyIcon (hicon);
-      
+      winDestroyIcon (hicon);
+     
+      hicon = (HICON)GetClassLong(hwnd, GCL_HICONSM);
+
+      /* Unselect any icon in the class structure */
+      SetClassLong (hwnd, GCL_HICONSM, 0);
+
+      /* If it's generated on-the-fly, get rid of it, will regen */
+      winDestroyIcon (hicon);
       
       /* Remove any menu additions, use bRevert flag */
       GetSystemMenu (hwnd, TRUE);
@@ -200,7 +207,8 @@ ReloadEnumWindowsProc (HWND hwnd, LPARAM lParam)
   else
     {
       /* Make the icon default, dynamic, or from xwinrc */
-      SetClassLong (hwnd, GCL_HICON, (LONG)g_hiconX);
+      SetClassLong (hwnd, GCL_HICON, (LONG)g_hIconX);
+      SetClassLong (hwnd, GCL_HICONSM, (LONG)g_hSmallIconX);
       wid = (Window)GetProp (hwnd, WIN_WID_PROP);
       if (wid)
 	winUpdateIcon (wid);
@@ -259,8 +267,10 @@ ReloadPrefs (void)
   pref.iconItems = 0;
   
   /* Free global default X icon */
-  if (g_hiconX)
-    DestroyIcon (g_hiconX);
+  if (g_hIconX) 
+    DestroyIcon (g_hIconX);
+  if (g_hSmallIconX)
+    DestroyIcon (g_hSmallIconX);  
 
   /* Reset the custom command IDs */
   g_cmdid = STARTMENUID;
@@ -268,15 +278,10 @@ ReloadPrefs (void)
   /* Load the updated resource file */
   LoadPreferences();
 
-  /* Define global icon, load it */
-  g_hiconX = (HICON)winOverrideDefaultIcon();
-  /* Use LoadImage so we get a non-shared, safe-to-kill resource */
-  if (!g_hiconX)
-    g_hiconX = (HICON)LoadImage (g_hInstance,
-				 MAKEINTRESOURCE(IDI_XWIN),
-				 IMAGE_ICON,
-				 0, 0,
-				 LR_DEFAULTSIZE);
+  g_hIconX = NULL;
+  g_hSmallIconX = NULL;
+
+  winInitGlobalIcons();
   
 #ifdef XWIN_MULTIWINDOW
   /* Rebuild the icons and menus */

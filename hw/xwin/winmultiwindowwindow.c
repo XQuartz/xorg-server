@@ -36,14 +36,13 @@
 #include "winmultiwindowclass.h"
 #include "winprefs.h"
 
-
 /*
  * External global variables
  */
 
-extern HICON			g_hiconX;
 extern HWND			g_hDlgDepthChange;
 
+extern void winSelectIcons(WindowPtr pWin, HICON *pIcon, HICON *pSmallIcon);
 
 /*
  * Prototypes for local functions
@@ -464,9 +463,10 @@ winCreateWindowsWindow (WindowPtr pWin)
   int			iWidth;
   int			iHeight;
   HWND			hWnd;
-  WNDCLASS		wc;
+  WNDCLASSEX		wc;
   winWindowPriv(pWin);
-  HICON                 hIcon;
+  HICON			hIcon;
+  HICON			hIconSmall;
 #define CLASS_NAME_LENGTH 512
   char                  pszClass[CLASS_NAME_LENGTH], pszWindowID[12];
   char                  *res_name, *res_class, *res_role;
@@ -495,23 +495,7 @@ winCreateWindowsWindow (WindowPtr pWin)
   iWidth = pWin->drawable.width;
   iHeight = pWin->drawable.height;
 
-  /* Load default X icon in case it's not ready yet */
-  if (!g_hiconX)
-    g_hiconX = (HICON)winOverrideDefaultIcon();
-  
-  if (!g_hiconX)
-    g_hiconX = (HICON)LoadImage (g_hInstance,
-				 MAKEINTRESOURCE(IDI_XWIN),
-				 IMAGE_ICON,
-				 0, 0,
-				 LR_DEFAULTSIZE);
-  
-  /* Try and get the icon from WM_HINTS */
-  hIcon = winXIconToHICON (pWin);
-  
-  /* Use default X icon if no icon loaded from WM_HINTS */
-  if (!hIcon)
-    hIcon = g_hiconX;
+  winSelectIcons(pWin, &hIcon, &hIconSmall); 
 
   /* Set standard class name prefix so we can identify window easily */
   strncpy (pszClass, WINDOW_CLASS_X, sizeof(pszClass));
@@ -548,17 +532,19 @@ winCreateWindowsWindow (WindowPtr pWin)
 #endif
 
   /* Setup our window class */
+  wc.cbSize = sizeof(wc);
   wc.style = CS_HREDRAW | CS_VREDRAW;
   wc.lpfnWndProc = winTopLevelWindowProc;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
   wc.hInstance = g_hInstance;
   wc.hIcon = hIcon;
+  wc.hIconSm = hIconSmall;
   wc.hCursor = 0;
   wc.hbrBackground = (HBRUSH) GetStockObject (WHITE_BRUSH);
   wc.lpszMenuName = NULL;
   wc.lpszClassName = pszClass;
-  RegisterClass (&wc);
+  RegisterClassEx (&wc);
 
   /* Create the window */
   /* Make it OVERLAPPED in create call since WS_POPUP doesn't support */
@@ -613,6 +599,7 @@ winDestroyWindowsWindow (WindowPtr pWin)
   MSG			msg;
   winWindowPriv(pWin);
   HICON			hiconClass;
+  HICON			hiconSmClass;
   HMODULE		hInstance;
   int			iReturn;
   char			pszClass[512];
@@ -628,6 +615,7 @@ winDestroyWindowsWindow (WindowPtr pWin)
   /* Store the info we need to destroy after this window is gone */
   hInstance = (HINSTANCE) GetClassLong (pWinPriv->hWnd, GCL_HMODULE);
   hiconClass = (HICON) GetClassLong (pWinPriv->hWnd, GCL_HICON);
+  hiconSmClass = (HICON) GetClassLong (pWinPriv->hWnd, GCL_HICONSM);
   iReturn = GetClassName (pWinPriv->hWnd, pszClass, 512);
   
   /* Destroy the Windows window */
@@ -657,15 +645,8 @@ winDestroyWindowsWindow (WindowPtr pWin)
       ErrorF ("winDestroyWindowsWindow - %d Deleting Icon: ", iReturn);
 #endif
       
-      /* Only delete if it's not the default */
-      if ((hiconClass != g_hiconX) &&
-	  !winIconIsOverride((unsigned long)hiconClass))
-	{ 
-	  iReturn = DestroyIcon (hiconClass);
-#if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("winDestroyWindowsWindow - %d\n", iReturn);
-#endif
-	}
+      winDestroyIcon(hiconClass);
+      winDestroyIcon(hiconSmClass);
     }
 
 #if CYGMULTIWINDOW_DEBUG

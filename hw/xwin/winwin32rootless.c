@@ -69,12 +69,7 @@ winMWExtWMSetNativeProperty (RootlessWindowPtr pFrame);
 Bool			g_fNoConfigureWindow = FALSE;
 
 
-/*
- * External global variables
- */
-
-extern HICON		g_hiconX;
-
+extern void winSelectIcons(WindowPtr pWin, HICON *pIcon, HICON *pSmallIcon);
 
 /*
  * Internal function to get the DIB format that is compatible with the screen
@@ -224,9 +219,10 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
 #define CLASS_NAME_LENGTH 512
   Bool				fResult = TRUE;
   win32RootlessWindowPtr	pRLWinPriv;
-  WNDCLASS			wc;
+  WNDCLASSEX			wc;
   char				pszClass[CLASS_NAME_LENGTH], pszWindowID[12];
   HICON				hIcon;
+  HICON				hIconSmall;
   char				*res_name, *res_class, *res_role;
   static int			s_iWindowID = 0;
  
@@ -251,25 +247,8 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
   // Store the implementation private frame ID
   pFrame->wid = (RootlessFrameID) pRLWinPriv;
 
-
-  /* Load default X icon in case it's not ready yet */
-  if (!g_hiconX)
-    g_hiconX = (HICON)winOverrideDefaultIcon();
+  winSelectIcons(pWin, &hIcon, &hIconSmall); 
   
-  if (!g_hiconX)
-    g_hiconX = (HICON)LoadImage (g_hInstance,
-				 MAKEINTRESOURCE(IDI_XWIN),
-				 IMAGE_ICON,
-				 0, 0,
-				 LR_DEFAULTSIZE);
-  
-  /* Try and get the icon from WM_HINTS */
-  hIcon = winXIconToHICON (pFrame->win);
-  
-  /* Use default X icon if no icon loaded from WM_HINTS */
-  if (!hIcon)
-    hIcon = g_hiconX;
-
   /* Set standard class name prefix so we can identify window easily */
   strncpy (pszClass, WINDOW_CLASS_X, sizeof(pszClass));
 
@@ -305,17 +284,19 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
 #endif
 
   /* Setup our window class */
+  wc.cbSize = sizeof(wc);
   wc.style = CS_HREDRAW | CS_VREDRAW;
   wc.lpfnWndProc = winMWExtWMWindowProc;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
   wc.hInstance = g_hInstance;
   wc.hIcon = hIcon;
+  wc.hIconSm = hIconSmall;
   wc.hCursor = 0;
   wc.hbrBackground = (HBRUSH) GetStockObject (WHITE_BRUSH);
   wc.lpszMenuName = NULL;
   wc.lpszClassName = pszClass;
-  RegisterClass (&wc);
+  RegisterClassEx (&wc);
 
   /* Create the window */
   g_fNoConfigureWindow = TRUE;
@@ -383,6 +364,7 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
 {
   win32RootlessWindowPtr pRLWinPriv = (win32RootlessWindowPtr) wid;
   HICON			hiconClass;
+  HICON			hiconSmClass;
   HMODULE		hInstance;
   int			iReturn;
   char			pszClass[CLASS_NAME_LENGTH];
@@ -414,6 +396,7 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
   /* Store the info we need to destroy after this window is gone */
   hInstance = (HINSTANCE) GetClassLong (pRLWinPriv->hWnd, GCL_HMODULE);
   hiconClass = (HICON) GetClassLong (pRLWinPriv->hWnd, GCL_HICON);
+  hiconSmClass = (HICON) GetClassLong (pRLWinPriv->hWnd, GCL_HICONSM);
   iReturn = GetClassName (pRLWinPriv->hWnd, pszClass, CLASS_NAME_LENGTH);
 
   pRLWinPriv->fClose = TRUE;
@@ -434,15 +417,8 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
       ErrorF ("winMWExtWMDestroyFramew - %d Deleting Icon: ", iReturn);
 #endif
       
-      /* Only delete if it's not the default */
-      if ((hiconClass != g_hiconX) &&
-	  !winIconIsOverride((unsigned long)hiconClass))
-	{ 
-	  iReturn = DestroyIcon (hiconClass);
-#if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("winMWExtWMDestroyFrame - %d\n", iReturn);
-#endif
-	}
+      winDestroyIcon(hiconClass);
+      winDestroyIcon(hiconSmClass);
     }
 
 #if CYGMULTIWINDOW_DEBUG

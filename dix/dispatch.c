@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/dix/dispatch.c,v 1.5.6.4 2005/01/06 04:14:00 deronj Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/dispatch.c,v 1.5.14.1 2005/01/10 03:45:03 deronj Exp $ */
 /* $Xorg: dispatch.c,v 1.5 2001/02/09 02:04:40 xorgcvs Exp $ */
 /************************************************************
 
@@ -583,7 +583,7 @@ Dispatch(void)
 #endif
 
 #if defined(LG3D) && defined(DISPATCH_DEBUG)
-		if (printprocs) {		
+              if (printprocs) {
 		    char *procName;
 		    if (MAJOROP >= NUM_PROC_NAMES) {
 

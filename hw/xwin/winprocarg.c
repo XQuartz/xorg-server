@@ -1000,16 +1000,18 @@ ddxProcessArgument (int argc, char *argv[], int i)
   /*
    * Look for the '-config' argument
    */
-  if (IS_OPTION ("-config"))
+  if (IS_OPTION ("-config")
+      || IS_OPTION ("-xf86config"))
     {
       CHECK_ARGS (1);
 #ifdef XWIN_XF86CONFIG
       g_cmdline.configFile = argv[++i];
 #else
-      winMessageBoxF ("The -config option is not supported in this "
+      winMessageBoxF ("The %s option is not supported in this "
 		      "release.\n"
 		      "Ignoring this option and continuing.\n",
-		      MB_ICONINFORMATION);
+		      MB_ICONINFORMATION,
+		      argv[i]);
 #endif
       return 2;
     }

@@ -104,8 +104,8 @@ winDisplayExitDialog (winPrivScreenPtr pScreenPriv)
 		 & ~(WS_MAXIMIZEBOX | WS_MINIMIZEBOX));
   SetWindowLong (g_hDlgExit, GWL_EXSTYLE,
 		 GetWindowLong (g_hDlgExit, GWL_EXSTYLE) & ~WS_EX_APPWINDOW );
-  SetWindowPos (g_hDlgExit, 0, 0, 0, 0, 0,
-		SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOZORDER | SWP_NOSIZE); 
+  SetWindowPos (g_hDlgExit, HWND_TOPMOST, 0, 0, 0, 0,
+		SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE); 
  
   /* Show the dialog box */
   ShowWindow (g_hDlgExit, SW_SHOW);

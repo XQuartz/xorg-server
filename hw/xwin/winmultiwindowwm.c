@@ -157,6 +157,9 @@ winMultiWindowXMsgProcErrorHandler (Display *pDisplay, XErrorEvent *pErr);
 static int
 winMutliWindowXMsgProcIOErrorHandler (Display *pDisplay);
 
+static int
+winRedirectErrorHandler (Display *pDisplay, XErrorEvent *pErr);
+
 static void
 winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg);
 
@@ -168,6 +171,7 @@ winInitMultiWindowWM (WMInfoPtr pWMInfo, WMProcArgPtr pProcArg);
 static jmp_buf			g_jmpWMEntry;
 static jmp_buf			g_jmpXMsgProcEntry;
 static Bool                     g_shutdown = FALSE;
+static Bool			redirectError = FALSE;
 
 
 /*
@@ -811,9 +815,20 @@ winMultiWindowXMsgProc (void *pArg)
   ErrorF ("winMultiWindowXMsgProc - XOpenDisplay () returned and "
 	  "successfully opened the display.\n");
 
-  XSelectInput (pProcArg->pDisplay,
-		RootWindow(pProcArg->pDisplay, pProcArg->dwScreen),
-		SubstructureNotifyMask);
+  /* Check if another window manager is already running */
+  redirectError = FALSE;
+  XSetErrorHandler (winRedirectErrorHandler);
+  XSelectInput(pProcArg->pDisplay,
+	       RootWindow (pProcArg->pDisplay, pProcArg->dwScreen),
+	       SubstructureNotifyMask | ButtonPressMask);
+  XSync (pProcArg->pDisplay, 0);
+  XSetErrorHandler (winMultiWindowXMsgProcErrorHandler);
+  if (redirectError)
+    {
+      ErrorF ("winMultiWindowXMsgProc - "
+	      "another window manager is running.  Exiting.\n");
+      pthread_exit (NULL);
+    }
   
   /* Set up the supported icon sizes */
   xis = XAllocIconSize ();
@@ -1187,6 +1202,18 @@ winMutliWindowXMsgProcIOErrorHandler (Display *pDisplay)
   /* Restart at the main entry point */
   longjmp (g_jmpXMsgProcEntry, WIN_JMP_ERROR_IO);
   
+  return 0;
+}
+
+
+/*
+ * Catch RedirectError to detect other window manager running
+ */
+
+static int
+winRedirectErrorHandler (Display *pDisplay, XErrorEvent *pErr)
+{
+  redirectError = TRUE;
   return 0;
 }
 

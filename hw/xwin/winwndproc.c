@@ -873,6 +873,28 @@ winWindowProc (HWND hwnd, UINT message,
 	ReleaseCapture ();
       return winMouseButtonsHandle (s_pScreen, ButtonRelease, Button3, wParam);
 
+    case WM_XBUTTONDBLCLK:
+    case WM_XBUTTONDOWN:
+      if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
+	break;
+      if (s_pScreenInfo->fRootless
+#ifdef XWIN_MULTIWINDOWEXTWM
+	  || s_pScreenInfo->fMWExtWM
+#endif
+	  )
+	SetCapture (hwnd);
+      return winMouseButtonsHandle (s_pScreen, ButtonPress, HIWORD(wParam) + 5, wParam);
+    case WM_XBUTTONUP:
+      if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
+	break;
+      if (s_pScreenInfo->fRootless
+#ifdef XWIN_MULTIWINDOWEXTWM
+	  || s_pScreenInfo->fMWExtWM
+#endif
+	  )
+	ReleaseCapture ();
+      return winMouseButtonsHandle (s_pScreen, ButtonRelease, HIWORD(wParam) + 5, wParam);
+
     case WM_TIMER:
       if (s_pScreenPriv == NULL || s_pScreenInfo->fIgnoreInput)
 	break;
@@ -1139,6 +1161,9 @@ winWindowProc (HWND hwnd, UINT message,
 	  /* Display Exit dialog */
 	  winDisplayExitDialog (s_pScreenPriv);
 	  return 0;
+    case ID_APP_SHOWCURSOR:
+      winDebug("ShowCursor: %d\n", ShowCursor(TRUE));
+      return 0;
 
 #ifdef XWIN_MULTIWINDOW
 	case ID_APP_HIDE_ROOT:

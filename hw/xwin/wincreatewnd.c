@@ -142,6 +142,8 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   winScreenInfo		*pScreenInfo = pScreenPriv->pScreenInfo;
   int			iWidth = pScreenInfo->dwUserWidth;
   int			iHeight = pScreenInfo->dwUserHeight;
+  int                   iPosX;
+  int                   iPosY;
   HWND			*phwnd = &pScreenPriv->hwndScreen;
   WNDCLASS		wc;
   RECT			rcClient, rcWorkArea;
@@ -193,6 +195,18 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   /* Adjust for auto-hide taskbars */
   winAdjustForAutoHide (&rcWorkArea);
 
+  /* Did the user specify a position? */
+  if (pScreenInfo->fUserGavePosition)
+    {
+      iPosX = pScreenInfo->dwInitialX;
+      iPosY = pScreenInfo->dwInitialY;
+    }
+  else
+    {
+      iPosX = rcWorkArea.left;
+      iPosY = rcWorkArea.top;
+    }
+
   /* Did the user specify a height and width? */
   if (pScreenInfo->fUserGaveHeightAndWidth)
     {
@@ -240,24 +254,6 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
 		+ GetSystemMetrics (SM_CYCAPTION);
 	    }
 	}
-      else
-	{
-	  /*
-	   * User gave a width and height but also said no decoration.
-	   * In this case we have to ignore the requested width and height
-	   * and instead use the largest possible window that we can.
-	   */
-	  if (pScreenInfo->fMultipleMonitors)
-	    {
-	      iWidth = GetSystemMetrics (SM_CXVIRTUALSCREEN);
-	      iHeight = GetSystemMetrics (SM_CYVIRTUALSCREEN);
-	    }
-	  else
-	    {
-	      iWidth = GetSystemMetrics (SM_CXSCREEN);
-	      iHeight = GetSystemMetrics (SM_CYSCREEN);
-	    }
-	}
     }
   else
     {
@@ -289,20 +285,30 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
       /* We cannot have scrollbars if we do not have a window border */
       pScreenInfo->fScrollbars = FALSE;
     }
+ 
+  if (TRUE 
+#ifdef XWIN_MULTIWINDOWEXTWM
+       && !pScreenInfo->fMWExtWM
+#endif
+#ifdef XWIN_MULTIWINDOW
+       && !pScreenInfo->fMultiWindow
+#endif
+     )
+    {
+      /* Trim window width to fit work area */
+      if (iWidth > (rcWorkArea.right - rcWorkArea.left))
+        iWidth = rcWorkArea.right - rcWorkArea.left;
   
-  /* Trim window width to fit work area */
-  if (iWidth > (rcWorkArea.right - rcWorkArea.left))
-    iWidth = rcWorkArea.right - rcWorkArea.left;
-  
-  /* Trim window height to fit work area */
-  if (iHeight >= (rcWorkArea.bottom - rcWorkArea.top))
-    iHeight = rcWorkArea.bottom - rcWorkArea.top;
+      /* Trim window height to fit work area */
+      if (iHeight >= (rcWorkArea.bottom - rcWorkArea.top))
+        iHeight = rcWorkArea.bottom - rcWorkArea.top;
   
 #if CYGDEBUG
-  winDebug ("winCreateBoundingWindowWindowed - Adjusted width: %d "\
-	  "height: %d\n",
-	  iWidth, iHeight);
+      winDebug ("winCreateBoundingWindowWindowed - Adjusted width: %d "\
+	      "height: %d\n",
+    	  iWidth, iHeight);
 #endif
+    }
 
   /* Set display and screen-specific tooltip text */
   if (g_pszQueryHost != NULL)
@@ -322,8 +328,8 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
 			    WINDOW_CLASS,	/* Class name */
 			    szTitle,		/* Window name */
 			    dwWindowStyle,
-			    rcWorkArea.left,	/* Horizontal position */
-			    rcWorkArea.top,	/* Vertical position */
+			    iPosX,	        /* Horizontal position */
+			    iPosY,	        /* Vertical position */
 			    iWidth,		/* Right edge */
 			    iHeight,		/* Bottom edge */
 			    (HWND) NULL,	/* No parent or owner window */

@@ -30,9 +30,7 @@ from The Open Group.
 
 #include "win.h"
 #include "winmsg.h"
-#ifdef XWIN_XF86CONFIG
 #include "winconfig.h"
-#endif
 #include "winprefs.h"
 #include "X11/Xlocale.h"
 #include <mntent.h>
@@ -437,9 +435,15 @@ winUseMsg (void)
 	  "\tSpecify an optional refresh rate to use in fullscreen mode\n"
 	  "\twith a DirectDraw engine.\n");
 
-  ErrorF ("-screen scr_num [width height]\n"
+  ErrorF ("-screen scr_num [width height [x y] | [[WxH[+X+Y]][@m]] ]\n"
 	  "\tEnable screen scr_num and optionally specify a width and\n"
-	  "\theight for that screen.\n");
+	  "\theight and initial position for that screen. Additionally\n"
+	  "\ta monitor number can be specified to start the server on,\n"
+	  "\tat which point, all coordinates become relative to that\n"
+      "\tmonitor (Not for Windows NT4 and 95). Examples:\n"
+      "\t -screen 0 800x600+100+100@2 ; 2nd monitor offset 100,100 size 800x600\n"
+      "\t -screen 0 1024x768@3        ; 3rd monitor size 1024x768\n"
+      "\t -screen 0 @1 ; on 1st monitor using its full resolution (the default)\n");
 
   ErrorF ("-lesspointer\n"
 	  "\tHide the windows mouse pointer when it is over an inactive\n"
@@ -635,6 +639,7 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   winMsg(X_INFO, "XF86Config is not supported\n");
   winMsg(X_INFO, "See http://x.cygwin.com/docs/faq/cygwin-x-faq.html "
          "for more information\n");
+  winConfigFiles ();
 #endif
 
   /* Load preferences from XWinrc file */

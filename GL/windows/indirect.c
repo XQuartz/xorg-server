@@ -247,24 +247,6 @@ struct __GLcontextRec {
 };
 
 
-/* Context manipulation; return GL_FALSE on failure */
-static GLboolean glWinDestroyContext(__GLcontext *gc)
-{
-    GLWIN_DEBUG_MSG("glWinDestroyContext (ctx %p\n", gc->ctx);
-
-    if (gc != NULL)
-    {
-        if (gc->ctx != NULL) 
-	    wglDeleteContext(gc->ctx);
-        if (gc->winInfo.hrgn)
-            DeleteObject(gc->winInfo.hrgn);
-
-        free(gc);
-    }
-
-    return GL_TRUE;
-}
-
 static HDC glWinMakeDC(__GLcontext *gc)
 {
     HDC dc;
@@ -289,60 +271,62 @@ static HDC glWinMakeDC(__GLcontext *gc)
     return dc;
 }
 
-static GLboolean glWinLoseCurrent(__GLcontext *gc)
-{
-    BOOL ret;
-    HDC dc = glWinMakeDC(gc);
-
-    GLWIN_DEBUG_MSG("glWinLoseCurrent (ctx %p)\n", gc->ctx);
-
-    ret = wglMakeCurrent(dc, NULL);
-    if (!ret)
-	ErrorF("wglMakeCurrent: %s\n", winErrorMessage());
-    ReleaseDC(gc->winInfo.hwnd, dc);
-
-    __glXLastContext = NULL; /* Mesa does this; why? */
-
-    return GL_TRUE;
-}
-
 static void unattach(__GLcontext *gc)
 {
-    GLWIN_DEBUG_MSG("unattach %p\n", gc);
+    BOOL ret;
+    GLWIN_DEBUG_MSG("unattach (ctx %p)\n", gc->ctx);
+    if (!gc->isAttached) 
+    {
+        ErrorF("called attach on an attached context\n");
+        return;
+    }
+
+    if (gc->ctx) 
+    {
+        ret = wglDeleteContext(gc->ctx);
+        if (!ret)
+            ErrorF("wglDeleteContext error: %s\n", winErrorMessage());
+        gc->ctx = NULL;
+    }
+
+    if (gc->winInfo.hrgn)
+    {
+        ret = DeleteObject(gc->winInfo.hrgn);
+        if (!ret)
+            ErrorF("DeleteObject error: %s\n", winErrorMessage());
+        gc->winInfo.hrgn = NULL;
+    }
+
     gc->isAttached = 0;
 }
 
 static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
 {
-    GLWIN_DEBUG_MSG("attach %p\n", gc);
     HDC dc;
-    PIXELFORMATDESCRIPTOR pfd;
     BOOL ret;
     __GLXdrawablePrivate *glxPriv = (__GLXdrawablePrivate *)glPriv->other;
 
-    if (gc->ctx) 
+    GLWIN_DEBUG_MSG("attach (ctx %p)\n", gc->ctx);
+
+    if (gc->isAttached)
     {
-        ret = wglDeleteContext(gc->ctx);
-        if (!ret) {
-            ErrorF("wglDeleteContext error: %s\n", winErrorMessage());
-        }
+        ErrorF("called attach on an attached context\n");
+        return;
     }
-    
+
     if (glxPriv->type == DRAWABLE_WINDOW)
         winGetWindowInfo((WindowPtr) glxPriv->pDraw, &gc->winInfo);
     
     if (debugSettings.dumpHWND)
-    {
         GLWIN_DEBUG_MSG("Got HWND %p\n", gc->winInfo.hwnd);
-        GLWIN_DEBUG_MSG("ActiveWindow %p\n", GetActiveWindow());
-    }
-    gc->winInfo.hwnd = GetActiveWindow();
 
     dc = glWinMakeDC(gc);
-    DescribePixelFormat(dc, gc->pixelFormat, 
-            sizeof(pfd), &pfd);
-    ret = SetPixelFormat(dc, gc->pixelFormat, &pfd);
-    
+
+    ret = SetPixelFormat(dc, gc->pixelFormat, &gc->pfd);
+    if (!ret) {
+        ErrorF("SetPixelFormat error: %s\n", winErrorMessage());
+    }
+
     gc->ctx = wglCreateContext(dc);
     
     if (gc->ctx == NULL) {
@@ -354,15 +338,40 @@ static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
     gc->isAttached = 1;
 }
 
+static GLboolean glWinLoseCurrent(__GLcontext *gc)
+{
+    //GLWIN_DEBUG_MSG("glWinLoseCurrent (ctx %p)\n", gc->ctx);
+
+    __glXLastContext = NULL; /* Mesa does this; why? */
+
+    return GL_TRUE;
+}
+
+/* Context manipulation; return GL_FALSE on failure */
+static GLboolean glWinDestroyContext(__GLcontext *gc)
+{
+    GLWIN_DEBUG_MSG("glWinDestroyContext (ctx %p)\n", gc->ctx);
+
+    if (gc != NULL)
+    {
+        if (gc->isAttached)
+            unattach(gc);
+        free(gc);
+    }
+
+    return GL_TRUE;
+}
+
 static GLboolean glWinMakeCurrent(__GLcontext *gc)
 {
     __GLdrawablePrivate *glPriv = gc->interface.imports.getDrawablePrivate(gc);
     BOOL ret;
     HDC dc;
 
-    GLWIN_DEBUG_MSG("glWinMakeCurrent (ctx %p)\n", gc->ctx);
+    //GLWIN_DEBUG_MSG("glWinMakeCurrent (ctx %p)\n", gc->ctx);
 
-    attach(gc, glPriv);
+    if (!gc->isAttached)
+        attach(gc, glPriv);
 
     dc = glWinMakeDC(gc);
     ret = wglMakeCurrent(dc, gc->ctx);
@@ -408,15 +417,13 @@ static GLboolean glWinForceCurrent(__GLcontext *gc)
     BOOL ret; 
     HDC dc;
 
-    GLWIN_DEBUG_MSG("glWinForceCurrent (ctx %p)\n", gc->ctx);
-
     dc = glWinMakeDC(gc);
     ret = wglMakeCurrent(dc, gc->ctx);
     if (!ret)
-	ErrorF("wglSetCurrent error: %s\n", winErrorMessage());
+        ErrorF("wglSetCurrent error: %s\n", winErrorMessage());
     ReleaseDC(gc->winInfo.hwnd, dc);
 
-    return ret;
+    return ret?GL_TRUE:GL_FALSE;
 }
 
 /* Drawing surface notification callbacks */
@@ -596,8 +603,6 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
 					  __GLinterface *shareGC)
 {
     __GLcontext *result;
-    BOOL ret;
-    PIXELFORMATDESCRIPTOR pfd;
     HDC dc;
 
     GLWIN_DEBUG_MSG("glWinCreateContext\n");
@@ -631,8 +636,7 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
 
     GLWIN_DEBUG_MSG("ChoosePixelFormat done (%d)\n", result->pixelFormat);
 
-    result->ctx = NULL;
-
+#if 0
     ret = SetPixelFormat(dc, result->pixelFormat, &pfd);
     if (!ret) {
         ErrorF("SetPixelFormat error: %s\n", winErrorMessage());
@@ -640,7 +644,9 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
         free(result);
         return NULL;
     }
+#endif
     
+#if 0
     result->ctx = wglCreateContext(dc);
 
     if (result->ctx == NULL) {
@@ -649,6 +655,10 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
         free(result);
         return NULL;
     }
+#else
+    result->ctx = NULL;
+    result->isAttached = 0;
+#endif
     ReleaseDC(result->winInfo.hwnd, dc);
 
     GLWIN_DEBUG_MSG("glWinCreateContext done\n");
@@ -682,6 +692,8 @@ glWinRealizeWindow(WindowPtr pWin)
         /* GL contexts bound to this window for drawing */
         for (gx = glxPriv->drawGlxc; gx != NULL; gx = gx->next) {
             gc = (__GLcontext *)gx->gc;
+            if (gc->isAttached)
+                unattach(gc);
             attach(gc, glPriv);
         }
 

@@ -279,8 +279,13 @@ OsVendorInit (void)
 #endif
 
   if (!g_fLogInited) {
-    LogInit (g_pszLogFile, NULL);
+    /* keep this order. If LogInit fails it calls Abort which then calls
+     * ddxGiveUp where LogInit is called again and creates an infinite 
+     * recursion. If we set g_fLogInited to TRUE before the init we 
+     * avoid the second call 
+     */  
     g_fLogInited = TRUE;
+    LogInit (g_pszLogFile, NULL);
   }  
   LogSetParameter (XLOG_FLUSH, 1);
   LogSetParameter (XLOG_VERBOSITY, g_iLogVerbose);

@@ -79,7 +79,10 @@ winKeyboardMessageHookLL (int iCode, WPARAM wParam, LPARAM lParam)
 	case WM_KEYUP:    case WM_SYSKEYUP: 
 	  fPassKeystroke = 
 	    ((p->vkCode == VK_TAB) && ((p->flags & LLKHF_ALTDOWN) != 0))
-	    || (p->vkCode == VK_LWIN) || (p->vkCode == VK_RWIN);
+#if 0
+	    || (p->vkCode == VK_LWIN) || (p->vkCode == VK_RWIN)
+#endif
+	    ;
 	  break;
 	}
     }

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.1.4.6.2.1 2004/02/27 21:31:00 eich Exp $ */
+/* $XdotOrg: xc/programs/Xserver/os/utils.c,v 1.1.4.6.2.4 2004/03/04 17:48:31 eich Exp $ */
 /* $Xorg: utils.c,v 1.5 2001/02/09 02:05:24 xorgcvs Exp $ */
 /*
 
@@ -168,7 +168,7 @@ int userdefinedfontpath = 0;
 
 char *dev_tty_from_init = NULL;		/* since we need to parse it anyway */
 
-extern int dispatchExceptionAtReset;
+extern char dispatchExceptionAtReset;
 
 OsSigHandlerPtr
 OsSignal(sig, handler)

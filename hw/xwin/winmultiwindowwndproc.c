@@ -933,7 +933,7 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	  ErrorF ("overridden window is shown\n");
 #endif
 	  SetWindowPos (hwnd, HWND_TOPMOST, 0, 0, 0, 0,
-			SWP_NOMOVE | SWP_NOSIZE);
+			SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	}
 	  
       /* Setup the Window Manager message */

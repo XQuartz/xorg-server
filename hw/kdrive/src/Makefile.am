@@ -1,6 +1,6 @@
 INCLUDES = 					\
 	@KDRIVE_INCS@				\
-	$(XSERVER_CFLAGS)
+	@XSERVER_CFLAGS@
 
 noinst_LIBRARIES = libkdrive.a
 

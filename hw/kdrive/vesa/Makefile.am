@@ -1,6 +1,6 @@
 INCLUDES = 					\
 	@KDRIVE_INCS@				\
-	$(XSERVER_CFLAGS)
+	@XSERVER_CFLAGS@
 
 noinst_LIBRARIES = libvesa.a
 
@@ -17,9 +17,9 @@ Xvesa_SOURCES = \
 
 Xvesa_LDADD = \
 	libvesa.a 				\
-	$(KDRIVE_LIBS)				\
-	$(XSERVER_LIBS)
+	@KDRIVE_LIBS@				\
+	@XSERVER_LIBS@
 
 Xvesa_DEPENDENCIES = \
 	libvesa.a				\
-	$(KDRIVE_LIBS)
+	@KDRIVE_LIBS@

@@ -1,8 +1,8 @@
 INCLUDES = 					\
-	$(KDRIVE_INCS)				\
 	-I$(top_srcdir)/hw/kdrive/fbdev		\
 	-I$(top_srcdir)/hw/kdrive/vesa		\
-	$(XSERVER_CFLAGS)
+	@KDRIVE_INCS@				\
+	@XSERVER_CFLAGS@
 
 bin_PROGRAMS = Xsmi
 
@@ -21,5 +21,5 @@ Xsmi_LDADD = \
 	libsmi.a 				\
 	$(top_builddir)/hw/kdrive/fbdev/libfbdev.a \
 	$(top_builddir)/hw/kdrive/vesa/libvesa.a \
-	$(KDRIVE_LIBS)				\
-	$(XSERVER_LIBS)
+	@KDRIVE_LIBS@				\
+	@XSERVER_LIBS@

@@ -1,6 +1,6 @@
 INCLUDES = 					\
 	@KDRIVE_INCS@				\
-	$(XSERVER_CFLAGS)
+	@XSERVER_CFLAGS@
 
 noinst_LIBRARIES = libfbdev.a
 
@@ -12,16 +12,18 @@ libfbdev_a_SOURCES = \
 Xfbdev_SOURCES = \
 	fbinit.c
 
+
+if TSLIB
+TSLIB_FLAG = -lts
+endif
+
 Xfbdev_LDADD = 						\
 	libfbdev.a					\
-	$(KDRIVE_LIBS)					\
-	$(XSERVER_LIBS)
+	@KDRIVE_LIBS@					\
+	@XSERVER_LIBS@					\
+	$(TSLIB_FLAG)
 
 Xfbdev_DEPENDENCIES =					\
 	libfbdev.a					\
-	$(KDRIVE_LIBS)
-
-if TSLIB
-Xfbdev_LDADD += -lts
-endif
+	@KDRIVE_LIBS@
 

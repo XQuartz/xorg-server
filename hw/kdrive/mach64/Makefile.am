@@ -1,7 +1,7 @@
 INCLUDES = 					\
         @KDRIVE_INCS@				\
 	-I$(top_srcdir)/hw/kdrive/vesa		\
-	$(XSERVER_CFLAGS)
+	@XSERVER_CFLAGS@
 
 bin_PROGRAMS = Xmach64
 
@@ -24,7 +24,7 @@ MACH64_LIBS =						\
 
 Xmach64_LDADD = 					\
 	$(MACH64_LIBS)					\
-	$(KDRIVE_LIBS)					\
-	$(XSERVER_LIBS)
+	@KDRIVE_LIBS@					\
+	@XSERVER_LIBS@
 
-Xmach64_DEPENDENCIES = $(MACH64_LIBS) $(KDRIVE_LIBS)
+Xmach64_DEPENDENCIES = $(MACH64_LIBS) @KDRIVE_LIBS@

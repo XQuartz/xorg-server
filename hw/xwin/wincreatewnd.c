@@ -148,13 +148,14 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
 	  (int) pScreenInfo->dwUserWidth, (int) pScreenInfo->dwUserHeight);
   ErrorF ("winCreateBoundingWindowWindowed - Current w: %d h: %d\n",
 	  (int) pScreenInfo->dwWidth, (int) pScreenInfo->dwHeight);
-  
+
   /* Set the common window style flags */
   dwWindowStyle = WS_OVERLAPPED | WS_SYSMENU | WS_MINIMIZEBOX;
   
   /* Decorated or undecorated window */
   if (pScreenInfo->fDecoration
       && !pScreenInfo->fRootless
+      && !pScreenInfo->fPseudoRootless
       && !pScreenInfo->fMultiWindow)
     {
       dwWindowStyle |= WS_CAPTION;
@@ -195,6 +196,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
       /* Adjust the window width and height for borders and title bar */
       if (pScreenInfo->fDecoration
 	  && !pScreenInfo->fRootless
+	  && !pScreenInfo->fPseudoRootless
 	  && !pScreenInfo->fMultiWindow)
 	{
 #if CYGDEBUG
@@ -261,6 +263,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   /* Clean up the scrollbars flag, if necessary */
   if ((!pScreenInfo->fDecoration
        || pScreenInfo->fRootless
+       || pScreenInfo->fPseudoRootless
        || pScreenInfo->fMultiWindow)
       && pScreenInfo->fScrollbars)
     {
@@ -410,11 +413,16 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
     }
   
   /* Attempt to bring our window to the top of the display */
-  if (!BringWindowToTop (*phwnd))
+  if (!pScreenInfo->fMultiWindow
+      && !pScreenInfo->fRootless
+      && !pScreenInfo->fPseudoRootless)
     {
-      ErrorF ("winCreateBoundingWindowWindowed - BringWindowToTop () "
-	      "failed\n");
-      return FALSE;
+      if (!BringWindowToTop (*phwnd))
+	{
+	  ErrorF ("winCreateBoundingWindowWindowed - BringWindowToTop () "
+		  "failed\n");
+	  return FALSE;
+	}
     }
 
   /* Paint window background blue */

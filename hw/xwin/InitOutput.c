@@ -154,6 +154,7 @@ winInitializeDefaultScreens (void)
       g_ScreenInfo[i].fFullScreen = FALSE;
       g_ScreenInfo[i].fDecoration = TRUE;
       g_ScreenInfo[i].fRootless = FALSE;
+      g_ScreenInfo[i].fPseudoRootless = FALSE;
       g_ScreenInfo[i].fMultiWindow = FALSE;
       g_ScreenInfo[i].fMultipleMonitors = FALSE;
       g_ScreenInfo[i].fClipboard = FALSE;
@@ -323,6 +324,9 @@ ddxUseMsg (void)
 	  "\tmode only.\n");
 
   ErrorF ("-rootless\n"
+	  "\tEXPERIMENTAL: Run the server in rootless mode.\n");
+
+  ErrorF ("-pseudorootless\n"
 	  "\tEXPERIMENTAL: Run the server in pseudo-rootless mode.\n");
 
   ErrorF ("-multiwindow\n"
@@ -689,6 +693,32 @@ ddxProcessArgument (int argc, char *argv[], int i)
 	{
 	  /* Parameter is for a single screen */
 	  g_ScreenInfo[g_iLastScreen].fRootless = TRUE;
+	}
+
+      /* Indicate that we have processed this argument */
+      return 1;
+    }
+
+  /*
+   * Look for the '-pseudorootless' argument
+   */
+  if (IS_OPTION ("-pseudorootless"))
+    {
+      /* Is this parameter attached to a screen or is it global? */
+      if (-1 == g_iLastScreen)
+	{
+	  int			j;
+
+	  /* Parameter is for all screens */
+	  for (j = 0; j < MAXSCREENS; j++)
+	    {
+	      g_ScreenInfo[j].fPseudoRootless = TRUE;
+	    }
+	}
+      else
+	{
+	  /* Parameter is for a single screen */
+	  g_ScreenInfo[g_iLastScreen].fPseudoRootless = TRUE;
 	}
 
       /* Indicate that we have processed this argument */

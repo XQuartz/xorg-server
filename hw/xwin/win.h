@@ -394,6 +394,7 @@ typedef struct
   Bool			fFullScreen;
   Bool			fDecoration;
   Bool			fRootless;
+  Bool			fPseudoRootless;
   Bool			fMultiWindow;
   Bool                  fMultipleMonitors;
   Bool			fClipboard;

@@ -449,7 +449,7 @@ winFinishScreenInitFB (int index,
 #endif
 
 
-  /* Handle pseudo-rootless mode */
+  /* Handle rootless mode */
   if (pScreenInfo->fRootless)
     {
       ErrorF ("winScreenInit - RootlessInit\n");
@@ -468,6 +468,43 @@ winFinishScreenInitFB (int index,
 	  return FALSE;
 	}
       winWindowsWMExtensionInit ();
+    }
+  /* Handle pseudo-rootless mode */
+  else if (pScreenInfo->fPseudoRootless)
+    {
+      /* Define the WRAP macro temporarily for local use */
+#define WRAP(a) \
+    if (pScreen->a) { \
+        pScreenPriv->a = pScreen->a; \
+    } else { \
+        ErrorF("null screen fn " #a "\n"); \
+        pScreenPriv->a = NULL; \
+    }
+
+      /* Save a pointer to each lower-level window procedure */
+      WRAP(CreateWindow);
+      WRAP(DestroyWindow);
+      WRAP(RealizeWindow);
+      WRAP(UnrealizeWindow);
+      WRAP(PositionWindow);
+      WRAP(ChangeWindowAttributes);
+#ifdef SHAPE
+      WRAP(SetShape);
+#endif
+
+      /* Assign pseudo-rootless window procedures to be top level procedures */
+      pScreen->CreateWindow = winCreateWindowPRootless;
+      pScreen->DestroyWindow = winDestroyWindowPRootless;
+      pScreen->PositionWindow = winPositionWindowPRootless;
+      pScreen->ChangeWindowAttributes = winChangeWindowAttributesPRootless;
+      pScreen->RealizeWindow = winMapWindowPRootless;
+      pScreen->UnrealizeWindow = winUnmapWindowPRootless;
+#ifdef SHAPE
+      pScreen->SetShape = winSetShapePRootless;
+#endif
+
+      /* Undefine the WRAP macro, as it is not needed elsewhere */
+#undef WRAP
     }
   /* Handle multi window mode */
   else if (pScreenInfo->fMultiWindow)

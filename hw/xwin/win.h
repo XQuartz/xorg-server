@@ -348,6 +348,20 @@ typedef struct
   PALETTEENTRY		peColors[WIN_NUM_PALETTE_ENTRIES];
 } winPrivCmapRec, *winPrivCmapPtr;
 
+/*
+ * Windows Cursor handling.
+ */ 
+  
+typedef struct {
+  /* from GetSystemMetrics */
+  int sm_cx;
+  int sm_cy;
+
+  BOOL visible;
+  HCURSOR handle;
+  QueryBestSizeProcPtr QueryBestSize;
+  miPointerSpriteFuncPtr spriteFuncs;
+} winCursorRec;
 
 /*
  * Screen information structure that we need before privates are available
@@ -565,6 +579,8 @@ typedef struct _winPrivScreenRec
 #ifdef SHAPE
   SetShapeProcPtr			SetShape;
 #endif
+
+  winCursorRec                          cursor;
 } winPrivScreenRec;
 
 
@@ -1399,6 +1415,12 @@ winWindowsWMSendEvent (int type, unsigned int mask, int which, int arg,
 void
 winWindowsWMExtensionInit (void);
 
+/*
+ * wincursor.c
+ */
+
+Bool
+winInitCursor (ScreenPtr pScreen);
 
 /*
  * END DDX and DIX Function Prototypes

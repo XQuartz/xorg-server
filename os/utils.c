@@ -603,7 +603,7 @@ ProcessCommandLine(int argc, char *argv[])
             if( ! VerifyDisplayName( display ) ) {
                 ErrorF("Bad display name: %s\n", display);
                 UseMsg();
-                exit(1);
+		FatalError("Bad display name, exiting: %s\n", display);
             }
 	}
 	else if ( strcmp( argv[i], "-a") == 0)
@@ -981,7 +981,7 @@ ProcessCommandLine(int argc, char *argv[])
  	{
 	    ErrorF("Unrecognized option: %s\n", argv[i]);
 	    UseMsg();
-	    exit (1);
+	    FatalError("Unrecognized option: %s\n", argv[i]);
         }
     }
 }

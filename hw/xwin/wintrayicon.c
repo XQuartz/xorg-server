@@ -49,12 +49,7 @@ winInitNotifyIcon (winPrivScreenPtr pScreenPriv)
   nid.uID = pScreenInfo->dwScreen;
   nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
   nid.uCallbackMessage = WM_TRAYICON;
-  nid.hIcon = LoadImage (g_hInstance,
-			 MAKEINTRESOURCE(IDI_XWIN),
-			 IMAGE_ICON,
-			 GetSystemMetrics (SM_CXSMICON),
-			 GetSystemMetrics (SM_CYSMICON),
-			 0);
+  nid.hIcon = (HICON)winTaskbarIcon ();
 
   /* Save handle to the icon so it can be freed later */
   pScreenPriv->hiconNotifyIcon = nid.hIcon;

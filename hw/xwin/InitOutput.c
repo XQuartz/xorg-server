@@ -463,6 +463,9 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   winMsg(X_INFO, "XF86Config is not supported. See http://x.cygwin.com/docs/faq/cygwin-xfree-faq.html for more information\n");
 #endif
 
+  /* Load preferences from XWinrc file */
+  LoadPreferences();
+
   /* Setup global screen info parameters */
   screenInfo->imageByteOrder = IMAGE_BYTE_ORDER;
   screenInfo->bitmapScanlinePad = BITMAP_SCANLINE_PAD;
@@ -515,9 +518,6 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
 	  FatalError ("InitOutput - Couldn't add screen %d", i);
 	}
     }
-
-  /* Load preferences from XWinrc file */
-  LoadPreferences();
 
 #if defined(XWIN_CLIPBOARD) || defined(XWIN_MULTIWINDOW)
 

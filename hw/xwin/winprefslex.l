@@ -80,6 +80,7 @@ static char *makestr(char *str)
 [aA][lL][wW][aA][yY][sS][oO][nN][tT][oO][pP]             { return ALWAYSONTOP; }
 [dD][eE][bB][uU][gG]                                     { return DEBUG; }
 [rR][eE][lL][oO][aA][dD]                                 { return RELOAD; }
+[tT][rR][aA][yY][iI][cC][oO][nN]                         { return TRAYICON; }
 "{"		                                         { return LB; }
 "}"		                                         { return RB; }
 "\""[^\"\r\n]+"\""                                       { yylval.sVal = makestr(yytext+1); \

@@ -37,6 +37,7 @@
 /* Fixups to prevent collisions between Windows and X headers */
 #define ATOM DWORD
 #include <windows.h>
+#include <shellapi.h>
 
 #include "winprefs.h"
 #include "winmultiwindowclass.h"
@@ -64,6 +65,11 @@ static int g_cmdid = STARTMENUID;
 
 /* Defined in DIX */
 extern char *display;
+
+/* Local function to handle comma-ified icon names */
+static HICON
+LoadImageComma (char *fname, int sx, int sy, int flags);
+
 
 /*
  * Creates or appends a menu from a MENUPARSED structure
@@ -227,6 +233,7 @@ ReloadPrefs (void)
 
   pref.iconDirectory[0] = 0;
   pref.defaultIconName[0] = 0;
+  pref.trayIconName[0] = 0;
 
   for (i=0; i<pref.iconItems; i++)
     if (pref.icon[i].hicon)
@@ -462,25 +469,13 @@ unsigned long
 winOverrideDefaultIcon()
 {
   HICON hicon;
-  char fname[PATH_MAX+NAME_MAX+2];
   
   if (pref.defaultIconName[0])
     {
-      /* Make sure we have a dir with trailing backslash */
-      /* Note we are using _Windows_ paths here, not cygwin */
-      strcpy (fname, pref.iconDirectory);
-      if (pref.iconDirectory[0])
-	if (fname[strlen(fname)-1]!='\\')
-	  strcat (fname, "\\");
-      strcat (fname, pref.defaultIconName);
-
-      hicon = (HICON)LoadImage(NULL,
-			       fname,
-			       IMAGE_ICON,
-			       0, 0,
-			       LR_DEFAULTSIZE|LR_LOADFROMFILE);
+      hicon = LoadImageComma (pref.defaultIconName, 0, 0, LR_DEFAULTSIZE);
       if (hicon==NULL)
-	ErrorF ("winOverrideDefaultIcon: LoadIcon(%s) failed\n", fname);
+        ErrorF ("winOverrideDefaultIcon: LoadIcon(%s) failed\n",
+                 pref.defaultIconName);
 
       return (unsigned long)hicon;
     }
@@ -488,6 +483,104 @@ winOverrideDefaultIcon()
   return 0;
 }
 
+
+/*
+ * Return the HICON to use in the taskbar notification area
+ */
+unsigned long
+winTaskbarIcon(void)
+{
+  HICON hicon;
+
+  hicon = 0;
+  /* First try and load an overridden, if success then return it */
+  if (pref.trayIconName[0])
+    {
+      hicon = LoadImageComma (pref.trayIconName,
+                             GetSystemMetrics (SM_CXSMICON),
+                             GetSystemMetrics (SM_CYSMICON),
+                             0 );
+    }
+
+  /* Otherwise return the default */
+  if (!hicon)
+    hicon =  (HICON) LoadImage (g_hInstance,
+                               MAKEINTRESOURCE(IDI_XWIN),
+                               IMAGE_ICON,
+                               GetSystemMetrics (SM_CXSMICON),
+                               GetSystemMetrics (SM_CYSMICON),
+                               0);
+
+  return (unsigned long)hicon;
+}
+
+
+/*
+ * Parse a filename to extract an icon:
+ *  If fname is exactly ",nnn" then extract icon from our resource
+ *  else if it is "file,nnn" then extract icon nnn from that file
+ *  else try to load it as an .ico file and if that fails return NULL
+ */
+static HICON
+LoadImageComma (char *fname, int sx, int sy, int flags)
+{
+  HICON  hicon;
+  int    index;
+  char   file[PATH_MAX+NAME_MAX+2];
+
+  /* Some input error checking */
+  if (!fname || !fname[0])
+    return NULL;
+
+  index = 0;
+  hicon = NULL;
+
+  if (fname[0]==',')
+    {
+      /* It's the XWIN.EXE resource they want */
+      index = atoi (fname+1);
+      hicon = LoadImage (g_hInstance,
+                        MAKEINTRESOURCE(index),
+                        IMAGE_ICON,
+                        sx,
+                        sy,
+                        flags);
+    }
+  else
+    {
+      file[0] = 0;
+      /* Prepend path if not given a "X:\" filename */
+      if ( !(fname[0] && fname[1]==':' && fname[2]=='\\') )
+        {
+         strcpy (file, pref.iconDirectory);
+         if (pref.iconDirectory[0])
+           if (fname[strlen(fname)-1]!='\\')
+             strcat (file, "\\");
+        }
+      strcat (file, fname);
+
+      if (strrchr (file, ','))
+       {
+         /* Specified as <fname>,<index> */
+
+         *(strrchr (file, ',')) = 0; /* End string at comma */
+         index = atoi (strrchr (fname, ',') + 1);
+         hicon = ExtractIcon (g_hInstance, file, index);
+       }
+      else
+       {
+         /* Just an .ico file... */
+
+         hicon = (HICON)LoadImage (NULL,
+                                   file,
+                                   IMAGE_ICON,
+                                   sx,
+                                   sy,
+                                   LR_LOADFROMFILE|flags);
+       }
+    }
+  return hicon;
+}
 
 /*
  * Check for a match of the window class to one specified in the
@@ -500,7 +593,6 @@ winOverrideIcon (unsigned long longWin)
   char *res_name, *res_class;
   int i;
   HICON hicon;
-  char fname[PATH_MAX+NAME_MAX+2];
   char *wmName;
 
   if (pWin==NULL)
@@ -525,21 +617,10 @@ winOverrideIcon (unsigned long longWin)
 	if (pref.icon[i].hicon)
 	  return pref.icon[i].hicon;
 
-	/* Make sure we have a dir with trailing backslash */
-	/* Note we are using _Windows_ paths here, not cygwin */
-	strcpy (fname, pref.iconDirectory);
-	if (pref.iconDirectory[0])
-	  if (fname[strlen(fname)-1]!='\\')
-	    strcat (fname, "\\");
-	strcat (fname, pref.icon[i].iconFile);
-
-	hicon = (HICON)LoadImage(NULL,
-				 fname,
-				 IMAGE_ICON,
-				 0, 0,
-				 LR_DEFAULTSIZE|LR_LOADFROMFILE);
-	if (hicon==NULL)
-	  ErrorF ("winOverrideIcon: LoadIcon(%s) failed\n", fname);
+       hicon = LoadImageComma (pref.icon[i].iconFile, 0, 0, LR_DEFAULTSIZE);
+       if (hicon==NULL)
+         ErrorF ("winOverrideIcon: LoadIcon(%s) failed\n",
+                  pref.icon[i].iconFile);
 
 	pref.icon[i].hicon = (unsigned long)hicon;
 	return (unsigned long)hicon;

@@ -51,6 +51,7 @@ static void SetIconDirectory (char *path);
 static void SetDefaultIcon (char *fname);
 static void SetRootMenu (char *menu);
 static void SetDefaultSysMenu (char *menu, int pos);
+static void SetTrayIcon (char *fname);
 
 static void OpenMenu(char *menuname);
 static void AddMenuLine(char *name, MENUCOMMANDTYPE cmd, char *param);
@@ -79,7 +80,7 @@ extern int yylex(void);
 
 %token NEWLINE MENU LB RB ICONDIRECTORY DEFAULTICON ICONS DEFAULTSYSMENU
 %token SYSMENU ROOTMENU SEPARATOR ATSTART ATEND EXEC ALWAYSONTOP DEBUG
-%token RELOAD
+%token RELOAD TRAYICON
 
 %token <sVal> STRING
 %type <iVal>  atspot
@@ -107,6 +108,10 @@ command:	defaulticon
 	| rootmenu
 	| defaultsysmenu
 	| debug
+	| trayicon
+	;
+
+trayicon:	TRAYICON STRING NEWLINE { SetTrayIcon($2); free($2); }
 	;
 
 rootmenu:	ROOTMENU STRING NEWLINE { SetRootMenu($2); free($2); }
@@ -192,6 +197,13 @@ SetDefaultIcon (char *fname)
   pref.defaultIconName[NAME_MAX] = 0;
 }
 
+static void
+SetTrayIcon (char *fname)
+{
+  strncpy (pref.trayIconName, fname, NAME_MAX);
+  pref.trayIconName[NAME_MAX] = 0;
+  ErrorF("trayiconname: %s\n", pref.trayIconName);
+}
 static void
 SetRootMenu (char *menu)
 {

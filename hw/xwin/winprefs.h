@@ -41,7 +41,7 @@
 #define NAME_MAX PATH_MAX
 #endif
 #define MENU_MAX 128   /* Maximum string length of a menu name or item */
-#define PARAM_MAX (4*PATH_MAX)  /* Maximim length of a parameter to a MENU */
+#define PARAM_MAX (4*PATH_MAX)  /* Maximum length of a parameter to a MENU */
 
 
 /* Supported commands in a MENU {} statement */
@@ -114,6 +114,7 @@ typedef struct WINPREFS
   /* Icon information */
   char iconDirectory[PATH_MAX+1]; /* Where do the .icos lie? (Win32 path) */
   char defaultIconName[NAME_MAX+1];   /* Replacement for x.ico */
+  char trayIconName[NAME_MAX+1]; /* Replacement for tray icon */
 
   ICONITEM *icon;
   int iconItems;
@@ -146,6 +147,9 @@ winIconIsOverride (unsigned hiconIn);
 
 unsigned long
 winOverrideIcon (unsigned long longpWin);
+
+unsigned long
+winTaskbarIcon(void);
 
 unsigned long
 winOverrideDefaultIcon(void);

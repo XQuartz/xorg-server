@@ -111,10 +111,6 @@
 #include "Xpoll.h"
 #include "xf86_OSproc.h"	/* sigio stuff */
 
-#ifdef LG3D
-#include "../../../Xext/lgeint.h"
-#endif /* LG3D */
-
 /******************************************************************************
  * debugging macro
  *****************************************************************************/
@@ -698,9 +694,7 @@ xf86eqEnqueue (xEvent *e)
 #ifdef XINPUT
     int		count;
     
-#ifndef LG3D
     xf86AssertBlockedSIGIO ("xf86eqEnqueue");
-#endif /* !LG3D */
     switch (e->u.u.type) {
     case KeyPress:
     case KeyRelease:
@@ -734,22 +728,6 @@ xf86eqEnqueue (xEvent *e)
         break;
     }
 #endif
-
-#ifdef LG3D
-    if (lgeDisplayServerIsAlive && 
-	!lgeDisplayServerClient->clientGone &&
-	!lgeEventComesFromDS) {
-
-	/*
-	ErrorF("Send event XS->DS, type = %d xy = %d, %d\n", 
-			   e->u.u.type, e->u.keyButtonPointer.rootX, 
-	                   e->u.keyButtonPointer.rootY);
-        */
-			   
-	WriteToClient(lgeDisplayServerClient, sizeof(xEvent), (char *)e);
-	return;
-    }
-#endif /* LG3D */
 
     oldtail = xf86EventQueue.tail;
     isMotion = e->u.u.type == MotionNotify;

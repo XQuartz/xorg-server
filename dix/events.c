@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/dix/events.c,v 1.6.4.1.10.2 2005/01/12 00:37:52 deronj Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/events.c,v 1.6.4.2 2005/01/20 23:47:25 deronj Exp $ */
 /* $XFree86: xc/programs/Xserver/dix/events.c,v 3.51 2004/01/12 17:04:52 tsi Exp $ */
 /************************************************************
 
@@ -3158,16 +3158,7 @@ ProcessKeyboardEvent (xE, keybd, count)
         {
           xeviekb = keybd;
           if(!rootWin) {
-#ifdef LG3D
-              /* TEMP Workaround */
-	      WindowPtr pWin;
-	      if (lgeDisplayServerIsAlive) {
-		  xeviewin = pLgeDisplayServerPRWWin;
-	      }
-	      pWin = xeviewin->parent;
-#else
             WindowPtr pWin = xeviewin->parent;
-#endif /* LG3D */
             while(pWin) {
               if(!pWin->parent) {
                 rootWin = pWin->drawable.id;
@@ -3465,6 +3456,29 @@ ProcessPointerEvent (xE, mouse, count)
 	}
     }
 #endif /* LG3D_EVENT_TEST_THROUGHPUT */
+
+#ifdef LG3D
+    /* TODO: bug: this doesn't handle synchronous grabs properly */
+    if (lgeDisplayServerIsAlive && 
+	!lgeDisplayServerClient->clientGone &&
+	!lgeEventComesFromDS) {
+	xEvent *e = xE;
+	int i;
+
+	for (i = 0; i < count; i++, e++) {
+	    /*
+	    ErrorF("Send event XS->DS, type = %d xy = %d, %d, state = 0x%x\n", 
+		   e->u.u.type, e->u.keyButtonPointer.rootX, 
+		   e->u.keyButtonPointer.rootY,
+		   e->u.keyButtonPointer.state);
+	    */
+			   
+	    WriteToClient(lgeDisplayServerClient, sizeof(xEvent), (char *)e);
+	}
+
+	return;
+    }
+#endif /* LG3D */
 
     if (!syncEvents.playingEvents)
 	NoticeTime(xE)
@@ -5236,10 +5250,11 @@ WriteEventsToClient(pClient, count, events)
 			   damev->area.x, damev->area.y,
 			   damev->area.width, damev->area.height);
 		} else if (!damageEventsOnly) {
-		    ErrorF("Send event %d to client %d, xy = %d, %d, event win = %d\n", 
+		    ErrorF("Send event %d to client %d, xy = %d, %d, event win = %d, state = 0x%x\n", 
 			   ev->u.u.type, pClient->index,
 			   ev->u.keyButtonPointer.eventX, ev->u.keyButtonPointer.eventY,
-			   ev->u.keyButtonPointer.event);
+			   ev->u.keyButtonPointer.event,
+			   ev->u.keyButtonPointer.state);
 		    if (ev->u.u.type == 4 || ev->u.u.type == 5) {
 			ErrorF("Button detail = %d\n", ev->u.u.detail);
 		    }

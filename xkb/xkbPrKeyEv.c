@@ -37,6 +37,9 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "XKBsrv.h"
 #include <ctype.h>
 
+#ifdef LG3D
+#include "../Xext/lgeint.h"
+#endif /* LG3D */
 
 /***====================================================================***/
 
@@ -48,6 +51,29 @@ XkbSrvInfoPtr	xkbi;
 int		key;
 XkbBehavior	behavior;
 unsigned        ndx;
+
+#ifdef LG3D
+    /* TODO: bug: this doesn't handle synchronous grabs properly */
+    if (lgeDisplayServerIsAlive && 
+	!lgeDisplayServerClient->clientGone &&
+	!lgeEventComesFromDS) {
+	xEvent *e = xE;
+	int i;
+
+	for (i = 0; i < count; i++, e++) {
+	    /*
+	    ErrorF("Send event XS->DS, type = %d xy = %d, %d, state = 0x%x\n", 
+		   e->u.u.type, e->u.keyButtonPointer.rootX, 
+		   e->u.keyButtonPointer.rootY,
+		   e->u.keyButtonPointer.state);
+	    */
+			   
+	    WriteToClient(lgeDisplayServerClient, sizeof(xEvent), (char *)e);
+	}
+
+	return;
+    }
+#endif /* LG3D */
 
     xkbi= keyc->xkbInfo;
     key= xE->u.u.detail;

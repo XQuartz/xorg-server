@@ -20,9 +20,9 @@
     if (init) { \
         proc = (procname)wglGetProcAddress(symbol); \
         init = FALSE; \
-        if (proc == NULL) \
+        if (proc == NULL) { \
             ErrorF("glwrap: Can't resolve \"%s\"\n", symbol); \
-        else \
+        } else \
             ErrorF("glwrap: resolved \"%s\"\n", symbol); \
     } \
     if (proc == NULL) { \
@@ -86,21 +86,21 @@ GLAPI void GLAPIENTRY glCopyColorTable( GLenum target, GLenum internalformat,
 GLAPI void GLAPIENTRY glGetColorTable( GLenum target, GLenum format,
                                        GLenum type, GLvoid *table )
 {
-    RESOLVE(PFNGLGETCOLORTABLEPROC, "glGetColorTableEXT");
+    RESOLVE(PFNGLGETCOLORTABLEPROC, "glGetColorTable");
     proc(target, format, type, table);
 }
 
 GLAPI void GLAPIENTRY glGetColorTableParameterfv( GLenum target, GLenum pname,
                                                   GLfloat *params )
 {
-    RESOLVE(PFNGLGETCOLORTABLEPARAMETERFVPROC, "glGetColorTableParameterfvEXT");
+    RESOLVE(PFNGLGETCOLORTABLEPARAMETERFVPROC, "glGetColorTableParameterfv");
     proc(target, pname, params);
 }
 
 GLAPI void GLAPIENTRY glGetColorTableParameteriv( GLenum target, GLenum pname,
                                                   GLint *params )
 {
-    RESOLVE(PFNGLGETCOLORTABLEPARAMETERIVPROC, "glGetColorTableParameterivEXT");
+    RESOLVE(PFNGLGETCOLORTABLEPARAMETERIVPROC, "glGetColorTableParameteriv");
     proc(target, pname, params);
 }
 

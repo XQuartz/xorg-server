@@ -41,43 +41,15 @@
  */
 
 
-#include <GL/gl.h>
-#include <GL/glext.h>
-#include <glxserver.h>
-#include <glxext.h>
 
-#define WINDOWS_LEAN_AND_CLEAN
-#include <windows.h>
-
-/* X11 and X11's glx */
-#include <miscstruct.h>
-#include <windowstr.h>
-#include <resource.h>
-#include <GL/glxint.h>
-#include <GL/glxtokens.h>
-#include <scrnintstr.h>
-#include <glxserver.h>
-#include <glxscreens.h>
-#include <glxdrawable.h>
-#include <glxcontext.h>
-#include <glxext.h>
-#include <glxutil.h>
-#include <glxscreens.h>
-#include <GL/internal/glcore.h>
-#include <stdlib.h>
+#include "glwindows.h"
 
 #include "../../hw/xwin/winpriv.h"
 
 /* ggs: needed to call back to glx with visual configs */
 extern void GlxSetVisualConfigs(int nconfigs, __GLXvisualConfig *configs, void **configprivs);
 
-static struct
-{
-    unsigned enableDebug : 1;
-    unsigned dumpPFD : 1;
-    unsigned dumpHWND : 1;
-    unsigned dumpDC : 1;
-} debugSettings = { 1, 0, 0, 0};
+static glWinDebugSettingsRec glWinDebugSettings = { 1, 0, 0, 0};
 
 static void glWinInitDebugSettings(void) 
 {
@@ -85,19 +57,19 @@ static void glWinInitDebugSettings(void)
 
     envptr = getenv("GLWIN_ENABLE_DEBUG");
     if (envptr != NULL)
-        debugSettings.enableDebug = (atoi(envptr) == 1);
+        glWinDebugSettings.enableDebug = (atoi(envptr) == 1);
 
     envptr = getenv("GLWIN_DUMP_PFD");
     if (envptr != NULL)
-        debugSettings.dumpPFD = (atoi(envptr) == 1);
+        glWinDebugSettings.dumpPFD = (atoi(envptr) == 1);
         
     envptr = getenv("GLWIN_DUMP_HWND");
     if (envptr != NULL)
-        debugSettings.dumpHWND = (atoi(envptr) == 1);
+        glWinDebugSettings.dumpHWND = (atoi(envptr) == 1);
 
     envptr = getenv("GLWIN_DUMP_DC");
     if (envptr != NULL)
-        debugSettings.dumpDC = (atoi(envptr) == 1);
+        glWinDebugSettings.dumpDC = (atoi(envptr) == 1);
 }
 
 static char errorbuffer[1024];
@@ -169,7 +141,7 @@ GLuint __glFloorLog2(GLuint val)
 }
 
 #if 1
-#define GLWIN_DEBUG_MSG if (debugSettings.enableDebug) ErrorF
+#define GLWIN_DEBUG_MSG if (glWinDebugSettings.enableDebug) ErrorF
 #else
 #define GLWIN_DEBUG_MSG(a, ...)
 #endif
@@ -258,18 +230,7 @@ static __GLexports glWinExports = {
     glWinEndDispatchOverride
 };
 
-typedef struct {
-    int num_vis;
-    __GLXvisualConfig *glx_vis;
-    void **priv;
-
-    /* wrapped screen functions */
-    RealizeWindowProcPtr RealizeWindow;
-    UnrealizeWindowProcPtr UnrealizeWindow;
-    CopyWindowProcPtr CopyWindow;
-} glWinScreenRec;
-
-static glWinScreenRec glWinScreens[MAXSCREENS];
+glWinScreenRec glWinScreens[MAXSCREENS];
 
 /* __GLdrawablePrivate->private */
 typedef struct {
@@ -291,7 +252,6 @@ struct __GLcontextRec {
 
   unsigned isAttached :1;
 };
-
 
 static HDC glWinMakeDC(__GLcontext *gc)
 {
@@ -371,7 +331,7 @@ static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
         winGetWindowInfo(pWin, &gc->winInfo);
     }
     
-    if (debugSettings.dumpHWND)
+    if (glWinDebugSettings.dumpHWND)
         GLWIN_DEBUG_MSG("Got HWND %p\n", gc->winInfo.hwnd);
 
     dc = glWinMakeDC(gc);
@@ -453,7 +413,7 @@ static GLboolean glWinMakeCurrent(__GLcontext *gc)
         attach(gc, glPriv);
 
     dc = glWinMakeDC(gc);
-    /*if (debugSettings.dumpDC)*/
+    /*if (glWinDebugSettings.dumpDC)*/
     /*    GLWIN_DEBUG_MSG("Got HDC %p\n", dc);*/
     ret = wglMakeCurrent(dc, gc->ctx);
     if (!ret)
@@ -704,7 +664,7 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
     result->interface.exports = glWinExports;
 
     winGetWindowInfo(NULL, &result->winInfo);
-    if (debugSettings.dumpHWND)
+    if (glWinDebugSettings.dumpHWND)
         GLWIN_DEBUG_MSG("Got HWND %p\n", result->winInfo.hwnd);
    
 #if 1 
@@ -722,7 +682,7 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
     }
     result->dc = dc; 
 #endif
-    if (debugSettings.dumpDC)
+    if (glWinDebugSettings.dumpDC)
         GLWIN_DEBUG_MSG("Got HDC %p\n", dc);
 
     if (makeFormat(mode, &result->pfd))
@@ -733,7 +693,7 @@ static __GLinterface *glWinCreateContext(__GLimports *imports,
         return NULL;
     }
 
-    if (debugSettings.dumpPFD)
+    if (glWinDebugSettings.dumpPFD)
         pfdOut(&result->pfd);
 
     result->pixelFormat = ChoosePixelFormat(dc, &result->pfd);
@@ -1383,6 +1343,8 @@ static Bool glWinScreenProbe(int screen)
     pScreen->UnrealizeWindow = glWinUnrealizeWindow;
     screenPriv->CopyWindow = pScreen->CopyWindow;
     pScreen->CopyWindow = glWinCopyWindow;
+
+    glWinInitCursor(pScreen);
 
     return TRUE;
 }

@@ -22,6 +22,8 @@
         init = FALSE; \
         if (proc == NULL) \
             ErrorF("glwrap: Can't resolve \"%s\"\n", symbol); \
+        else \
+            ErrorF("glwrap: resolved \"%s\"\n", symbol); \
     } \
     if (proc == NULL) { \
         __glXErrorCallBack(NULL, 0); \

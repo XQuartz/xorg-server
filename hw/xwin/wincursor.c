@@ -358,6 +358,7 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
 	}
       free (lpBits);
       
+      
       if (hAnd && hXor)
 	{
 	  ii.fIcon = FALSE;
@@ -367,20 +368,32 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
 	  ii.hbmColor = hXor;
 	  hCursor = (HCURSOR) CreateIconIndirect( &ii );
 
-	  GetIconInfo(hCursor, &ii);
-	  if (ii.fIcon)
+	  if (hCursor == NULL)
+	    winW32Error(2, GetLastError(), "winLoadCursor - CreateIconIndirect failed: %s\n");
+	  else 
 	    {
-	      HCURSOR hCursor2;  
-	      WIN_DEBUG_MSG("winLoadCursor: CreateIconIndirect returned no "
-			"cursor. Trying again.\n");
+	      GetIconInfo(hCursor, &ii);
+	      if (ii.fIcon)
+		{
+		  WIN_DEBUG_MSG("winLoadCursor: CreateIconIndirect returned  no cursor. Trying again.\n");
 
-	      ii.fIcon = FALSE;
-	      ii.xHotspot = pCursor->bits->xhot;
-	      ii.yHotspot = pCursor->bits->yhot;
-	      hCursor2 = (HCURSOR) CreateIconIndirect( &ii );
+		  DestroyCursor(hCursor);
+		  
+  	          ii.fIcon = FALSE;
+	          ii.xHotspot = pCursor->bits->xhot;
+	          ii.yHotspot = pCursor->bits->yhot;
+		  hCursor = (HCURSOR) CreateIconIndirect( &ii );
+		  
+		  if (hCursor == NULL)
+		    winW32Error(2, GetLastError(), "winLoadCursor - CreateIconIndirect failed: %s\n");
 
-	      DestroyIcon(hCursor);
-	      hCursor = hCursor2;
+		  /* GetIconInfo creates new bitmaps. Destroy them again */
+		  if (ii.hbmMask)
+     	            DeleteObject(ii.hbmMask);
+		  if (ii.hbmColor)
+		    DeleteObject(ii.hbmColor);
+                  
+		}
 	    }
 	}
 
@@ -398,28 +411,12 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
 			      pCursor->bits->xhot, pCursor->bits->yhot,
 			      pScreenPriv->cursor.sm_cx, pScreenPriv->cursor.sm_cy,
 			      pAnd, pXor);
+      if (hCursor == NULL)
+	winW32Error(2, GetLastError(), "winLoadCursor - CreateCursor failed: %s\n");
     }
   free (pAnd);
   free (pXor);
 
-  if (hCursor == NULL)
-    {
-      LPVOID lpMsgBuf;
-      
-      /* Display a fancy error message */
-      FormatMessage (FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-		     FORMAT_MESSAGE_FROM_SYSTEM | 
-		     FORMAT_MESSAGE_IGNORE_INSERTS,
-		     NULL,
-		     GetLastError (),
-		     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-		     (LPTSTR) &lpMsgBuf,
-		     0, NULL);
-      
-      winErrorFVerb (2, "winLoadCursor - CreateCursor failed\n"
-	      "\t%s\n", (LPSTR)lpMsgBuf);
-      LocalFree (lpMsgBuf);
-    }
   return hCursor;
 }
 

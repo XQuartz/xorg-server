@@ -339,7 +339,7 @@ winKeybdBell (int iPercent, DeviceIntPtr pDeviceInt,
 void
 winKeybdCtrl (DeviceIntPtr pDevice, KeybdCtrl *pCtrl)
 {
-
+  g_winInternalModeKeyStatesPtr = &(pDevice->key->state);
 }
 
 
@@ -445,11 +445,13 @@ winKeybdProc (DeviceIntPtr pDeviceInt, int iState)
       
     case DEVICE_ON: 
       pDevice->on = TRUE;
+      g_winInternalModeKeyStatesPtr = &(pDeviceInt->key->state);
       break;
 
     case DEVICE_CLOSE:
     case DEVICE_OFF: 
       pDevice->on = FALSE;
+      g_winInternalModeKeyStatesPtr = NULL;
       break;
     }
 

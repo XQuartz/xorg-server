@@ -225,8 +225,8 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	if (message == WM_RENDERALLFORMATS)
 	  fConvertToUnicode = FALSE;
 	else
-	  fConvertToUnicode = g_fUnicodeSupport && (CF_UNICODETEXT == wParam);
-
+	  fConvertToUnicode = (CF_UNICODETEXT == wParam);
+	
 	/* Request the selection contents */
 	iReturn = XConvertSelection (pDisplay,
 				     *(pWindowProp->patomLastOwnedSelection),

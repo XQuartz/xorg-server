@@ -34,14 +34,6 @@
 
 
 /*
- * References to external symbols
- */
-
-extern int			g_iScreenPrivateIndex;
-extern int			g_iWindowPrivateIndex;
-
-
-/*
  * Prototypes for local functions
  */
 
@@ -59,6 +51,7 @@ winReshapePRootless (WindowPtr pWin);
 #endif
 
 
+#ifdef XWIN_NATIVEGDI
 /* See Porting Layer Definition - p. 37 */
 /* See mfb/mfbwindow.c - mfbCreateWindow() */
 
@@ -221,6 +214,7 @@ winMapWindowNativeGDI (WindowPtr pWindow)
   return TRUE;
 
 }
+#endif
 
 
 /* See Porting Layer Definition - p. 37 */

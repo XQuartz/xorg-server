@@ -30,9 +30,6 @@
 /* $XFree86: xc/programs/Xserver/hw/xwin/winclipboardtextconv.c,v 1.2 2003/07/29 21:25:16 dawes Exp $ */
 
 #include "win.h"
-
-#if WIN_CLIPBOARD_SUPPORT
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -158,4 +155,3 @@ winClipboardUNIXtoDOS (unsigned char **ppszData, int iLength)
   ErrorF ("UNIXtoDOS () - Final string:\n%s\n", pszDestBegin);
 #endif
 }
-#endif

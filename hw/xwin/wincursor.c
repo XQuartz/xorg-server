@@ -34,13 +34,18 @@
 
 #include "win.h"
 
-
 /*
- * References to external symbols
+ * Local function prototypes
  */
 
-extern int			g_iScreenPrivateIndex;
+static void
+winPointerWarpCursor (ScreenPtr pScreen, int x, int y);
 
+static Bool
+winCursorOffScreen (ScreenPtr *ppScreen, int *x, int *y);
+
+static void
+winCrossScreen (ScreenPtr pScreen, Bool fEntering);
 
 miPointerScreenFuncRec g_winPointerCursorFuncs =
 {
@@ -50,7 +55,7 @@ miPointerScreenFuncRec g_winPointerCursorFuncs =
 };
 
 
-void
+static void
 winPointerWarpCursor (ScreenPtr pScreen, int x, int y)
 {
   winScreenPriv(pScreen);
@@ -94,13 +99,13 @@ winPointerWarpCursor (ScreenPtr pScreen, int x, int y)
   miPointerWarpCursor (pScreen, x, y);
 }
 
-Bool
+static Bool
 winCursorOffScreen (ScreenPtr *ppScreen, int *x, int *y)
 {
   return FALSE;
 }
 
-void
+static void
 winCrossScreen (ScreenPtr pScreen, Bool fEntering)
 {
 }

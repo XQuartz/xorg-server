@@ -34,7 +34,6 @@
 
 #include "win.h"
 
-#if WIN_MULTIWINDOW_SUPPORT
 
 /*
  * External global variables
@@ -211,4 +210,3 @@ winReshapeMultiWindow (WindowPtr pWin)
   return;
 }
 #endif
-#endif /* WIN_MULTIWINDOW_SUPPORT*/

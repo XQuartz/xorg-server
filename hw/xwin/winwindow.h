@@ -38,8 +38,6 @@
 #define YES			1
 #endif
 
-#define WIN_MULTIWINDOW_SUPPORT			YES
-
 /* Constant strings */
 #define WINDOW_CLASS		"cygwin/x"
 #define WINDOW_TITLE		"Cygwin/X - %s:%d"
@@ -81,7 +79,7 @@ typedef struct
   LPDIRECTDRAWCLIPPER	pddcPrimary;
 } winPrivWinRec, *winPrivWinPtr;
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 typedef struct _winWMMessageRec{
   DWORD			dwID;
   DWORD			msg;
@@ -137,5 +135,5 @@ winMinimizeWindow (Window id);
 void
 winUpdateIcon (Window id);
 
-#endif /* WIN_MULTIWINDOW_SUPPORT */
+#endif /* XWIN_MULTIWINDOW */
 #endif

@@ -34,15 +34,6 @@
 
 #include "win.h"
 
-
-/*
- * References to external symbols
- */
-
-extern int			g_iCmapPrivateIndex;
-extern int			g_iScreenPrivateIndex;
-
-
 /* See Porting Layer Definition - p. 30 */
 /*
  * Walk the list of installed colormaps, filling the pmaps list
@@ -285,15 +276,6 @@ winDestroyColormap (ColormapPtr pColormap)
 #if CYGDEBUG
   ErrorF ("winDestroyColormap - Returning\n");
 #endif
-}
-
-
-int
-winExpandDirectColors (ColormapPtr pmap, int ndef,
-		       xColorItem *indefs, xColorItem *outdefs)
-{
-  ErrorF ("\nwinExpandDirectColors\n");
-  return miExpandDirectColors (pmap, ndef, indefs, outdefs);
 }
 
 

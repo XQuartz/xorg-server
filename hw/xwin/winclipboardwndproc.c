@@ -31,8 +31,6 @@
 
 #include "winclipboard.h"
 
-#if WIN_CLIPBOARD_SUPPORT
-
 
 /*
  * Constants
@@ -416,4 +414,3 @@ winClipboardFlushWindowsMessageQueue (HWND hwnd)
   
   return TRUE;
 }
-#endif

@@ -106,10 +106,12 @@ winCreateBoundingWindowFullScreen (ScreenPtr pScreen)
   /* Branch on the server engine */
   switch (pScreenInfo->dwEngine)
     {
+#ifdef XWIN_NATIVEGDI
     case WIN_SERVER_SHADOW_GDI:
       /* Show the window */
       ShowWindow (*phwnd, SW_SHOWMAXIMIZED);
       break;
+#endif
 
     default:
       /* Hide the window */
@@ -156,7 +158,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   if (pScreenInfo->fDecoration
       && !pScreenInfo->fRootless
       && !pScreenInfo->fPseudoRootless
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
       && !pScreenInfo->fMultiWindow
 #endif
       )
@@ -200,7 +202,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
       if (pScreenInfo->fDecoration
 	  && !pScreenInfo->fRootless
 	  && !pScreenInfo->fPseudoRootless
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 	  && !pScreenInfo->fMultiWindow
 #endif
 	  )
@@ -270,7 +272,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   if ((!pScreenInfo->fDecoration
        || pScreenInfo->fRootless
        || pScreenInfo->fPseudoRootless
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
        || pScreenInfo->fMultiWindow
 #endif
        )
@@ -409,7 +411,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
 
   /* Show the window */
   if (pScreenInfo->fRootless
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
       || pScreenInfo->fMultiWindow
 #endif
       )
@@ -428,7 +430,7 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   /* Attempt to bring our window to the top of the display */
   if (!pScreenInfo->fRootless
       && !pScreenInfo->fPseudoRootless
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
       && !pScreenInfo->fMultiWindow
 #endif
       )
@@ -441,9 +443,11 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
 	}
     }
 
+#ifdef XWIN_NATIVEGDI
   /* Paint window background blue */
   if (pScreenInfo->dwEngine == WIN_SERVER_NATIVE_GDI)
     winPaintBackground (*phwnd, RGB (0x00, 0x00, 0xFF));
+#endif
 
   ErrorF ("winCreateBoundingWindowWindowed -  Returning\n");
 

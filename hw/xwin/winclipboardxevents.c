@@ -31,9 +31,6 @@
 
 #include "winclipboard.h"
 
-#if WIN_CLIPBOARD_SUPPORT
-
-
 /*
  * Process any pending X events
  */
@@ -778,4 +775,3 @@ winClipboardFlushXEvents (HWND hwnd,
 
   return WIN_XEVENTS_SUCCESS;
 }
-#endif

@@ -73,6 +73,14 @@ extern int			g_iScreenPrivateIndex;
 
 
 /*
+ * Local functions
+ */
+
+static Bool
+winSaveScreen (ScreenPtr pScreen, int on);
+
+
+/*
  * Determine what type of screen we are initializing
  * and call the appropriate procedure to intiailize
  * that type of screen.
@@ -92,7 +100,7 @@ winScreenInit (int index,
 	  pScreenInfo->dwWidth, pScreenInfo->dwHeight);
 #endif
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /* Bail if -rootless and -multiwindow flags both present */
   if (pScreenInfo->fRootless && pScreenInfo->fMultiWindow)
     {
@@ -249,7 +257,7 @@ winFinishScreenInitFB (int index,
   char			*pbits = NULL;
   int			iReturn;
 
-#if WIN_LAYER_SUPPORT
+#ifdef XWIN_LAYER
   pScreenPriv->dwLayerKind = LAYER_SHADOW;
 #endif
 
@@ -375,7 +383,7 @@ winFinishScreenInitFB (int index,
     }
 #endif
 
-#if WIN_LAYER_SUPPORT
+#ifdef XWIN_LAYER
   /* KDrive does LayerStartInit right after fbPictureInit */
   if (!LayerStartInit (pScreen))
     {
@@ -439,7 +447,7 @@ winFinishScreenInitFB (int index,
       return FALSE;
     }
 
-#if !WIN_LAYER_SUPPORT
+#ifndef XWIN_LAYER
   /* Initialize the shadow framebuffer layer */
   if ((pScreenInfo->dwEngine == WIN_SERVER_SHADOW_GDI
        || pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD
@@ -517,7 +525,7 @@ winFinishScreenInitFB (int index,
       /* Undefine the WRAP macro, as it is not needed elsewhere */
 #undef WRAP
     }
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /* Handle multi window mode */
   else if (pScreenInfo->fMultiWindow)
     {
@@ -571,7 +579,7 @@ winFinishScreenInitFB (int index,
   pScreenPriv->CloseScreen = pScreen->CloseScreen;
   pScreen->CloseScreen = pScreenPriv->pwinCloseScreen;
 
-#if WIN_CLIPBOARD_SUPPORT || WIN_MULTIWINDOW_SUPPORT
+#if defined(XWIN_CLIPBOARD) || defined(XWIN_MULTIWINDOW)
   /* Create a mutex for modules in separate threads to wait for */
   iReturn = pthread_mutex_init (&pScreenPriv->pmServerStarted, NULL);
   if (iReturn != 0)
@@ -594,14 +602,14 @@ winFinishScreenInitFB (int index,
   pScreenPriv->fServerStarted = FALSE;
 #endif
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /* Set the WindowOrderChanged flag to false */
   pScreenPriv->fWindowOrderChanged = FALSE;
 
   pScreenPriv->fRestacking = FALSE;
 #endif
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 #if CYGDEBUG || YES
   if (pScreenInfo->fMultiWindow)
     ErrorF ("winFinishScreenInitFB - Calling winInitWM.\n");
@@ -633,21 +641,7 @@ winFinishScreenInitFB (int index,
   return TRUE;
 }
 
-
-/*
- *
- *
- *
- *
- * TEST CODE BELOW - NOT USED IN NORMAL COMPILATION
- *
- *
- *
- *
- *
- */
-
-
+#ifdef XWIN_NATIVEGDI
 /* See Porting Layer Definition - p. 20 */
 
 Bool
@@ -795,26 +789,12 @@ winFinishScreenInitNativeGDI (int index,
 
   return TRUE;
 }
+#endif
 
 
 /* See Porting Layer Definition - p. 33 */
-Bool
+static Bool
 winSaveScreen (ScreenPtr pScreen, int on)
 {
   return TRUE;
-}
-
-
-PixmapPtr
-winGetWindowPixmap (WindowPtr pwin)
-{
-  ErrorF ("winGetWindowPixmap ()\n");
-  return NULL;
-}
-
-
-void
-winSetWindowPixmap (WindowPtr pwin, PixmapPtr pPix)
-{
-  ErrorF ("winSetWindowPixmap ()\n");
 }

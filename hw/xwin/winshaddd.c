@@ -689,7 +689,7 @@ winCloseScreenShadowDD (int nIndex, ScreenPtr pScreen)
       pScreenPriv->hwndScreen = NULL;
     }
 
-#if WIN_CLIPBOARD_SUPPORT || WIN_MULTIWINDOW_SUPPORT
+#if defined(XWIN_CLIPBOARD) || defined(XWIN_MULTIWINDOW)
   /* Destroy the thread startup mutex */
   pthread_mutex_destroy (&pScreenPriv->pmServerStarted);
 #endif
@@ -767,7 +767,7 @@ winInitVisualsShadowDD (ScreenPtr pScreen)
 	  return FALSE;
 	}
 
-#if WIN_EMULATE_PSEUDO_SUPPORT
+#ifdef XWIN_EMULATEPSEUDO
       if (!pScreenInfo->fEmulatePseudo)
 	break;
 
@@ -799,7 +799,7 @@ winInitVisualsShadowDD (ScreenPtr pScreen)
 	  return FALSE;
 	}
 
-#if WIN_EMULATE_PSEUDO_SUPPORT
+#ifdef XWIN_EMULATEPSEUDO
       if (!pScreenInfo->fEmulatePseudo)
 	break;
 
@@ -1370,7 +1370,7 @@ winSetEngineFunctionsShadowDD (ScreenPtr pScreen)
   pScreenPriv->pwinHotKeyAltTab = (winHotKeyAltTabProcPtr) (void (*)(void))NoopDDA;
   pScreenPriv->pwinCreatePrimarySurface = winCreatePrimarySurfaceShadowDD;
   pScreenPriv->pwinReleasePrimarySurface = winReleasePrimarySurfaceShadowDD;
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   pScreenPriv->pwinFinishCreateWindowsWindow =
     (winFinishCreateWindowsWindowProcPtr) (void (*)(void))NoopDDA;
 #endif

@@ -31,14 +31,7 @@
 
 #include "win.h"
 
-
-/*
- * References to external symbols
- */
-
-extern int			g_iScreenPrivateIndex;
-
-
+#ifdef XWIN_NATIVEGDI
 /* See Porting Layer Definition - p. 33 */
 /*
  * Called by clients, returns the best size for a cursor, tile, or
@@ -51,6 +44,7 @@ winQueryBestSizeNativeGDI (int class, unsigned short *pWidth,
 {
   ErrorF ("winQueryBestSizeNativeGDI\n");
 }
+#endif
 
 
 /*
@@ -103,6 +97,7 @@ winUpdateFBPointer (ScreenPtr pScreen, void *pbits)
 }
 
 
+#ifdef XWIN_NATIVEGDI
 /*
  * Paint the window background with the specified color
  */
@@ -152,3 +147,4 @@ winPaintBackground (HWND hwnd, COLORREF colorref)
 
   return TRUE;
 }
+#endif

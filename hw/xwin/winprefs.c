@@ -39,7 +39,7 @@
 #include <windows.h>
 
 #include "winprefs.h"
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 #include "winmultiwindowclass.h"
 #endif
 
@@ -147,7 +147,7 @@ MakeMenu (char *name,
 }
 
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 /*
  * Callback routine that is executed once per window class.
  * Removes or creates custom window settings depending on LPARAM
@@ -209,7 +209,7 @@ ReloadPrefs (void)
 {
   int i;
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /* First, iterate over all windows replacing their icon with system */
   /* default one and deleting any custom system menus                 */
   EnumWindows (ReloadEnumWindowsProc, FALSE);
@@ -254,7 +254,7 @@ ReloadPrefs (void)
   if (!g_hiconX)
     g_hiconX = LoadIcon (g_hInstance, MAKEINTRESOURCE(IDI_XWIN));
   
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /* Rebuild the icons and menus */
   EnumWindows (ReloadEnumWindowsProc, TRUE);
 #endif
@@ -381,7 +381,7 @@ HandleCustomWM_COMMAND (unsigned long hwndIn,
 }
 
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 /*
  * Add the default or a custom menu depending on the class match
  */
@@ -494,6 +494,7 @@ winOverrideDefaultIcon()
 }
 
 
+#ifdef XWIN_MULTIWINDOW
 /*
  * Check for a match of the window class to one specified in the
  * ICONS{} section in the prefs file, and load the icon from a file
@@ -559,6 +560,7 @@ winOverrideIcon (unsigned long longWin)
 
   return 0;
 }
+#endif
 
 
 /*

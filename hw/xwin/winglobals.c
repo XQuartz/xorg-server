@@ -52,10 +52,6 @@ HINSTANCE	g_hInstance = 0;
 HWND		g_hDlgDepthChange = NULL;
 HWND		g_hDlgExit = NULL;
 const char *	g_pszQueryHost = NULL;
-#if WIN_CLIPBOARD_SUPPORT
-Bool		g_fUnicodeClipboard = TRUE;
-Bool		g_fClipboard = FALSE;
-#endif
 Bool		g_fXdmcpEnabled = FALSE;
 HICON		g_hiconX = NULL;
 
@@ -73,7 +69,7 @@ HMODULE		g_hmodCommonControls = NULL;
 FARPROC		g_fpTrackMouseEvent = (FARPROC) (void (*)(void))NoopDDA;
 
 
-#if WIN_CLIPBOARD_SUPPORT
+#ifdef XWIN_CLIPBOARD
 /*
  * Wrapped DIX functions
  */
@@ -86,6 +82,8 @@ winDispatchProcPtr	winProcSetSelectionOwnerOrig = NULL;
  * Clipboard variables
  */
 
+Bool			g_fUnicodeClipboard = TRUE;
+Bool			g_fClipboard = FALSE;
 Bool			g_fClipboardLaunched = FALSE;
 Bool			g_fClipboardStarted = FALSE;
 pthread_t		g_ptClipboardProc;
@@ -104,7 +102,7 @@ Atom			g_atomLastOwnedSelection;
 void
 winInitializeGlobals (void)
 {
-#if WIN_CLIPBOARD_SUPPORT
+#ifdef XWIN_CLIPBOARD
   g_fClipboardLaunched = FALSE;
   g_fClipboardStarted = FALSE;
   g_iClipboardWindow = None;

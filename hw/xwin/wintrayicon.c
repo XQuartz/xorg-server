@@ -143,7 +143,7 @@ winHandleIconMessage (HWND hwnd, UINT message,
 	/* Get actual tray icon menu */
 	hmenuTray = GetSubMenu (hmenuPopup, 0);
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 	/* Check for MultiWindow mode */
 	if (pScreenInfo->fMultiWindow)
 	  {

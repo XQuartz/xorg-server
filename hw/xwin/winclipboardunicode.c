@@ -31,8 +31,6 @@
 
 #include "win.h"
 
-#if WIN_CLIPBOARD_SUPPORT
-
 Bool
 winClipboardDetectUnicodeSupport (void);
 
@@ -77,4 +75,3 @@ winClipboardDetectUnicodeSupport (void)
 
   return fReturn;
 }
-#endif

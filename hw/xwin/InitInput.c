@@ -29,8 +29,8 @@
 /* $XFree86: xc/programs/Xserver/hw/xwin/InitInput.c,v 1.13 2003/07/29 21:25:15 dawes Exp $ */
 
 #include "win.h"
-#if WIN_CLIPBOARD_SUPPORT
-#include "../../Xext/xf86miscproc.h"
+#ifdef XWIN_CLIPBOARD
+# include "../../Xext/xf86miscproc.h"
 #endif
 #include "dixstruct.h"
 
@@ -39,7 +39,7 @@
  * Local function prototypes
  */
 
-#if WIN_CLIPBOARD_SUPPORT
+#ifdef XWIN_CLIPBOARD
 DISPATCH_PROC(winProcEstablishConnection);
 DISPATCH_PROC(winProcQueryTree);
 DISPATCH_PROC(winProcSetSelectionOwner);
@@ -59,7 +59,7 @@ CARD32			g_c32LastInputEventTime = 0;
 
 extern int			g_fdMessageQueue;
 extern Bool			g_fXdmcpEnabled;
-#if WIN_CLIPBOARD_SUPPORT
+#ifdef XWIN_CLIPBOARD
 extern winDispatchProcPtr	winProcEstablishConnectionOrig;
 extern winDispatchProcPtr	winProcQueryTreeOrig;
 #endif
@@ -121,7 +121,7 @@ InitInput (int argc, char *argv[])
   ErrorF ("InitInput\n");
 #endif
 
-#if WIN_CLIPBOARD_SUPPORT
+#ifdef XWIN_CLIPBOARD
   /*
    * Wrap some functions at every generation of the server.
    */

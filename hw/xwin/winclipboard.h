@@ -31,16 +31,6 @@
  */
 /* $XFree86: xc/programs/Xserver/hw/xwin/winclipboard.h,v 1.3 2003/10/02 13:30:10 eich Exp $ */
 
-#ifndef NO
-#define NO					0
-#endif
-#ifndef YES
-#define YES					1
-#endif
-
-#define WIN_CLIPBOARD_SUPPORT			YES
-
-#if WIN_CLIPBOARD_SUPPORT
 /* Standard library headers */
 #include <assert.h>
 #include <stdio.h>
@@ -157,5 +147,4 @@ winClipboardFlushXEvents (HWND hwnd,
 			  int iWindow,
 			  Display *pDisplay,
 			  Bool fUnicodeSupport);
-#endif /* WIN_CLIPBOARD_SUPPORT */
 #endif

@@ -31,15 +31,6 @@
 
 #include "win.h"
 
-
-/*
- * References to external symbols
- */
-
-extern int			g_iScreenPrivateIndex;
-extern int			g_iGCPrivateIndex;
-
-
 void
 winPushPixels(GCPtr pGC, PixmapPtr pBitMap, DrawablePtr pDrawable, int dx, int dy, int xOrg, int yOrg);
 

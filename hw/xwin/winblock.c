@@ -36,7 +36,6 @@
  * References to external symbols
  */
 
-extern int			g_iScreenPrivateIndex;
 extern HWND			g_hDlgDepthChange;
 extern HWND			g_hDlgExit;
 
@@ -51,7 +50,7 @@ winBlockHandler (int nScreen,
   winScreenPriv((ScreenPtr)pBlockData);
   MSG			msg;
 
-#if WIN_CLIPBOARD_SUPPORT || WIN_MULTIWINDOW_SUPPORT
+#if defined(XWIN_CLIPBOARD) || defined(XWIN_MULTIWINDOW)
   /* Signal threaded modules to begin */
   if (pScreenPriv != NULL && !pScreenPriv->fServerStarted)
     {
@@ -89,7 +88,7 @@ winBlockHandler_ProcessMessages:
 	}
     }
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   if (pScreenPriv->pScreenInfo->fMultiWindow)
     winReorderWindowsMultiWindow ((ScreenPtr)pBlockData);
 #endif

@@ -30,7 +30,7 @@ from The Open Group.
 
 #include "win.h"
 #include "winmsg.h"
-#if WIN_XF86CONFIG_SUPPORT
+#ifdef XWIN_XF86CONFIG
 #include "winconfig.h"
 #endif
 #include "winprefs.h"
@@ -44,11 +44,9 @@ from The Open Group.
 extern int			g_iNumScreens;
 extern winScreenInfo		g_ScreenInfo[];
 extern int			g_iLastScreen;
-extern Bool			g_fInitializedDefaultScreens;
 extern FILE			*g_pfLog;
-extern Bool			g_fUnicodeClipboard;
+
 extern Bool			g_fXdmcpEnabled;
-extern int			g_iScreenPrivateIndex;
 extern int			g_fdMessageQueue;
 extern const char *		g_pszQueryHost;
 extern HINSTANCE		g_hInstance;
@@ -57,8 +55,11 @@ int		g_iLogVerbose = 4;
 char *		g_pszLogFile = WIN_LOG_FNAME;
 Bool		g_fLogInited = FALSE;
 
+#ifdef XWIN_CLIPBOARD
+extern Bool			g_fUnicodeClipboard;
 extern Bool			g_fClipboardLaunched;
 extern Bool			g_fClipboardStarted;
+#endif
 
 extern HMODULE			g_hmodDirectDraw;
 extern FARPROC			g_fpDirectDrawCreate;
@@ -111,10 +112,6 @@ static PixmapFormatRec g_PixmapFormats[] = {
 const int NUMFORMATS = sizeof (g_PixmapFormats) / sizeof (g_PixmapFormats[0]);
 
 #if defined(DDXOSRESET)
-extern pthread_t		g_ptClipboardProc;
-extern HWND			g_hwndClipboard;
-extern Bool			g_fClipboard;
-
 /*
  * Called right before KillAllClients when the server is going to reset,
  * allows us to shutdown our seperate threads cleanly.
@@ -125,7 +122,7 @@ OsVendorReset (void)
 {
   ErrorF ("OsVendorReset - Hello\n");
 
-#if WIN_CLIPBOARD_SUPPORT
+#ifdef XWIN_CLIPBOARD
   /* Close down clipboard resources */
   if (g_fClipboard && g_fClipboardLaunched && g_fClipboardStarted)
     {
@@ -151,7 +148,7 @@ ddxGiveUp (void)
   winErrorFVerb (2, "ddxGiveUp\n");
 #endif
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /* Notify the worker threads we're exiting */
   winDeinitMultiWindowWM ();
 #endif
@@ -269,7 +266,10 @@ ddxUseMsg (void)
 	  "\t\t1 - Shadow GDI\n"
 	  "\t\t2 - Shadow DirectDraw\n"
 	  "\t\t4 - Shadow DirectDraw4 Non-Locking\n"
-	  "\t\t16 - Native GDI - experimental\n");
+#ifdef XWIN_NATIVEGDI
+	  "\t\t16 - Native GDI - experimental\n"
+#endif
+	  );
 
   ErrorF ("-fullscreen\n"
 	  "\tRun the server in fullscreen mode.\n");
@@ -292,20 +292,25 @@ ddxUseMsg (void)
 	  "\tmode only.\n");
 
   ErrorF ("-rootless\n"
-	  "\tEXPERIMENTAL: Run the server in rootless mode.\n");
+	  "\tRun the server in rootless mode.\n");
 
   ErrorF ("-pseudorootless\n"
-	  "\tEXPERIMENTAL: Run the server in pseudo-rootless mode.\n");
+	  "\tRun the server in pseudo-rootless mode.\n");
 
+#ifdef XWIN_MULTIWINDOW
   ErrorF ("-multiwindow\n"
-	  "\tEXPERIMENTAL: Run the server in multi-window mode.\n");
+	  "\tRun the server in multi-window mode.\n");
+#endif
 
   ErrorF ("-multiplemonitors\n"
 	  "\tEXPERIMENTAL: Use the entire virtual screen if multiple\n"
 	  "\tmonitors are present.\n");
 
+#ifdef XWIN_CLIPBOARD
   ErrorF ("-clipboard\n"
-	  "\tEXPERIMENTAL: Run the clipboard integration module.\n");
+	  "\tRun the clipboard integration module.\n"
+	  "\tDo not use at the same time as 'xwinclip'.\n");
+#endif
 
   ErrorF ("-scrollbars\n"
 	  "\tIn windowed mode, allow screens bigger than the Windows desktop.\n"
@@ -323,12 +328,14 @@ ddxUseMsg (void)
 	  "\tthe updated region when num_boxes, or more, are in the\n"
 	  "\tupdated region.  Currently supported only by `-engine 1'.\n");
 
+#ifdef XWIN_EMULATEPSEUDO
   ErrorF ("-emulatepseudo\n"
 	  "\tCreate a depth 8 PseudoColor visual when running in\n"
 	  "\tdepths 15, 16, 24, or 32, collectively known as TrueColor\n"
 	  "\tdepths.  The PseudoColor visual does not have correct colors,\n"
 	  "\tand it may crash, but it at least allows you to run your\n"
 	  "\tapplication in TrueColor modes.\n");
+#endif
 
   ErrorF ("-[no]unixkill\n"
           "\tCtrl+Alt+Backspace exits the X Server.\n");
@@ -342,10 +349,10 @@ ddxUseMsg (void)
   ErrorF ("-keyboard\n"
 	  "\tSpecify a keyboard device from the configuration file.\n");
 
+#ifdef XWIN_CLIPBOARD
   ErrorF ("-nounicodeclipboard\n"
 	  "\tDo not use Unicode clipboard even if NT-based platform.\n");
-
-  /* TODO: new options */ 
+#endif
 }
 
 
@@ -375,7 +382,7 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   winErrorFVerb (2, "InitOutput\n");
 #endif
 
-#if WIN_XF86CONFIG_SUPPORT
+#ifdef XWIN_XF86CONFIG
   /* Try to read the XF86Config-style configuration file */
   if (!winReadConfigfile ())
     winErrorFVerb (1, "InitOutput - Error reading config file\n");
@@ -460,7 +467,7 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   /* Load preferences from XWinrc file */
   LoadPreferences();
 
-#if WIN_CLIPBOARD_SUPPORT || WIN_MULTIWINDOW_SUPPORT
+#if defined(XWIN_CLIPBOARD) || defined(XWIN_MULTIWINDOW)
 
 #if defined(XCSECURITY)
   /* Generate a cookie used by internal clients for authorization */

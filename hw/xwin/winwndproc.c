@@ -45,7 +45,6 @@
 Bool			g_fCursor = TRUE;
 
 
-
 /*
  * References to external symbols
  */
@@ -159,7 +158,10 @@ winWindowProc (HWND hwnd, UINT message,
       if (s_pScreenInfo->fFullScreen
 	  && (s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD
 	      || s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL
-	      || s_pScreenInfo->dwEngine == WIN_SERVER_PRIMARY_DD))
+#ifdef XWIN_PRIMARYFB
+	      || s_pScreenInfo->dwEngine == WIN_SERVER_PRIMARY_DD
+#endif
+	      ))
 	{
 	  /* 
 	   * Store the new display dimensions and depth.
@@ -213,7 +215,10 @@ winWindowProc (HWND hwnd, UINT message,
       if ((s_pScreenInfo->dwBPP != wParam)
 	  && (s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD
 	      || s_pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DDNL
-	      || s_pScreenInfo->dwEngine == WIN_SERVER_PRIMARY_DD))
+#ifdef XWIN_PRIMARYFB
+	      || s_pScreenInfo->dwEngine == WIN_SERVER_PRIMARY_DD
+#endif
+	      ))
 	{
 	  /* Cannot display the visual until the depth is restored */
 	  ErrorF ("winWindowProc - Disruptive change in depth\n");
@@ -311,7 +316,7 @@ winWindowProc (HWND hwnd, UINT message,
 	    || !s_pScreenInfo->fDecoration
 	    || s_pScreenInfo->fRootless
 	    || s_pScreenInfo->fPseudoRootless
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 	    || s_pScreenInfo->fMultiWindow
 #endif
 	    || s_pScreenInfo->fFullScreen)
@@ -585,7 +590,7 @@ winWindowProc (HWND hwnd, UINT message,
 	    || !s_pScreenInfo->fDecoration
 	    || s_pScreenInfo->fRootless
 	    || s_pScreenInfo->fPseudoRootless
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 	    || s_pScreenInfo->fMultiWindow
 #endif
 	    )
@@ -1062,7 +1067,7 @@ winWindowProc (HWND hwnd, UINT message,
 	  winDisplayExitDialog (s_pScreenPriv);
 	  return 0;
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 	case ID_APP_HIDE_ROOT:
 	  ShowWindow (s_pScreenPriv->hwndScreen, SW_HIDE);
 	  s_pScreenPriv->fRootWindowShown = FALSE;
@@ -1084,7 +1089,7 @@ winWindowProc (HWND hwnd, UINT message,
     case WM_ENDSESSION:
     case WM_GIVEUP:
       /* Tell X that we are giving up */
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
       if (s_pScreenInfo->fMultiWindow)
 	winDeinitMultiWindowWM ();
 #endif

@@ -32,9 +32,6 @@
 /* $XFree86: xc/programs/Xserver/hw/xwin/winmultiwindowwindow.c,v 1.3 2003/10/02 13:30:10 eich Exp $ */
 
 #include "win.h"
-
-#if WIN_MULTIWINDOW_SUPPORT
-
 #include "dixevents.h"
 #include "winmultiwindowclass.h"
 #include "winprefs.h"
@@ -979,4 +976,3 @@ winAdjustXWindow (WindowPtr pWin, HWND hwnd)
 #undef WIDTH
 #undef HEIGHT
 }
-#endif

@@ -39,7 +39,7 @@
 #include "XKBsrv.h"
 #endif
 
-#if WIN_XF86CONFIG_SUPPORT
+#ifdef XWIN_XF86CONFIG
 #ifndef CONFIGPATH
 #define CONFIGPATH  "%A," "%R," \
                     "/etc/X11/%R," "%P/etc/X11/%R," \
@@ -106,7 +106,7 @@ winInfoRec g_winInfo = {
    50}
 };
 
-#if WIN_XF86CONFIG_SUPPORT
+#ifdef XWIN_XF86CONFIG
 serverLayoutRec g_winConfigLayout;
 
 static Bool ParseOptionValue (int scrnIndex, pointer options,
@@ -255,7 +255,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
   static unsigned int           layoutNum = 0;
   int                           keyboardType;
 #endif
-#if WIN_XF86CONFIG_SUPPORT
+#ifdef XWIN_XF86CONFIG
   XF86ConfInputPtr		kbd = NULL;
   XF86ConfInputPtr		input_list = NULL;
   MessageType			from = X_DEFAULT;
@@ -365,7 +365,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
   if (g_cmdline.keyboard)
     kbdfrom = X_CMDLINE;
 
-#if WIN_XF86CONFIG_SUPPORT
+#ifdef XWIN_XF86CONFIG
   /*
    * Until the layout code is finished, I search for the keyboard 
    * device and configure the server with it.
@@ -613,7 +613,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 }
 
 
-#if WIN_XF86CONFIG_SUPPORT
+#ifdef XWIN_XF86CONFIG
 Bool
 winConfigMouse (DeviceIntPtr pDevice)
 {
@@ -728,7 +728,7 @@ winConfigScreens ()
 }
 
 
-#if WIN_XF86CONFIG_SUPPORT
+#ifdef XWIN_XF86CONFIG
 char *
 winSetStrOption (pointer optlist, const char *name, char *deflt)
 {
@@ -831,7 +831,7 @@ winNameCompare (const char *s1, const char *s2)
 }
 
 
-#if WIN_XF86CONFIG_SUPPORT
+#ifdef XWIN_XF86CONFIG
 /*
  * Find the named option in the list. 
  * @return the pointer to the option record, or NULL if not found.

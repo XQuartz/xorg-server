@@ -35,7 +35,7 @@
  * Local function prototypes
  */
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 BOOL CALLBACK
 winRedrawAllProcShadowGDI (HWND hwnd, LPARAM lParam);
 #endif
@@ -210,7 +210,7 @@ winQueryRGBBitsAndMasks (ScreenPtr pScreen)
 }
 
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
 /*
  * Redraw all ---?
  */
@@ -370,7 +370,7 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
       return FALSE;
     }
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
   if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawAllProcShadowGDI, 0);
 #endif
@@ -394,7 +394,7 @@ winShadowUpdateGDI (ScreenPtr pScreen,
   BoxPtr		pBox = REGION_RECTS (damage);
   int			x, y, w, h;
   HRGN			hrgnTemp = NULL, hrgnCombined = NULL;
-#if WIN_UPDATE_STATS
+#ifdef XWIN_UPDATESTATS
   static DWORD		s_dwNonUnitRegions = 0;
   static DWORD		s_dwTotalUpdates = 0;
   static DWORD		s_dwTotalBoxes = 0;
@@ -407,7 +407,7 @@ winShadowUpdateGDI (ScreenPtr pScreen,
   if ((!pScreenPriv->fActive && pScreenInfo->fFullScreen)
       || pScreenPriv->fBadDepth) return;
 
-#if WIN_UPDATE_STATS
+#ifdef XWIN_UPDATESTATS
   ++s_dwTotalUpdates;
   s_dwTotalBoxes += dwBox;
 
@@ -423,7 +423,7 @@ winShadowUpdateGDI (ScreenPtr pScreen,
 	    (s_dwNonUnitRegions * 100) / s_dwTotalUpdates,
 	    s_dwTotalBoxes / s_dwTotalUpdates,
 	    s_dwNonUnitRegions, s_dwTotalUpdates);
-#endif /* WIN_UPDATE_STATS */
+#endif /* XWIN_UPDATESTATS */
 
   /*
    * Handle small regions with multiple blits,
@@ -493,7 +493,7 @@ winShadowUpdateGDI (ScreenPtr pScreen,
       SelectClipRgn (pScreenPriv->hdcScreen, NULL);
     }
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
   if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawAllProcShadowGDI, 0);
 #endif
@@ -555,7 +555,7 @@ winCloseScreenShadowGDI (int nIndex, ScreenPtr pScreen)
       pScreenPriv->hwndScreen = NULL;
     }
 
-#if WIN_CLIPBOARD_SUPPORT || WIN_MULTIWINDOW_SUPPORT
+#if defined(XWIN_CLIPBOARD) || defined(XWIN_MULTIWINDOW)
   /* Destroy the thread startup mutex */
   pthread_mutex_destroy (&pScreenPriv->pmServerStarted);
 #endif
@@ -618,7 +618,7 @@ winInitVisualsShadowGDI (ScreenPtr pScreen)
 	  return FALSE;
 	}
 
-#if WIN_EMULATE_PSEUDO_SUPPORT
+#ifdef XWIN_EMULATEPSEUDO
       if (!pScreenInfo->fEmulatePseudo)
 	break;
 
@@ -650,7 +650,7 @@ winInitVisualsShadowGDI (ScreenPtr pScreen)
 	  return FALSE;
 	}
 
-#if WIN_EMULATE_PSEUDO_SUPPORT
+#ifdef XWIN_EMULATEPSEUDO
       if (!pScreenInfo->fEmulatePseudo)
 	break;
 
@@ -800,7 +800,7 @@ winBltExposedRegionsShadowGDI (ScreenPtr pScreen)
   /* EndPaint frees the DC */
   EndPaint (pScreenPriv->hwndScreen, &ps);
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
   if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawAllProcShadowGDI, 0);
 #endif
@@ -872,7 +872,7 @@ winRedrawScreenShadowGDI (ScreenPtr pScreen)
 	  0, 0,
 	  SRCCOPY);
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
   if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawAllProcShadowGDI, 0);
 #endif
@@ -982,7 +982,7 @@ winInstallColormapShadowGDI (ColormapPtr pColormap)
   /* Save a pointer to the newly installed colormap */
   pScreenPriv->pcmapInstalled = pColormap;
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /* Redraw all windows */
   if (pScreenInfo->fMultiWindow) EnumWindows(winRedrawAllProcShadowGDI, 0);
 #endif
@@ -1196,7 +1196,7 @@ winSetEngineFunctionsShadowGDI (ScreenPtr pScreen)
     = (winCreatePrimarySurfaceProcPtr) (void (*)(void))NoopDDA;
   pScreenPriv->pwinReleasePrimarySurface
     = (winReleasePrimarySurfaceProcPtr) (void (*)(void))NoopDDA;
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   pScreenPriv->pwinFinishCreateWindowsWindow =
     (winFinishCreateWindowsWindowProcPtr) (void (*)(void))NoopDDA;
 #endif

@@ -40,7 +40,7 @@ extern int			g_iNumScreens;
 extern winScreenInfo		g_ScreenInfo[];
 extern int			g_iLastScreen;
 extern Bool			g_fInitializedDefaultScreens;
-#if WIN_CLIPBOARD_SUPPORT
+#ifdef XWIN_CLIPBOARD
 extern Bool			g_fUnicodeClipboard;
 extern Bool			g_fClipboard;
 #endif
@@ -100,14 +100,16 @@ winInitializeDefaultScreens (void)
 	=  WIN_DEFAULT_USER_GAVE_HEIGHT_AND_WIDTH;
       g_ScreenInfo[i].dwBPP = WIN_DEFAULT_BPP;
       g_ScreenInfo[i].dwClipUpdatesNBoxes = WIN_DEFAULT_CLIP_UPDATES_NBOXES;
+#ifdef XWIN_EMULATEPSEUDO
       g_ScreenInfo[i].fEmulatePseudo = WIN_DEFAULT_EMULATE_PSEUDO;
+#endif
       g_ScreenInfo[i].dwRefreshRate = WIN_DEFAULT_REFRESH;
       g_ScreenInfo[i].pfb = NULL;
       g_ScreenInfo[i].fFullScreen = FALSE;
       g_ScreenInfo[i].fDecoration = TRUE;
       g_ScreenInfo[i].fRootless = FALSE;
       g_ScreenInfo[i].fPseudoRootless = FALSE;
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
       g_ScreenInfo[i].fMultiWindow = FALSE;
 #endif
       g_ScreenInfo[i].fMultipleMonitors = FALSE;
@@ -475,7 +477,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
       return 1;
     }
 
-#if WIN_MULTIWINDOW_SUPPORT
+#ifdef XWIN_MULTIWINDOW
   /*
    * Look for the '-multiwindow' argument
    */
@@ -563,7 +565,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
     }
 
 
-#if WIN_CLIPBOARD_SUPPORT
+#ifdef XWIN_CLIPBOARD
   /*
    * Look for the '-clipboard' argument
    */
@@ -765,6 +767,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
       return 2;
     }
 
+#ifdef XWIN_EMULATEPSEUDO
   /*
    * Look for the '-emulatepseudo' argument
    */
@@ -790,6 +793,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
       /* Indicate that we have processed this argument */
       return 1;
     }
+#endif
 
   /*
    * Look for the '-nowinkill' argument
@@ -1028,7 +1032,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
       return 2;
     }
 
-#if WIN_CLIPBOARD_SUPPORT
+#ifdef XWIN_CLIPBOARD
   /*
    * Look for the '-nounicodeclipboard' argument
    */

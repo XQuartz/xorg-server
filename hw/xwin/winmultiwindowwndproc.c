@@ -32,6 +32,9 @@
 /* $XFree86: xc/programs/Xserver/hw/xwin/winmultiwindowwndproc.c,v 1.3 2003/10/08 11:13:03 eich Exp $ */
 
 #include "win.h"
+
+#if WIN_MULTIWINDOW_SUPPORT
+
 #include "dixevents.h"
 #include "winmultiwindowclass.h"
 #include "winprefs.h"
@@ -41,13 +44,7 @@
  */
 
 extern Bool		g_fCursor;
-
-
-/*
- * Global variables
- */
-
-HICON			g_hiconX = NULL;
+extern HICON		g_hiconX;
 
 
 /*
@@ -974,3 +971,4 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 
   return DefWindowProc (hwnd, message, wParam, lParam);
 }
+#endif

@@ -64,9 +64,11 @@ winWakeupHandler (int nScreen,
 	  DispatchMessage (&msg);
 	}
     }
-  
+
+#if WIN_MULTIWINDOW_SUPPORT
   if (pScreenPriv->pScreenInfo->fMultiWindow)
     winReorderWindowsMultiWindow ((ScreenPtr)pWakeupData);
+#endif
   
   if (pScreenPriv->pScreenInfo->fRootless)
     winWin32RootlessReorderWindows ((ScreenPtr)pWakeupData);

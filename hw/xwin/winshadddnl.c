@@ -732,8 +732,10 @@ winCloseScreenShadowDDNL (int nIndex, ScreenPtr pScreen)
       pScreenPriv->hwndScreen = NULL;
     }
 
+#if WIN_CLIPBOARD_SUPPORT || WIN_MULTIWINDOW_SUPPORT
   /* Destroy the thread startup mutex */
   pthread_mutex_destroy (&pScreenPriv->pmServerStarted);
+#endif
 
   /* Kill our screeninfo's pointer to the screen */
   pScreenInfo->pScreen = NULL;
@@ -1357,8 +1359,10 @@ winSetEngineFunctionsShadowDDNL (ScreenPtr pScreen)
   pScreenPriv->pwinHotKeyAltTab = (winHotKeyAltTabProcPtr) (void (*)(void))NoopDDA;
   pScreenPriv->pwinCreatePrimarySurface = winCreatePrimarySurfaceShadowDDNL;
   pScreenPriv->pwinReleasePrimarySurface = winReleasePrimarySurfaceShadowDDNL;
+#if WIN_MULTIWINDOW_SUPPORT
   pScreenPriv->pwinFinishCreateWindowsWindow
     = winFinishCreateWindowsWindowDDNL;
+#endif
 
   return TRUE;
 }

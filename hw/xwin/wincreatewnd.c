@@ -156,7 +156,10 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   if (pScreenInfo->fDecoration
       && !pScreenInfo->fRootless
       && !pScreenInfo->fPseudoRootless
-      && !pScreenInfo->fMultiWindow)
+#if WIN_MULTIWINDOW_SUPPORT
+      && !pScreenInfo->fMultiWindow
+#endif
+      )
     {
       dwWindowStyle |= WS_CAPTION;
       if (pScreenInfo->fScrollbars)
@@ -197,7 +200,10 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
       if (pScreenInfo->fDecoration
 	  && !pScreenInfo->fRootless
 	  && !pScreenInfo->fPseudoRootless
-	  && !pScreenInfo->fMultiWindow)
+#if WIN_MULTIWINDOW_SUPPORT
+	  && !pScreenInfo->fMultiWindow
+#endif
+	  )
 	{
 #if CYGDEBUG
 	  ErrorF ("winCreateBoundingWindowWindowed - Window has decoration\n");
@@ -264,7 +270,10 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
   if ((!pScreenInfo->fDecoration
        || pScreenInfo->fRootless
        || pScreenInfo->fPseudoRootless
-       || pScreenInfo->fMultiWindow)
+#if WIN_MULTIWINDOW_SUPPORT
+       || pScreenInfo->fMultiWindow
+#endif
+       )
       && pScreenInfo->fScrollbars)
     {
       /* We cannot have scrollbars if we do not have a window border */
@@ -399,7 +408,11 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
 #endif
 
   /* Show the window */
-  if (pScreenInfo->fMultiWindow || pScreenInfo->fRootless)
+  if (pScreenInfo->fRootless
+#if WIN_MULTIWINDOW_SUPPORT
+      || pScreenInfo->fMultiWindow
+#endif
+      )
     {
       pScreenPriv->fRootWindowShown = FALSE;
       ShowWindow (*phwnd, SW_HIDE);
@@ -413,9 +426,12 @@ winCreateBoundingWindowWindowed (ScreenPtr pScreen)
     }
   
   /* Attempt to bring our window to the top of the display */
-  if (!pScreenInfo->fMultiWindow
-      && !pScreenInfo->fRootless
-      && !pScreenInfo->fPseudoRootless)
+  if (!pScreenInfo->fRootless
+      && !pScreenInfo->fPseudoRootless
+#if WIN_MULTIWINDOW_SUPPORT
+      && !pScreenInfo->fMultiWindow
+#endif
+      )
     {
       if (!BringWindowToTop (*phwnd))
 	{

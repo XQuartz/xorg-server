@@ -47,12 +47,13 @@
 /*
  * Build toggles for experimental features
  */
-#define WIN_NATIVE_GDI_SUPPORT			YES
+#define WIN_NATIVE_GDI_SUPPORT			NO
 #define WIN_LAYER_SUPPORT			NO
-#define WIN_EMULATE_PSEUDO_SUPPORT		YES
+#define WIN_EMULATE_PSEUDO_SUPPORT		NO
 #define WIN_UPDATE_STATS			NO
-#define WIN_XF86CONFIG_SUPPORT			YES
-
+#define WIN_XF86CONFIG_SUPPORT			NO
+#define WIN_CLIPBOARD_SUPPORT			YES
+#define WIN_MULTIWINDOW_SUPPORT			YES
 
 /* Turn debug messages on or off */
 #define CYGDEBUG				NO
@@ -400,7 +401,9 @@ typedef struct
   Bool			fDecoration;
   Bool			fRootless;
   Bool			fPseudoRootless;
+#if WIN_MULTIWINDOW_SUPPORT
   Bool			fMultiWindow;
+#endif
   Bool                  fMultipleMonitors;
   Bool			fLessPointer;
   Bool			fScrollbars;
@@ -502,17 +505,23 @@ typedef struct _winPrivScreenRec
   int                          nCY;
 
 
+#if WIN_MULTIWINDOW_SUPPORT
   /* Privates used by multi-window server */
   pthread_t		ptWMProc;
   pthread_t		ptXMsgProc;
   void			*pWMInfo;
-  Bool                  fWindowOrderChanged;
-  Bool                  fRestacking;
-  Bool			fRootWindowShown;
+#endif
 
+  /* Privates used by both multi-window and pseudo rootless */
+  Bool			fRootWindowShown;
+  Bool                  fRestacking;
+  Bool                  fWindowOrderChanged;
+
+#if WIN_CLIPBOARD_SUPPORT || WIN_MULTIWINDOW_SUPPORT
   /* Privates used for any module running in a seperate thread */
   pthread_mutex_t	pmServerStarted;
   Bool			fServerStarted;
+#endif
   
   /* Engine specific functions */
   winAllocateFBProcPtr			pwinAllocateFB;
@@ -534,8 +543,10 @@ typedef struct _winPrivScreenRec
   winCreatePrimarySurfaceProcPtr	pwinCreatePrimarySurface;
   winReleasePrimarySurfaceProcPtr	pwinReleasePrimarySurface;
 
+#if WIN_MULTIWINDOW_SUPPORT
   /* Window Procedures for MultiWindow mode */
   winFinishCreateWindowsWindowProcPtr	pwinFinishCreateWindowsWindow;
+#endif
 
   /* Window Procedures for Rootless mode */
   CreateWindowProcPtr			CreateWindow;
@@ -1470,12 +1481,14 @@ winSetShapePRootless (WindowPtr pWindow);
 
 
 /*
- * winmultiwindowicons.c
+ * winmultiwindowicons.c - Used by both multi-window and Win32Rootless
  */
 
 HICON
 winXIconToHICON (WindowPtr pWin);
 
+
+#if WIN_MULTIWINDOW_SUPPORT
 /*
  * winmultiwindowshape.c
  */
@@ -1543,6 +1556,7 @@ winGetWindowID (WindowPtr pWin);
 int
 winAdjustXWindow (WindowPtr pWin, HWND hwnd);
 
+
 /*
  * winmultiwindowwndproc.c
  */
@@ -1550,6 +1564,7 @@ winAdjustXWindow (WindowPtr pWin, HWND hwnd);
 LRESULT CALLBACK
 winTopLevelWindowProc (HWND hwnd, UINT message, 
 		       WPARAM wParam, LPARAM lParam);
+#endif
 
 
 /*

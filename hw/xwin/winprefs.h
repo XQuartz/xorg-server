@@ -92,7 +92,7 @@ typedef struct ICONITEM
   unsigned long hicon;                /* LoadImage() result */
 } ICONITEM;
 
-typedef struct WINMULTIWINDOWPREFS
+typedef struct WINPREFS
 {
   /* Menu information */
   MENUPARSED *menu; /* Array of created menus */
@@ -116,7 +116,7 @@ typedef struct WINMULTIWINDOWPREFS
   ICONITEM *icon;
   int iconItems;
 
-} WINMULTIWINDOWPREFS;
+} WINPREFS;
 
 
 
@@ -147,4 +147,3 @@ winOverrideIcon (unsigned long longpWin);
 
 unsigned long
 winOverrideDefaultIcon(void);
-

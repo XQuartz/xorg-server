@@ -92,6 +92,7 @@ winScreenInit (int index,
 	  pScreenInfo->dwWidth, pScreenInfo->dwHeight);
 #endif
 
+#if WIN_MULTIWINDOW_SUPPORT
   /* Bail if -rootless and -multiwindow flags both present */
   if (pScreenInfo->fRootless && pScreenInfo->fMultiWindow)
     {
@@ -105,6 +106,7 @@ winScreenInit (int index,
 	      "\tthe -multiwindow command-line parameter.");
       return FALSE;
     }
+#endif
 
   /* Allocate privates for this screen */
   if (!winAllocatePrivates (pScreen))
@@ -515,6 +517,7 @@ winFinishScreenInitFB (int index,
       /* Undefine the WRAP macro, as it is not needed elsewhere */
 #undef WRAP
     }
+#if WIN_MULTIWINDOW_SUPPORT
   /* Handle multi window mode */
   else if (pScreenInfo->fMultiWindow)
     {
@@ -562,11 +565,13 @@ winFinishScreenInitFB (int index,
       /* Undefine the WRAP macro, as it is not needed elsewhere */
 #undef WRAP
     }
+#endif
 
   /* Wrap either fb's or shadow's CloseScreen with our CloseScreen */
   pScreenPriv->CloseScreen = pScreen->CloseScreen;
   pScreen->CloseScreen = pScreenPriv->pwinCloseScreen;
 
+#if WIN_CLIPBOARD_SUPPORT || WIN_MULTIWINDOW_SUPPORT
   /* Create a mutex for modules in separate threads to wait for */
   iReturn = pthread_mutex_init (&pScreenPriv->pmServerStarted, NULL);
   if (iReturn != 0)
@@ -587,12 +592,16 @@ winFinishScreenInitFB (int index,
 
   /* Set the ServerStarted flag to false */
   pScreenPriv->fServerStarted = FALSE;
+#endif
 
+#if WIN_MULTIWINDOW_SUPPORT
   /* Set the WindowOrderChanged flag to false */
   pScreenPriv->fWindowOrderChanged = FALSE;
 
   pScreenPriv->fRestacking = FALSE;
+#endif
 
+#if WIN_MULTIWINDOW_SUPPORT
 #if CYGDEBUG || YES
   if (pScreenInfo->fMultiWindow)
     ErrorF ("winFinishScreenInitFB - Calling winInitWM.\n");
@@ -609,6 +618,7 @@ winFinishScreenInitFB (int index,
       ErrorF ("winFinishScreenInitFB - winInitWM () failed.\n");
       return FALSE;
     }
+#endif
 
   /* Tell the server that we are enabled */
   pScreenPriv->fEnabled = TRUE;

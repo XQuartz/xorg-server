@@ -284,4 +284,3 @@ winMultiWindowGetWMName (WindowPtr pWin, char **wmName)
   
   return 0;
 }
-

@@ -39,7 +39,7 @@
 #define YYERROR_VERBOSE 1
 
 /* The global pref settings */
-WINMULTIWINDOWPREFS pref;
+WINPREFS pref;
 
 /* The working menu */  
 static MENUPARSED menu;

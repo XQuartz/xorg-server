@@ -311,7 +311,9 @@ winWindowProc (HWND hwnd, UINT message,
 	    || !s_pScreenInfo->fDecoration
 	    || s_pScreenInfo->fRootless
 	    || s_pScreenInfo->fPseudoRootless
+#if WIN_MULTIWINDOW_SUPPORT
 	    || s_pScreenInfo->fMultiWindow
+#endif
 	    || s_pScreenInfo->fFullScreen)
 	  break;
 
@@ -583,7 +585,10 @@ winWindowProc (HWND hwnd, UINT message,
 	    || !s_pScreenInfo->fDecoration
 	    || s_pScreenInfo->fRootless
 	    || s_pScreenInfo->fPseudoRootless
-	    || s_pScreenInfo->fMultiWindow)
+#if WIN_MULTIWINDOW_SUPPORT
+	    || s_pScreenInfo->fMultiWindow
+#endif
+	    )
 	  break;
 
 	/*
@@ -1057,6 +1062,7 @@ winWindowProc (HWND hwnd, UINT message,
 	  winDisplayExitDialog (s_pScreenPriv);
 	  return 0;
 
+#if WIN_MULTIWINDOW_SUPPORT
 	case ID_APP_HIDE_ROOT:
 	  ShowWindow (s_pScreenPriv->hwndScreen, SW_HIDE);
 	  s_pScreenPriv->fRootWindowShown = FALSE;
@@ -1066,6 +1072,7 @@ winWindowProc (HWND hwnd, UINT message,
 	  ShowWindow (s_pScreenPriv->hwndScreen, SW_SHOW);
 	  s_pScreenPriv->fRootWindowShown = TRUE;
 	  return 0;
+#endif
 
 	default:
 	  /* It's probably one of the custom menus... */
@@ -1077,8 +1084,10 @@ winWindowProc (HWND hwnd, UINT message,
     case WM_ENDSESSION:
     case WM_GIVEUP:
       /* Tell X that we are giving up */
+#if WIN_MULTIWINDOW_SUPPORT
       if (s_pScreenInfo->fMultiWindow)
 	winDeinitMultiWindowWM ();
+#endif
       GiveUp (0);
       return 0;
 

@@ -125,6 +125,7 @@ OsVendorReset (void)
 {
   ErrorF ("OsVendorReset - Hello\n");
 
+#if WIN_CLIPBOARD_SUPPORT
   /* Close down clipboard resources */
   if (g_fClipboard && g_fClipboardLaunched && g_fClipboardStarted)
     {
@@ -137,6 +138,7 @@ OsVendorReset (void)
 
       ErrorF ("OsVendorReset - Clipboard thread has exited.\n");
     }
+#endif
 }
 #endif
 
@@ -149,8 +151,10 @@ ddxGiveUp (void)
   winErrorFVerb (2, "ddxGiveUp\n");
 #endif
 
+#if WIN_MULTIWINDOW_SUPPORT
   /* Notify the worker threads we're exiting */
   winDeinitMultiWindowWM ();
+#endif
 
   /* Close our handle to our message queue */
   if (g_fdMessageQueue != WIN_FD_INVALID)
@@ -456,6 +460,8 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   /* Load preferences from XWinrc file */
   LoadPreferences();
 
+#if WIN_CLIPBOARD_SUPPORT || WIN_MULTIWINDOW_SUPPORT
+
 #if defined(XCSECURITY)
   /* Generate a cookie used by internal clients for authorization */
   if (g_fXdmcpEnabled)
@@ -471,6 +477,7 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
        */
       setlocale (LC_ALL, "");
     }
+#endif
 
 #if CYGDEBUG || YES
   winErrorFVerb (2, "InitOutput - Returning.\n");

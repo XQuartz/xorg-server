@@ -39,7 +39,9 @@
 #include <windows.h>
 
 #include "winprefs.h"
+#if WIN_MULTIWINDOW_SUPPORT
 #include "winmultiwindowclass.h"
+#endif
 
 /* Where will the custom menu commands start counting from? */
 #define STARTMENUID WM_USER
@@ -47,8 +49,8 @@
 /* From winmultiwindowflex.l, the real parser */
 extern void parse_file (FILE *fp);
 
-/* From winmultiwindowyacc.y, the pref structure loaded by the parser */
-extern WINMULTIWINDOWPREFS pref;
+/* From winprefyacc.y, the pref structure loaded by the parser */
+extern WINPREFS pref;
 
 /* The global X default icon */
 extern HICON		g_hiconX;
@@ -145,6 +147,7 @@ MakeMenu (char *name,
 }
 
 
+#if WIN_MULTIWINDOW_SUPPORT
 /*
  * Callback routine that is executed once per window class.
  * Removes or creates custom window settings depending on LPARAM
@@ -192,6 +195,7 @@ ReloadEnumWindowsProc (HWND hwnd, LPARAM lParam)
 
   return TRUE;
 }
+#endif
 
 
 /*
@@ -205,9 +209,11 @@ ReloadPrefs (void)
 {
   int i;
 
+#if WIN_MULTIWINDOW_SUPPORT
   /* First, iterate over all windows replacing their icon with system */
   /* default one and deleting any custom system menus                 */
   EnumWindows (ReloadEnumWindowsProc, FALSE);
+#endif
   
   /* Now, free/clear all info from our prefs structure */
   for (i=0; i<pref.menuItems; i++)
@@ -248,8 +254,10 @@ ReloadPrefs (void)
   if (!g_hiconX)
     g_hiconX = LoadIcon (g_hInstance, MAKEINTRESOURCE(IDI_XWIN));
   
+#if WIN_MULTIWINDOW_SUPPORT
   /* Rebuild the icons and menus */
   EnumWindows (ReloadEnumWindowsProc, TRUE);
+#endif
 
   /* Whew, done */
 }
@@ -373,6 +381,7 @@ HandleCustomWM_COMMAND (unsigned long hwndIn,
 }
 
 
+#if WIN_MULTIWINDOW_SUPPORT
 /*
  * Add the default or a custom menu depending on the class match
  */
@@ -429,6 +438,7 @@ SetupSysMenu (unsigned long hwndIn)
 	MakeMenu (pref.defaultSysMenuName, sys, -1);
     }
 }
+#endif
 
 
 /*
@@ -659,4 +669,3 @@ LoadPreferences ()
     } /* for all menus */
 
 }
-

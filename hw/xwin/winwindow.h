@@ -1,3 +1,5 @@
+#if !defined(_WINWINDOW_H_)
+#define _WINWINDOW_H_
 /*
  *Copyright (C) 1994-2000 The XFree86 Project, Inc. All Rights Reserved.
  *
@@ -29,16 +31,14 @@
  */
 /* $XFree86: xc/programs/Xserver/hw/xwin/winwindow.h,v 1.4 2003/10/08 11:13:03 eich Exp $ */
 
-
-#ifndef _WINWINDOW_H_
-#define _WINWINDOW_H_
-
 #ifndef NO
 #define NO			0
 #endif
 #ifndef YES
 #define YES			1
 #endif
+
+#define WIN_MULTIWINDOW_SUPPORT			YES
 
 /* Constant strings */
 #define WINDOW_CLASS		"cygwin/x"
@@ -81,6 +81,7 @@ typedef struct
   LPDIRECTDRAWCLIPPER	pddcPrimary;
 } winPrivWinRec, *winPrivWinPtr;
 
+#if WIN_MULTIWINDOW_SUPPORT
 typedef struct _winWMMessageRec{
   DWORD			dwID;
   DWORD			msg;
@@ -128,6 +129,7 @@ winDeinitMultiWindowWM (void);
 void
 winMinimizeWindow (Window id);
 
+
 /*
  * winmultiwindowicons.c
  */
@@ -135,4 +137,5 @@ winMinimizeWindow (Window id);
 void
 winUpdateIcon (Window id);
 
+#endif /* WIN_MULTIWINDOW_SUPPORT */
 #endif

@@ -31,6 +31,8 @@
 
 #include "winclipboard.h"
 
+#if WIN_CLIPBOARD_SUPPORT
+
 
 /*
  * Process any pending X events
@@ -212,8 +214,10 @@ winClipboardFlushXEvents (HWND hwnd,
 	  /* Setup the string style */
 	  if (event.xselectionrequest.target == XA_STRING)
 	    xiccesStyle = XStringStyle;
+#ifdef X_HAVE_UTF8_STRING
 	  else if (event.xselectionrequest.target == atomUTF8String)
 	    xiccesStyle = XUTF8StringStyle;
+#endif
 	  else if (event.xselectionrequest.target == atomCompoundText)
 	    xiccesStyle = XCompoundTextStyle;
 	  else
@@ -287,11 +291,13 @@ winClipboardFlushXEvents (HWND hwnd,
 	  /* Create the text property from the text list */
 	  if (fUnicodeSupport)
 	    {
+#ifdef X_HAVE_UTF8_STRING
 	      iReturn = Xutf8TextListToTextProperty (pDisplay,
 						     pszTextList,
 						     1,
 						     xiccesStyle,
 						     &xtpText);
+#endif
 	    }
 	  else
 	    {
@@ -478,6 +484,7 @@ winClipboardFlushXEvents (HWND hwnd,
 		  XFlush (pDisplay);
 		  return WIN_XEVENTS_CONVERT;
 		}
+#ifdef X_HAVE_UTF8_STRING
 	      else if (event.xselection.target == atomCompoundText)
 		{
 #if 0
@@ -502,6 +509,7 @@ winClipboardFlushXEvents (HWND hwnd,
 		  XFlush (pDisplay);
 		  return WIN_XEVENTS_CONVERT;
 		}
+#endif
 	      else
 		{
 		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
@@ -574,11 +582,13 @@ winClipboardFlushXEvents (HWND hwnd,
 
 	  if (fUnicodeSupport)
 	    {
+#ifdef X_HAVE_UTF8_STRING
 	      /* Convert the text property to a text list */
 	      iReturn = Xutf8TextPropertyToTextList (pDisplay,
 						     &xtpText,
 						     &ppszTextList,
 						     &iCount);
+#endif
 	    }
 	  else
 	    {
@@ -768,3 +778,4 @@ winClipboardFlushXEvents (HWND hwnd,
 
   return WIN_XEVENTS_SUCCESS;
 }
+#endif

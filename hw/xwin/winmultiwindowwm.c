@@ -55,6 +55,8 @@
 #include "ddraw.h"
 #include "winwindow.h"
 
+#if WIN_MULTIWINDOW_SUPPORT
+
 #ifndef CYGDEBUG 
 #define CYGDEBUG NO
 #endif
@@ -1228,3 +1230,4 @@ winDeinitMultiWindowWM ()
   ErrorF ("winDeinitMultiWindowWM - Noting shutdown in progress\n");
   g_shutdown = TRUE;
 }
+#endif

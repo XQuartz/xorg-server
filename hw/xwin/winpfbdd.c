@@ -649,8 +649,10 @@ winSetEngineFunctionsPrimaryDD (ScreenPtr pScreen)
     = (winBltExposedRegionsProcPtr) (void (*)(void))NoopDDA;
   pScreenPriv->pwinActivateApp = winActivateAppPrimaryDD;
   pScreenPriv->pwinHotKeyAltTab = winHotKeyAltTabPrimaryDD;
+#if WIN_MULTIWINDOW_SUPPORT
   pScreenPriv->pwinFinishCreateWindowsWindow =
     (winFinishCreateWindowsWindowProcPtr) (void (*)(void))NoopDDA;
+#endif
 
   return TRUE;
 }

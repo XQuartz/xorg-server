@@ -40,12 +40,13 @@ extern int			g_iNumScreens;
 extern winScreenInfo		g_ScreenInfo[];
 extern int			g_iLastScreen;
 extern Bool			g_fInitializedDefaultScreens;
+#if WIN_CLIPBOARD_SUPPORT
 extern Bool			g_fUnicodeClipboard;
-extern Bool			g_fXdmcpEnabled;
 extern Bool			g_fClipboard;
+#endif
 extern int			g_iLogVerbose;
 extern char *			g_pszLogFile;
-
+extern Bool			g_fXdmcpEnabled;
 
 /*
  * Function prototypes
@@ -106,7 +107,9 @@ winInitializeDefaultScreens (void)
       g_ScreenInfo[i].fDecoration = TRUE;
       g_ScreenInfo[i].fRootless = FALSE;
       g_ScreenInfo[i].fPseudoRootless = FALSE;
+#if WIN_MULTIWINDOW_SUPPORT
       g_ScreenInfo[i].fMultiWindow = FALSE;
+#endif
       g_ScreenInfo[i].fMultipleMonitors = FALSE;
       g_ScreenInfo[i].fLessPointer = FALSE;
       g_ScreenInfo[i].fScrollbars = FALSE;
@@ -472,6 +475,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
       return 1;
     }
 
+#if WIN_MULTIWINDOW_SUPPORT
   /*
    * Look for the '-multiwindow' argument
    */
@@ -497,6 +501,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
       /* Indicate that we have processed this argument */
       return 1;
     }
+#endif
 
   /*
    * Look for the '-multiplemonitors' argument
@@ -558,7 +563,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
     }
 
 
-
+#if WIN_CLIPBOARD_SUPPORT
   /*
    * Look for the '-clipboard' argument
    */
@@ -569,6 +574,8 @@ ddxProcessArgument (int argc, char *argv[], int i)
       /* Indicate that we have processed this argument */
       return 1;
     }
+#endif
+
 
   /*
    * Look for the '-ignoreinput' argument
@@ -1021,6 +1028,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
       return 2;
     }
 
+#if WIN_CLIPBOARD_SUPPORT
   /*
    * Look for the '-nounicodeclipboard' argument
    */
@@ -1030,6 +1038,7 @@ ddxProcessArgument (int argc, char *argv[], int i)
       /* Indicate that we have processed the argument */
       return 1;
     }
+#endif
 
 #ifdef XKB
   /*

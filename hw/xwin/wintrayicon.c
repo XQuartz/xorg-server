@@ -143,6 +143,7 @@ winHandleIconMessage (HWND hwnd, UINT message,
 	/* Get actual tray icon menu */
 	hmenuTray = GetSubMenu (hmenuPopup, 0);
 
+#if WIN_MULTIWINDOW_SUPPORT
 	/* Check for MultiWindow mode */
 	if (pScreenInfo->fMultiWindow)
 	  {
@@ -163,6 +164,7 @@ winHandleIconMessage (HWND hwnd, UINT message,
 	      }
 	  }
 	else
+#endif
 	  {
 	    /* Remove Show Root Window button */
 	    RemoveMenu (hmenuTray,

@@ -30,6 +30,8 @@
 /* $XFree86: xc/programs/Xserver/hw/xwin/winclipboardthread.c,v 1.3 2003/10/02 13:30:10 eich Exp $ */
 
 #include "winclipboard.h"
+
+#if WIN_CLIPBOARD_SUPPORT
 #include "X11/Xauth.h"
 
 
@@ -410,3 +412,4 @@ winClipboardIOErrorHandler (Display *pDisplay)
   
   return 0;
 }
+#endif

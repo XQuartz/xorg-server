@@ -29,6 +29,8 @@
  */
 
 #include "win.h"
+
+#if WIN_CLIPBOARD_SUPPORT
 #include "dixstruct.h"
 #include "X11/Xatom.h"
 
@@ -497,3 +499,4 @@ winProcSetSelectionOwner (ClientPtr client)
  winProcSetSelectionOwner_Done:
   return (*winProcSetSelectionOwnerOrig) (client);
 }
+#endif

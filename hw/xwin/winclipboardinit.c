@@ -32,6 +32,7 @@
 #include "dixstruct.h"
 #include "winclipboard.h"
 
+#if WIN_CLIPBOARD_SUPPORT
 
 /*
  * Local typedefs
@@ -127,3 +128,4 @@ winClipboardCreateMessagingWindow ()
 
   return hwnd;
 }
+#endif

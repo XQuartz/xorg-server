@@ -51,6 +51,7 @@ winBlockHandler (int nScreen,
   winScreenPriv((ScreenPtr)pBlockData);
   MSG			msg;
 
+#if WIN_CLIPBOARD_SUPPORT || WIN_MULTIWINDOW_SUPPORT
   /* Signal threaded modules to begin */
   if (pScreenPriv != NULL && !pScreenPriv->fServerStarted)
     {
@@ -74,6 +75,7 @@ winBlockHandler (int nScreen,
     }
 
 winBlockHandler_ProcessMessages:
+#endif
 
   /* Process all messages on our queue */
   while (PeekMessage (&msg, NULL, 0, 0, PM_REMOVE))
@@ -87,8 +89,10 @@ winBlockHandler_ProcessMessages:
 	}
     }
 
+#if WIN_MULTIWINDOW_SUPPORT
   if (pScreenPriv->pScreenInfo->fMultiWindow)
     winReorderWindowsMultiWindow ((ScreenPtr)pBlockData);
+#endif
 
   if (pScreenPriv->pScreenInfo->fRootless)
     winWin32RootlessReorderWindows ((ScreenPtr)pBlockData);

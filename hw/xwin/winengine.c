@@ -182,7 +182,11 @@ winSetEngine (ScreenPtr pScreen)
     }
 
   /* ShadowGDI is the only engine that supports Multi Window Mode */
-  if (pScreenInfo->fMultiWindow || pScreenInfo->fRootless)
+  if (pScreenInfo->fRootless
+#if WIN_MULTIWINDOW_SUPPORT
+      || pScreenInfo->fMultiWindow
+#endif
+      )
     {
       ErrorF ("winSetEngine - Multi Window or Rootless => ShadowGDI\n");
       pScreenInfo->dwEngine = WIN_SERVER_SHADOW_GDI;

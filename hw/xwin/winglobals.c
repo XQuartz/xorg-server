@@ -52,9 +52,12 @@ HINSTANCE	g_hInstance = 0;
 HWND		g_hDlgDepthChange = NULL;
 HWND		g_hDlgExit = NULL;
 const char *	g_pszQueryHost = NULL;
+#if WIN_CLIPBOARD_SUPPORT
 Bool		g_fUnicodeClipboard = TRUE;
 Bool		g_fClipboard = FALSE;
+#endif
 Bool		g_fXdmcpEnabled = FALSE;
+HICON		g_hiconX = NULL;
 
 
 /*
@@ -70,6 +73,7 @@ HMODULE		g_hmodCommonControls = NULL;
 FARPROC		g_fpTrackMouseEvent = (FARPROC) (void (*)(void))NoopDDA;
 
 
+#if WIN_CLIPBOARD_SUPPORT
 /*
  * Wrapped DIX functions
  */
@@ -89,6 +93,7 @@ HWND			g_hwndClipboard;
 void			*g_pClipboardDisplay;
 Window			g_iClipboardWindow;
 Atom			g_atomLastOwnedSelection;
+#endif
 
 
 /*
@@ -99,10 +104,12 @@ Atom			g_atomLastOwnedSelection;
 void
 winInitializeGlobals (void)
 {
+#if WIN_CLIPBOARD_SUPPORT
   g_fClipboardLaunched = FALSE;
   g_fClipboardStarted = FALSE;
   g_iClipboardWindow = None;
   g_pClipboardDisplay = NULL;
   g_atomLastOwnedSelection = None;
   g_hwndClipboard = NULL;
+#endif
 }

@@ -1,11 +1,5 @@
 INCLUDES = 					\
-	-I$(top_srcdir)/fb			\
-	-I$(top_srcdir)/hw/kdrive/src		\
-	-I$(top_srcdir)/mi			\
-	-I$(top_srcdir)/miext/damage		\
-	-I$(top_srcdir)/miext/shadow		\
-	-I$(top_srcdir)/randr			\
-	-I$(top_srcdir)/render			\
+	@KDRIVE_INCS@				\
 	$(XSERVER_CFLAGS)
 
 noinst_LIBRARIES = libvesa.a
@@ -23,20 +17,9 @@ Xvesa_SOURCES = \
 
 Xvesa_LDADD = \
 	libvesa.a 				\
-	$(top_builddir)/dix/libdix.a		\
-	$(top_builddir)/os/libos.a		\
-	$(top_builddir)/hw/kdrive/src/libkdrive.a  \
-	$(top_builddir)/hw/kdrive/linux/liblinux.a  \
-	$(top_builddir)/miext/damage/libdamage.a \
-	$(top_builddir)/miext/shadow/libshadow.a \
-	$(top_builddir)/randr/librandr.a	\
-	$(top_builddir)/render/librender.a	\
-	$(top_builddir)/xfixes/libxfixes.a	\
-	$(top_builddir)/fb/libfb.a		\
-	$(top_builddir)/mi/libmi.a		\
-	$(top_builddir)/Xext/libXext.a		\
-	$(top_builddir)/randr/librandr.a	\
-	$(top_builddir)/render/librender.a	\
-	$(top_builddir)/xfixes/libxfixes.a	\
-	$(top_builddir)/dix/libxpstubs.a	\
+	$(KDRIVE_LIBS)				\
 	$(XSERVER_LIBS)
+
+Xvesa_DEPENDENCIES = \
+	libvesa.a				\
+	$(KDRIVE_LIBS)

@@ -71,20 +71,18 @@ winScaleXBitmapToWindows (int iconSize,
   unsigned int		zero;
   unsigned int		color;
 
+  effXBPP = pixmap->drawable.bitsPerPixel;
+  effXDepth = pixmap->drawable.depth;
 
   if (pixmap->drawable.bitsPerPixel == 15)
     effXBPP = 16;
-  else
-    effXBPP = pixmap->drawable.bitsPerPixel;
   
   if (pixmap->drawable.depth == 15)
     effXDepth = 16;
-  else
-    effXDepth = pixmap->drawable.depth;
 
   /* Need 32-bit aligned rows */
   stride = ((iconSize * effBPP + 31) & (~31)) / 8;
-  xStride = ((pixmap->drawable.width * effXBPP + 31) & (~31)) / 8;
+  xStride = PixmapBytePad (pixmap->drawable.width, pixmap->drawable.depth);
   if (stride == 0 || xStride == 0)
     {
       ErrorF ("winScaleXBitmapToWindows - stride or xStride is zero.  "

@@ -372,27 +372,27 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
 	    winW32Error(2, GetLastError(), "winLoadCursor - CreateIconIndirect failed: %s\n");
 	  else 
 	    {
-	      GetIconInfo(hCursor, &ii);
-	      if (ii.fIcon)
+	      if (GetIconInfo(hCursor, &ii))
 		{
-		  WIN_DEBUG_MSG("winLoadCursor: CreateIconIndirect returned  no cursor. Trying again.\n");
-
-		  DestroyCursor(hCursor);
-		  
-  	          ii.fIcon = FALSE;
-	          ii.xHotspot = pCursor->bits->xhot;
-	          ii.yHotspot = pCursor->bits->yhot;
-		  hCursor = (HCURSOR) CreateIconIndirect( &ii );
-		  
-		  if (hCursor == NULL)
-		    winW32Error(2, GetLastError(), "winLoadCursor - CreateIconIndirect failed: %s\n");
-
+		  if (ii.fIcon)
+		    {
+		      WIN_DEBUG_MSG("winLoadCursor: CreateIconIndirect returned  no cursor. Trying again.\n");
+		      
+		      DestroyCursor(hCursor);
+		      
+		      ii.fIcon = FALSE;
+		      ii.xHotspot = pCursor->bits->xhot;
+		      ii.yHotspot = pCursor->bits->yhot;
+		      hCursor = (HCURSOR) CreateIconIndirect( &ii );
+		      
+		      if (hCursor == NULL)
+			winW32Error(2, GetLastError(), "winLoadCursor - CreateIconIndirect failed: %s\n");
+		    }
 		  /* GetIconInfo creates new bitmaps. Destroy them again */
 		  if (ii.hbmMask)
      	            DeleteObject(ii.hbmMask);
 		  if (ii.hbmColor)
 		    DeleteObject(ii.hbmColor);
-                  
 		}
 	    }
 	}

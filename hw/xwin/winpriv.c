@@ -8,6 +8,8 @@
 #include "winpriv.h"
 #include "winwindow.h"
 
+void
+winCreateWindowsWindow (WindowPtr pWin);
 /**
  * Return size and handles of a window.
  * If pWin is NULL, then the information for the root window is requested.
@@ -17,6 +19,8 @@ extern void winGetWindowInfo(WindowPtr pWin, winWindowInfoPtr pWinInfo)
     /* Sanity check */
     if (pWinInfo == NULL)
         return;
+
+    winDebug("%s:%d pWin=%p\n", __FUNCTION__, __LINE__, pWin);
 
     /* a real window was requested */
     if (pWin != NULL) 
@@ -60,7 +64,12 @@ extern void winGetWindowInfo(WindowPtr pWin, winWindowInfoPtr pWinInfo)
                 return;
             }
 
+            if (pWinPriv->hWnd == NULL)
+            {
+                winCreateWindowsWindow(pWin);
+            }
             if (pWinPriv->hWnd != NULL) { 
+                
                 /* copy size and window handle */
                 pWinInfo->rect = rect_extends;
                 pWinInfo->hwnd = pWinPriv->hWnd;

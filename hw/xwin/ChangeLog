@@ -1,5 +1,10 @@
 2004-05-27  Alexander Gottwald  <ago@freedesktop.org>
 
+	* winpriv.c: Create win32 window if not already created
+	* winmultiwindowwindow.c: Export winCreateWindowWindow
+
+2004-05-27  Alexander Gottwald  <ago@freedesktop.org>
+
 	* win.h: Allow CYGDEBUG to defined in the Makefile
 	* winwindow.h: Allow CYGWINDOWING_DEBUG to defined in the Makefile
 

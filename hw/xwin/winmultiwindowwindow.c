@@ -48,7 +48,7 @@ extern void winSelectIcons(WindowPtr pWin, HICON *pIcon, HICON *pSmallIcon);
  * Prototypes for local functions
  */
 
-static void
+void
 winCreateWindowsWindow (WindowPtr pWin);
 
 static void
@@ -456,7 +456,7 @@ winRestackWindowMultiWindow (WindowPtr pWin, WindowPtr pOldNextSib)
  * winCreateWindowsWindow - Create a Windows window associated with an X window
  */
 
-static void
+void
 winCreateWindowsWindow (WindowPtr pWin)
 {
   int                   iX, iY;

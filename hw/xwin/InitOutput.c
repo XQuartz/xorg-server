@@ -459,6 +459,8 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   /* Try to read the XF86Config-style configuration file */
   if (!winReadConfigfile ())
     winErrorFVerb (1, "InitOutput - Error reading config file\n");
+#else
+  winMsg(X_INFO, "XF86Config is not supported. See http://x.cygwin.com/docs/faq/cygwin-xfree-faq.html for more information\n");
 #endif
 
   /* Setup global screen info parameters */

@@ -548,7 +548,7 @@ winCreateWindowsWindow (WindowPtr pWin)
   if (hWnd == NULL)
     {
       ErrorF ("winCreateWindowsWindow - CreateWindowExA () failed: %d\n",
-	      GetLastError ());
+	      (int) GetLastError ());
     }
   
   pWinPriv->hWnd = hWnd;

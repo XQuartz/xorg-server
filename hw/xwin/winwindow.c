@@ -98,7 +98,7 @@ winCopyWindowNativeGDI (WindowPtr pWin,
   int			dx, dy;
   int			i, nbox;
   WindowPtr		pwinRoot;
-  BoxPtr		pBoxDst, pBoxSrc;
+  BoxPtr		pBoxDst;
   ScreenPtr		pScreen = pWin->drawable.pScreen;
   winScreenPriv(pScreen);
 
@@ -465,9 +465,7 @@ void
 winReshapePRootless (WindowPtr pWin)
 {
   int		nRects;
-#if 0
   ScreenPtr	pScreen = pWin->drawable.pScreen;
-#endif
   RegionRec	rrNewShape;
   BoxPtr	pShape, pRects, pEnd;
   HRGN		hRgn, hRgnRect;

@@ -207,8 +207,9 @@ winDisplayDepthChangeDialog (winPrivScreenPtr pScreenPriv)
   ShowWindow (g_hDlgDepthChange, SW_SHOW);
   
   ErrorF ("winDisplayDepthChangeDialog - DialogBox returned: %d\n",
-	  g_hDlgDepthChange);
-  ErrorF ("winDisplayDepthChangeDialog - GetLastError: %d\n", GetLastError ());
+	  (int) g_hDlgDepthChange);
+  ErrorF ("winDisplayDepthChangeDialog - GetLastError: %d\n",
+	  (int) GetLastError ());
 	      
   /* Minimize the display window */
   ShowWindow (pScreenPriv->hwndScreen, SW_MINIMIZE);

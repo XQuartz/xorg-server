@@ -142,6 +142,8 @@ KDKBDREP_ioctl_ok(int rate, int delay) {
 #endif /* KDKBDREP */
 }
 
+#undef rate
+
 static int
 KIOCSRATE_ioctl_ok(int rate, int delay) {
 #ifdef KIOCSRATE
@@ -168,8 +170,6 @@ KIOCSRATE_ioctl_ok(int rate, int delay) {
    return 0;
 #endif /* KIOCSRATE */
 }
-
-#undef rate
 
 static void
 SetKbdRepeat(InputInfoPtr pInfo, char rad)
@@ -356,7 +356,7 @@ Bool SpecialKey(InputInfoPtr pInfo, int key, Bool down, int modifiers)
 
   if ((ModifierSet(ControlMask | AltMask)) ||
       (ModifierSet(ControlMask | AltLangMask))) {
-      if (VTSwitchEnabled && !xf86Info.vtSysreq) {
+      if (VTSwitchEnabled && !xf86Info.vtSysreq && !xf86Info.dontVTSwitch) {
           switch (key) {
              case KEY_F1:
              case KEY_F2:
@@ -382,7 +382,7 @@ Bool SpecialKey(InputInfoPtr pInfo, int key, Bool down, int modifiers)
       }
   }
 #ifdef USE_VT_SYSREQ
-    if (VTSwitchEnabled && xf86Info.vtSysreq) {
+    if (VTSwitchEnabled && xf86Info.vtSysreq && !xf86Info.dontVTSwitch) {
         switch (key) {
             case KEY_F1:
             case KEY_F2:

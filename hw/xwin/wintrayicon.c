@@ -161,20 +161,10 @@ winHandleIconMessage (HWND hwnd, UINT message,
 	else
 #endif
 	  {
-	    /* Remove Show Root Window button */
-	    RemoveMenu (hmenuTray,
-			ID_APP_HIDE_ROOT,
-			MF_BYCOMMAND);
-	    
 	    /* Remove Hide Root Window button */
 	    RemoveMenu (hmenuTray,
 			ID_APP_HIDE_ROOT,
 			MF_BYCOMMAND);
-
-	    /* Remove separator */
-	    RemoveMenu (hmenuTray,
-			0,
-			MF_BYPOSITION);
 	  }
 
 	SetupRootMenu ((unsigned long)hmenuTray);

@@ -242,6 +242,8 @@ winDisplayExitDialog (winPrivScreenPtr pScreenPriv)
 	       (int) GetDlgItem (g_hDlgExit, IDCANCEL), TRUE);
 }
 
+#define CONNECTED_CLIENTS_FORMAT	"There are currently %d clients connected."
+
 
 /*
  * Exit dialog window procedure
@@ -259,18 +261,41 @@ winExitDlgProc (HWND hDialog, UINT message,
   switch (message)
     {
     case WM_INITDIALOG:
-      /* Store pointers to private structures for future use */
-      s_pScreenPriv = (winPrivScreenPtr) lParam;
-      s_pScreenInfo = s_pScreenPriv->pScreenInfo;
-      s_pScreen = s_pScreenInfo->pScreen;
+      {
+	char			*pszConnectedClients;
+	int			iReturn;
+	int			iConnectedClients = 100;
 
-      winCenterDialog (hDialog);
+	/* Store pointers to private structures for future use */
+	s_pScreenPriv = (winPrivScreenPtr) lParam;
+	s_pScreenInfo = s_pScreenPriv->pScreenInfo;
+	s_pScreen = s_pScreenInfo->pScreen;
+	
+	winCenterDialog (hDialog);
+	
+	/* Set icon to standard app icon */
+	PostMessage (hDialog,
+		     WM_SETICON,
+		     ICON_SMALL,
+		     (LPARAM) LoadIcon (g_hInstance,
+					MAKEINTRESOURCE(IDI_XWIN)));
 
-      /* Set icon to standard app icon */
-      PostMessage (hDialog,
-		   WM_SETICON,
-		   ICON_SMALL,
-		   (LPARAM) LoadIcon (g_hInstance, MAKEINTRESOURCE(IDI_XWIN)));
+	/* Format the connected clients string */
+	iReturn = sprintf (NULL, CONNECTED_CLIENTS_FORMAT,
+			   iConnectedClients);
+	if (iReturn <= 0)
+	  return TRUE;
+	pszConnectedClients = malloc (iReturn + 1);
+	if (!pszConnectedClients)
+	  return TRUE;
+	snprintf (pszConnectedClients, iReturn + 1, CONNECTED_CLIENTS_FORMAT,
+		  iConnectedClients);
+	
+	/* Set the number of connected clients */
+	SetWindowText (GetDlgItem (hDialog, IDC_CLIENTS_CONNECTED),
+		       pszConnectedClients);
+	free (pszConnectedClients);
+      }
       return TRUE;
 
     case WM_COMMAND:

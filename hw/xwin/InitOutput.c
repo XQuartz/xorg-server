@@ -77,6 +77,11 @@ extern FARPROC			g_fpTrackMouseEvent;
  * Function prototypes
  */
 
+#ifdef XWIN_CLIPBOARD
+static void
+winClipboardShutdown (void);
+#endif
+
 #if defined(DDXOSVERRORF)
 void
 OsVendorVErrorF (const char *pszFormat, va_list va_args);
@@ -122,6 +127,28 @@ static PixmapFormatRec g_PixmapFormats[] = {
 
 const int NUMFORMATS = sizeof (g_PixmapFormats) / sizeof (g_PixmapFormats[0]);
 
+#ifdef XWIN_CLIPBOARD
+static void
+winClipboardShutdown (void)
+{
+  /* Close down clipboard resources */
+  if (g_fClipboard && g_fClipboardLaunched && g_fClipboardStarted)
+    {
+      /* Synchronously destroy the clipboard window */
+      if (g_hwndClipboard != NULL)
+	SendMessage (g_hwndClipboard, WM_DESTROY, 0, 0);
+      else
+	return;
+      
+      /* Wait for the clipboard thread to exit */
+      pthread_join (g_ptClipboardProc, NULL);
+
+      ErrorF ("ddxBeforeReset - Clipboard thread has exited.\n");
+    }
+}
+#endif
+
+
 #if defined(DDXBEFORERESET)
 /*
  * Called right before KillAllClients when the server is going to reset,
@@ -134,18 +161,7 @@ ddxBeforeReset (void)
   ErrorF ("ddxBeforeReset - Hello\n");
 
 #ifdef XWIN_CLIPBOARD
-  /* Close down clipboard resources */
-  if (g_fClipboard && g_fClipboardLaunched && g_fClipboardStarted)
-    {
-      /* Synchronously destroy the clipboard window */
-      if (g_hwndClipboard != NULL)
-	SendMessage (g_hwndClipboard, WM_DESTROY, 0, 0);
-      
-      /* Wait for the clipboard thread to exit */
-      pthread_join (g_ptClipboardProc, NULL);
-
-      ErrorF ("ddxBeforeReset - Clipboard thread has exited.\n");
-    }
+  winClipboardShutdown ();
 #endif
 }
 #endif
@@ -155,9 +171,19 @@ ddxBeforeReset (void)
 void
 ddxGiveUp (void)
 {
+  int		i;
+
 #if CYGDEBUG
   winErrorFVerb (2, "ddxGiveUp\n");
 #endif
+
+  /* Perform per-screen deinitialization */
+  for (i = 0; i < g_iNumScreens; ++i)
+    {
+      /* Delete the tray icon */
+      if (!g_ScreenInfo[i].fNoTrayIcon)
+ 	winDeleteNotifyIcon (winGetScreenPriv (g_ScreenInfo[i].pScreen));
+    }
 
 #ifdef XWIN_MULTIWINDOW
   /* Notify the worker threads we're exiting */
@@ -510,7 +536,7 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   g_hInstance = GetModuleHandle (NULL);
 
   /* Initialize each screen */
-  for (i = 0; i < g_iNumScreens; i++)
+  for (i = 0; i < g_iNumScreens; ++i)
     {
       /* Initialize the screen */
       if (-1 == AddScreen (winScreenInit, argc, argv))

@@ -360,18 +360,28 @@ winProcSetSelectionOwner (ClientPtr client)
 	  && None != s_iOwners[CLIP_OWN_PRIMARY])
 	{
 	  fOwnedToNotOwned = TRUE;
-	  
+
+#if 0
+	  ErrorF ("winProcSetSelectionOwner - PRIMARY - Going from "
+		  "owned to not owned.\n");
+#endif
+
 	  /* Adjust last owned selection */
 	  if (None != s_iOwners[CLIP_OWN_CLIPBOARD])
-	    g_atomLastOwnedSelection = MakeAtom ("CLIPBOARD", 9, FALSE);
+	    g_atomLastOwnedSelection = MakeAtom ("CLIPBOARD", 9, TRUE);
 	  else
 	    g_atomLastOwnedSelection = None;
 	}
       
       /* Save new selection owner or None */
       s_iOwners[CLIP_OWN_PRIMARY] = stuff->window;
+
+#if 0
+      ErrorF ("winProcSetSelectionOwner - PRIMARY - Now owned by: %d\n",
+	      stuff->window);
+#endif
     }
-  else if (MakeAtom ("CLIPBOARD", 9, FALSE) == stuff->selection)
+  else if (MakeAtom ("CLIPBOARD", 9, TRUE) == stuff->selection)
     {
       /* Look for owned -> not owned transition */
       if (None == stuff->window
@@ -379,7 +389,12 @@ winProcSetSelectionOwner (ClientPtr client)
 	{
 	  fOwnedToNotOwned = TRUE;
 	  
-	   /* Adjust last owned selection */
+#if 0
+	  ErrorF ("winProcSetSelectionOwner - CLIPBOARD - Going from "
+		  "owned to not owned.\n");
+#endif
+
+	  /* Adjust last owned selection */
 	  if (None != s_iOwners[CLIP_OWN_PRIMARY])
 	    g_atomLastOwnedSelection = XA_PRIMARY;
 	  else
@@ -388,6 +403,11 @@ winProcSetSelectionOwner (ClientPtr client)
       
       /* Save new selection owner or None */
       s_iOwners[CLIP_OWN_CLIPBOARD] = stuff->window;
+
+#if 0
+      ErrorF ("winProcSetSelectionOwner - CLIPBOARD - Now owned by: %d\n",
+	      stuff->window);
+#endif
     }
   else
     goto winProcSetSelectionOwner_Done;
@@ -401,8 +421,10 @@ winProcSetSelectionOwner (ClientPtr client)
    */
   if (None == stuff->window
       && g_iClipboardWindow != client->lastDrawableID
-      && None == s_iOwners[CLIP_OWN_PRIMARY]
-      && None == s_iOwners[CLIP_OWN_CLIPBOARD]
+      && (None == s_iOwners[CLIP_OWN_PRIMARY]
+	  || g_iClipboardWindow == s_iOwners[CLIP_OWN_PRIMARY])
+      && (None == s_iOwners[CLIP_OWN_CLIPBOARD]
+	  || g_iClipboardWindow == s_iOwners[CLIP_OWN_CLIPBOARD])
       && fOwnedToNotOwned
       && g_hwndClipboard != NULL
       && g_hwndClipboard == GetClipboardOwner ())
@@ -418,6 +440,10 @@ winProcSetSelectionOwner (ClientPtr client)
       OpenClipboard (NULL);
       EmptyClipboard ();
       CloseClipboard ();
+
+      /* Clear X selection ownership (might still be marked as us owning) */
+      s_iOwners[CLIP_OWN_PRIMARY] = None;
+      s_iOwners[CLIP_OWN_CLIPBOARD] = None;
       
       goto winProcSetSelectionOwner_Done;
     }

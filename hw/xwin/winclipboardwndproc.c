@@ -201,7 +201,7 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	    iReturn = XGetSelectionOwner (pDisplay,
 					  XInternAtom (pDisplay,
 						       "CLIPBOARD",
-						       FALSE));
+						       False));
 	    if (iReturn == g_iClipboardWindow)
 	      {
 #if 0
@@ -211,7 +211,7 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 		XSetSelectionOwner (pDisplay,
 				    XInternAtom (pDisplay,
 						 "CLIPBOARD",
-						 FALSE),
+						 False),
 				    None,
 				    CurrentTime);
 	      }
@@ -244,7 +244,7 @@ winClipboardWindowProc (HWND hwnd, UINT message,
 	iReturn = XSetSelectionOwner (pDisplay,
 				      XInternAtom (pDisplay,
 						   "CLIPBOARD",
-						   FALSE),
+						   False),
 				      iWindow,
 				      CurrentTime);
 	if (iReturn == BadAtom || iReturn == BadWindow)

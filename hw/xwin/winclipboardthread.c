@@ -84,12 +84,12 @@ winClipboardProc (void *pvNotUsed)
   Atom			atomClipboard, atomClipboardManager;
   int			iReturn;
   HWND			hwnd = NULL;
-  int			iConnectionNumber;
-  int			fdMessageQueue;
+  int			iConnectionNumber = 0;
+  int			fdMessageQueue = 0;
   fd_set		fdsRead;
   int			iMaxDescriptor;
-  Display		*pDisplay;
-  Window		iWindow;
+  Display		*pDisplay = NULL;
+  Window		iWindow = None;
   int			iRetries;
   Bool			fUnicodeSupport;
   char			szDisplay[512];
@@ -371,6 +371,45 @@ winClipboardProc (void *pvNotUsed)
 	    }
 	}
     }
+
+  /* Close our X window */
+  if (pDisplay && iWindow)
+    {
+      iReturn = XDestroyWindow (pDisplay, iWindow);
+      if (iReturn == BadWindow)
+	ErrorF ("winClipboardProc - XDestroyWindow returned BadWindow.\n");
+      else
+	ErrorF ("winClipboardProc - XDestroyWindow succeeded.\n");
+    }
+
+  /* Close our Win32 message handle */
+  if (fdMessageQueue)
+    close (fdMessageQueue);
+
+#if 0
+  /*
+   * FIXME: XCloseDisplay hangs if we call it, as of 2004/03/26.  The
+   * XSync and XSelectInput calls did not help.
+   */
+
+  /* Discard any remaining events */
+  XSync (pDisplay, TRUE);
+
+  /* Select event types to watch */
+  XSelectInput (pDisplay,
+		DefaultRootWindow (pDisplay),
+		None);
+
+  /* Close our X display */
+  if (pDisplay)
+    {
+      XCloseDisplay (pDisplay);
+    }
+#endif
+
+  g_iClipboardWindow = None;
+  g_pClipboardDisplay = NULL;
+  g_hwndClipboard = NULL;
 
   return NULL;
 }

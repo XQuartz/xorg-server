@@ -271,7 +271,7 @@ winMWExtWMCreateFrame (RootlessWindowPtr pFrame, ScreenPtr pScreen,
     hIcon = g_hiconX;
 
   /* Set standard class name prefix so we can identify window easily */
-  strncpy (pszClass, WINDOW_CLASS_X, strlen (WINDOW_CLASS_X));
+  strncpy (pszClass, WINDOW_CLASS_X, sizeof(pszClass));
 
   if (winMultiWindowGetClassHint (pFrame->win, &res_name, &res_class))
     {
@@ -414,7 +414,7 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
   /* Store the info we need to destroy after this window is gone */
   hInstance = (HINSTANCE) GetClassLong (pRLWinPriv->hWnd, GCL_HMODULE);
   hiconClass = (HICON) GetClassLong (pRLWinPriv->hWnd, GCL_HICON);
-  iReturn = GetClassName (pRLWinPriv->hWnd, pszClass, 512);
+  iReturn = GetClassName (pRLWinPriv->hWnd, pszClass, CLASS_NAME_LENGTH);
 
   pRLWinPriv->fClose = TRUE;
   pRLWinPriv->fDestroyed = TRUE;
@@ -426,21 +426,21 @@ winMWExtWMDestroyFrame (RootlessFrameID wid)
   if (iReturn)
     { 
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winDestroyWindowsWindow - Unregistering %s: ", pszClass);
+      ErrorF ("winMWExtWMDestroyFrame - Unregistering %s: ", pszClass);
 #endif
       iReturn = UnregisterClass (pszClass, hInstance);
       
 #if CYGMULTIWINDOW_DEBUG
-      ErrorF ("winDestroyWindowsWindow - %d Deleting Icon: ", iReturn);
+      ErrorF ("winMWExtWMDestroyFramew - %d Deleting Icon: ", iReturn);
 #endif
       
       /* Only delete if it's not the default */
-      if (hiconClass != g_hiconX &&
+      if ((hiconClass != g_hiconX) &&
 	  !winIconIsOverride((unsigned long)hiconClass))
 	{ 
 	  iReturn = DestroyIcon (hiconClass);
 #if CYGMULTIWINDOW_DEBUG
-	  ErrorF ("winDestroyWindowsWindow - %d\n", iReturn);
+	  ErrorF ("winMWExtWMDestroyFrame - %d\n", iReturn);
 #endif
 	}
     }

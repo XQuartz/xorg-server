@@ -68,6 +68,7 @@ winWindowProc (HWND hwnd, UINT message,
   static HINSTANCE		s_hInstance;
   static Bool			s_fTracking = FALSE;
   static unsigned long		s_ulServerGeneration = 0;
+  static UINT			s_uTaskbarRestart = 0;
   int				iScanCode;
   int				i;
 
@@ -123,6 +124,7 @@ winWindowProc (HWND hwnd, UINT message,
       s_pScreenInfo = s_pScreenPriv->pScreenInfo;
       s_pScreen = s_pScreenInfo->pScreen;
       s_hwndLastPrivates = hwnd;
+      s_uTaskbarRestart = RegisterWindowMessage(TEXT("TaskbarCreated"));
       SetProp (hwnd, WIN_SCR_PROP, s_pScreenPriv);
 
       /* Setup tray icon */
@@ -1128,6 +1130,13 @@ winWindowProc (HWND hwnd, UINT message,
       /* Display Exit dialog */
       winDisplayExitDialog (s_pScreenPriv);
       return 0;
+
+    default:
+      if(message == s_uTaskbarRestart)
+	{
+	  winInitNotifyIcon (s_pScreenPriv);
+	}
+      break;
     }
 
   return DefWindowProc (hwnd, message, wParam, lParam);

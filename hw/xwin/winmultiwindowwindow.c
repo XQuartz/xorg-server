@@ -466,6 +466,7 @@ winCreateWindowsWindow (WindowPtr pWin)
   char                  *res_name, *res_class, *res_role;
   static int		s_iWindowID = 0;
   winPrivScreenPtr	pScreenPriv = pWinPriv->pScreenPriv;
+  WinXSizeHints         hints;
 
 #if CYGMULTIWINDOW_DEBUG
   ErrorF ("winCreateWindowsWindow - pWin: %08x\n", pWin);
@@ -473,6 +474,15 @@ winCreateWindowsWindow (WindowPtr pWin)
 
   iX = pWin->drawable.x + GetSystemMetrics (SM_XVIRTUALSCREEN);
   iY = pWin->drawable.y + GetSystemMetrics (SM_YVIRTUALSCREEN);
+
+  /* Default positions if none specified */
+  if (!winMultiWindowGetWMNormalHints(pWin, &hints))
+    hints.flags = 0;
+  if ( !(hints.flags & (USPosition|PPosition)) )
+    {
+      iX = CW_USEDEFAULT;
+      iY = CW_USEDEFAULT;
+    }
   
   iWidth = pWin->drawable.width;
   iHeight = pWin->drawable.height;
@@ -539,10 +549,12 @@ winCreateWindowsWindow (WindowPtr pWin)
   RegisterClass (&wc);
 
   /* Create the window */
+  /* Make it OVERLAPPED in create call since WS_POPUP doesn't support */
+  /* CW_USEDEFAULT, change back to popup after creation */
   hWnd = CreateWindowExA (WS_EX_TOOLWINDOW,	/* Extended styles */
 			  pszClass,		/* Class name */
 			  WINDOW_TITLE_X,	/* Window name */
-			  WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
+			  WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS,
 			  iX,			/* Horizontal position */
 			  iY,			/* Vertical position */
 			  iWidth,		/* Right edge */ 
@@ -556,7 +568,10 @@ winCreateWindowsWindow (WindowPtr pWin)
       ErrorF ("winCreateWindowsWindow - CreateWindowExA () failed: %d\n",
 	      (int) GetLastError ());
     }
-  
+ 
+  /* Change style back to popup, already placed... */
+  SetWindowLong (hWnd, GWL_STYLE, WS_POPUP | WS_CLIPCHILDREN | WS_CLIPSIBLINGS);
+
   pWinPriv->hWnd = hWnd;
 
   /* Cause the "Always On Top" to be added in main WNDPROC */

@@ -163,14 +163,12 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
   BOOL fReverse;
   HBITMAP hAnd, hXor;
   ICONINFO ii;
-  unsigned char *pColor, *pCur;
+  unsigned char *pCur;
   int x, y;
   unsigned char bit;
-  BITMAP bm;
   HDC hDC;
-  int bpp, planes;
-  unsigned short fg16, bg16;
   BITMAPV4HEADER bi;
+  BITMAPINFO *pbmi;
   unsigned long *lpBits;
 
   WIN_DEBUG_MSG("winLoadCursor: Win32: %dx%d X11: %dx%d hotspot: %d,%d\n", 
@@ -246,208 +244,140 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
 	  }
     }
 
-  /* See if we can make a real colored cursor instead of B&W 
-   * Get the planes and the colordepth of the windows desktop */
-  hDC = GetDC (GetDesktopWindow ());
-  planes = GetDeviceCaps (hDC, PLANES);
-  bpp = GetDeviceCaps (hDC, BITSPIXEL);
-  ReleaseDC (GetDesktopWindow (), hDC);
-
   /* prepare the pointers */ 
-  hXor = NULL;
-  hAnd = NULL;
   hCursor = NULL;
   lpBits = NULL;
 
   /* We have a truecolor alpha-blended cursor and can use it! */
-  if (bpp>=24 && planes==1 && pCursor->bits->argb) 
+  if (pCursor->bits->argb) 
     {
       WIN_DEBUG_MSG("winLoadCursor: Trying truecolor alphablended cursor\n"); 
-      hAnd = CreateBitmap (pScreenPriv->cursor.sm_cx, pScreenPriv->cursor.sm_cy, 1, 1, pAnd);
-      if (hAnd)
+      memset (&bi, 0, sizeof (BITMAPV4HEADER));
+      bi.bV4Size = sizeof(BITMAPV4HEADER);
+      bi.bV4Width = pScreenPriv->cursor.sm_cx;
+      bi.bV4Height = -(pScreenPriv->cursor.sm_cy); /* right-side up */
+      bi.bV4Planes = 1;
+      bi.bV4BitCount = 32;
+      bi.bV4V4Compression = BI_BITFIELDS;
+      bi.bV4RedMask = 0x00FF0000;
+      bi.bV4GreenMask = 0x0000FF00;
+      bi.bV4BlueMask = 0x000000FF;
+      bi.bV4AlphaMask = 0xFF000000; 
+      
+      lpBits = (unsigned long *) calloc (pScreenPriv->cursor.sm_cx*pScreenPriv->cursor.sm_cy,
+					 sizeof (unsigned long));
+      
+      if (lpBits)
 	{
-	  memset (&bi, 0, sizeof (BITMAPV4HEADER));
-	  bi.bV4Size = sizeof(BITMAPV4HEADER);
-	  bi.bV4Width = pScreenPriv->cursor.sm_cx;
-	  bi.bV4Height = pScreenPriv->cursor.sm_cy;
-	  bi.bV4Planes = 1;
-	  bi.bV4BitCount = 32;
-	  bi.bV4V4Compression = BI_BITFIELDS;
-	  bi.bV4RedMask = 0x00FF0000;
-	  bi.bV4GreenMask = 0x0000FF00;
-	  bi.bV4BlueMask = 0x000000FF;
-	  bi.bV4AlphaMask = 0xFF000000; 
-	  
-	  hDC = GetDC(NULL);
-	  if (hDC)
+	  for (y=0; y<nCY; y++)
 	    {
-	      hXor = CreateDIBSection (hDC, (BITMAPINFO *)&bi, DIB_RGB_COLORS,
-				       (void **)&lpBits, NULL, 0);
-	      ReleaseDC (NULL, hDC);
-	    }
-	  
-	  if (hXor && lpBits)
-	    {
-	      memset (lpBits, 0, 4*pScreenPriv->cursor.sm_cx*pScreenPriv->cursor.sm_cy);
-	      for (y=0; y<nCY; y++)
-		{
-		  unsigned long *src, *dst;
-		  src = &(pCursor->bits->argb[y * pCursor->bits->width]);
-		  /*DIBs are upside down */
-		  dst = &(lpBits[(pScreenPriv->cursor.sm_cy-y-1) * pScreenPriv->cursor.sm_cx]);
-		  memcpy (dst, src, 4*nCX);
-		}
-	    }
-	  else
-	    {
-	      DeleteObject (hAnd);
-	      hAnd = NULL;
-	    }
-	} /* End if hAnd */
-    } /* End if-truecolor-icon */
-
-  /* Try and make a bicolor icon */
-  if (bpp>=15 && planes==1 && !hXor && !hAnd)
-    {
-      WIN_DEBUG_MSG("winLoadCursor: Trying bicolor cursor\n"); 
-      if (bpp==15)
-	bpp = 16;
-
-      fg16 = RGB_TO_16(pCursor->fore);
-      bg16 = RGB_TO_16(pCursor->back);
-
-      /* Create the cursor mask with 1 bpp */
-      hAnd = CreateBitmap (pScreenPriv->cursor.sm_cx, pScreenPriv->cursor.sm_cy, 1, 1, pAnd);
-
-      /* Create the color array */
-      pColor = (unsigned char *) calloc (pScreenPriv->cursor.sm_cx * pScreenPriv->cursor.sm_cy, BYTE_COUNT(bpp));
-      if (!pColor)
-	FatalError ("winLoadCursor - Unable to allocate pColor. Exiting.\n");
-
-      pCur = pColor;
-      for (y=0; y<pScreenPriv->cursor.sm_cy; y++)
-	{
-	  for (x=0; x<pScreenPriv->cursor.sm_cx; x++)
-	    {
-	      if (x>=nCX || y>=nCY) /* Outside of X11 icon bounds */
-		{
-		  switch (bpp)
-		    {
-		    case 32:
-		      (*pCur++) = 0; /* Fall-thru */
-		    case 24:
-		      (*pCur++) = 0; /* Fall-thru */
-		    case 16:
-		      (*pCur++) = 0;
-		      (*pCur++) = 0;
-		      break;
-		    }
-		}
-	      else /* Within X11 icon bounds */
-		{
-		  int nWinPix = BYTE_COUNT(pScreenPriv->cursor.sm_cx) * y + (x/8);
-
-		  bit = pAnd[nWinPix];
-		  bit = bit & (1<<(7-(x&7)));
-		  if (!bit) /* Within the cursor mask? */
-		    {
-		      int nXPix = BitmapBytePad(pCursor->bits->width) * y + (x/8);
-		      bit = ~reverse(~pCursor->bits->source[nXPix] & pCursor->bits->mask[nXPix]);
-		      bit = bit & (1<<(7-(x&7)));
-		      if (bit) /* Draw foreground */
-			{
-			  switch (bpp)
-			    {
-			    case 32:
-			    case 24:
-			      (*pCur++) = pCursor->foreBlue>>8;
-			      (*pCur++) = pCursor->foreGreen>>8;
-			      (*pCur++) = pCursor->foreRed>>8;
-			      if (bpp==32)
-				(*pCur++) = 0;
-			      break;
-			    case 16:
-			      *(pCur++) = (fg16 >> 8) & 255;
-			      *(pCur++) = (fg16 & 255);
-			      break;
-			    }
-			}
-		      else /* Draw background */
-			{
-			  switch (bpp)
-			    {
-			    case 32:
-			    case 24:
-			      (*pCur++) = pCursor->backBlue>>8;
-			      (*pCur++) = pCursor->backGreen>>8;
-			      (*pCur++) = pCursor->backRed>>8;
-			      if (bpp==32)
-				(*pCur++) = 0;
-			      break;
-			    case 16:
-			      *(pCur++) = (bg16 >> 8) & 255;
-			      *(pCur++) = (bg16 & 255);
-			      break;
-			    }
-			}
-		    } 
-		  else /* Outside the cursor mask */
-		    {
-		      switch (bpp)
-			{
-			case 32:
-			  (*pCur++) = 0; /* Fall-thru */
-			case 24:
-			  (*pCur++) = 0; /* Fall-thru */
-			case 16:
-			  (*pCur++) = 0;
-			  (*pCur++) = 0;
-			  break;
-			}
-		    }
-		}
+	      unsigned long *src, *dst;
+	      src = &(pCursor->bits->argb[y * pCursor->bits->width]);
+	      dst = &(lpBits[y * pScreenPriv->cursor.sm_cx]);
+	      memcpy (dst, src, 4*nCX);
 	    }
 	}
+    } /* End if-truecolor-icon */
+  
+  if (!lpBits)
+    {
+      /* Bicolor, use a palettized DIB */
+      WIN_DEBUG_MSG("winLoadCursor: Trying two color cursor\n"); 
+      pbmi = (BITMAPINFO*)&bi;
+      memset (pbmi, 0, sizeof (BITMAPINFOHEADER));
+      pbmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+      pbmi->bmiHeader.biWidth = pScreenPriv->cursor.sm_cx;
+      pbmi->bmiHeader.biHeight = -abs(pScreenPriv->cursor.sm_cy); /* right-side up */
+      pbmi->bmiHeader.biPlanes = 1;
+      pbmi->bmiHeader.biBitCount = 8;
+      pbmi->bmiHeader.biCompression = BI_RGB;
+      pbmi->bmiHeader.biSizeImage = 0;
+      pbmi->bmiHeader.biClrUsed = 3;
+      pbmi->bmiHeader.biClrImportant = 3;
+      pbmi->bmiColors[0].rgbRed = 0; /* Empty */
+      pbmi->bmiColors[0].rgbGreen = 0;
+      pbmi->bmiColors[0].rgbBlue = 0;
+      pbmi->bmiColors[0].rgbReserved = 0;
+      pbmi->bmiColors[1].rgbRed = pCursor->backRed>>8; /* Background */
+      pbmi->bmiColors[1].rgbGreen = pCursor->backGreen>>8;
+      pbmi->bmiColors[1].rgbBlue = pCursor->backBlue>>8;
+      pbmi->bmiColors[1].rgbReserved = 0;
+      pbmi->bmiColors[2].rgbRed = pCursor->foreRed>>8; /* Foreground */
+      pbmi->bmiColors[2].rgbGreen = pCursor->foreGreen>>8;
+      pbmi->bmiColors[2].rgbBlue = pCursor->foreBlue>>8;
+      pbmi->bmiColors[2].rgbReserved = 0;
+      
+      lpBits = (unsigned long *) calloc (pScreenPriv->cursor.sm_cx*pScreenPriv->cursor.sm_cy,
+					 sizeof (char));
+      
+      pCur = (unsigned char *)lpBits;
+      if (lpBits)
+	{
+	  for (y=0; y<pScreenPriv->cursor.sm_cy; y++)
+	    {
+	      for (x=0; x<pScreenPriv->cursor.sm_cx; x++)
+		{
+		  if (x>=nCX || y>=nCY) /* Outside of X11 icon bounds */
+		    (*pCur++) = 0;
+		  else /* Within X11 icon bounds */
+		    {
+		      int nWinPix = BYTE_COUNT(pScreenPriv->cursor.sm_cx) * y + (x/8);
 
-      /* Make a bitmap from the color bits */
-      bm.bmType = 0;
-      bm.bmWidth = pScreenPriv->cursor.sm_cx;
-      bm.bmHeight = pScreenPriv->cursor.sm_cy;
-      bm.bmWidthBytes = pScreenPriv->cursor.sm_cx * BYTE_COUNT(bpp);
-      bm.bmPlanes = 1;
-      bm.bmBitsPixel = bpp;
-      bm.bmBits = (void *)pColor;
-      if (hAnd)
-	hXor = CreateBitmapIndirect (&bm);
-      free (pColor);
-    } /* End if-bicolor-icon */
+		      bit = pAnd[nWinPix];
+		      bit = bit & (1<<(7-(x&7)));
+		      if (!bit) /* Within the cursor mask? */
+			{
+			  int nXPix = BitmapBytePad(pCursor->bits->width) * y + (x/8);
+			  bit = ~reverse(~pCursor->bits->source[nXPix] & pCursor->bits->mask[nXPix]);
+			  bit = bit & (1<<(7-(x&7)));
+			  if (bit) /* Draw foreground */
+			    (*pCur++) = 2;
+			  else /* Draw background */
+			    (*pCur++) = 1;
+			}
+		      else /* Outside the cursor mask */
+			(*pCur++) = 0;
+		    }
+		} /* end for (x) */
+	    } /* end for (y) */
+	} /* end if (lpbits) */
+    }
 
-  /* If one of the previous two methods gave us the bitmaps we need, make a cursor */
-  if (hXor && hAnd)
+  /* If one of the previous two methods gave us the bitmap we need, make a cursor */
+  if (lpBits)
     {
       WIN_DEBUG_MSG("winLoadCursor: Creating bitmap cursor: hotspot %d,%d\n",
-              pCursor->bits->xhot, pCursor->bits->yhot); 
-      ii.fIcon = FALSE;
-      ii.xHotspot = pCursor->bits->xhot;
-      ii.yHotspot = pCursor->bits->yhot;
-      ii.hbmMask = hAnd;
-      ii.hbmColor = hXor;
-      hCursor = (HCURSOR) CreateIconIndirect( &ii );
+              pCursor->bits->xhot, pCursor->bits->yhot);
 
-      /* Check if windows created an icon instead of the cursor. 
-       * This breaks the hotspot. Discard it then */
-      GetIconInfo(hCursor, &ii);
-      if (ii.fIcon)
+      hAnd = NULL;
+      hXor = NULL;
+
+      hAnd = CreateBitmap (pScreenPriv->cursor.sm_cx, pScreenPriv->cursor.sm_cy, 1, 1, pAnd);
+
+      hDC = GetDC (NULL);
+      if (hDC)
 	{
-	  WIN_DEBUG_MSG("winLoadCursor: Got bitmap icon. Discarding it.\n");
-	  DestroyIcon(hCursor);
-	  hCursor = NULL;
+	  hXor = CreateCompatibleBitmap (hDC, pScreenPriv->cursor.sm_cx, pScreenPriv->cursor.sm_cy);
+	  SetDIBits (hDC, hXor, 0, pScreenPriv->cursor.sm_cy, lpBits, (BITMAPINFO*)&bi, DIB_RGB_COLORS);
+	  ReleaseDC (NULL, hDC);
 	}
+      free (lpBits);
+      
+      if (hAnd && hXor)
+	{
+	  ii.fIcon = FALSE;
+	  ii.xHotspot = pCursor->bits->xhot;
+	  ii.yHotspot = pCursor->bits->yhot;
+	  ii.hbmMask = hAnd;
+	  ii.hbmColor = hXor;
+	  hCursor = (HCURSOR) CreateIconIndirect( &ii );
+	}
+
+      if (hAnd)
+	DeleteObject (hAnd);
+      if (hXor)
+	DeleteObject (hXor);
     }
-  if (hAnd)
-    DeleteObject (hAnd);
-  if (hXor)
-    DeleteObject (hXor);
 
   if (!hCursor)
     {

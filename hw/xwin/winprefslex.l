@@ -37,7 +37,7 @@
 
 extern YYSTYPE yylval;
 extern char *yytext;
-extern int yyparse();
+extern int yyparse(void);
 
 extern void ErrorF (const char* /*f*/, ...);
 

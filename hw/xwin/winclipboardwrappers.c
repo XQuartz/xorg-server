@@ -30,7 +30,8 @@
 
 #include "win.h"
 #include "dixstruct.h"
-#include "Xatom.h"
+#include "X11/Xatom.h"
+
 
 /*
  * Constants

@@ -1,3 +1,4 @@
+#if defined(XCSECURITY)
 /*
  *Copyright (C) 2003-2004 Harold L Hunt II All Rights Reserved.
  *
@@ -31,10 +32,10 @@
 #include "win.h"
 
 /* Includes for authorization */
-#include "Xauth.h"
+#include "X11/Xauth.h"
 #define _SECURITY_SERVER
-#include "security.h"
-#include "securstr.h"
+#include "X11/extensions/security.h"
+#include "X11/extensions/securstr.h"
 
 
 /*
@@ -125,3 +126,4 @@ winGenerateAuthorization ()
   
   return FALSE;
 }
+#endif

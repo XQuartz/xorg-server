@@ -44,6 +44,9 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
+#ifndef XFree86Server
+#define XFree86Server
+#endif
 #include <windows.h>
 #include <windowsx.h>
 

@@ -353,8 +353,10 @@ winMapWindowPRootless (WindowPtr pWin)
 #endif
 
   fResult = winGetScreenPriv(pWin->drawable.pScreen)->RealizeWindow(pWin);
-  
+
+#ifdef SHAPE
   winReshapePRootless (pWin);
+#endif
   
   winUpdateRgnPRootless (pWin);
   

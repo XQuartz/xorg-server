@@ -30,9 +30,11 @@ from The Open Group.
 
 #include "win.h"
 #include "winmsg.h"
+#if WIN_XF86CONFIG_SUPPORT
 #include "winconfig.h"
+#endif
 #include "winprefs.h"
-#include "Xlocale.h"
+#include "X11/Xlocale.h"
 
 
 /*
@@ -72,7 +74,7 @@ void OsVendorVErrorF (const char *pszFormat, va_list va_args);
 #endif
 
 #if defined(DDXOSRESET)
-void OsVendorReset ();
+void OsVendorReset (void);
 #endif
 
 void winInitializeDefaultScreens (void);
@@ -116,7 +118,7 @@ extern Bool			g_fClipboard;
  */
 
 void
-OsVendorReset ()
+OsVendorReset (void)
 {
   ErrorF ("OsVendorReset - Hello\n");
 
@@ -138,7 +140,7 @@ OsVendorReset ()
 
 /* See Porting Layer Definition - p. 57 */
 void
-ddxGiveUp()
+ddxGiveUp (void)
 {
 #if CYGDEBUG
   winErrorFVerb (2, "ddxGiveUp\n");
@@ -366,9 +368,11 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   winErrorFVerb (2, "InitOutput\n");
 #endif
 
+#if WIN_XF86CONFIG_SUPPORT
   /* Try to read the XF86Config-style configuration file */
   if (!winReadConfigfile ())
     winErrorFVerb (1, "InitOutput - Error reading config file\n");
+#endif
 
   /* Setup global screen info parameters */
   screenInfo->imageByteOrder = IMAGE_BYTE_ORDER;
@@ -423,7 +427,7 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
 	iMaxConsecutiveScreen = i + 1;
     }
   winErrorFVerb (2, "InitOutput - g_iNumScreens: %d iMaxConsecutiveScreen: %d\n",
-	  g_iNumScreens, iMaxConsecutiveScreen);
+		 g_iNumScreens, iMaxConsecutiveScreen);
   if (g_iNumScreens < iMaxConsecutiveScreen)
     FatalError ("InitOutput - Malformed set of screen parameter(s).  "
 		"Screens must be specified consecutively starting with "
@@ -449,9 +453,11 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
   /* Load preferences from XWinrc file */
   LoadPreferences();
 
+#if defined(XCSECURITY)
   /* Generate a cookie used by internal clients for authorization */
   if (g_fXdmcpEnabled)
     winGenerateAuthorization ();
+#endif
 
   /* Perform some one time initialization */
   if (1 == serverGeneration)

@@ -67,7 +67,7 @@ FARPROC		g_fpDirectDrawCreate = NULL;
 FARPROC		g_fpDirectDrawCreateClipper = NULL;
 
 HMODULE		g_hmodCommonControls = NULL;
-FARPROC		g_fpTrackMouseEvent = (FARPROC) (void (*)())NoopDDA;
+FARPROC		g_fpTrackMouseEvent = (FARPROC) (void (*)(void))NoopDDA;
 
 
 /*

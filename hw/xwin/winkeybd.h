@@ -1,6 +1,5 @@
 #if !defined(WINKEYBD_H)
 #define WINKEYBD_H
-
 /*
  *Copyright (C) 1994-2000 The XFree86 Project, Inc. All Rights Reserved.
  *

@@ -29,7 +29,7 @@
  */
 /* $XFree86: xc/programs/Xserver/hw/xwin/XWin.rc,v 1.2 2003/07/29 21:25:15 dawes Exp $ */
 
-#include "resource.h"
+#include "winresource.h"
 
 
 /*

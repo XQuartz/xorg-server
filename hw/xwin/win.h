@@ -51,6 +51,7 @@
 #define WIN_LAYER_SUPPORT			NO
 #define WIN_EMULATE_PSEUDO_SUPPORT		YES
 #define WIN_UPDATE_STATS			NO
+#define WIN_XF86CONFIG_SUPPORT			YES
 
 
 /* Turn debug messages on or off */
@@ -133,8 +134,6 @@
 #include <errno.h>
 #include <pthread.h>
 
-#include <X11/XWDFile.h>
-
 #ifdef HAS_MMAP
 #include <sys/mman.h>
 #ifndef MAP_FILE
@@ -142,10 +141,10 @@
 #endif /* MAP_FILE */
 #endif /* HAS_MMAP */
 
-#include "X.h"
-#include "Xproto.h"
-#include "Xos.h"
-#include "Xprotostr.h"
+#include "X11/X.h"
+#include "X11/Xproto.h"
+#include "X11/Xos.h"
+#include "X11/Xprotostr.h"
 #include "scrnintstr.h"
 #include "pixmapstr.h"
 #include "pixmap.h"
@@ -163,14 +162,16 @@
 #include "mibstore.h"
 #include "input.h"
 #include "mipointer.h"
-#include "keysym.h"
+#include "X11/keysym.h"
 #include "mibstore.h"
 #include "micoord.h"
 #include "dix.h"
 #include "miline.h"
 #include "shadow.h"
 #include "fb.h"
+#if WIN_LAYER_SUPPORT
 #include "layer.h"
+#endif
 #include "rootless.h"
 
 #ifdef RENDER
@@ -186,6 +187,7 @@
  * Windows headers
  */
 #include "winms.h"
+#include "./winresource.h"
 
 
 /*
@@ -390,8 +392,6 @@ typedef struct
   DWORD			dwDepth;
   DWORD			dwRefreshRate;
   char			*pfb;
-  XWDColor		*pXWDCmap;
-  XWDFileHeader		*pXWDHeader;
   DWORD			dwEngine;
   DWORD			dwEnginePreferred;
   DWORD			dwClipUpdatesNBoxes;
@@ -735,8 +735,10 @@ winAllocateCmapPrivates (ColormapPtr pCmap);
  * winauth.c
  */
 
+#if defined(XCSECURITY)
 Bool
 winGenerateAuthorization (void);
+#endif
 
 
 /*
@@ -1191,6 +1193,15 @@ winInitializeDefaultScreens (void);
 
 
 /*
+ * winpushpixels.c
+ */
+
+void
+winPushPixels (GCPtr pGC, PixmapPtr pBitMap, DrawablePtr pDrawable,
+	       int dx, int dy, int xOrg, int yOrg);
+
+
+/*
  * winscrinit.c
  */
 
@@ -1363,6 +1374,9 @@ winInitVisualsShadowGDI (ScreenPtr pScreen);
 
 Bool
 winAdjustVideoModeShadowGDI (ScreenPtr pScreen);
+
+Bool
+winBltExposedRegionsShadowGDI (ScreenPtr pScreen);
 
 Bool
 winActivateAppShadowGDI (ScreenPtr pScreen);

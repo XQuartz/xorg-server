@@ -465,10 +465,11 @@ winClipboardFlushXEvents (HWND hwnd,
 					       atomLocalProperty,
 					       iWindow,
 					       CurrentTime);
-		  if (iReturn == BadAtom || iReturn == BadWindow)
+		  if (iReturn != Success)
 		    {
 		      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-			      "XConvertSelection () failed\n");
+			      "XConvertSelection () failed, aborting: %d\n",
+			      iReturn);
 		      break;
 		    }
 
@@ -488,10 +489,11 @@ winClipboardFlushXEvents (HWND hwnd,
 					       atomLocalProperty,
 					       iWindow,
 					       CurrentTime);
-		  if (iReturn == BadAtom || iReturn == BadWindow)
+		  if (iReturn != Success)
 		    {
 		      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-			      "XConvertSelection () failed\n");
+			      "XConvertSelection () failed, aborting: %d\n",
+			      iReturn);
 		      break;
 		    }
 
@@ -502,7 +504,8 @@ winClipboardFlushXEvents (HWND hwnd,
 	      else
 		{
 		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-			  "Unknown format.  Cannot request conversion.\n");
+			  "Unknown format.  Cannot request conversion, "
+			  "aborting.\n");
 		  break;
 		}
 	    }
@@ -523,7 +526,8 @@ winClipboardFlushXEvents (HWND hwnd,
 	  if (iReturn != Success)
 	    {
 	      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-		      "XGetWindowProperty () failed, aborting.\n");
+		      "XGetWindowProperty () failed, aborting: %d\n",
+		      iReturn);
 	      break;
 	    }
 
@@ -548,7 +552,8 @@ winClipboardFlushXEvents (HWND hwnd,
 	  if (iReturn != Success)
 	    {
 	      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-		      "XGetWindowProperty () failed, aborting.\n");
+		      "XGetWindowProperty () failed, aborting: %d\n",
+		      iReturn);
 	      break;
 	    }
 
@@ -600,26 +605,25 @@ winClipboardFlushXEvents (HWND hwnd,
 	      else
 		{
 		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-			  "X*TextPropertyToTextList list_return is NULL\n");
+			  "X*TextPropertyToTextList list_return is NULL.\n");
 		  pszReturnData = malloc (1);
 		  pszReturnData[0] = '\0';
 		}
 	    }
 	  else
 	    {
+	      ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
+		      "X*TextPropertyToTextList returned: ");
 	      switch (iReturn)
 		{
 		case XNoMemory:
-		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-			  "XNoMemory\n");
+		  ErrorF ("XNoMemory\n");
 		  break;
 		case XConverterNotFound:
-		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-			  "XConverterNotFound\n");
+		  ErrorF ("XConverterNotFound\n");
 		  break;
 		default:
-		  ErrorF ("winClipboardFlushXEvents - SelectionNotify - "
-			  "Unknown Error\n");
+		  ErrorF ("%d", iReturn);
 		  break;
 		}
 	      pszReturnData = malloc (1);
@@ -627,7 +631,8 @@ winClipboardFlushXEvents (HWND hwnd,
 	    }
 
 	  /* Free the data returned from XGetWindowProperty */
-	  XFreeStringList (ppszTextList);
+	  if (ppszTextList)
+	    XFreeStringList (ppszTextList);
 	  ppszTextList = NULL;
 	  XFree (xtpText.value);
 	  xtpText.value = NULL;
@@ -648,6 +653,15 @@ winClipboardFlushXEvents (HWND hwnd,
 	      /* Allocate memory for the Unicode string */
 	      pwszUnicodeStr
 		= (wchar_t*) malloc (sizeof (wchar_t) * (iUnicodeLen + 1));
+	      if (!pwszUnicodeStr)
+		{
+		  ErrorF ("winClipboardFlushXEvents - SelectionNotify "
+			  "malloc failed for pwszUnicodeStr, aborting.\n");
+
+		  /* Abort */
+		  fAbort = TRUE;
+		  goto winClipboardFlushXEvents_SelectionNotify_Done;
+		}
 
 	      /* Do the actual conversion */
 	      MultiByteToWideChar (CP_UTF8,
@@ -668,6 +682,18 @@ winClipboardFlushXEvents (HWND hwnd,
 
 	      /* Allocate global memory for the X clipboard data */
 	      hGlobal = GlobalAlloc (GMEM_MOVEABLE, iConvertDataLen);
+	    }
+
+	  /* Check that global memory was allocated */
+	  if (!hGlobal)
+	    {
+	      ErrorF ("winClipboardFlushXEvents - SelectionNotify "
+		      "GlobalAlloc failed, aborting: %ld\n",
+		      GetLastError ());
+
+	      /* Abort */
+	      fAbort = TRUE;
+	      goto winClipboardFlushXEvents_SelectionNotify_Done;
 	    }
 
 	  /* Obtain a pointer to the global memory */

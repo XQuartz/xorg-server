@@ -1,3 +1,5 @@
+#if !defined(WINMULTIWINDOWCLASS_H)
+#define WINMULTIWINDOWCLASS_H
 /*
  *Copyright (C) 1994-2000 The XFree86 Project, Inc. All Rights Reserved.
  *
@@ -108,3 +110,4 @@ winMultiWindowGetWMNormalHints (WindowPtr pWin, WinXSizeHints *hints);
 int
 winMultiWindowGetWMName (WindowPtr pWin, char **wmName);
 
+#endif

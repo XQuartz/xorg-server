@@ -30,7 +30,7 @@
 /* $XFree86: xc/programs/Xserver/hw/xwin/winclipboardthread.c,v 1.3 2003/10/02 13:30:10 eich Exp $ */
 
 #include "winclipboard.h"
-#include "Xauth.h"
+#include "X11/Xauth.h"
 
 
 /*
@@ -46,8 +46,10 @@
 
 extern Bool		g_fUnicodeClipboard;
 extern unsigned long	serverGeneration;
+#if defined(XCSECURITY)
 extern unsigned int	g_uiAuthDataLen;
 extern char		*g_pAuthData;
+#endif
 extern Bool		g_fClipboardStarted;
 extern HWND		g_hwndClipboard;
 extern void		*g_pClipboardDisplay;
@@ -133,12 +135,14 @@ winClipboardProc ()
       ErrorF ("winClipboardProc - setjmp returned for IO Error Handler.\n");
       pthread_exit (NULL);
     }
-  
+
+#if defined(XCSECURITY)
   /* Use our generated cookie for authentication */
   XSetAuthorization (AUTH_NAME,
 		     strlen (AUTH_NAME),
 		     g_pAuthData,
 		     g_uiAuthDataLen);
+#endif
 
   /* Set error handler */
   XSetErrorHandler (winClipboardErrorHandler);

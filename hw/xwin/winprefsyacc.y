@@ -68,7 +68,7 @@ static int yyerror (char *s);
 
 extern void ErrorF (const char* /*f*/, ...);
 extern char *yytext;
-extern int yylex();
+extern int yylex(void);
 
 %}
 
@@ -240,7 +240,7 @@ AddMenuLine (char *text, MENUCOMMANDTYPE cmd, char *param)
 }
 
 static void
-CloseMenu ()
+CloseMenu (void)
 {
   if (menu.menuItem==NULL || menu.menuItems==0)
     {
@@ -261,7 +261,7 @@ CloseMenu ()
 }
 
 static void 
-OpenIcons ()
+OpenIcons (void)
 {
   if (pref.icon != NULL) {
     ErrorF("LoadPreferences: Redefining icon mappings\n");
@@ -292,12 +292,12 @@ AddIconLine (char *matchstr, char *iconfile)
 }
 
 static void 
-CloseIcons ()
+CloseIcons (void)
 {
 }
 
 static void
-OpenSysMenu ()
+OpenSysMenu (void)
 {
   if (pref.sysMenu != NULL) {
     ErrorF("LoadPreferences: Redefining system menu\n");
@@ -328,7 +328,7 @@ AddSysMenuLine (char *matchstr, char *menuname, int pos)
 }
 
 static void
-CloseSysMenu ()
+CloseSysMenu (void)
 {
 }
 

@@ -1,3 +1,5 @@
+#if !defined(WINRESOURCE_H)
+#define WINRESOURCE_H
 /*
  *Copyright (C) 1994-2000 The XFree86 Project, Inc. All Rights Reserved.
  *
@@ -27,51 +29,22 @@
  *
  * Authors:	Harold L Hunt II
  */
-/* $XFree86: xc/programs/Xserver/hw/xwin/winclipboardunicode.c,v 1.2 2003/07/29 21:25:16 dawes Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xwin/resource.h,v 1.2 2003/07/29 21:25:15 dawes Exp $ */
 
-#include "win.h"
-
-Bool
-winClipboardDetectUnicodeSupport (void);
-
-void
-winClipboardDOStoUNIX (char *pszData, int iLength);
- 
-void
-winClipboardUNIXtoDOS (unsigned char **ppszData, int iLength);
+#include "winms.h"
 
 
 /*
- * Determine whether we suport Unicode or not.
- * NOTE: Currently, just check if we are on an NT-based platform or not.
+ * Local defines
  */
 
-Bool
-winClipboardDetectUnicodeSupport (void)
-{
-  Bool			fReturn = FALSE;
-  OSVERSIONINFO		osvi;
-  
-  /* Get operating system version information */
-  ZeroMemory (&osvi, sizeof (osvi));
-  osvi.dwOSVersionInfoSize = sizeof (osvi);
-  GetVersionEx (&osvi);
+#define IDM_APP_ABOUT		40001
+#define IDC_STATIC		-1
+#define IDI_XWIN		101
+#define IDM_TRAYICON_MENU	102
+#define ID_APP_EXIT		103
+#define ID_APP_HIDE_ROOT	104
+#define ID_APP_SHOW_ROOT	105
+#define ID_APP_ALWAYS_ON_TOP	106
 
-  /* Branch on platform ID */
-  switch (osvi.dwPlatformId)
-    {
-    case VER_PLATFORM_WIN32_NT:
-      /* Engine 4 is supported on NT only */
-      ErrorF ("DetectUnicodeSupport - Windows NT/2000/XP\n");
-      fReturn = TRUE;
-      break;
-
-    case VER_PLATFORM_WIN32_WINDOWS:
-      /* Engine 4 is supported on NT only */
-      ErrorF ("DetectUnicodeSupport - Windows 95/98/Me\n");
-      fReturn = FALSE;
-      break;
-    }
-
-  return fReturn;
-}
+#endif

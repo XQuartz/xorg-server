@@ -42,21 +42,25 @@
 #include <pthread.h>
 
 /* X headers */
-#include "X.h"
-#include "Xatom.h"
+#include "X11/X.h"
+#include "X11/Xatom.h"
 /* NOTE: For some unknown reason, including Xproto.h solves
  * tons of problems with including windows.h.  Unknowns reasons
  * are usually bad, so someone should investigate this.
  */
-#include "Xproto.h"
-#include "Xutil.h"
-#include "Xlocale.h"
+#include "X11/Xproto.h"
+#include "X11/Xutil.h"
+#include "X11/Xlocale.h"
 
 /* Fixups to prevent collisions between Windows and X headers */
 #define ATOM			DWORD
 
 /* Windows headers */
+#ifndef XFree86Server
+#define XFree86Server
+#endif
 #include <windows.h>
+#undef XFree86Server
 
 
 /* Clipboard module constants */
@@ -86,10 +90,10 @@ extern void ErrorF (const char* /*f*/, ...);
  */
 
 Bool
-winInitClipboard ();
+winInitClipboard (void);
 
 HWND
-winClipboardCreateMessagingWindow ();
+winClipboardCreateMessagingWindow (void);
 
 
 /*
@@ -108,7 +112,7 @@ winClipboardUNIXtoDOS (unsigned char **ppszData, int iLength);
  */
 
 void *
-winClipboardProc ();
+winClipboardProc (void);
 
 void
 winDeinitClipboard (void);

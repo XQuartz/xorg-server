@@ -1,3 +1,5 @@
+#ifndef __WIN_CONFIG_H__
+#define __WIN_CONFIG_H__
 /*
  *Copyright (C) 1994-2000 The XFree86 Project, Inc. All Rights Reserved.
  *
@@ -28,11 +30,11 @@
  * Authors: Alexander Gottwald	
  */
 /* $XFree86: xc/programs/Xserver/hw/xwin/winconfig.h,v 1.1 2002/10/17 08:18:22 alanh Exp $ */
-#ifndef __WIN_CONFIG_H__
-#define __WIN_CONFIG_H__
 
 #include "win.h"
+#if WIN_XF86CONFIG_SUPPORT
 #include "../xfree86/parser/xf86Parser.h"
+#endif
 
 
 /* These are taken from hw/xfree86/common/xf86str.h */
@@ -205,8 +207,9 @@ WinCmdlineRec, *WinCmdlinePtr;
 
 
 extern WinCmdlineRec g_cmdline;
-
+#if WIN_XF86CONFIG_SUPPORT
 extern XF86ConfigPtr g_xf86configptr;
+#endif
 extern serverLayoutRec g_winConfigLayout;
 
 
@@ -282,9 +285,10 @@ char *winSetStrOption (pointer optlist, const char *name, char *deflt);
 int winSetBoolOption (pointer optlist, const char *name, int deflt);
 int winSetIntOption (pointer optlist, const char *name, int deflt);
 double winSetRealOption (pointer optlist, const char *name, double deflt);
-
+#if WIN_XF86CONFIG_SUPPORT
 XF86OptionPtr winFindOption (XF86OptionPtr list, const char *name);
 char *winFindOptionValue (XF86OptionPtr list, const char *name);
+#endif
 int winNameCompare (const char *s1, const char *s2);
 char *winNormalizeName (const char *s);
 

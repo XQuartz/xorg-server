@@ -39,6 +39,7 @@
 #include "XKBsrv.h"
 #endif
 
+#if WIN_XF86CONFIG_SUPPORT
 #ifndef CONFIGPATH
 #define CONFIGPATH  "%A," "%R," \
                     "/etc/X11/%R," "%P/etc/X11/%R," \
@@ -53,6 +54,8 @@
 #endif
 
 XF86ConfigPtr g_xf86configptr = NULL;
+#endif
+
 WinCmdlineRec g_cmdline = {
   NULL,				/* configFile */
   NULL,				/* fontPath */
@@ -98,6 +101,7 @@ winInfoRec g_winInfo = {
    50}
 };
 
+#if WIN_XF86CONFIG_SUPPORT
 serverLayoutRec g_winConfigLayout;
 
 static Bool ParseOptionValue (int scrnIndex, pointer options,
@@ -199,6 +203,7 @@ winReadConfigfile ()
   winConfigFiles ();
   return retval;
 }
+#endif
 
 
 /* Set the keyboard configuration */
@@ -240,12 +245,16 @@ WinKBLayoutRec winKBLayouts[] = {
 Bool
 winConfigKeyboard (DeviceIntPtr pDevice)
 {
+#ifdef XKB
   char                          layoutName[KL_NAMELENGTH];
   static unsigned int           layoutNum = 0;
-  int                           keyboardType;  
+  int                           keyboardType;
+#endif
+#if WIN_XF86CONFIG_SUPPORT
   XF86ConfInputPtr		kbd = NULL;
   XF86ConfInputPtr		input_list = NULL;
   MessageType			from = X_DEFAULT;
+#endif
   MessageType			kbdfrom = X_CONFIG;
 
   /* Setup defaults */
@@ -288,7 +297,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
         winMsgVerb(X_PROBED, 1, "Setting autorepeat to delay=%d, rate=%d\n",
                 g_winInfo.keyboard.delay, g_winInfo.keyboard.rate);
       }
-  }       
+  }
   
 
   keyboardType = GetKeyboardType (0);
@@ -335,7 +344,6 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	g_winInfo.xkb.options = pLayout->xkboptions; 
 	break;
       }
-
   }  
   
   g_winInfo.xkb.initialMap = NULL;
@@ -352,6 +360,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
   if (g_cmdline.keyboard)
     kbdfrom = X_CMDLINE;
 
+#if WIN_XF86CONFIG_SUPPORT
   /*
    * Until the layout code is finished, I search for the keyboard 
    * device and configure the server with it.
@@ -517,15 +526,18 @@ winConfigKeyboard (DeviceIntPtr pDevice)
         }
 #endif
     }
+#endif
 
   return TRUE;
 }
 
 
+#if WIN_XF86CONFIG_SUPPORT
 Bool
 winConfigMouse (DeviceIntPtr pDevice)
 {
   MessageType			mousefrom = X_CONFIG;
+
   XF86ConfInputPtr		mouse = NULL;
   XF86ConfInputPtr		input_list = NULL;
 
@@ -618,6 +630,7 @@ winConfigFiles ()
 
   return TRUE;
 }
+#endif
 
 
 Bool
@@ -634,6 +647,7 @@ winConfigScreens ()
 }
 
 
+#if WIN_XF86CONFIG_SUPPORT
 char *
 winSetStrOption (pointer optlist, const char *name, char *deflt)
 {
@@ -687,6 +701,7 @@ winSetRealOption (pointer optlist, const char *name, double deflt)
     deflt = o.value.realnum;
   return deflt;
 }
+#endif
 
 
 /*
@@ -735,6 +750,7 @@ winNameCompare (const char *s1, const char *s2)
 }
 
 
+#if WIN_XF86CONFIG_SUPPORT
 /*
  * Find the named option in the list. 
  * @return the pointer to the option record, or NULL if not found.
@@ -1042,6 +1058,7 @@ GetBoolValue (OptionInfoPtr p, const char *s)
     }
   return TRUE;
 }
+#endif
 
 
 char *

@@ -1,5 +1,5 @@
 /* $Xorg: access.c,v 1.5 2001/02/09 02:05:23 xorgcvs Exp $ */
-/* $XdotOrg: xc/programs/Xserver/os/access.c,v 1.1.4.3.2.1.2.1 2004/03/13 18:48:40 alanc Exp $ */
+/* $XdotOrg: xc/programs/Xserver/os/access.c,v 1.1.4.3.2.3 2004/03/22 11:57:11 ago Exp $ */
 /***********************************************************
 
 Copyright 1987, 1998  The Open Group
@@ -2035,7 +2035,7 @@ siHostnameAddrMatch(int family, pointer addr, int len,
 	    {
 		struct  sockaddr_in  sin;
 
-    		sin.sa_family = hp->h_addrtype;
+    		sin.sin_family = hp->h_addrtype;
 		acopy ( *addrlist, &(sin.sin_addr), hp->h_length);
 		hostaddrlen = sizeof(sin);
     		f = ConvertAddr ((struct sockaddr *)&sin, 
@@ -2046,7 +2046,7 @@ siHostnameAddrMatch(int family, pointer addr, int len,
 		    break;
 		}
     	    }
-
+        }
     }
 #endif
     return res;

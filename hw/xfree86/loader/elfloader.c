@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/hw/xfree86/loader/elfloader.c,v 1.1.4.3 2004/03/05 13:40:51 eich Exp $ */
+/* $XdotOrg: xc/programs/Xserver/hw/xfree86/loader/elfloader.c,v 1.1.4.1.6.5 2004/04/02 17:25:21 eich Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/loader/elfloader.c,v 1.61tsi Exp $ */
 /*
  *
@@ -1096,6 +1096,18 @@ ELFCreatePLT(ELFModulePtr elffile)
 	ErrorF("ELFCreatePLT() Unable to allocate memory!!!!\n");
 	return;
     }
+#   if defined(linux) || defined(__OpenBSD__)
+    {
+	unsigned long page_size = getpagesize();
+	unsigned long round;
+
+	round = (unsigned long)elffile->plt & (page_size - 1);
+	mprotect(elffile->plt - round,
+		 (elffile->pltsize + round + page_size - 1) & ~(page_size - 1),
+		 PROT_READ | PROT_WRITE | PROT_EXEC);
+    }
+#   endif
+									      
     elffile->sections[elffile->pltndx].sh_size = elffile->pltsize;
 # ifdef ELFDEBUG
     ELFDEBUG("ELFCreatePLT: PLT address %lx\n", elffile->plt);

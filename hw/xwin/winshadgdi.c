@@ -430,12 +430,12 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
   else
     {
       winW32Error (2, "winAllocateFBShadowGDI - Shadow blit failure\n");
-      /* ago: ignore this error. The blit fails with wine, but does not 
-       * cause any problems later. */
-
 #if 0      
       return FALSE;
 #else 
+      /* ago: ignore this error. The blit fails with wine, but does not 
+       * cause any problems later. */
+
       fReturn = TRUE;
 #endif      
     }
@@ -443,11 +443,6 @@ winAllocateFBShadowGDI (ScreenPtr pScreen)
   /* Look for height weirdness */
   if (dibsection.dsBmih.biHeight < 0)
     {
-      /* FIXME: Figure out why biHeight is sometimes negative */
-      ErrorF ("winAllocateFBShadowGDI - WEIRDNESS - biHeight "
-	      "still negative: %d\n"
-	      "winAllocateFBShadowGDI - WEIRDNESS - Flipping biHeight sign\n",
-	      (int) dibsection.dsBmih.biHeight);
       dibsection.dsBmih.biHeight = -dibsection.dsBmih.biHeight;
     }
 

@@ -26,7 +26,7 @@ That can be done both for the generic case and for particular programs.
 3- To change the icon that is associated to the \fIWindows\fP window that
 \fIXWin -multiwindow\fP produces for each top-level X-window. Again, that
 can be done both for the generic case and for particular programs. The new
-icons associated should be \fIWindows\fP kind incons \fI.ico\fP.
+icons associated should be \fIWindows\fP format icons \fI.ico\fP.
 
 
 .SH FILE FORMAT
@@ -40,13 +40,23 @@ begin with "#" or "//" and go to the end-of-line.
 .PP
 Quote marks in strings are optional unless the string has included spaces.
 .PP
-There are three kinds of instructions, debug, menu and icon instructions.
+There are three kinds of instructions: miscellaneous, menu, and icon.
 
 
-.SH Debug instruction
+.SH Miscellaneous instruction
 .TP 8
 .B DEBUG \fIString\fP
 The \fIString\fP is printed to the XWin.log file.
+
+.TP 8
+.B TRAYICON \fIicon-specifier\fB
+The \fBTRAYICON\fP keyword changes the icon \fIXWin\fP displays in the
+system tray area.
+
+.TP 8
+.B SILENTEXIT
+The \fBSILENTEXIT\fP keyword, which takes no parameters, disables the
+exit confirmation dialog.
 
 
 .SH Menu instructions
@@ -76,8 +86,8 @@ This instruction defines a menu and asigns a \fIMenu_Name\fP to it.
 .br
 The \fIItem_Label\fP is the string that is written in the menu item.
 .br
-\fICommand\fP is a string with the command that will be executed. Here
-paths should be \fICYGWIN\fP style (e.g. /usr/local/bin/myprogram).
+\fICommand\fP is a string with the command that will be executed by /bin/sh.
+Here paths should be \fICYGWIN\fP style (e.g. /usr/local/bin/myprogram).
 A string "%display%" appearing in the \fICommand\fP will be replaced
 with the proper display variable (i.e. 127.0.0.1:<display>.0).
 .br
@@ -108,23 +118,54 @@ Associates a specific menu to a specific WM_CLASS or WM_NAME.
 
 
 .SH Icon Instructions
+When specifying an \fIicon-file\fP in the following commands several different formats are allowed:
+.br
+\fB"NAME.ICO"\fP\fI of an .ico format file\fP
+.br
+\t \t ("cygwin.ico", "apple.ico")
+.br
+\fB"NAME.DLL,nn"\fP\fI of a .DLL and icon index\fP
+.br
+\t \t ("c:\\windows\\system32\\shell32.dll,4" is the default folder icon)
+.br
+\fB",nn"\fP\fI index into XWin.EXE internal ICON resources\fP
+.br
+\t \t (",101" is the 1st icon inside \fIXWin.EXE\fP)
 .TP 8
 .B ICONDIRECTORY \fIWindows-path-to-icon-directory\fP
-Defines the directory where the \fI.ico\fP files are located. It should
-be a \fIWindows\fP style path (e.g. C:\\cygwin\\usr\\local\\icons).
+Defines the default directory to search for \ficon-file\fP files.
+It should be a \fIWindows\fP style path (e.g. C:\\cygwin\\usr\\local\\icons).
 .TP 8
-.B DEFAULTICON \fIicon-file-name.ico\fP
+.B DEFAULTICON \fIicon-file\fP
 Defines a replacement for the standard X icon for applications without
 specified icons.
 .TP 8
 .B ICONS {
- \fIclass-or-name-of-window\fP \fIicon-file-name.ico\fP
+.br
+ \fIclass-or-name-of-window\fP \fIicon-file\fP
 .br
   \fI...\fP
 .br
   \fB}\fP
 .br
-Defines icon replacements for specific windows.
+Defines icon replacements windows matching the specified window class or names.
+If multiple name or class matches occur for a window, only the first one
+will be used.
+
+
+.SH EXAMPLE
+.TP 8
+This example adds an Xterm menu item to the system tray icon
+\fBMENU systray {
+.br
+\t xterm  EXEC "xterm -display %display% -sb -sl 999"
+.br
+\t SEPARATOR
+.br
+}
+.br
+ROOTMENU systray
+\fP
 
 
 .SH "SEE ALSO"

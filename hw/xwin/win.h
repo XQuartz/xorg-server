@@ -165,9 +165,6 @@
 #include "miline.h"
 #include "shadow.h"
 #include "fb.h"
-#ifdef XWIN_LAYER
-#include "layer.h"
-#endif
 #include "rootless.h"
 
 #ifdef RENDER
@@ -452,12 +449,6 @@ typedef struct _winPrivScreenRec
   DWORD			dwLastWindowsWidth;
   DWORD			dwLastWindowsHeight;
   DWORD			dwLastWindowsBitsPixel;
-
-  /* Layer support */
-#ifdef XWIN_LAYER
-  DWORD			dwLayerKind;
-  LayerPtr		pLayer;
-#endif
 
   /* Palette management */
   ColormapPtr		pcmapInstalled;
@@ -976,35 +967,6 @@ void
 winSendKeyEvent (DWORD dwKey, Bool fDown);
 
 
-#ifdef XWIN_LAYER
-/*
- * winlayer.c
- */
-
-LayerPtr
-winLayerCreate (ScreenPtr pScreen);
-
-int
-winLayerAdd (WindowPtr pWindow, pointer value);
-
-int
-winLayerRemove (WindowPtr pWindow, pointer value);
-
-# ifdef RANDR
-Bool
-winRandRGetInfo (ScreenPtr pScreen, Rotation *pRotations);
-
-Bool
-winRandRSetConfig (ScreenPtr		pScreen,
-		   Rotation		rotateKind,
-		   RRScreenSizePtr	pSize);
-
-Bool
-winRandRInit (ScreenPtr pScreen);
-# endif /* RANDR */
-#endif /* XWIN_LAYER */
-
-
 /*
  * winmisc.c
  */
@@ -1204,6 +1166,25 @@ void
 winPushPixels (GCPtr pGC, PixmapPtr pBitMap, DrawablePtr pDrawable,
 	       int dx, int dy, int xOrg, int yOrg);
 #endif
+
+
+#ifdef RANDR
+/*
+ * winrandr.c
+ */
+
+Bool
+winRandRGetInfo (ScreenPtr pScreen, Rotation *pRotations);
+
+Bool
+winRandRSetConfig (ScreenPtr		pScreen,
+		   Rotation		rotateKind,
+		   int			rate,
+		   RRScreenSizePtr	pSize);
+
+Bool
+winRandRInit (ScreenPtr pScreen);
+#endif /* RANDR */
 
 
 /*

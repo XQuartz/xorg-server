@@ -243,10 +243,6 @@ winFinishScreenInitFB (int index,
   char			*pbits = NULL;
   int			iReturn;
 
-#ifdef XWIN_LAYER
-  pScreenPriv->dwLayerKind = LAYER_SHADOW;
-#endif
-
   /* Create framebuffer */
   if (!(*pScreenPriv->pwinAllocateFB) (pScreen))
     {
@@ -369,44 +365,13 @@ winFinishScreenInitFB (int index,
     }
 #endif
 
-#ifdef XWIN_LAYER
-  /* KDrive does LayerStartInit right after fbPictureInit */
-  if (!LayerStartInit (pScreen))
-    {
-      ErrorF ("winFinishScreenInitFB - LayerStartInit () failed\n");
-      return FALSE;
-    }
-
-  /* Not sure what we're adding to shadow, but add it anyway */
-  if (!shadowAdd (pScreen, 0, pScreenPriv->pwinShadowUpdate, NULL, 0, 0))
-    {
-      ErrorF ("winFinishScreenInitFB - shadowAdd () failed\n");
-      return FALSE;
-    }
-
-  /* KDrive does LayerFinishInit right after LayerStartInit */
-  if (!LayerFinishInit (pScreen))
-    {
-      ErrorF ("winFinishScreenInitFB - LayerFinishInit () failed\n");
-      return FALSE;
-    }
-
-  /* KDrive does LayerCreate right after LayerFinishInit */
-  pScreenPriv->pLayer = winLayerCreate (pScreen);
-  if (!pScreenPriv->pLayer)
-    {
-      ErrorF ("winFinishScreenInitFB - winLayerCreate () failed\n");
-      return FALSE;
-    }
-  
-  /* KDrive does RandRInit right after LayerCreate */
 #ifdef RANDR
-  if (pScreenInfo->dwDepth != 8 && !winRandRInit (pScreen))
+  /* Initialize resize and rotate support */
+  if (!winRandRInit (pScreen))
     {
       ErrorF ("winFinishScreenInitFB - winRandRInit () failed\n");
       return FALSE;
     }
-#endif
 #endif
 
   /*
@@ -433,7 +398,6 @@ winFinishScreenInitFB (int index,
       return FALSE;
     }
 
-#ifndef XWIN_LAYER
   /* Initialize the shadow framebuffer layer */
   if ((pScreenInfo->dwEngine == WIN_SERVER_SHADOW_GDI
        || pScreenInfo->dwEngine == WIN_SERVER_SHADOW_DD
@@ -454,7 +418,6 @@ winFinishScreenInitFB (int index,
 	  return FALSE;
 	}
     }
-#endif
 
 #ifdef XWIN_MULTIWINDOWEXTWM
   /* Handle multi-window external window manager mode */

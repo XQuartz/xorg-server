@@ -475,7 +475,7 @@ winFinishScreenInitFB (int index,
       pScreen->CreateWindow = winCreateWindowRootless;
       pScreen->DestroyWindow = winDestroyWindowRootless;
       pScreen->PositionWindow = winPositionWindowRootless;
-      pScreen->ChangeWindowAttributes = winChangeWindowAttributesRootless;
+      /*pScreen->ChangeWindowAttributes = winChangeWindowAttributesRootless;*/
       pScreen->RealizeWindow = winMapWindowRootless;
       pScreen->UnrealizeWindow = winUnmapWindowRootless;
 #ifdef SHAPE
@@ -520,7 +520,7 @@ winFinishScreenInitFB (int index,
       pScreen->CreateWindow = winCreateWindowMultiWindow;
       pScreen->DestroyWindow = winDestroyWindowMultiWindow;
       pScreen->PositionWindow = winPositionWindowMultiWindow;
-      pScreen->ChangeWindowAttributes = winChangeWindowAttributesMultiWindow;
+      /*pScreen->ChangeWindowAttributes = winChangeWindowAttributesMultiWindow;*/
       pScreen->RealizeWindow = winMapWindowMultiWindow;
       pScreen->UnrealizeWindow = winUnmapWindowMultiWindow;
       pScreen->ReparentWindow = winReparentWindowMultiWindow;
@@ -685,7 +685,7 @@ winFinishScreenInitNativeGDI (int index,
   pScreen->CreateWindow = winCreateWindowNativeGDI;
   pScreen->DestroyWindow = winDestroyWindowNativeGDI;
   pScreen->PositionWindow = winPositionWindowNativeGDI;
-  pScreen->ChangeWindowAttributes = winChangeWindowAttributesNativeGDI;
+  /*pScreen->ChangeWindowAttributes = winChangeWindowAttributesNativeGDI;*/
   pScreen->RealizeWindow = winMapWindowNativeGDI;
   pScreen->UnrealizeWindow = winUnmapWindowNativeGDI;
 

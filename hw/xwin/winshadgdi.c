@@ -1177,6 +1177,8 @@ winSetEngineFunctionsShadowGDI (ScreenPtr pScreen)
     = (winCreatePrimarySurfaceProcPtr) (void (*)(void))NoopDDA;
   pScreenPriv->pwinReleasePrimarySurface
     = (winReleasePrimarySurfaceProcPtr) (void (*)(void))NoopDDA;
+  pScreenPriv->pwinFinishCreateWindowsWindow =
+    (winFinishCreateWindowsWindowProcPtr) (void (*)(void))NoopDDA;
 
   return TRUE;
 }

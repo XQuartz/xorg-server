@@ -309,7 +309,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
   if (keyboardType > 0 && GetKeyboardLayoutName (layoutName)) 
   {
     WinKBLayoutPtr	pLayout;
-    bool                bfound = false;
+    Bool                bfound = FALSE;
 
     if (! layoutNum)
       layoutNum = strtoul (layoutName, (char **)NULL, 16);
@@ -340,7 +340,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 	if (pLayout->winkbtype > 0 && pLayout->winkbtype != keyboardType)
 	  continue;
 	
-        bfound = true;
+        bfound = TRUE;
 	winMsg (X_PROBED,
 		"Using preset keyboard for \"%s\" (%x), type \"%d\"\n",
 		pLayout->layoutname, pLayout->winlayout, keyboardType);
@@ -363,7 +363,7 @@ winConfigKeyboard (DeviceIntPtr pDevice)
 
         regpath = alloca(sizeof(regtempl) + KL_NAMELENGTH + 1);
         strcpy(regpath, regtempl);
-        strcat(layoutName);
+        strcat(regpath, layoutName);
 
         if (!RegOpenKey(HKEY_LOCAL_MACHINE, regpath, &regkey) &&
           !RegQueryValueEx(regkey, "Layout Text", 0, NULL, lname, &namesize))

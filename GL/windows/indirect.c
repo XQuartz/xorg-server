@@ -162,6 +162,9 @@ static struct __GLdispatchStateRec* glWinDispatchExec(__GLcontext *gc);
 static void glWinBeginDispatchOverride(__GLcontext *gc);
 static void glWinEndDispatchOverride(__GLcontext *gc);
 
+/* Debug output */
+static void pfdOut(const PIXELFORMATDESCRIPTOR *pfd);
+
 static __GLexports glWinExports = {
     glWinDestroyContext,
     glWinLoseCurrent,
@@ -252,6 +255,32 @@ static void unattach(__GLcontext *gc)
 static void attach(__GLcontext *gc, __GLdrawablePrivate *glPriv)
 {
     GLWIN_DEBUG_MSG("attach %p\n", gc);
+    HDC dc;
+    PIXELFORMATDESCRIPTOR pfd;
+    BOOL ret;
+
+    ret = wglDeleteContext(gc->ctx);
+    if (!ret) {
+        ErrorF("wglDeleteContext error: %s\n", winErrorMessage());
+    }
+    
+    /* get the correct window handle */
+    gc->wnd = GetActiveWindow(); /* FIXME */
+
+    dc = GetDC(gc->wnd);
+    DescribePixelFormat(dc, gc->pixelFormat, 
+            sizeof(pfd), &pfd);
+    pfdOut(&pfd);
+    ret = SetPixelFormat(dc, gc->pixelFormat, &pfd);
+
+    gc->ctx = wglCreateContext(dc);
+
+    if (gc->ctx == NULL) {
+	ErrorF("wglCreateContext error: %s\n", winErrorMessage());
+        ReleaseDC(gc->wnd, dc);
+        return;
+    }
+    ReleaseDC(gc->wnd, dc);
 }
 
 static GLboolean glWinMakeCurrent(__GLcontext *gc)

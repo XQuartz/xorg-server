@@ -500,7 +500,7 @@ configureLayoutSection (void)
     int scrnum = 0;
     parsePrologue (XF86ConfLayoutPtr, XF86ConfLayoutRec)
 
-    ptr->lay_identifier = "XFree86 Configured";
+    ptr->lay_identifier = "X.org Configured";
 
     {
 	XF86ConfInputrefPtr iptr;

@@ -1785,7 +1785,7 @@ xf86PrintBanner()
 #if defined(BUILDERSTRING)
   ErrorF("%s \n",BUILDERSTRING);
 #endif
-  ErrorF("\tBefore reporting problems, check http://www.XFree86.Org/\n"
+  ErrorF("\tBefore reporting problems, check http://wiki.X.Org/\n"
 	 "\tto make sure that you have the latest version.\n");
 #ifdef XFree86LOADER
   ErrorF("Module Loader present\n");

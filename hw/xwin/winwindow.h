@@ -50,8 +50,12 @@
 #define WIN_WID_PROP		"cyg_wid_prop_rl"
 #define WIN_NEEDMANAGE_PROP	"cyg_override_redirect_prop_rl"
 #define WIN_HWND_CACHE		"cyg_privmap_rl"
+#ifndef CYGMULTIWINDOW_DEBUG
 #define CYGMULTIWINDOW_DEBUG    NO
+#endif
+#ifndef CYGWINDOWING_DEBUG
 #define CYGWINDOWING_DEBUG	NO
+#endif
 
 typedef struct _winPrivScreenRec *winPrivScreenPtr;
 

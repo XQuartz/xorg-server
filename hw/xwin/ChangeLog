@@ -1,3 +1,8 @@
+2004-05-27  Alexander Gottwald  <ago@freedesktop.org>
+
+	* win.h: Allow CYGDEBUG to defined in the Makefile
+	* winwindow.h: Allow CYGWINDOWING_DEBUG to defined in the Makefile
+
 2004-05-19  Alexander Gottwald  <ago@freedesktop.org>
 	
 	* winmultiwindowicons.c (winInitGlobalIcons): Load the small default

@@ -44,7 +44,9 @@
 #endif
 
 /* Turn debug messages on or off */
+#ifndef CYGDEBUG
 #define CYGDEBUG				NO
+#endif
 
 #define NEED_EVENTS
 

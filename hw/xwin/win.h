@@ -508,7 +508,7 @@ typedef struct _winPrivScreenRec
   /* Privates used by both multi-window and rootless */
   Bool			fRootWindowShown;
   Bool                  fRestacking;
-  Bool                  fWindowOrderChanged; /* Only for rootless */
+  Bool                  fWindowOrderChanged;
 
 #if defined(XWIN_CLIPBOARD) || defined(XWIN_MULTIWINDOW)
   /* Privates used for any module running in a seperate thread */

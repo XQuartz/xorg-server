@@ -620,7 +620,6 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 	break;
 
       winRestoreModeKeyStates ();
-      winReorderWindowsMultiWindow (s_pScreen);
       return 0;
       
     case WM_KILLFOCUS:
@@ -726,6 +725,9 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
 
       /* Pass the message to the root window */
       SendMessage (hwndScreen, message, wParam, lParam);
+
+      if (s_pScreenPriv != NULL)
+	s_pScreenPriv->fWindowOrderChanged = TRUE;
 
       if (LOWORD(wParam) != WA_INACTIVE)
 	{
@@ -888,6 +890,8 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       if (fWMMsgInitialized)
 	winSendMessageToWM (s_pScreenPriv->pWMInfo, &wmMsg);
 
+      if (s_pScreenPriv != NULL)
+	s_pScreenPriv->fWindowOrderChanged = TRUE;
       return 0;
 
     case WM_SIZING:
@@ -896,6 +900,16 @@ winTopLevelWindowProc (HWND hwnd, UINT message,
       return ValidateSizing (hwnd, pWin, wParam, lParam);
 
     case WM_WINDOWPOSCHANGED:
+      if (!( ((LPWINDOWPOS)lParam)->flags
+	     & SWP_NOZORDER ))
+	{
+#if CYGWINDOWING_DEBUG
+	  ErrorF ("winTopLevelWindowProc - WM_WINDOWPOSCHANGED: "
+		  "Z order is changed\n");
+#endif
+	  if (s_pScreenPriv != NULL)
+	    s_pScreenPriv->fWindowOrderChanged = TRUE;
+	}
       /*
        * Pass the message to DefWindowProc to let the function
        * break down WM_WINDOWPOSCHANGED to WM_MOVE and WM_SIZE.

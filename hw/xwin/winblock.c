@@ -88,6 +88,11 @@ winBlockHandler_ProcessMessages:
 	}
     }
 
+#ifdef XWIN_MULTIWINDOW
+  if (pScreenPriv->pScreenInfo->fMultiWindow)
+    winReorderWindowsMultiWindow ((ScreenPtr)pBlockData);
+#endif
+
 #ifdef XWIN_MULTIWINDOWEXTWM
   if (pScreenPriv->pScreenInfo->fMWExtWM)
     winMWExtWMReorderWindows ((ScreenPtr)pBlockData);

@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/dix/events.c,v 1.6.4.1.2.4 2004/12/23 23:50:21 deronj Exp $ */
+/* $XdotOrg: xc/programs/Xserver/dix/events.c,v 1.6.4.1.10.1 2005/01/10 03:45:03 deronj Exp $ */
 /* $XFree86: xc/programs/Xserver/dix/events.c,v 3.51 2004/01/12 17:04:52 tsi Exp $ */
 /************************************************************
 
@@ -1103,7 +1103,7 @@ lgeTryClientEvents (ClientPtr client, xEvent *pEvents, int count, Mask mask,
 	 int destination;
 
 	 destination = lgeDSCaresAboutEvent (pEvents, &win);
-	 
+       
 	 if (destination != SEND_TO_NORMAL_CLIENT && win == lgeGrabAllWindowEvents.window) {
 	     /* 
 	     ** Send events to grabbing client client. Use a null grab pointer 
@@ -1948,9 +1948,25 @@ MaybeDeliverEventsToClient(pWin, pEvents, count, filter, dontClient)
 
 #ifdef LG3D
 
+/*
+** Returns true if the event type is one which was generated
+** by an input device. These are the only types of events
+** which been sent to the Display Server so they are the only
+** types of events which have the event field already set.
+**
+** TODO: this macro does not yet support XINPUT devices.
+*/
+
+#define EVENT_IS_DEVICE_EVENT(e) \
+    ((e)->u.u.type == KeyPress      || \
+     (e)->u.u.type == KeyRelease    || \
+     (e)->u.u.type == ButtonPress   || \
+     (e)->u.u.type == ButtonRelease || \
+     (e)->u.u.type == MotionNotify)
+
 /* Returns True if the event occurred above a 3D object rather than a native window */
 #define EVENT_IS_3D(e) \
-    ((e)->u.keyButtonPointer.event == lgeDisplayServerPRW)
+    (EVENT_IS_DEVICE_EVENT(e) && (e)->u.keyButtonPointer.event == lgeDisplayServerPRW)
 
 /*
 TODO: it's not clear whether this routine deals with grabs properly.
@@ -2021,7 +2037,7 @@ lgeFixUpEventFromWindow(
     if (!EVENT_IS_3D(xE)) {
 	eventWindowOld = XE_KBPTR.event;
 	XE_KBPTR.event = pWin->drawable.id;
-	/*ErrorF("new event window = %d\n", XE_KBPTR.event);*/
+        /*ErrorF("new event window = %d\n", XE_KBPTR.event);*/
     }
 
     if (sprite.hot.pScreen != pWin->drawable.pScreen)
@@ -5207,7 +5223,7 @@ WriteEventsToClient(pClient, count, events)
 	if (print_events_all ||
 	    /* TODO: these indices are now out of date; update them */
 	    (print_events_to_ds && pClient->index == 4) ||
-	    (print_events_to_wm && pClient->index == 5) ||
+	    (print_events_to_wm && pClient->index == 9) ||
 	    (print_events_to_app && pClient->index == 6)) {
 	    xEvent *ev;
 

@@ -55,7 +55,6 @@ mach64ScreenInit (KdScreenInfo *screen)
 {
     Mach64CardInfo	*mach64c = screen->card->driver;
     Mach64ScreenInfo	*mach64s;
-    int			screen_size, memory;
 
     mach64s = (Mach64ScreenInfo *) xalloc (sizeof (Mach64ScreenInfo));
     if (!mach64s)
@@ -409,6 +408,7 @@ KdCardFuncs	mach64Funcs = {
     mach64CardInit,	    /* cardinit */
     mach64ScreenInit,	    /* scrinit */
     mach64InitScreen,	    /* initScreen */
+    mach64FinishInitScreen, /* finishInitScreen */
     mach64CreateResources,  /* createRes */
     mach64Preserve,	    /* preserve */
     mach64Enable,	    /* enable */
@@ -432,6 +432,4 @@ KdCardFuncs	mach64Funcs = {
     
     vesaGetColors,    	    /* getColors */
     vesaPutColors,	    /* putColors */
-
-    mach64FinishInitScreen, /* finishInitScreen */
 };

@@ -76,6 +76,7 @@ KdShadowSet (ScreenPtr pScreen, int randr, ShadowUpdateProc update, ShadowWindow
 	else
 	    shadowUnset (pScreen);
     }
+    return TRUE;
 }
 
 void

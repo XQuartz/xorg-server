@@ -33,6 +33,8 @@
 
 /* Need Bool */
 #include "Xdefs.h"
+/* Need TURE */
+#include "misc.h"
 
 /* Need to know how long paths can be... */
 #include <limits.h>
@@ -118,6 +120,9 @@ typedef struct WINPREFS
 
   ICONITEM *icon;
   int iconItems;
+
+  /* Silent exit flag */
+  Bool fSilentExit;
 
 } WINPREFS;
 

@@ -434,6 +434,8 @@ typedef struct _winPrivScreenRec
 
   int			iDeltaZ;
 
+  int			iConnectedClients;
+
   CloseScreenProcPtr	CloseScreen;
 
   DWORD			dwRedMask;

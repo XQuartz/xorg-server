@@ -80,7 +80,7 @@ extern int yylex(void);
 
 %token NEWLINE MENU LB RB ICONDIRECTORY DEFAULTICON ICONS DEFAULTSYSMENU
 %token SYSMENU ROOTMENU SEPARATOR ATSTART ATEND EXEC ALWAYSONTOP DEBUG
-%token RELOAD TRAYICON
+%token RELOAD TRAYICON SILENTEXIT
 
 %token <sVal> STRING
 %type <iVal>  atspot
@@ -109,6 +109,7 @@ command:	defaulticon
 	| defaultsysmenu
 	| debug
 	| trayicon
+	| silentexit
 	;
 
 trayicon:	TRAYICON STRING NEWLINE { SetTrayIcon($2); free($2); }
@@ -163,6 +164,9 @@ sysmenulist:	sysmenuline
 	;
 
 sysmenu:	SYSMENU LB NEWLINE {OpenSysMenu();} newline_or_nada sysmenulist RB {CloseSysMenu();}
+	;
+
+silentexit:	SILENTEXIT NEWLINE { pref.fSilentExit = TRUE; }
 	;
 
 debug: 	DEBUG STRING NEWLINE { ErrorF("LoadPreferences: %s\n", $2); free($2); }

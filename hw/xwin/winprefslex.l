@@ -81,6 +81,7 @@ ALWAYSONTOP             { return ALWAYSONTOP; }
 DEBUG                   { return DEBUG; }
 RELOAD                  { return RELOAD; }
 TRAYICON                { return TRAYICON; }
+SILENTEXIT		{ return SILENTEXIT; }
 "{"                     { return LB; }
 "}"                     { return RB; }
 "\""[^\"\r\n]+"\""      { yylval.sVal = makestr(yytext+1); \

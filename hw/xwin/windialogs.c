@@ -32,6 +32,7 @@
 #include "win.h"
 #include <sys/cygwin.h>
 #include <shellapi.h>
+#include "winprefs.h"
 
 
 /*
@@ -42,6 +43,8 @@ extern Bool			g_fCursor;
 extern HWND			g_hDlgDepthChange;
 extern HWND			g_hDlgExit;
 extern HWND			g_hDlgAbout;
+extern WINPREFS			pref;
+extern Bool			g_fClipboardStarted;
 
 
 /*
@@ -203,6 +206,33 @@ winCenterDialog (HWND hwndDlg)
 void
 winDisplayExitDialog (winPrivScreenPtr pScreenPriv)
 {
+  int i;
+  int liveClients = 0;
+
+  /* Count up running clinets (clients[0] is serverClient) */
+  for (i = 1; i < currentMaxClients; i++)
+    if (clients[i] != NullClient)	
+      liveClients++;
+  /* Count down server internal clients */
+  if (pScreenPriv->pScreenInfo->fMultiWindow)
+    liveClients -= 2; /* multiwindow window manager & XMsgProc  */
+  if (g_fClipboardStarted)
+    liveClients--; /* clipboard manager */
+
+  /* Don't show the exit confirmation dialog if SilentExit is enabled */
+  if (pref.fSilentExit && liveClients <= 0)
+    {
+      if (g_hDlgExit != NULL)
+	{
+	  DestroyWindow (g_hDlgExit);
+	  g_hDlgExit = NULL;
+	}
+      PostMessage (pScreenPriv->hwndScreen, WM_GIVEUP, 0, 0);
+      return;
+    }
+
+  pScreenPriv->iConnectedClients = liveClients;
+  
   /* Check if dialog already exists */
   if (g_hDlgExit != NULL)
     {
@@ -254,8 +284,6 @@ winExitDlgProc (HWND hDialog, UINT message,
 		WPARAM wParam, LPARAM lParam)
 {
   static winPrivScreenPtr	s_pScreenPriv = NULL;
-  static winScreenInfo		*s_pScreenInfo = NULL;
-  static ScreenPtr		s_pScreen = NULL;
 
   /* Branch on message type */
   switch (message)
@@ -264,12 +292,9 @@ winExitDlgProc (HWND hDialog, UINT message,
       {
 	char			*pszConnectedClients;
 	int			iReturn;
-	int			iConnectedClients = 100;
 
 	/* Store pointers to private structures for future use */
 	s_pScreenPriv = (winPrivScreenPtr) lParam;
-	s_pScreenInfo = s_pScreenPriv->pScreenInfo;
-	s_pScreen = s_pScreenInfo->pScreen;
 	
 	winCenterDialog (hDialog);
 	
@@ -282,14 +307,14 @@ winExitDlgProc (HWND hDialog, UINT message,
 
 	/* Format the connected clients string */
 	iReturn = sprintf (NULL, CONNECTED_CLIENTS_FORMAT,
-			   iConnectedClients);
+			   s_pScreenPriv->iConnectedClients);
 	if (iReturn <= 0)
 	  return TRUE;
 	pszConnectedClients = malloc (iReturn + 1);
 	if (!pszConnectedClients)
 	  return TRUE;
 	snprintf (pszConnectedClients, iReturn + 1, CONNECTED_CLIENTS_FORMAT,
-		  iConnectedClients);
+		  s_pScreenPriv->iConnectedClients);
 	
 	/* Set the number of connected clients */
 	SetWindowText (GetDlgItem (hDialog, IDC_CLIENTS_CONNECTED),

@@ -70,6 +70,8 @@
 # In the case where multiple matches occur, the first listed in the ICONS
 # section will be chosen.
 
+# To disable exit confirmation dialog add the line containing SilentExit
+
 # DEBUG <string> prints out the string to the XWin.log file
 
 // Below are just some silly menus to demonstrate writing your
@@ -116,6 +118,8 @@ SysMenu {
 # Icons {
 # 	"xterm"	"uninstall.ico"
 # }
+
+# SilentExit
 
 DEBUG "Done parsing the configuration file..."
 

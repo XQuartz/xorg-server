@@ -1123,8 +1123,10 @@ ProcRenderAddGlyphs (ClientPtr client)
 	goto bail;
     }
     glyphs = glyphsBase;
-    while (nglyphs--)
+    while (nglyphs--) {
 	AddGlyph (glyphSet, glyphs->glyph, glyphs->id);
+	glyphs++;
+    }
 
     if (glyphsBase != glyphsLocal)
 	DEALLOCATE_LOCAL (glyphsBase);

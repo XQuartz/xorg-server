@@ -168,7 +168,7 @@ int userdefinedfontpath = 0;
 
 char *dev_tty_from_init = NULL;		/* since we need to parse it anyway */
 
-extern int dispatchExceptionAtReset;
+extern char dispatchExceptionAtReset;
 
 OsSigHandlerPtr
 OsSignal(sig, handler)

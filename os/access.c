@@ -1,5 +1,5 @@
 /* $Xorg: access.c,v 1.5 2001/02/09 02:05:23 xorgcvs Exp $ */
-/* $XdotOrg: xc/programs/Xserver/os/access.c,v 1.1.4.2.2.4 2004/03/18 12:00:24 ago Exp $ */
+/* $XdotOrg$ */
 /***********************************************************
 
 Copyright 1987, 1998  The Open Group

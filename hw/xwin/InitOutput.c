@@ -85,6 +85,7 @@ void OsVendorReset (void);
 #endif
 
 void winInitializeDefaultScreens (void);
+static Bool winCheckDisplayNumber (void);
 
 
 /*
@@ -211,6 +212,13 @@ AbortDDX (void)
 void
 OsVendorInit (void)
 {
+
+  if (serverGeneration == 1 && !winCheckDisplayNumber ())
+    {
+      FatalError ("Duplicate invocation of Cygwin/X");
+      return;
+    }
+  
   /* Re-initialize global variables on server reset */
   winInitializeGlobals ();
 
@@ -492,4 +500,70 @@ InitOutput (ScreenInfo *screenInfo, int argc, char *argv[])
 #if CYGDEBUG || YES
   winErrorFVerb (2, "InitOutput - Returning.\n");
 #endif
+}
+
+/*
+ * winCheckDisplayNumber - Check if another instance of Cygwin/X is
+ * already running on the same display number.  If no one exists,
+ * make a mutex to prevent new instances from running on the same display.
+ *
+ * return FALSE if the display number is already used.
+ */
+
+static Bool
+winCheckDisplayNumber ()
+{
+  int disp;
+  HANDLE mutex;
+  char name[MAX_PATH]; /* can be shorter */
+  int n;
+
+  disp = atoi (display);
+  if (disp < 0 || disp > 65535)
+    {
+      ErrorF ("winCheckDisplayNumber - Bad display number: %d\n", disp);
+      return FALSE;
+    }
+  n = snprintf (name, sizeof(name), "Cygwin/X server mutex on disp. %d", disp);
+  if (n >= sizeof(name))
+    {
+      ErrorF ("winCheckDisplayNumber - Mutex name overflows\n");
+      return FALSE;
+    }
+  else if (n < 0)
+    {
+      Error ("winCheckDisplayNumber");
+      return FALSE;
+    }
+
+  /* Windows automatically releases the mutex when this process exits */
+  mutex = CreateMutex (NULL, FALSE, name);
+  if (!mutex)
+    {
+      LPVOID lpMsgBuf;
+	  
+      /* Display a fancy error message */
+      FormatMessage (FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		     FORMAT_MESSAGE_FROM_SYSTEM | 
+		     FORMAT_MESSAGE_IGNORE_INSERTS,
+		     NULL,
+		     GetLastError (),
+		     MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		     (LPTSTR) &lpMsgBuf,
+		     0, NULL);
+      ErrorF ("winCheckDisplayNumber - CreateMutex failed: %s\n",
+	      (LPSTR)lpMsgBuf);
+      LocalFree (lpMsgBuf);
+
+      return FALSE;
+    }
+  if (GetLastError () == ERROR_ALREADY_EXISTS)
+    {
+      ErrorF ("winCheckDisplayNumber - "
+	      "Cygwin/X is already running on display %d\n",
+	      disp);
+      return FALSE;
+    }
+
+  return TRUE;
 }

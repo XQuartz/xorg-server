@@ -47,11 +47,6 @@
 
 #define BRIGHTNESS(x) (x##Red * 0.299 + x##Green * 0.587 + x##Blue * 0.114)
 
-#define RGB_TO_16(x) \
-	((((x##Blue>>10)&0x1f)<<10) | \
-	(((x##Red>>10)&0x1f)<<5) | \
-	(((x##Green>>10)&0x1f)<<0))
-
 #if 1
 # define WIN_DEBUG_MSG winDebug
 #else
@@ -371,6 +366,22 @@ winLoadCursor (ScreenPtr pScreen, CursorPtr pCursor, int screen)
 	  ii.hbmMask = hAnd;
 	  ii.hbmColor = hXor;
 	  hCursor = (HCURSOR) CreateIconIndirect( &ii );
+
+	  GetIconInfo(hCursor, &ii);
+	  if (ii.fIcon)
+	    {
+	      HCURSOR hCursor2;  
+	      WIN_DEBUG_MSG("winLoadCursor: CreateIconIndirect returned no "
+			"cursor. Trying again.\n");
+
+	      ii.fIcon = FALSE;
+	      ii.xHotspot = pCursor->bits->xhot;
+	      ii.yHotspot = pCursor->bits->yhot;
+	      hCursor2 = (HCURSOR) CreateIconIndirect( &ii );
+
+	      DestroyIcon(hCursor);
+	      hCursor = hCursor2;
+	    }
 	}
 
       if (hAnd)

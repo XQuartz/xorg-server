@@ -1,5 +1,10 @@
 2005-04-20  Alexander Gottwald  <ago at freedesktop dot org>
 
+	* winshaddnl.c:
+	Print error code if winStoreColorsShadowDDNL fails
+
+2005-04-20  Alexander Gottwald  <ago at freedesktop dot org>
+
 	* winlayouts.h:
 	Removed layout "Français (Canada)" because it does not appear to 
 	match XKB layout "ca" and no user provided me with sufficient 

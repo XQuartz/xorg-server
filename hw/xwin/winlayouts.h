@@ -41,6 +41,7 @@ typedef struct
 WinKBLayoutRec winKBLayouts[] = 
 {
     {  0x405, -1, "pc105", "cz",      NULL, NULL, "Czech"},
+    {0x10405, -1, "pc105", "cz_qwerty", NULL, NULL, "Czech (QWERTY)"},
     {  0x406, -1, "pc105", "dk",      NULL, NULL, "Danish"},
     {  0x407, -1, "pc105", "de",      NULL, NULL, "German (Germany)"},
     {0x10407, -1, "pc105", "de",      NULL, NULL, "German (Germany, IBM)"},
@@ -99,7 +100,7 @@ Support ID       XKB        Language
         0x1004              Chinese (Singapore)
         0x1404              Chinese (Macao SAR) (98/ME,2K/XP)
    X    0x0405  cz          Czech
-                            Czech (QWERTY)
+   X            cz_qwerty   Czech (QWERTY)
                             Czech (Programmers)
    X    0x0406  dk          Danish
    X    0x0407  de          German (Standard)

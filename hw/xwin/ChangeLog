@@ -1,3 +1,8 @@
+2005-05-24  Alexander Gottwald  <ago at freedesktop dot org>
+
+	* winlayouts.h:
+	Added Czech (QWERTY) layout
+
 2005-04-20  Alexander Gottwald  <ago at freedesktop dot org>
 
 	* winshaddnl.c:

@@ -55,6 +55,7 @@ WinKBLayoutRec winKBLayouts[] =
     {  0x40b, -1, "pc105", "fi",      NULL, NULL, "Finnish"},
     {  0x40c, -1, "pc105", "fr",      NULL, NULL, "French (Standard)"},
     {  0x80c, -1, "pc105", "be",      NULL, NULL, "French (Belgian)"},
+    {  0xc0c, -1, "pc105", "ca_enhanced", NULL, NULL, "French (Canada)"},
     { 0x100c, -1, "pc105", "fr_CH",   NULL, NULL, "French (Switzerland)"},
     {  0x40e, -1, "pc105", "hu",      NULL, NULL, "Hungarian"},
     {  0x410, -1, "pc105", "it",      NULL, NULL, "Italian"},

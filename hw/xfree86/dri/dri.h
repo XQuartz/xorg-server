@@ -37,7 +37,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef _DRI_H_
 
 #include "scrnintstr.h"
-#include "xf86dri.h"
+#include "drm.h"
 
 typedef int DRISyncType;
 
@@ -305,6 +305,9 @@ extern void DRIPrintDrawableLock(ScreenPtr pScreen, char *msg);
 extern void DRILock(ScreenPtr pScreen, int flags);
 
 extern void DRIUnlock(ScreenPtr pScreen);
+
+typedef void (*DRICallback)(void *);
+extern void DRIUnlockedCallback(DRICallback callback, void *data, int flags);
 
 extern DRIWrappedFuncsRec *DRIGetWrappedFuncs(ScreenPtr pScreen);
 

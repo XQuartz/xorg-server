@@ -1,3 +1,36 @@
+2006-01-17  Kristian Høgsberg  <krh@redhat.com>
+
+	* GL/Makefile.am:
+	* GL/glx/Makefile.am:
+	* GL/glx/glxcmds.c: (DoCreateContext), (DoMakeCurrent),
+	(__glXCopyContext), (__glXSwapBuffers):
+	* GL/glx/glxcontext.h:
+	* GL/glx/glxdrawable.h:
+	* GL/glx/glxext.c: (ResetExtension), (ContextGone),
+	(__glXFreeContext), (GlxExtensionInit), (__glXCoreType),
+	(__glXForceCurrent), (__glXCallDispatch), (__glXDispatch):
+	* GL/glx/glxscreens.c: (DrawableGone), (__glXScreenInit):
+	* GL/glx/glxscreens.h:
+	* GL/glx/glxserver.h:
+	* GL/glx/glxutil.c: (__glXCreateDrawablePrivate),
+	(__glXDestroyDrawablePrivate), (__glXGetDrawablePrivate):
+	* configure.ac: Implement accelerated indirect rendering by
+	loading DRI drivers directly.
+	
+	* hw/xfree86/dixmods/Makefile.am:
+	* hw/xfree86/dixmods/glxmodule.c: Drop GLcore dependency from glx
+	module.
+	
+	* hw/xfree86/dri/dri.c:
+	* hw/xfree86/dri/dri.h: Work around double destroy case and add
+	DRIUnlockedCallback() function.
+
+	* GL/glx/glxloader.c:
+	* GL/glx/glxloader.h:
+	* GL/glx/glxvisuals.c:
+	* GL/glx/glxvisuals.h: New files, lots of code coming from
+	GL/mesa/X/xf86glx.c and the libGL loader code.
+
 Thu Jan 12 17:09:18 2006  Søren Sandmann  <sandmann@redhat.com>
 
 	* include/window.[ch]: Add new functions to enable and disable

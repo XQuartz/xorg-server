@@ -48,8 +48,10 @@
 #include <windowstr.h>
 
 #include "glxserver.h"
+#include "glxvisuals.h"
 #include "glxutil.h"
 #include "glxext.h"
+#include "glxloader.h"
 
 const char GLServerVersion[] = "1.2";
 static const char GLServerExtensions[] = 
@@ -142,18 +144,6 @@ static char GLXServerExtensions[] =
 			"GLX_SGIX_fbconfig "
 			;
 
-/*
- * __glDDXScreenInfo comes from GLcore, so we can't resolve this symbol at
- * module open time.  Leave a placeholder, and fill this in when we first
- * need it (in __glXScreenInit).  XXX Why make this an array?
- */
-static __GLXscreenInfo *__glXScreens[] = {
-    NULL /* &__glDDXScreenInfo */ ,
-};
-
-static GLint __glXNumStaticScreens =
-	(sizeof __glXScreens / sizeof __glXScreens[0]);
-
 __GLXscreenInfo *__glXActiveScreens;
 GLint __glXNumActiveScreens;
 
@@ -175,108 +165,9 @@ __GLXscreenInfo *__glXgetActiveScreen(int num) {
 */
 static Bool DrawableGone(__GLXdrawablePrivate *glxPriv, XID xid)
 {
-    __GLXcontext *cx, *cx1;
-
-    /*
-    ** Use glxPriv->type to figure out what kind of drawable this is. Don't
-    ** use glxPriv->pDraw->type because by the time this routine is called,
-    ** the pDraw might already have been freed.
-    */
-    if (glxPriv->type == DRAWABLE_WINDOW) {
-	/*
-	** When a window is destroyed, notify all context bound to 
-	** it, that there are no longer bound to anything.
-	*/
-	for (cx = glxPriv->drawGlxc; cx; cx = cx1) {
-	    cx1 = cx->nextDrawPriv;
-	    cx->pendingState |= __GLX_PENDING_DESTROY;
-	}
-
-	for (cx = glxPriv->readGlxc; cx; cx = cx1) {
-	    cx1 = cx->nextReadPriv;
-	    cx->pendingState |= __GLX_PENDING_DESTROY;
-	}
-    }
-
-    /*
-    ** set the size to 0, so that context that may still be using this 
-    ** drawable not do anything harmful
-    */
-    glxPriv->xorigin = 0;
-    glxPriv->yorigin = 0;
-    glxPriv->width = 0;
-    glxPriv->height = 0;
-
     __glXUnrefDrawablePrivate(glxPriv);
 
     return True;
-}
-
-/*
-** This hook gets called when a window moves or changes size.
-*/
-static Bool PositionWindow(WindowPtr pWin, int x, int y)
-{
-    ScreenPtr pScreen;
-    __GLXcontext *glxc;
-    __GLXdrawablePrivate *glxPriv;
-    Bool ret;
-
-    /*
-    ** Call wrapped position window routine
-    */
-    pScreen = pWin->drawable.pScreen;
-    pScreen->PositionWindow =
-	__glXActiveScreens[pScreen->myNum].WrappedPositionWindow;
-    ret = (*pScreen->PositionWindow)(pWin, x, y);
-    pScreen->PositionWindow = PositionWindow;
-
-    /*
-    ** Tell all contexts rendering into this window that the window size
-    ** has changed.
-    */
-    glxPriv = (__GLXdrawablePrivate *) LookupIDByType(pWin->drawable.id,
-						      __glXDrawableRes);
-    if (glxPriv == NULL) {
-	/*
-	** This window is not being used by the OpenGL.
-	*/
-	return ret;
-    }
-
-    /*
-    ** resize the drawable
-    */
-    /* first change the drawable size */
-    if (__glXResizeDrawableBuffers(glxPriv) == GL_FALSE) {
-	/* resize failed! */
-	/* XXX: what can we possibly do here? */
-	ret = False;
-    }
-
-    /* mark contexts as needing resize */
-
-    for (glxc = glxPriv->drawGlxc; glxc; glxc = glxc->nextDrawPriv) {
-	glxc->pendingState |= __GLX_PENDING_RESIZE;
-    }
-
-    for (glxc = glxPriv->readGlxc; glxc; glxc = glxc->nextReadPriv) {
-	glxc->pendingState |= __GLX_PENDING_RESIZE;
-    }
-
-    return ret;
-}
-
-/*
-** Wrap our own PositionWindow routine around the server's, so we can
-** be notified when a window changes size
-*/
-static void wrapPositionWindow(int screen)
-{
-    ScreenPtr pScreen = screenInfo.screens[screen];
-
-    __glXActiveScreens[screen].WrappedPositionWindow = pScreen->PositionWindow;
-    pScreen->PositionWindow = PositionWindow;
 }
 
 /*
@@ -324,9 +215,7 @@ void __glXSwapBarrierInit(int screen, __GLXSwapBarrierExtensionFuncs *funcs)
 
 void __glXScreenInit(GLint numscreens)
 {
-    GLint i,j;
-
-    __glXScreens[0] = __glXglDDXScreenInfo(); /* from GLcore */
+    GLint i;
 
     /*
     ** This alloc has to work or else the server might as well core dump.
@@ -334,24 +223,16 @@ void __glXScreenInit(GLint numscreens)
     __glXActiveScreens =
       (__GLXscreenInfo *) __glXMalloc(sizeof(__GLXscreenInfo) * numscreens);
     
-    for (i=0; i < numscreens; i++) {
-	/*
-	** Probe each static screen to see which exists.
-	*/
-	for (j=0; j < __glXNumStaticScreens; j++) {
-	    if ((*__glXScreens[j]->screenProbe)(i)) {
-		__glXActiveScreens[i] = *__glXScreens[j];
+    for (i = 0; i < numscreens; i++) {
+	__glXVisualsInitScreen(&__glXActiveScreens[i], i);
+	__glXActiveScreens[i].GLextensions = __glXStrdup(GLServerExtensions);
+	__glXActiveScreens[i].GLXvendor = __glXStrdup(GLXServerVendorName);
+	__glXActiveScreens[i].GLXversion = __glXStrdup(GLXServerVersion);
+	__glXActiveScreens[i].GLXextensions = __glXStrdup(GLXServerExtensions);
 
-		__glXActiveScreens[i].numUsableVisuals = __glXActiveScreens[i].numVisuals;
-		__glXActiveScreens[i].GLextensions = __glXStrdup(GLServerExtensions);
-		__glXActiveScreens[i].GLXvendor = __glXStrdup(GLXServerVendorName);
-		__glXActiveScreens[i].GLXversion = __glXStrdup(GLXServerVersion);
-		__glXActiveScreens[i].GLXextensions = __glXStrdup(GLXServerExtensions);
+	__glXDrawableRes = CreateNewResourceType((DeleteType)DrawableGone);
 
-		__glXDrawableRes = CreateNewResourceType((DeleteType)DrawableGone);
-		wrapPositionWindow(i);
-	    }
-	}
+	__glXLoaderInitScreen(i);
     }
     __glXNumActiveScreens = numscreens;
 }

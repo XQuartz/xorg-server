@@ -33,18 +33,20 @@
 #include "glxext.h"
 #include "micmap.h"
 
+#include "glapi.h"
+#include "glthread.h"
+#include "dispatch.h"
 
-void GlxWrapInitVisuals(miInitVisualsProcPtr *);
-void GlxSetVisualConfigs(int nconfigs, 
-                         __GLXvisualConfig *configs, void **privates);
+#include "xf86.h"
+#include "dri.h"
 
-static __GLXextensionInfo *__glXExt /* = &__glDDXExtensionInfo */;
 
 /*
 ** Forward declarations.
 */
-static int __glXSwapDispatch(ClientPtr);
 static int __glXDispatch(ClientPtr);
+
+void __glXVisualsReset(void);
 
 /*
 ** Called when the extension is reset.
@@ -52,7 +54,7 @@ static int __glXDispatch(ClientPtr);
 static void ResetExtension(ExtensionEntry* extEntry)
 {
     __glXFlushContextCache();
-    (*__glXExt->resetExtension)();
+    __glXVisualsReset();
     __glXScreenReset();
 }
 
@@ -98,7 +100,11 @@ static int ContextGone(__GLXcontext* cx, XID id)
 {
     cx->idExists = GL_FALSE;
     if (!cx->isCurrent) {
-	__glXFreeContext(cx);
+	/* This is called from CloseDownCLient() in dix, not through
+	 * __glXDispatch, so we'll have to lift the DRM lock manually
+	 * to avoid deadlocks for cards that grab the lock during
+	 * context destruction. */
+	DRIUnlockedCallback(__glXFreeContext, cx, 0);
     }
 
     return True;
@@ -166,9 +172,8 @@ GLboolean __glXFreeContext(__GLXcontext *cx)
     if (cx->idExists || cx->isCurrent) return GL_FALSE;
     
     if (!cx->isDirect) {
-	if ((*cx->gc->exports.destroyContext)((__GLcontext *)cx->gc) == GL_FALSE) {
-	    return GL_FALSE;
-	}
+	(*cx->driContext.destroyContext)(NULL, cx->screen,
+					 cx->driContext.private);
     }
     if (cx->feedbackBuf) __glXFree(cx->feedbackBuf);
     if (cx->selectBuf) __glXFree(cx->selectBuf);
@@ -232,6 +237,7 @@ GLboolean __glXErrorOccured(void)
 /*
 ** Initialize the GLX extension.
 */
+
 void GlxExtensionInit(void)
 {
     ExtensionEntry *extEntry;
@@ -246,7 +252,7 @@ void GlxExtensionInit(void)
     */
     extEntry = AddExtension(GLX_EXTENSION_NAME, __GLX_NUMBER_EVENTS,
 			    __GLX_NUMBER_ERRORS, __glXDispatch,
-			    __glXSwapDispatch, ResetExtension,
+			    __glXDispatch, ResetExtension,
 			    StandardMinorOpcode);
     if (!extEntry) {
 	FatalError("__glXExtensionInit: AddExtensions failed\n");
@@ -287,46 +293,8 @@ void GlxExtensionInit(void)
 
 Bool __glXCoreType(void)
 {
-    return __glXExt->type;
-}
-
-/************************************************************************/
-
-void GlxSetVisualConfigs(int nconfigs, 
-                         __GLXvisualConfig *configs, void **privates)
-{
-    (*__glXExt->setVisualConfigs)(nconfigs, configs, privates);
-}
-
-static miInitVisualsProcPtr saveInitVisualsProc;
-
-Bool GlxInitVisuals(VisualPtr *visualp, DepthPtr *depthp,
-		    int *nvisualp, int *ndepthp,
-		    int *rootDepthp, VisualID *defaultVisp,
-		    unsigned long sizes, int bitsPerRGB,
-		    int preferredVis)
-{
-    Bool ret;
-
-    if (saveInitVisualsProc) {
-        ret = saveInitVisualsProc(visualp, depthp, nvisualp, ndepthp,
-                                  rootDepthp, defaultVisp, sizes, bitsPerRGB,
-                                  preferredVis);
-        if (!ret)
-            return False;
-    }
-    (*__glXExt->initVisuals)(visualp, depthp, nvisualp, ndepthp, rootDepthp,
-                             defaultVisp, sizes, bitsPerRGB);
-    return True;
-}
-
-void
-GlxWrapInitVisuals(miInitVisualsProcPtr *initVisProc)
-{
-    saveInitVisualsProc = *initVisProc;
-    *initVisProc = GlxInitVisuals;
-    /* HACK: this shouldn't be done here but it's the earliest time */
-    __glXExt = __glXglDDXExtensionInfo();       /* from GLcore */
+    /* This can't be right... what is this used for anyway? */
+    return GL_CORE_MESA;
 }
 
 /************************************************************************/
@@ -375,20 +343,43 @@ __GLXcontext *__glXForceCurrent(__GLXclientState *cl, GLXContextTag tag,
 	return cx;
     }
 
+    /* FIXME: A better solution would be to expose the forceCurrent
+     * from the underlying __GLcontext in the DRIcontext.  According
+     * to idr, this is much faster for this purpose. */
     /* Make this context the current one for the GL. */
+
     if (!cx->isDirect) {
-	if (!(*cx->gc->exports.forceCurrent)((__GLcontext *)cx->gc)) {
+	if (!(*cx->driContext.bindContext)(NULL, cx->drawPriv->pDraw->pScreen->myNum,
+					   cx->drawPriv->drawId,
+					   cx->readPriv->drawId,
+					   &cx->driContext)) {
 	    /* Bind failed, and set the error code.  Bummer */
 	    cl->client->errorValue = cx->id;
 	    *error = __glXBadContextState;
 	    return 0;
     	}
     }
+
     __glXLastContext = cx;
     return cx;
 }
 
 /************************************************************************/
+
+typedef struct {
+    int (*proc)(__GLXclientState *cl, GLbyte *pc);
+    __GLXclientState *clientState;
+    GLbyte *stuff;
+    int retval;
+} __GLXdispatchData;
+
+static void __glXCallDispatch(void *data)
+{
+    __GLXdispatchData *dispatchData = data;
+
+    dispatchData->retval = 
+	(*dispatchData->proc)(dispatchData->clientState, dispatchData->stuff);
+}
 
 /*
 ** Top level dispatcher; all commands are executed from here down.
@@ -397,8 +388,8 @@ static int __glXDispatch(ClientPtr client)
 {
     REQUEST(xGLXSingleReq);
     CARD8 opcode;
-    int (*proc)(__GLXclientState *cl, GLbyte *pc);
     __GLXclientState *cl;
+    __GLXdispatchData dispatchData;
 
     opcode = stuff->glxCode;
     cl = __glXClients[client->index];
@@ -443,54 +434,16 @@ static int __glXDispatch(ClientPtr client)
     /*
     ** Use the opcode to index into the procedure table.
     */
-    proc = __glXSingleTable[opcode];
-    return (*proc)(cl, (GLbyte *) stuff);
-}
+    if (client->swapped)
+	dispatchData.proc = __glXSwapSingleTable[opcode];
+    else
+	dispatchData.proc = __glXSingleTable[opcode];
+    dispatchData.clientState = cl;
+    dispatchData.stuff = (GLbyte *) stuff;
 
-static int __glXSwapDispatch(ClientPtr client)
-{
-    REQUEST(xGLXSingleReq);
-    CARD8 opcode;
-    int (*proc)(__GLXclientState *cl, GLbyte *pc);
-    __GLXclientState *cl;
+    DRIUnlockedCallback(__glXCallDispatch, &dispatchData, 0);
 
-    opcode = stuff->glxCode;
-    cl = __glXClients[client->index];
-    if (!cl) {
-	cl = (__GLXclientState *) __glXMalloc(sizeof(__GLXclientState));
-	 __glXClients[client->index] = cl;
-	if (!cl) {
-	    return BadAlloc;
-	}
-	__glXMemset(cl, 0, sizeof(__GLXclientState));
-    }
-    
-    if (!cl->inUse) {
-	/*
-	** This is first request from this client.  Associate a resource
-	** with the client so we will be notified when the client dies.
-	*/
-	XID xid = FakeClientID(client->index);
-	if (!AddResource( xid, __glXClientRes, (pointer)(long)client->index)) {
-	    return BadAlloc;
-	}
-	ResetClientState(client->index);
-	cl->inUse = GL_TRUE;
-	cl->client = client;
-    }
-
-    /*
-    ** Check for valid opcode.
-    */
-    if (opcode >= __GLX_SINGLE_TABLE_SIZE) {
-	return BadRequest;
-    }
-
-    /*
-    ** Use the opcode to index into the procedure table.
-    */
-    proc = __glXSwapSingleTable[opcode];
-    return (*proc)(cl, (GLbyte *) stuff);
+    return dispatchData.retval;
 }
 
 int __glXNoSuchSingleOpcode(__GLXclientState *cl, GLbyte *pc)

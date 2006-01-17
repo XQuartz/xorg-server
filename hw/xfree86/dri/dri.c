@@ -43,6 +43,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "xf86_ansic.h"
 #else
 #include <sys/time.h>
+#include <sys/types.h>
 #include <unistd.h>
 #endif
 
@@ -1057,6 +1058,11 @@ DRIDestroyDrawable(ScreenPtr pScreen, Drawable id, DrawablePtr pDrawable)
     if (pDrawable->type == DRAWABLE_WINDOW) {
 	pWin = (WindowPtr)pDrawable;
 	pDRIDrawablePriv = DRI_DRAWABLE_PRIV_FROM_WINDOW(pWin);
+	/* Workaround to handle the case where both the DRI resource
+	 * cleanup and the glx resource clean up calls this
+	 * function. */
+	if (pDRIDrawablePriv == NULL)
+	    return TRUE;
 	pDRIDrawablePriv->refCount--;
 	if (pDRIDrawablePriv->refCount <= 0) {
 	    /* This calls back DRIDrawablePrivDelete which frees private area */
@@ -1903,6 +1909,53 @@ DRIUnlock(ScreenPtr pScreen)
     }
     if (!pDRIPriv->lockRefCount)
         DRM_UNLOCK(pDRIPriv->drmFD, pDRIPriv->pSAREA, pDRIPriv->myContext);
+}
+
+void
+DRIUnlockedCallback(DRICallback callback, void *data, int flags)
+{
+    int blocked;
+    int i;
+
+    blocked = xf86BlockSIGIO();
+
+    for (i = 0; i < screenInfo.numScreens; i++) {
+	ScreenPtr        pScreen  = screenInfo.screens[i];
+	DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
+
+	if (pDRIPriv->pDriverInfo->driverSwapMethod == DRI_HIDE_X_CONTEXT) {
+	    /* hide X context by swapping 2D component here */
+	    (*pDRIPriv->pDriverInfo->SwapContext)(pScreen,
+						  DRI_2D_SYNC,
+						  DRI_NO_CONTEXT,
+						  NULL,
+						  DRI_2D_CONTEXT,
+						  pDRIPriv->partial3DContextStore);
+	}
+
+	DRIUnlock(pScreen);
+    }
+
+    callback(data);
+
+    for (i = 0; i < screenInfo.numScreens; i++) {
+	ScreenPtr        pScreen  = screenInfo.screens[i];
+	DRIScreenPrivPtr pDRIPriv = DRI_SCREEN_PRIV(pScreen);
+
+	DRILock(pScreen, 0);
+
+	if (pDRIPriv->pDriverInfo->driverSwapMethod == DRI_HIDE_X_CONTEXT) {
+	    /* hide X context by swapping 2D component here */
+	    (*pDRIPriv->pDriverInfo->SwapContext)(pScreen,
+						  DRI_3D_SYNC,
+						  DRI_2D_CONTEXT,
+						  pDRIPriv->partial3DContextStore,
+						  DRI_2D_CONTEXT,
+						  pDRIPriv->hiddenContextStore);
+	}
+    }
+
+    xf86UnblockSIGIO(blocked);
 }
 
 void *

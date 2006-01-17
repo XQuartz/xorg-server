@@ -40,6 +40,7 @@
 #include <dix-config.h>
 #endif
 
+#include <xf86.h>
 #include "glxserver.h"
 #include <GL/glxtokens.h>
 #include <unpack.h>
@@ -47,7 +48,6 @@
 #include <pixmapstr.h>
 #include <windowstr.h>
 #include "g_disptab_EXT.h"
-#include "glximports.h"
 #include "glxutil.h"
 #include "glxext.h"
 #include "GL/glx_ansic.h"
@@ -58,24 +58,6 @@
 #include "dispatch.h"
 
 /************************************************************************/
-
-static __GLimports imports = {
-    __glXImpMalloc,
-    __glXImpCalloc,
-    __glXImpRealloc,
-    __glXImpFree,
-    __glXImpWarning,
-    __glXImpFatal,
-    __glXImpGetenv,
-    __glXImpAtoi,
-    __glXImpSprintf,
-    __glXImpFopen,
-    __glXImpFclose,
-    __glXImpFprintf,
-    __glXImpGetDrawablePrivate,
-    __glXImpGetReadablePrivate,
-    NULL
-};
 
 static int __glXGetFBConfigsSGIX(__GLXclientState *cl, GLbyte *pc);
 static int __glXCreateContextWithConfigSGIX(__GLXclientState *cl, GLbyte *pc);
@@ -110,7 +92,7 @@ int DoCreateContext(__GLXclientState *cl, GLXContextID gcId,
     __GLXcontext *glxc, *shareglxc;
     __GLcontextModes *modes;
     __GLXscreenInfo *pGlxScreen;
-    __GLinterface *shareGC;
+    void *share;
     GLint i;
 
     LEGAL_NEW_RESOURCE(gcId, client);
@@ -165,7 +147,7 @@ int DoCreateContext(__GLXclientState *cl, GLXContextID gcId,
     ** for multithreaded servers, we don't do this.  
     */
     if (shareList == None) {
-	shareGC = 0;
+	share = 0;
     } else {
 	shareglxc = (__GLXcontext *) LookupIDByType(shareList, __glXContextRes);
 	if (!shareglxc) {
@@ -191,7 +173,7 @@ int DoCreateContext(__GLXclientState *cl, GLXContextID gcId,
 	    */
 	    isDirect = GL_FALSE;
 	}
-	shareGC = shareglxc->gc;
+	share = shareglxc->driContext.private;
     }
 
     /*
@@ -213,13 +195,11 @@ int DoCreateContext(__GLXclientState *cl, GLXContextID gcId,
     glxc->modes = modes;
 
     if (!isDirect) {
-
-	/*
-	** Allocate a GL context
-	*/
-	imports.other = (void *)glxc;
-	glxc->gc = (*pGlxScreen->createContext)(&imports, glxc->modes, shareGC);
-	if (!glxc->gc) {
+	glxc->driContext.private = 
+	    (*pGlxScreen->driScreen.createNewContext)(NULL, modes, 0,
+						      share,
+						      &glxc->driContext);
+	if (glxc->driContext.private == NULL) {
 	    __glXFree(glxc);
 	    client->errorValue = gcId;
 	    return BadAlloc;
@@ -228,14 +208,15 @@ int DoCreateContext(__GLXclientState *cl, GLXContextID gcId,
 	/*
 	** Don't need local GL context for a direct context.
 	*/
-	glxc->gc = 0;
+	glxc->driContext.private = NULL;
     }
     /*
     ** Register this context as a resource.
     */
     if (!AddResource(gcId, __glXContextRes, (pointer)glxc)) {
 	if (!isDirect) {
-	    (*glxc->gc->exports.destroyContext)((__GLcontext *)glxc->gc);
+	    (*glxc->driContext.destroyContext)(NULL, screen,
+					       glxc->driContext.private);
         }
 	__glXFree(glxc);
 	client->errorValue = gcId;
@@ -518,7 +499,6 @@ int DoMakeCurrent( __GLXclientState *cl,
     __GLXpixmap *drawPixmap = NULL;
     __GLXpixmap *readPixmap = NULL;
     __GLXcontext *glxc, *prevglxc;
-    __GLinterface *gc, *prevgc;
     __GLXdrawablePrivate *drawPriv = NULL;
     __GLXdrawablePrivate *readPriv = NULL;
     GLint error;
@@ -552,10 +532,8 @@ int DoMakeCurrent( __GLXclientState *cl,
 	    client->errorValue = prevglxc->id;
 	    return __glXBadContextState;
 	}
-	prevgc = prevglxc->gc;
     } else {
 	prevglxc = 0;
-	prevgc = 0;
     }
 
     /*
@@ -573,8 +551,6 @@ int DoMakeCurrent( __GLXclientState *cl,
 	    /* Context is current to somebody else */
 	    return BadAccess;
 	}
-	gc = glxc->gc;
-
 
 	assert( drawId != None );
 	assert( readId != None );
@@ -616,7 +592,6 @@ int DoMakeCurrent( __GLXclientState *cl,
     } else {
 	/* Switching to no context.  Ignore new drawable. */
 	glxc = 0;
-	gc = 0;
 	pDraw = 0;
 	pRead = 0;
     }
@@ -638,7 +613,14 @@ int DoMakeCurrent( __GLXclientState *cl,
 	/*
 	** Make the previous context not current.
 	*/
-	if (!(*prevgc->exports.loseCurrent)((__GLcontext *)prevgc)) {
+
+	/* FIXME-KRH: this is where we need the looseContext function
+	 * in the DRIcontext interface. */
+
+	if (!(*prevglxc->driContext.unbindContext)(NULL, pDraw->pScreen->myNum,
+						   0, /* prev draw */
+						   0, /* prev read */
+						   &prevglxc->driContext)) {
 	    return __glXBadContext;
 	}
 	__glXDeassociateContext(prevglxc);
@@ -649,25 +631,19 @@ int DoMakeCurrent( __GLXclientState *cl,
 
 	glxc->drawPriv = drawPriv;
 	glxc->readPriv = readPriv;
-	__glXCacheDrawableSize(drawPriv);
 
 	/* make the context current */
-	if (!(*gc->exports.makeCurrent)((__GLcontext *)gc)) {
-	    glxc->drawPriv = NULL;
-	    glxc->readPriv = NULL;
-	    return __glXBadContext;
-	}
-
-	/* resize the buffers */
-	if (!__glXResizeDrawableBuffers(drawPriv)) {
-	    /* could not do initial resize.  make current failed */
-	    (*gc->exports.loseCurrent)((__GLcontext *)gc);
+	if (!(*glxc->driContext.bindContext)(NULL, pDraw->pScreen->myNum,
+					     drawId, readId,
+					     &glxc->driContext)) {
 	    glxc->drawPriv = NULL;
 	    glxc->readPriv = NULL;
 	    return __glXBadContext;
 	}
 
 	glxc->isCurrent = GL_TRUE;
+	/* FIXME: Is this assignment ok?  Why wasn't it here already? */
+	__glXLastContext = glxc;
 	__glXAssociateContext(glxc);
 	assert(drawPriv->drawGlxc == glxc);
 	assert(readPriv->readGlxc == glxc);
@@ -842,7 +818,6 @@ int __glXCopyContext(__GLXclientState *cl, GLbyte *pc)
     GLXContextID source = req->source;
     GLXContextID dest = req->dest;
     GLXContextTag tag = req->contextTag;
-    unsigned long mask = req->mask;
     __GLXcontext *src, *dst;
     int error;
 
@@ -906,6 +881,11 @@ int __glXCopyContext(__GLXclientState *cl, GLbyte *pc)
 	    return error;
 	}
     }
+
+#if 0
+    /* FIXME: We probably need to add DRIcontext::copyContext for
+     * this. */
+
     /*
     ** Issue copy.  The only reason for failure is a bad mask.
     */
@@ -915,6 +895,8 @@ int __glXCopyContext(__GLXclientState *cl, GLbyte *pc)
 	client->errorValue = mask;
 	return BadValue;
     }
+#endif
+
     return Success;
 }
 
@@ -1353,9 +1335,8 @@ int __glXSwapBuffers(__GLXclientState *cl, GLbyte *pc)
 	    }
 	}
 
-	if ((*glxPriv->swapBuffers)(glxPriv) == GL_FALSE) {
-	    return __glXBadDrawable;
-	}
+	CALL_Finish( GET_DISPATCH(), () );
+	(*glxPriv->driDrawable.swapBuffers)(NULL, glxPriv->driDrawable.private);
     }
 
     return Success;

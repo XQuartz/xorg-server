@@ -52,6 +52,7 @@
 #include <resource.h>
 #include <scrnintstr.h>
 #include "GL/glx_ansic.h"
+#include <stdint.h>
 
 
 /*
@@ -64,6 +65,7 @@
 #include <GL/gl.h>
 #include <GL/glxproto.h>
 #include <GL/glxint.h>
+#include <GL/internal/dri_interface.h>
 
 /* For glxscreens.h */
 typedef struct __GLXdrawablePrivateRec __GLXdrawablePrivate;

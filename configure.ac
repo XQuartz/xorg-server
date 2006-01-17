@@ -535,7 +535,7 @@ if test "x$GLX" = xyes && ! test "x$MESA_SOURCE" = x; then
 	PKG_CHECK_MODULES([XLIB], [x11])
 	AC_SUBST(XLIB_CFLAGS)
 	AC_DEFINE(GLXEXT, 1, [Build GLX extension])
-	GLX_LIBS='$(top_builddir)/GL/glx/libglx.la $(top_builddir)/GL/mesa/libGLcore.la'
+	GLX_LIBS='$(top_builddir)/GL/glx/libglx.la'
 	test -d GL || mkdir GL
         $srcdir/GL/symlink-mesa.sh $MESA_SOURCE GL/
 	if test $? -ne 0; then

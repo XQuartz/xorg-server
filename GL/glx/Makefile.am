@@ -4,6 +4,8 @@ AM_CFLAGS = \
 	@DIX_CFLAGS@ \
 	@GL_CFLAGS@ \
 	@XLIB_CFLAGS@ \
+	@LIBDRM_CFLAGS@ \
+	@DRIPROTO_CFLAGS@ \
 	-I@MESA_SOURCE@/include \
 	-I@MESA_SOURCE@/src/mesa/glapi \
 	-I@MESA_SOURCE@/src/mesa/main \
@@ -14,7 +16,12 @@ AM_CFLAGS = \
 # none yet
 #sdk_HEADERS =
 
-INCLUDES = -I$(top_srcdir)/GL/include -I$(top_srcdir)/hw/xfree86/os-support
+INCLUDES = \
+	-I$(top_srcdir)/GL/include \
+	-I$(top_srcdir)/hw/xfree86/os-support \
+	-I$(top_srcdir)/hw/xfree86/os-support/bus \
+	-I$(top_srcdir)/hw/xfree86/common \
+	-I$(top_srcdir)/hw/xfree86/dri
 
 nodist_libglx_la_SOURCES = indirect_size.h
 
@@ -28,8 +35,6 @@ libglx_la_SOURCES = \
         glcontextmodes.h \
         global.c \
         glthread.c \
-        glxbuf.c \
-        glxbuf.h \
         glxcmds.c \
         glxcmdsswap.c \
         glxcontext.h \
@@ -37,14 +42,10 @@ libglx_la_SOURCES = \
         glxerror.h \
         glxext.c \
         glxext.h \
-        glxfb.c \
-        glxfb.h \
-        glximports.c \
-        glximports.h \
-        glxmem.c \
-        glxmem.h \
-        glxpix.c \
-        glxpix.h \
+        glxvisuals.c \
+        glxvisuals.h \
+        glxloader.c \
+        glxloader.h \
         glxscreens.c \
         glxscreens.h \
         glxserver.h \

@@ -47,6 +47,7 @@ typedef struct __GLXcontextRec __GLXcontext;
 #define CAPI
 
 #include "GL/internal/glcore.h"
+#include "GL/internal/dri_interface.h"
 
 struct __GLXcontextRec {
     /*
@@ -62,11 +63,9 @@ struct __GLXcontextRec {
     struct __GLXcontextRec *nextReadPriv;
 
     /*
-    ** Opaque pointer the context object created by the GL that the
-    ** server is bound with.  Never dereferenced by this code, but used
-    ** as a handle to feed to the routines in the screen info struct.
+    ** The DRI context initialized by the DRI driver.
     */
-    __GLinterface *gc;
+    __DRIcontext driContext;
 
     /*
     ** mode struct for this context
@@ -119,11 +118,6 @@ struct __GLXcontextRec {
     ** Whether this context is a direct rendering context.
     */
     GLboolean isDirect;
-
-    /*
-    ** Window pending state
-    */
-    GLuint pendingState;
 
     /*
     ** This flag keeps track of whether there are unflushed GL commands.

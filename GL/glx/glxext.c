@@ -129,7 +129,7 @@ static int ClientGone(int clientIndex, XID id)
 		__glXDeassociateContext(cx);
 		cx->isCurrent = GL_FALSE;
 		if (!cx->idExists) {
-		    __glXFreeContext(cx);
+		  DRIUnlockedCallback(__glXFreeContext, cx, 0);
 		}
 	    }
 	}

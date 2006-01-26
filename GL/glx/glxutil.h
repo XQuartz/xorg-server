@@ -50,7 +50,10 @@ extern void *__glXRealloc(void *addr, size_t newSize);
 extern void __glXFree(void *ptr);
 
 /* relate contexts with drawables */
-extern void __glXAssociateContext(__GLXcontext *glxc);
+void
+__glXAssociateContext(__GLXcontext *glxc,
+		      __GLXdrawablePrivate *drawPriv,
+		      __GLXdrawablePrivate *readPriv);
 extern void __glXDeassociateContext(__GLXcontext *glxc);
 
 /* drawable operation */

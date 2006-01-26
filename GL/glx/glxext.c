@@ -104,7 +104,7 @@ static int ContextGone(__GLXcontext* cx, XID id)
 	 * __glXDispatch, so we'll have to lift the DRM lock manually
 	 * to avoid deadlocks for cards that grab the lock during
 	 * context destruction. */
-	DRIUnlockedCallback(__glXFreeContext, cx, 0);
+      DRIUnlockedCallback((void(*)(void*)) __glXFreeContext, cx, 0);
     }
 
     return True;
@@ -129,7 +129,7 @@ static int ClientGone(int clientIndex, XID id)
 		__glXDeassociateContext(cx);
 		cx->isCurrent = GL_FALSE;
 		if (!cx->idExists) {
-		  DRIUnlockedCallback(__glXFreeContext, cx, 0);
+		  DRIUnlockedCallback((void(*)(void*)) __glXFreeContext, cx, 0);
 		}
 	    }
 	}
@@ -160,6 +160,17 @@ static int PixmapGone(__GLXpixmap *pGlxPixmap, XID id)
 	(*pGlxPixmap->pScreen->DestroyPixmap)(pPixmap);
 	__glXFree(pGlxPixmap);
     }
+
+    return True;
+}
+
+/*
+** Destroy routine that gets called when a drawable is freed.  A drawable
+** contains the ancillary buffers needed for rendering.
+*/
+static Bool DrawableGone(__GLXdrawablePrivate *glxPriv, XID xid)
+{
+    __glXUnrefDrawablePrivate(glxPriv);
 
     return True;
 }
@@ -243,6 +254,7 @@ void GlxExtensionInit(void)
     ExtensionEntry *extEntry;
     int i;
     
+    __glXDrawableRes = CreateNewResourceType((DeleteType)DrawableGone);
     __glXContextRes = CreateNewResourceType((DeleteType)ContextGone);
     __glXClientRes = CreateNewResourceType((DeleteType)ClientGone);
     __glXPixmapRes = CreateNewResourceType((DeleteType)PixmapGone);

@@ -50,6 +50,7 @@ __GLXcontext *__glXLastContext;
 /*
 ** X resources.
 */
+RESTYPE __glXDrawableRes;
 RESTYPE __glXContextRes;
 RESTYPE __glXClientRes;
 RESTYPE __glXPixmapRes;

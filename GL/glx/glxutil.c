@@ -137,8 +137,14 @@ __glXFree(void *addr)
 ** associate a context with a drawable
 */
 void
-__glXAssociateContext(__GLXcontext *glxc)
+__glXAssociateContext(__GLXcontext *glxc,
+		      __GLXdrawablePrivate *drawPriv,
+		      __GLXdrawablePrivate *readPriv)
 {
+    glxc->drawPriv = drawPriv;
+    glxc->readPriv = readPriv;
+    glxc->isCurrent = GL_TRUE;
+
     glxc->nextDrawPriv = glxc->drawPriv->drawGlxc;
     glxc->drawPriv->drawGlxc = glxc;
 
@@ -242,12 +248,14 @@ __glXCreateDrawablePrivate(DrawablePtr pDraw, XID drawId,
     /* The last argument is 'attrs', which is used with pbuffers which
      * we currently don't support. */
 
+#if 0
     glxPriv->driDrawable.private =
 	(pGlxScreen->driScreen.createNewDrawable)(NULL, modes,
 						  drawId,
 						  &glxPriv->driDrawable,
 						  0,
 						  NULL);
+#endif
 
     return glxPriv;
 }
@@ -258,8 +266,10 @@ __glXDestroyDrawablePrivate(__GLXdrawablePrivate *glxPriv)
     /* remove the drawable from the drawable list */
     FreeResourceByType(glxPriv->drawId, __glXDrawableRes, FALSE);
 
+#if 0
     (*glxPriv->driDrawable.destroyDrawable)(NULL,
 					    glxPriv->driDrawable.private);
+#endif
 
     /* Free the drawable Private */
     __glXFree(glxPriv);

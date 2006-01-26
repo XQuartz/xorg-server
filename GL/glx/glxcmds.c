@@ -204,6 +204,7 @@ int DoCreateContext(__GLXclientState *cl, GLXContextID gcId,
 	    client->errorValue = gcId;
 	    return BadAlloc;
 	}
+	glxc->driContext.mode = modes;
     } else {
 	/*
 	** Don't need local GL context for a direct context.
@@ -629,24 +630,16 @@ int DoMakeCurrent( __GLXclientState *cl,
 
     if ((glxc != 0) && !glxc->isDirect) {
 
-	glxc->drawPriv = drawPriv;
-	glxc->readPriv = readPriv;
-
 	/* make the context current */
 	if (!(*glxc->driContext.bindContext)(NULL, pDraw->pScreen->myNum,
 					     drawId, readId,
 					     &glxc->driContext)) {
-	    glxc->drawPriv = NULL;
-	    glxc->readPriv = NULL;
 	    return __glXBadContext;
 	}
 
-	glxc->isCurrent = GL_TRUE;
 	/* FIXME: Is this assignment ok?  Why wasn't it here already? */
 	__glXLastContext = glxc;
-	__glXAssociateContext(glxc);
-	assert(drawPriv->drawGlxc == glxc);
-	assert(readPriv->readGlxc == glxc);
+	__glXAssociateContext(glxc, drawPriv, readPriv);
     }
 
     if (prevglxc) {
@@ -1335,8 +1328,16 @@ int __glXSwapBuffers(__GLXclientState *cl, GLbyte *pc)
 	    }
 	}
 
-	CALL_Finish( GET_DISPATCH(), () );
-	(*glxPriv->driDrawable.swapBuffers)(NULL, glxPriv->driDrawable.private);
+	{
+	  __DRIscreen *driScreen;
+	  __DRIdrawable *driDraw;
+
+	  driScreen = &__glXgetActiveScreen(pDraw->pScreen->myNum)->driScreen;
+	  driDraw = (driScreen->getDrawable)(NULL, drawId, driScreen->private);
+
+	  CALL_Finish( GET_DISPATCH(), () );
+	  (*driDraw->swapBuffers)(NULL, driDraw->private);
+	}
     }
 
     return Success;

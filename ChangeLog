@@ -1,3 +1,12 @@
+2006-01-26  Kristian Høgsberg  <krh@redhat.com>
+
+	* GL/glx/glxutil.c (__glXCreateDrawablePrivate)
+	(__glXDestroyDrawablePrivate): Don't explicitly create and destroy
+	the __DRIdrawable, since the DRI driver doesn't want us to.
+	
+	* GL/glx/glxutil.c (__glXAssociateContext): Move some __GLXcontext
+	updating code to here.
+
 2006-01-18  Kristian Høgsberg  <krh@redhat.com>
 
 	* GL/glx/glxext.c (ClientGone): Also lift DRI lock when destroying

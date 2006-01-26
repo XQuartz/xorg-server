@@ -153,22 +153,10 @@ __GLXHyperpipeExtensionFuncs *__glXHyperpipeFuncs = NULL;
 static int __glXNumHyperpipeFuncs = 0;
 
 
-RESTYPE __glXDrawableRes;
-
 __GLXscreenInfo *__glXgetActiveScreen(int num) {
 	return &__glXActiveScreens[num];
 }
 
-/*
-** Destroy routine that gets called when a drawable is freed.  A drawable
-** contains the ancillary buffers needed for rendering.
-*/
-static Bool DrawableGone(__GLXdrawablePrivate *glxPriv, XID xid)
-{
-    __glXUnrefDrawablePrivate(glxPriv);
-
-    return True;
-}
 
 /*
  * If your DDX driver wants to register support for swap barriers or hyperpipe
@@ -229,8 +217,6 @@ void __glXScreenInit(GLint numscreens)
 	__glXActiveScreens[i].GLXvendor = __glXStrdup(GLXServerVendorName);
 	__glXActiveScreens[i].GLXversion = __glXStrdup(GLXServerVersion);
 	__glXActiveScreens[i].GLXextensions = __glXStrdup(GLXServerExtensions);
-
-	__glXDrawableRes = CreateNewResourceType((DeleteType)DrawableGone);
 
 	__glXLoaderInitScreen(i);
     }

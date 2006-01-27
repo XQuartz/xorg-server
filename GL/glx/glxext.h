@@ -77,6 +77,11 @@ extern void __glXResetLargeCommandStatus(__GLXclientState*);
 extern int __glXQueryContextInfoEXT(__GLXclientState *cl, GLbyte *pc);
 extern int __glXSwapQueryContextInfoEXT(__GLXclientState *cl, GLbyte *pc);
 
+extern int __glXBindTexImageEXT(__GLXclientState *cl, GLbyte *pc);
+extern int __glXSwapBindTexImageEXT(__GLXclientState *cl, GLbyte *pc);
+extern int __glXReleaseTexImageEXT(__GLXclientState *cl, GLbyte *pc);
+extern int __glXSwapReleaseTexImageEXT(__GLXclientState *cl, GLbyte *pc);
+
 extern int DoMakeCurrent( __GLXclientState *cl, GLXDrawable drawId,
     GLXDrawable readId, GLXContextID contextId, GLXContextTag tag );
 extern int DoGetVisualConfigs(__GLXclientState *cl, unsigned screen,

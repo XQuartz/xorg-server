@@ -389,6 +389,48 @@ int __glXSwapQueryContextInfoEXT(__GLXclientState *cl, GLbyte *pc)
     return __glXQueryContextInfoEXT(cl, pc);
 }
 
+int __glXSwapBindTexImageEXT(__GLXclientState *cl, GLbyte *pc)
+{
+    xGLXVendorPrivateReq *req = (xGLXVendorPrivateReq *) pc;
+    GLXDrawable		 *drawId;
+    int			 *buffer;
+    
+    __GLX_DECLARE_SWAP_VARIABLES;
+
+    pc += __GLX_VENDPRIV_HDR_SIZE;
+
+    drawId = ((GLXDrawable *) (pc));
+    buffer = ((int *)	      (pc + 4));
+    
+    __GLX_SWAP_SHORT(&req->length);
+    __GLX_SWAP_INT(&req->contextTag);
+    __GLX_SWAP_INT(drawId);
+    __GLX_SWAP_INT(buffer);
+
+    return __glXBindTexImageEXT(cl, (GLbyte *)pc);
+}
+
+int __glXSwapReleaseTexImageEXT(__GLXclientState *cl, GLbyte *pc)
+{
+    xGLXVendorPrivateReq *req = (xGLXVendorPrivateReq *) pc;
+    GLXDrawable		 *drawId;
+    int			 *buffer;
+    
+    __GLX_DECLARE_SWAP_VARIABLES;
+
+    pc += __GLX_VENDPRIV_HDR_SIZE;
+
+    drawId = ((GLXDrawable *) (pc));
+    buffer = ((int *)	      (pc + 4));
+    
+    __GLX_SWAP_SHORT(&req->length);
+    __GLX_SWAP_INT(&req->contextTag);
+    __GLX_SWAP_INT(drawId);
+    __GLX_SWAP_INT(buffer);
+
+    return __glXReleaseTexImageEXT(cl, (GLbyte *)pc);
+}
+
 /************************************************************************/
 
 /*
@@ -824,6 +866,10 @@ int __glXSwapVendorPrivate(__GLXclientState *cl, GLbyte *pc)
 	__GLX_SWAP_INT(pc + 4);
 	CALL_SamplePatternSGIS( GET_DISPATCH(), (*(GLenum *)(pc + 4)) );
 	return Success;
+    case X_GLXvop_BindTexImageEXT:
+	return __glXSwapBindTexImageEXT(cl, pc);
+    case X_GLXvop_ReleaseTexImageEXT:
+	return __glXSwapReleaseTexImageEXT(cl, pc);  
     }
 #endif
 

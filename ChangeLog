@@ -1,3 +1,14 @@
+2006-01-27  Kristian Høgsberg  <krh@redhat.com>
+
+	* GL/glx/glxcmds.c (DoCreateGLXPixmap): Disable check for fbconfig
+	for now so we can create RGBA textures from 32 bit visuals.
+
+	* GL/glx/glxcmds.c (__glXBindTexImageEXT)
+	(__glXReleaseTexImageEXT), (__glXVendorPrivate):
+	* GL/glx/glxcmdsswap.c: (__glXSwapBindTexImageEXT),
+	(__glXSwapReleaseTexImageEXT), (__glXSwapVendorPrivate):
+	* GL/glx/glxext.h: Implement GLX_texture_from_drawable.
+
 2006-01-26  Kristian Høgsberg  <krh@redhat.com>
 
 	* GL/glx/glxutil.c (__glXCreateDrawablePrivate)

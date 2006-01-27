@@ -1162,6 +1162,7 @@ int DoCreateGLXPixmap(__GLXclientState *cl, VisualID visual,
     ** Get configuration of the visual.
     */
     pGlxScreen = &__glXActiveScreens[screenNum];
+#if 0
     modes = _gl_context_modes_find_visual( pGlxScreen->modes, visual );
     if (modes == NULL) {
 	/*
@@ -1170,7 +1171,7 @@ int DoCreateGLXPixmap(__GLXclientState *cl, VisualID visual,
 	client->errorValue = visual;
 	return BadValue;
     }
-
+#endif
     pGlxPixmap = (__GLXpixmap *) __glXMalloc(sizeof(__GLXpixmap));
     if (!pGlxPixmap) {
 	return BadAlloc;
@@ -1387,6 +1388,79 @@ int __glXQueryContextInfoEXT(__GLXclientState *cl, GLbyte *pc)
 	WriteToClient(client, nReplyBytes, (char *)sendBuf);
     }
     __glXFree((char *)sendBuf);
+
+    return Success;
+}
+
+int __glXBindTexImageEXT(__GLXclientState *cl, GLbyte *pc)
+{
+    xGLXVendorPrivateReq *req = (xGLXVendorPrivateReq *) pc;
+    ClientPtr		 client = cl->client;
+    PixmapPtr		 pixmap;
+    __GLXpixmap		*pGlxPixmap;
+    GLXDrawable		 drawId;
+    int			 buffer;
+    int			 error;
+
+    pc += __GLX_VENDPRIV_HDR_SIZE;
+
+    drawId = *((CARD32 *) (pc));
+    buffer = *((INT32 *)  (pc + 4));
+
+    if (buffer != GLX_FRONT_LEFT_EXT)
+      return __glXBadPixmap;
+
+    if (!__glXForceCurrent (cl, req->contextTag, &error))
+	return error;
+
+    pGlxPixmap = (__GLXpixmap *)LookupIDByType(drawId, __glXPixmapRes);
+    if (!pGlxPixmap) {
+	client->errorValue = drawId;
+	return __glXBadPixmap;
+    }
+
+    pixmap = (PixmapPtr) pGlxPixmap->pDraw;
+    
+    CALL_PixelStorei( GET_DISPATCH(), (GL_UNPACK_ROW_LENGTH,  pixmap->devKind / 4) );
+    CALL_PixelStorei( GET_DISPATCH(), (GL_UNPACK_SKIP_ROWS,   pixmap->drawable.y) );
+    CALL_PixelStorei( GET_DISPATCH(), (GL_UNPACK_SKIP_PIXELS, pixmap->drawable.x) );
+
+    CALL_TexImage2D( GET_DISPATCH(),
+		     ( GL_TEXTURE_RECTANGLE_ARB,
+		       0,
+		       4,
+		       pixmap->drawable.width,
+		       pixmap->drawable.height,
+		       0,
+		       GL_BGRA,
+		       GL_UNSIGNED_BYTE,
+		       pixmap->devPrivate.ptr ) );
+
+    return Success;
+}
+
+int __glXReleaseTexImageEXT(__GLXclientState *cl, GLbyte *pc)
+{
+    xGLXVendorPrivateReq *req = (xGLXVendorPrivateReq *) pc;
+    ClientPtr		 client = cl->client;
+    __GLXpixmap		*pGlxPixmap;
+    GLXDrawable		 drawId;
+    int			 buffer;
+    int			 error;
+
+    pc += __GLX_VENDPRIV_HDR_SIZE;
+
+    drawId = *((CARD32 *) (pc));
+    buffer = *((INT32 *)  (pc + 4));
+    
+    if (!__glXForceCurrent (cl, req->contextTag, &error))
+	return error;
+
+    pGlxPixmap = (__GLXpixmap *)LookupIDByType(drawId, __glXPixmapRes);
+    if (!pGlxPixmap) {
+	client->errorValue = drawId;
+	return __glXBadDrawable;
+    }
 
     return Success;
 }
@@ -1965,6 +2039,10 @@ int __glXVendorPrivate(__GLXclientState *cl, GLbyte *pc)
 	return Success;
     case X_GLXvop_BindSwapBarrierSGIX:
         return __glXBindSwapBarrierSGIX(cl, pc);
+    case X_GLXvop_BindTexImageEXT:
+	return __glXBindTexImageEXT(cl, pc);
+    case X_GLXvop_ReleaseTexImageEXT:
+	return __glXReleaseTexImageEXT(cl, pc);  
     }
 #endif
 

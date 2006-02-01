@@ -1,3 +1,7 @@
+2006-02-01  Kristian Høgsberg  <krh@redhat.com>
+
+	* hw/xfree86/dri/dri.c (DRIUnlockedCallback): Also drop drawable lock.
+
 2006-01-27  Kristian Høgsberg  <krh@redhat.com>
 
 	* GL/glx/glxcmds.c (DoCreateGLXPixmap): Disable check for fbconfig

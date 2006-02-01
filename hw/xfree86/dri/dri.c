@@ -1933,6 +1933,10 @@ DRIUnlockedCallback(DRICallback callback, void *data, int flags)
 						  pDRIPriv->partial3DContextStore);
 	}
 
+	if (pDRIPriv->windowsTouched)
+	    DRM_SPINUNLOCK(&pDRIPriv->pSAREA->drawable_lock, 1);
+	pDRIPriv->windowsTouched = FALSE;
+
 	DRIUnlock(pScreen);
     }
 

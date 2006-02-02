@@ -618,7 +618,7 @@ int DoMakeCurrent( __GLXclientState *cl,
 	/* FIXME-KRH: this is where we need the looseContext function
 	 * in the DRIcontext interface. */
 
-	if (!(*prevglxc->driContext.unbindContext)(NULL, pDraw->pScreen->myNum,
+	if (!(*prevglxc->driContext.unbindContext)(NULL, prevglxc->pScreen->myNum,
 						   0, /* prev draw */
 						   0, /* prev read */
 						   &prevglxc->driContext)) {
@@ -631,7 +631,7 @@ int DoMakeCurrent( __GLXclientState *cl,
     if ((glxc != 0) && !glxc->isDirect) {
 
 	/* make the context current */
-	if (!(*glxc->driContext.bindContext)(NULL, pDraw->pScreen->myNum,
+	if (!(*glxc->driContext.bindContext)(NULL, glxc->pScreen->myNum,
 					     drawId, readId,
 					     &glxc->driContext)) {
 	    return __glXBadContext;

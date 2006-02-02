@@ -1,6 +1,12 @@
 2006-02-02  Kevin E. Martin  <kem-at-freedesktop-dot-org>
 
 	* GL/glx/glxcmds.c: (DoMakeCurrent):
+	Use prevglxc->{draw,read}Priv->drawId for previously bound
+	drawables when unbinding context.
+
+2006-02-02  Kevin E. Martin  <kem-at-freedesktop-dot-org>
+
+	* GL/glx/glxcmds.c: (DoMakeCurrent):
 	Use {prev}glxc instead of pDraw to access pScreen.  Fixes
 	glXMakeCurrent(dpy, None, NULL).
 

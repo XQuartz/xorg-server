@@ -619,8 +619,8 @@ int DoMakeCurrent( __GLXclientState *cl,
 	 * in the DRIcontext interface. */
 
 	if (!(*prevglxc->driContext.unbindContext)(NULL, prevglxc->pScreen->myNum,
-						   0, /* prev draw */
-						   0, /* prev read */
+						   prevglxc->drawPriv->drawId, /* prev draw */
+						   prevglxc->readPriv->drawId, /* prev read */
 						   &prevglxc->driContext)) {
 	    return __glXBadContext;
 	}

@@ -199,9 +199,7 @@ damageDamageRegion (DrawablePtr pDrawable, RegionPtr pRegion, Bool clip,
 #endif
 	    continue;
 	}
-	
-	draw_x = pDamage->pDrawable->x;
-	draw_y = pDamage->pDrawable->y;
+
 #ifdef COMPOSITE
 	/*
 	 * Need to move everyone to screen coordinates
@@ -209,10 +207,15 @@ damageDamageRegion (DrawablePtr pDrawable, RegionPtr pRegion, Bool clip,
 	 */
 	if (pDamage->pDrawable->type != DRAWABLE_WINDOW)
 	{
-	    draw_x += ((PixmapPtr) pDamage->pDrawable)->screen_x;
-	    draw_y += ((PixmapPtr) pDamage->pDrawable)->screen_y;
+	    draw_x = ((PixmapPtr) pDamage->pDrawable)->screen_x;
+	    draw_y = ((PixmapPtr) pDamage->pDrawable)->screen_y;
 	}
+        else
 #endif
+        {
+            draw_x = pDamage->pDrawable->x;
+            draw_y = pDamage->pDrawable->y;
+        }
 	
 	/*
 	 * Clip against border or pixmap bounds

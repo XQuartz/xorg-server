@@ -1392,6 +1392,28 @@ int __glXQueryContextInfoEXT(__GLXclientState *cl, GLbyte *pc)
     return Success;
 }
 
+static void
+FillAlphaChannel (PixmapPtr pixmap)
+{
+    int i, j;
+    CARD32 *pixels = (CARD32 *)pixmap->devPrivate.ptr;
+    CARD32 rowstride = pixmap->devKind / 4;
+    CARD32 x, y;
+
+    x = pixmap->drawable.x;
+    y = pixmap->drawable.y;
+    
+    for (i = y; i < pixmap->drawable.height + y; ++i)
+    {
+        for (j = x; j < pixmap->drawable.width + x; ++j)
+        {
+            int index = i * rowstride + j;
+
+            pixels[index] |= 0xFF000000;
+        }
+    }
+}
+
 int __glXBindTexImageEXT(__GLXclientState *cl, GLbyte *pc)
 {
     xGLXVendorPrivateReq *req = (xGLXVendorPrivateReq *) pc;
@@ -1401,6 +1423,7 @@ int __glXBindTexImageEXT(__GLXclientState *cl, GLbyte *pc)
     GLXDrawable		 drawId;
     int			 buffer;
     int			 error;
+    int                  bpp;
 
     pc += __GLX_VENDPRIV_HDR_SIZE;
 
@@ -1420,20 +1443,27 @@ int __glXBindTexImageEXT(__GLXclientState *cl, GLbyte *pc)
     }
 
     pixmap = (PixmapPtr) pGlxPixmap->pDraw;
+    bpp = pixmap->drawable.depth == 24 ? 4 : 2; /* XXX 24bpp packed, 8, etc */
     
-    CALL_PixelStorei( GET_DISPATCH(), (GL_UNPACK_ROW_LENGTH,  pixmap->devKind / 4) );
-    CALL_PixelStorei( GET_DISPATCH(), (GL_UNPACK_SKIP_ROWS,   pixmap->drawable.y) );
-    CALL_PixelStorei( GET_DISPATCH(), (GL_UNPACK_SKIP_PIXELS, pixmap->drawable.x) );
+    CALL_PixelStorei( GET_DISPATCH(), (GL_UNPACK_ROW_LENGTH,
+                                       pixmap->devKind / bpp) );
+    CALL_PixelStorei( GET_DISPATCH(), (GL_UNPACK_SKIP_ROWS,
+                                       pixmap->drawable.y) );
+    CALL_PixelStorei( GET_DISPATCH(), (GL_UNPACK_SKIP_PIXELS,
+                                       pixmap->drawable.x) );
+
+    if (bpp == 4)
+        FillAlphaChannel(pixmap);
 
     CALL_TexImage2D( GET_DISPATCH(),
 		     ( GL_TEXTURE_RECTANGLE_ARB,
 		       0,
-		       4,
+		       bpp == 4 ? 4 : 3,
 		       pixmap->drawable.width,
 		       pixmap->drawable.height,
 		       0,
-		       GL_BGRA,
-		       GL_UNSIGNED_BYTE,
+		       bpp == 4 ? GL_BGRA : GL_RGB,
+		       bpp == 4 ? GL_UNSIGNED_BYTE : GL_UNSIGNED_SHORT_5_6_5,
 		       pixmap->devPrivate.ptr ) );
 
     return Success;

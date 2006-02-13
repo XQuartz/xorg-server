@@ -231,6 +231,9 @@ ProcCompositeNameWindowPixmap (ClientPtr client)
     if (!cw)
 	return BadMatch;
 
+    if (!pWin->mapped)
+        return BadMatch;
+
     pPixmap = (*pWin->drawable.pScreen->GetWindowPixmap) (pWin);
     if (!pPixmap)
 	return BadMatch;

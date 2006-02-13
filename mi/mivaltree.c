@@ -1,5 +1,5 @@
 /* $Xorg: mivaltree.c,v 1.4 2001/02/09 02:05:22 xorgcvs Exp $ */
-/* $XdotOrg: xc/programs/Xserver/mi/mivaltree.c,v 1.4 2005/04/20 12:25:45 daniels Exp $ */
+/* $XdotOrg: xserver/xorg/mi/mivaltree.c,v 1.6.10.1 2006/02/06 23:18:55 ajax Exp $ */
 /*
  * mivaltree.c --
  *	Functions for recalculating window clip lists. Main function
@@ -313,7 +313,11 @@ miComputeClips (
 	    {
 		if (pChild->viewable)
 		{
-		    if (pChild->visibility != VisibilityFullyObscured)
+		    if (pChild->visibility != VisibilityFullyObscured
+#ifdef COMPOSITE
+                        || pChild->redirectDraw
+#endif
+                        )
 		    {
 			REGION_TRANSLATE( pScreen, &pChild->borderClip,
 						      dx, dy);
@@ -491,9 +495,15 @@ miComputeClips (
      *
      * To figure the exposure of the window we subtract the old clip from the
      * new, just as for the border.
+     *
+     * For composite this optimization is incorrect since
+     * the window should not in fact be exposed just because it
+     * was FullyObscured before.
      */
-
-    if (oldVis == VisibilityFullyObscured ||
+    if (
+#ifndef COMPOSITE
+        oldVis == VisibilityFullyObscured ||
+#endif
 	oldVis == VisibilityNotViewable)
     {
 	REGION_COPY( pScreen, &pParent->valdata->after.exposed, universe);

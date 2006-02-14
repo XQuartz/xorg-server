@@ -3,6 +3,9 @@
 	* include/xorg-config.h.in:
 	Make self-backtracing work.  Spotted by many people, patch from Gentoo.
 
+	* os/access.c:
+	Bug #5218: Avoid crashing on unconfigured interfaces.  (Andrei Barbu)
+
 2005-12-20  Kevin E. Martin  <kem-at-freedesktop-dot-org>
 
 	* configure.ac:

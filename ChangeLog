@@ -1,5 +1,13 @@
 2006-02-15  Eric Anholt  <anholt@FreeBSD.org>
 
+	* include/dix-config.h.in:
+	Merge from HEAD:
+	Add #undef BSD44SOCKETS, without which the listener socket on FreeBSD
+	would be created without the port number due to xtrans's define not
+	being used when xtrans was compiled in the X Server.
+
+2006-02-15  Eric Anholt  <anholt@FreeBSD.org>
+
 	* configure.ac:
 	Merge from HEAD:
 	Fix the AC_TRY_RUN for sys/linker.h which had no hope due to lacking a

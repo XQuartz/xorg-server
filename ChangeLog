@@ -1,5 +1,14 @@
 2006-02-15  Eric Anholt  <anholt@FreeBSD.org>
 
+	* configure.ac:
+	Merge from HEAD:
+	Fix the AC_TRY_RUN for sys/linker.h which had no hope due to lacking a
+	main() to instead use a nice AC_CHECK_HEADERS that works.  Also, fix
+	the nearby SYSV IPC check which was lacking an argument and giving
+	bogus results (it's "AC_TRY_LINK(includes, main, yes, no)").
+
+2006-02-15  Eric Anholt  <anholt@FreeBSD.org>
+
 	* render/picture.c: (premultiply):
 	Merge from HEAD:
 	Correct rounding in divide-by-255 code.

@@ -1,3 +1,9 @@
+2006-02-15  Eric Anholt  <anholt@FreeBSD.org>
+
+	* render/picture.c: (premultiply):
+	Merge from HEAD:
+	Correct rounding in divide-by-255 code.
+
 2006-02-14  Adam Jackson  <ajax@freedesktop.org>
 
 	* include/xorg-config.h.in:

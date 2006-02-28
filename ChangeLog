@@ -3,13 +3,16 @@
 	* XpConfig/C/print/models/CANONC3200-PS/fonts/Makefile.am:
 	* XpConfig/C/print/models/HPLJ4050-PS/fonts/Makefile.am:
 	* XpConfig/C/print/models/SPSPARC2/fonts/Makefile.am:
-	Bug #5627: Fix Xprint font symlinking. (TIlman Sauerbeck)
+	Bug #5627: Fix Xprint font symlinking. (Tilman Sauerbeck)
 
 	* randr/Makefile.am:
 	Sync with head, install randrstr.h in the SDK.
 
 	* xkb/maprules.c:
 	Bug #5216: Allow options to appear with other components.
+
+	* hw/xfree86/common/xf86PciInfo.h:
+	Resync with head.
 
 2006-02-15  Eric Anholt  <anholt@FreeBSD.org>
 

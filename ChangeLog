@@ -8,6 +8,9 @@
 	* randr/Makefile.am:
 	Sync with head, install randrstr.h in the SDK.
 
+	* xkb/maprules.c:
+	Bug #5216: Allow options to appear with other components.
+
 2006-02-15  Eric Anholt  <anholt@FreeBSD.org>
 
 	* include/dix-config.h.in:

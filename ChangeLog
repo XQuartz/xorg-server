@@ -5,6 +5,9 @@
 	* XpConfig/C/print/models/SPSPARC2/fonts/Makefile.am:
 	Bug #5627: Fix Xprint font symlinking. (TIlman Sauerbeck)
 
+	* randr/Makefile.am:
+	Sync with head, install randrstr.h in the SDK.
+
 2006-02-15  Eric Anholt  <anholt@FreeBSD.org>
 
 	* include/dix-config.h.in:

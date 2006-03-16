@@ -1,3 +1,9 @@
+2006-03-16  Adam Jackson  <ajax@freedesktop.org>
+
+	* render/picture.c:
+	* miext/cw/cw.h:
+	Bug #6191: Sync Render gradient fixes from head.  (Lars Knoll)
+
 2006-03-14  Eric Anholt  <anholt@FreeBSD.org>
 
 	* GL/mesa/array_cache/Makefile.am:

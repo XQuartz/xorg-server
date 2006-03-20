@@ -1,5 +1,5 @@
 /* $XFree86: xc/programs/Xserver/hw/xfree86/common/xf86Init.c,v 3.212 2004/01/27 01:31:45 dawes Exp $ */
-/* $XdotOrg: $ */
+/* $XdotOrg: xserver/xorg/hw/xfree86/common/xf86Init.c,v 1.29 2005/12/14 20:11:16 ajax Exp $ */
 
 /*
  * Loosely based on code bearing the following copyright:
@@ -1376,7 +1376,7 @@ ddxProcessArgument(int argc, char **argv, int i)
     }
   
   /* First the options that are only allowed for root */
-  if (getuid() == 0 || geteuid != 0)
+  if (getuid() == 0 || geteuid() != 0)
   {
     if (!strcmp(argv[i], "-modulepath"))
     {
@@ -1679,7 +1679,7 @@ ddxProcessArgument(int argc, char **argv, int i)
   }
   if (!strcmp(argv[i], "-configure"))
   {
-    if (getuid() != 0 && geteuid == 0) {
+    if (getuid() != 0 && geteuid() == 0) {
 	ErrorF("The '-configure' option can only be used by root.\n");
 	exit(1);
     }

@@ -1,5 +1,12 @@
 2006-04-03  Adam Jackson  <ajax@freedesktop.org>
 
+	* hw/dmx/glxProxy/glxcmds.c:
+	Fix a server crash due to memsetting beyond allocated memory 
+	when running GL applications. (Alan Hourihane, backported from 
+	head)
+
+2006-04-03  Adam Jackson  <ajax@freedesktop.org>
+
 	* fb/fbmmx.c:
 	Bug #6346: Build fix when using gcc -mno-sse. (Jonathan 
 	Adamczewski)

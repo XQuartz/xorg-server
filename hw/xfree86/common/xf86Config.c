@@ -1,4 +1,4 @@
-/* $XdotOrg: xserver/xorg/hw/xfree86/common/xf86Config.c,v 1.23.2.1 2006/04/03 21:59:58 ajax Exp $ */
+/* $XdotOrg: xserver/xorg/hw/xfree86/common/xf86Config.c,v 1.23.2.2 2006/04/07 01:34:20 ajax Exp $ */
 /* $XFree86: xc/programs/Xserver/hw/xfree86/common/xf86Config.c,v 3.276 2003/10/08 14:58:26 dawes Exp $ */
 
 
@@ -2034,8 +2034,10 @@ configImpliedLayout(serverLayoutPtr servlayoutp, XF86ConfScreenPtr conf_screen)
     slp = xnfcalloc(1, 2 * sizeof(screenLayoutRec));
     slp[0].screen = xnfcalloc(1, sizeof(confScreenRec));
     slp[1].screen = NULL;
-    if (!configScreen(slp[0].screen, conf_screen, 0, from))
+    if (!configScreen(slp[0].screen, conf_screen, 0, from)) {
+	xfree(slp);
 	return FALSE;
+    }
     servlayoutp->id = "(implicit)";
     servlayoutp->screens = slp;
     servlayoutp->inactives = xnfcalloc(1, sizeof(GDevRec));

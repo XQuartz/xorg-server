@@ -1,3 +1,14 @@
+2006-04-14  Adam Jackson  <ajax@freedesktop.org>
+
+	* ChangeLog:
+	* hw/xfree86/os-support/Makefile.am:
+	Bug #6580: Don't install xf86drm.h, that's libdrm's job.
+
+2006-04-14  Adam Jackson  <ajax@freedesktop.org>
+
+	* hw/xfree86/os-support/Makefile.am:
+	Bug #6580: Don't install xf86drm.h, that's libdrm's job.
+
 Mon Apr 10 11:00:46 2006  Søren Sandmann  <sandmann@redhat.com>
 
 	* composite/compext.c (ProcCompositeReleaseOverlayWindow): Use

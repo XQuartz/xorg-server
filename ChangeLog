@@ -1,3 +1,10 @@
+2006-04-17  Donnie Berkholz  <spyderous@gentoo.org>
+
+	reviewed by: Adam Jackson
+
+	* hw/kdrive/ephyr/Makefile.am:
+	Bug #6628: Fix kdrive build by linking in libexa before KDRIVE_LIBS.
+
 2006-04-15  Luc Verhaegen  <libv@skynet.be>
 
 	* hw/xfree86/utils/cvt/cvt.c: (PrintUsage):

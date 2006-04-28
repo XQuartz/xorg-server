@@ -1,5 +1,11 @@
 2006-04-28  Adam Jackson  <ajax@freedesktop.org>
 
+	* hw/xfree86/common/xf86pciBus.c:
+	* hw/xfree86/os-support/shared/stdResource.c:
+	Bug #6750: Fixup for quirky Intel bridges. (Dave Airlie)
+
+2006-04-28  Adam Jackson  <ajax@freedesktop.org>
+
 	* hw/xfree86/os-support/bus/Pci.c:
 	* hw/xfree86/os-support/bus/Pci.h:
 	* hw/xfree86/os-support/bus/linuxPci.c:

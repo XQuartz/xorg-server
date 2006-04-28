@@ -1,3 +1,11 @@
+2006-04-28  Adam Jackson  <ajax@freedesktop.org>
+
+	* hw/xfree86/os-support/bus/Pci.c:
+	* hw/xfree86/os-support/bus/Pci.h:
+	* hw/xfree86/os-support/bus/linuxPci.c:
+	Bug #6751: Use sysfs to read card ROMs if available. (Dave 
+	Airlie)
+
 2006-04-24  Adam Jackson  <ajax@freedesktop.org>
 
 	* fb/fbcompose.c:

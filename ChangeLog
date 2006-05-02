@@ -1,3 +1,9 @@
+2006-05-02  Adam Jackson  <ajax@freedesktop.org>
+
+	* render/mitri.c:
+	Bug #6642: Fix buffer overflow in Render.  (CVE 2006-1526, patch
+	from Eric Anholt)
+
 2006-04-28  Adam Jackson  <ajax@freedesktop.org>
 
 	* configure.ac:

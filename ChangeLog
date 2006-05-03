@@ -1,3 +1,9 @@
+2006-05-03  Alan Coopersmith  <alan.coopersmith@sun.com>
+
+	* os/WaitFor.c:
+        Use min() [defined in include/misc.h] instead of MIN() [not defined in
+        any Xorg header].
+
 2006-05-02  Adam Jackson  <ajax@freedesktop.org>
 
 	* render/mitri.c:

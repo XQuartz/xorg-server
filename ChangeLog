@@ -1,5 +1,12 @@
 2006-05-15  Adam Jackson  <ajax@freedesktop.org>
 
+	* configure.ac:
+	* hw/xfree86/os-support/linux/lnx_acpi.c:
+	Bug #5209: Fix APM/ACPI support, again. (Michel Dänzer, Valery 
+	Inozemtsev)
+
+2006-05-15  Adam Jackson  <ajax@freedesktop.org>
+
 	* Xext/sync.c:
 	Bug #6903: Fix a crash in the Sync extension.  (Søren Sandmann)
 

@@ -1,3 +1,8 @@
+2006-05-15  Adam Jackson  <ajax@freedesktop.org>
+
+	* configure.ac:
+	Bug #6916: Build fix for non-Linux.  (Matthieu Herrb)
+
 2006-05-12  Adam Jackson  <ajax@freedesktop.org>
 
 	* configure.ac:

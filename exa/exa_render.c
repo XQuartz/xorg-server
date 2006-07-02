@@ -490,7 +490,8 @@ exaComposite(CARD8	op,
 	if (op == PictOpSrc)
 	{
 	    if (pSrc->pDrawable->width == 1 &&
-		pSrc->pDrawable->height == 1 && pSrc->repeat)
+		pSrc->pDrawable->height == 1 && pSrc->repeat &&
+		pSrc->repeatType == RepeatNormal)
 	    {
 		ret = exaTryDriverSolidFill(pSrc, pDst, xSrc, ySrc, xDst, yDst,
 					    width, height);
@@ -531,6 +532,8 @@ exaComposite(CARD8	op,
 
 
     if (pExaScr->info->PrepareComposite &&
+	(!pSrc->repeat || pSrc->repeat == RepeatNormal) &&
+	(!pMask || !pMask->repeat || pMask->repeat == RepeatNormal) &&
 	!pSrc->alphaMap && (!pMask || !pMask->alphaMap) && !pDst->alphaMap)
     {
 	ret = exaTryDriverComposite(op, pSrc, pMask, pDst, xSrc, ySrc, xMask,

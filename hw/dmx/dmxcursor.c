@@ -664,8 +664,8 @@ static Bool _dmxUnrealizeCursor(ScreenPtr pScreen, CursorPtr pCursor)
 {
     DMXScreenInfo    *dmxScreen = &dmxScreens[pScreen->myNum];
 
-    DMXDBG2("_dmxUnrealizeCursor(%d,%p)\n",
-            pScreen->myNum, pCursor);
+    DMXDBG3("_dmxUnrealizeCursor(%d,%p) %p\n",
+            pScreen->myNum, pCursor, pCursorPriv);
 
     if (dmxScreen->beDisplay) {
 	if (dmxBEFreeCursor(pScreen, pCursor))

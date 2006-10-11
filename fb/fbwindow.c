@@ -118,9 +118,6 @@ fbCopyWindowProc (DrawablePtr	pSrcDrawable,
 	       upsidedown);
 	pbox++;
     }
-
-    fbFinishAccess (pDstDrawable);
-    fbFinishAccess (pSrcDrawable);
 }
 
 void 
@@ -252,8 +249,6 @@ fbFillRegionSolid (DrawablePtr	pDrawable,
 	fbValidateDrawable (pDrawable);
 	pbox++;
     }
-
-    fbFinishAccess (pDrawable);
 }
 
 #ifdef PANORAMIX
@@ -316,9 +311,6 @@ fbFillRegionTiled (DrawablePtr	pDrawable,
 		yRot - (pbox->y1 + dstYoff));
 	pbox++;
     }
-
-    fbFinishAccess (&pTile->drawable);
-    fbFinishAccess (pDrawable);
 }
 
 void

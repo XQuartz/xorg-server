@@ -76,14 +76,12 @@ rasterizeEdges (FbBits		*buf,
 		x &= FB_MASK;
 
 		FbMaskBits (x, width, startmask, nmiddle, endmask);
-		if (startmask) {
-		    WRITE(a, READ(a) | startmask);
-		    a++;
-		}
+		if (startmask)
+		    *a++ |= startmask;
 		while (nmiddle--)
-		    WRITE(a++, FB_ALLONES);
+		    *a++ = FB_ALLONES;
 		if (endmask)
-		    WRITE(a, READ(a) | endmask);
+		    *a |= endmask;
 	    }
 #else
 	    {

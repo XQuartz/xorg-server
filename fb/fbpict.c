@@ -137,25 +137,22 @@ fbCompositeSolidMask_nx8x8888 (CARD8      op,
 
 	while (w--)
 	{
-	    m = READ(mask++);
+	    m = *mask++;
 	    if (m == 0xff)
 	    {
 		if (srca == 0xff)
-		    WRITE(dst, src & dstMask);
+		    *dst = src & dstMask;
 		else
-		    WRITE(dst, fbOver (src, READ(dst)) & dstMask);
+		    *dst = fbOver (src, *dst) & dstMask;
 	    }
 	    else if (m)
 	    {
 		d = fbIn (src, m);
-		WRITE(dst, fbOver (d, READ(dst)) & dstMask);
+		*dst = fbOver (d, *dst) & dstMask;
 	    }
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -199,17 +196,17 @@ fbCompositeSolidMask_nx8888x8888C (CARD8      op,
 
 	while (w--)
 	{
-	    ma = READ(mask++);
+	    ma = *mask++;
 	    if (ma == 0xffffffff)
 	    {
 		if (srca == 0xff)
-		    WRITE(dst, src & dstMask);
+		    *dst = src & dstMask;
 		else
-		    WRITE(dst, fbOver (src, READ(dst)) & dstMask);
+		    *dst = fbOver (src, *dst) & dstMask;
 	    }
 	    else if (ma)
 	    {
-		d = READ(dst);
+		d = *dst;
 #define FbInOverC(src,srca,msk,dst,i,result) { \
     CARD16  __a = FbGet8(msk,i); \
     CARD32  __t, __ta; \
@@ -224,14 +221,11 @@ fbCompositeSolidMask_nx8888x8888C (CARD8      op,
 		FbInOverC (src, srca, ma, d, 8, n);
 		FbInOverC (src, srca, ma, d, 16, o);
 		FbInOverC (src, srca, ma, d, 24, p);
-		WRITE(dst, m|n|o|p);
+		*dst = m|n|o|p;
 	    }
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -274,7 +268,7 @@ fbCompositeSolidMask_nx8x0888 (CARD8      op,
 
 	while (w--)
 	{
-	    m = READ(mask++);
+	    m = *mask++;
 	    if (m == 0xff)
 	    {
 		if (srca == 0xff)
@@ -294,9 +288,6 @@ fbCompositeSolidMask_nx8x0888 (CARD8      op,
 	    dst += 3;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -339,30 +330,27 @@ fbCompositeSolidMask_nx8x0565 (CARD8      op,
 
 	while (w--)
 	{
-	    m = READ(mask++);
+	    m = *mask++;
 	    if (m == 0xff)
 	    {
 		if (srca == 0xff)
 		    d = src;
 		else
 		{
-		    d = READ(dst);
+		    d = *dst;
 		    d = fbOver24 (src, cvt0565to8888(d));
 		}
-		WRITE(dst, cvt8888to0565(d));
+		*dst = cvt8888to0565(d);
 	    }
 	    else if (m)
 	    {
-		d = READ(dst);
+		d = *dst;
 		d = fbOver24 (fbIn(src,m), cvt0565to8888(d));
-		WRITE(dst, cvt8888to0565(d));
+		*dst = cvt8888to0565(d);
 	    }
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -409,36 +397,33 @@ fbCompositeSolidMask_nx8888x0565C (CARD8      op,
 
 	while (w--)
 	{
-	    ma = READ(mask++);
+	    ma = *mask++;
 	    if (ma == 0xffffffff)
 	    {
 		if (srca == 0xff)
 		{
-		    WRITE(dst, src16);
+		    *dst = src16;
 		}
 		else
 		{
-		    d = READ(dst);
+		    d = *dst;
 		    d = fbOver24 (src, cvt0565to8888(d));
-		    WRITE(dst, cvt8888to0565(d));
+		    *dst = cvt8888to0565(d);
 		}
 	    }
 	    else if (ma)
 	    {
-		d = READ(dst);
+		d = *dst;
 		d = cvt0565to8888(d);
 		FbInOverC (src, srca, ma, d, 0, m);
 		FbInOverC (src, srca, ma, d, 8, n);
 		FbInOverC (src, srca, ma, d, 16, o);
 		d = m|n|o;
-		WRITE(dst, cvt8888to0565(d));
+		*dst = cvt8888to0565(d);
 	    }
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pMask->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -476,18 +461,15 @@ fbCompositeSrc_8888x8888 (CARD8      op,
 
 	while (w--)
 	{
-	    s = READ(src++);
+	    s = *src++;
 	    a = s >> 24;
 	    if (a == 0xff)
-		WRITE(dst, s & dstMask);
+		*dst = s & dstMask;
 	    else if (a)
-		WRITE(dst, fbOver (s, READ(dst)) & dstMask);
+		*dst = fbOver (s, *dst) & dstMask;
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pSrc->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -524,7 +506,7 @@ fbCompositeSrc_8888x0888 (CARD8      op,
 
 	while (w--)
 	{
-	    s = READ(src++);
+	    s = *src++;
 	    a = s >> 24;
 	    if (a)
 	    {
@@ -537,9 +519,6 @@ fbCompositeSrc_8888x0888 (CARD8      op,
 	    dst += 3;
 	}
     }
-
-    fbFinishAccess (pSrc->pDrawable);
-    fbFinishAccess (pDst->pDrawable);
 }
 
 void
@@ -576,7 +555,7 @@ fbCompositeSrc_8888x0565 (CARD8      op,
 
 	while (w--)
 	{
-	    s = READ(src++);
+	    s = *src++;
 	    a = s >> 24;
 	    if (a)
 	    {
@@ -584,17 +563,14 @@ fbCompositeSrc_8888x0565 (CARD8      op,
 		    d = s;
 		else
 		{
-		    d = READ(dst);
+		    d = *dst;
 		    d = fbOver24 (s, cvt0565to8888(d));
 		}
-		WRITE(dst, cvt8888to0565(d));
+		*dst = cvt8888to0565(d);
 	    }
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pSrc->pDrawable);
 }
 
 void
@@ -629,11 +605,8 @@ fbCompositeSrc_0565x0565 (CARD8      op,
 	w = width;
 
 	while (w--)
-	    WRITE(dst, READ(src++));
+	    *dst++ = *src++;
     }
-
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pSrc->pDrawable);
 }
 
 void
@@ -670,23 +643,20 @@ fbCompositeSrcAdd_8000x8000 (CARD8	op,
 
 	while (w--)
 	{
-	    s = READ(src++);
+	    s = *src++;
 	    if (s)
 	    {
 		if (s != 0xff)
 		{
-		    d = READ(dst);
+		    d = *dst;
 		    t = d + s;
 		    s = t | (0 - (t >> 8));
 		}
-		WRITE(dst, s);
+		*dst = s;
 	    }
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pSrc->pDrawable);
 }
 
 void
@@ -724,12 +694,12 @@ fbCompositeSrcAdd_8888x8888 (CARD8	op,
 
 	while (w--)
 	{
-	    s = READ(src++);
+	    s = *src++;
 	    if (s)
 	    {
 		if (s != 0xffffffff)
 		{
-		    d = READ(dst);
+		    d = *dst;
 		    if (d)
 		    {
 			m = FbAdd(s,d,0,t);
@@ -739,14 +709,11 @@ fbCompositeSrcAdd_8888x8888 (CARD8	op,
 			s = m|n|o|p;
 		    }
 		}
-		WRITE(dst, s);
+		*dst = s;
 	    }
 	    dst++;
 	}
     }
-
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pSrc->pDrawable);
 }
 
 void
@@ -790,9 +757,6 @@ fbCompositeSrcAdd_1000x1000 (CARD8	op,
 
 	   FALSE,
 	   FALSE);
-
-    fbFinishAccess(pDst->pDrawable);
-    fbFinishAccess(pSrc->pDrawable);
 }
 
 void
@@ -857,9 +821,6 @@ fbCompositeSolidMask_nx1xn (CARD8      op,
 	      src,
 	      FB_ALLONES,
 	      0x0);
-
-    fbFinishAccess (pDst->pDrawable);
-    fbFinishAccess (pMask->pDrawable);
 }
 
 # define mod(a,b)	((b) == 1 ? 0 : (a) >= 0 ? (a) % (b) : (b) - (-a) % (b))

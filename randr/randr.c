@@ -42,9 +42,6 @@
 int	RRGeneration;
 int	RRNScreens;
 
-static int ProcRRDispatch (ClientPtr pClient);
-static int SProcRRDispatch (ClientPtr pClient);
-
 #define wrap(priv,real,mem,func) {\
     priv->mem = real->mem; \
     real->mem = func; \
@@ -53,6 +50,9 @@ static int SProcRRDispatch (ClientPtr pClient);
 #define unwrap(priv,real,mem) {\
     real->mem = priv->mem; \
 }
+
+static int ProcRRDispatch (ClientPtr pClient);
+static int SProcRRDispatch (ClientPtr pClient);
 
 int	RREventBase;
 int	RRErrorBase;

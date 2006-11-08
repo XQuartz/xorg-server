@@ -1636,8 +1636,8 @@ xf86VTSwitch()
 
 /* Input handler registration */
 
-_X_EXPORT pointer
-xf86AddInputHandler(int fd, InputHandlerProc proc, pointer data)
+static pointer
+addInputHandler(int fd, InputHandlerProc proc, pointer data)
 {
     IHPtr ih;
 
@@ -1656,25 +1656,33 @@ xf86AddInputHandler(int fd, InputHandlerProc proc, pointer data)
     ih->next = InputHandlers;
     InputHandlers = ih;
 
-    AddEnabledDevice(fd);
-
     return ih;
 }
 
-_X_EXPORT int
-xf86RemoveInputHandler(pointer handler)
-{
-    IHPtr ih, p;
-    int fd;
-    
-    if (!handler)
-	return -1;
+_X_EXPORT pointer
+xf86AddInputHandler(int fd, InputHandlerProc proc, pointer data)
+{   
+    IHPtr ih = addInputHandler(fd, proc, data);
 
-    ih = handler;
-    fd = ih->fd;
-    
-    if (ih->fd >= 0)
-	RemoveEnabledDevice(ih->fd);
+    if (ih)
+        AddEnabledDevice(fd);
+    return ih;
+}
+
+_X_EXPORT pointer
+xf86AddGeneralHandler(int fd, InputHandlerProc proc, pointer data)
+{   
+    IHPtr ih = addInputHandler(fd, proc, data);
+
+    if (ih)
+        AddGeneralSocket(fd);
+    return ih;
+}
+
+static void
+removeInputHandler(IHPtr ih)
+{
+    IHPtr p;
 
     if (ih == InputHandlers)
 	InputHandlers = ih->next;
@@ -1686,6 +1694,43 @@ xf86RemoveInputHandler(pointer handler)
 	    p->next = ih->next;
     }
     xfree(ih);
+}
+
+_X_EXPORT int
+xf86RemoveInputHandler(pointer handler)
+{
+    IHPtr ih;
+    int fd;
+    
+    if (!handler)
+	return -1;
+
+    ih = handler;
+    fd = ih->fd;
+    
+    if (ih->fd >= 0)
+	RemoveEnabledDevice(ih->fd);
+    removeInputHandler(ih);
+
+    return fd;
+}
+
+_X_EXPORT int
+xf86RemoveGeneralHandler(pointer handler)
+{
+    IHPtr ih;
+    int fd;
+    
+    if (!handler)
+	return -1;
+
+    ih = handler;
+    fd = ih->fd;
+    
+    if (ih->fd >= 0)
+	RemoveGeneralSocket(ih->fd);
+    removeInputHandler(ih);
+
     return fd;
 }
 
@@ -1704,6 +1749,20 @@ xf86DisableInputHandler(pointer handler)
 }
 
 _X_EXPORT void
+xf86DisableGeneralHandler(pointer handler)
+{
+    IHPtr ih;
+
+    if (!handler)
+	return;
+
+    ih = handler;
+    ih->enabled = FALSE;
+    if (ih->fd >= 0)
+	RemoveGeneralSocket(ih->fd);
+}
+
+_X_EXPORT void
 xf86EnableInputHandler(pointer handler)
 {
     IHPtr ih;
@@ -1715,6 +1774,20 @@ xf86EnableInputHandler(pointer handler)
     ih->enabled = TRUE;
     if (ih->fd >= 0)
 	AddEnabledDevice(ih->fd);
+}
+
+_X_EXPORT void
+xf86EnableGeneralHandler(pointer handler)
+{
+    IHPtr ih;
+
+    if (!handler)
+	return;
+
+    ih = handler;
+    ih->enabled = TRUE;
+    if (ih->fd >= 0)
+	AddGeneralSocket(ih->fd);
 }
 
 /*

@@ -50,4 +50,5 @@ EXTRA_DIST = \
 	$(LNX_EXTRA_SOURCES) \
 	lnx.h \
 	lnx_kbd.h \
-	$(srcdir)/../shared/xf86Axp.h
+	$(srcdir)/../shared/xf86Axp.h \
+	$(srcdir)/../shared/ia64Pci.h

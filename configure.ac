@@ -25,7 +25,7 @@ dnl Process this file with autoconf to create configure.
 AC_PREREQ(2.57)
 dnl This is the not the Xorg version number, it's the server version number.
 dnl Yes, that's weird.
-AC_INIT([xorg-server], 1.1.99.901, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+AC_INIT([xorg-server], 1.1.99.903, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([dist-bzip2 foreign])
 AM_MAINTAINER_MODE
@@ -49,7 +49,6 @@ dnl xwin-config.h covers the XWin DDX.
 AC_CONFIG_HEADERS(include/xwin-config.h)
 dnl kdrive-config.h covers the kdrive DDX
 AC_CONFIG_HEADERS(include/kdrive-config.h)
-
 
 AC_PROG_CC
 AM_PROG_AS
@@ -298,8 +297,8 @@ DEFAULT_VENDOR_NAME_SHORT="X.Org"
 DEFAULT_VERSION_MAJOR=7
 DEFAULT_VERSION_MINOR=1
 DEFAULT_VERSION_PATCH=99
-DEFAULT_VERSION_SNAP=2
-DEFAULT_RELEASE_DATE="21 December 2005"
+DEFAULT_VERSION_SNAP=903
+DEFAULT_RELEASE_DATE="30 November 2006"
 DEFAULT_VENDOR_WEB="http://wiki.x.org"
 
 m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])
@@ -370,7 +369,7 @@ AC_ARG_WITH(mesa-source,     AS_HELP_STRING([--with-mesa-source=MESA_SOURCE], [P
 AC_ARG_WITH(fontdir,         AS_HELP_STRING([--with-fontdir=FONTDIR], [Path to top level dir where fonts are installed (default: ${libdir}/X11/fonts)]),
                                 [ FONTDIR="$withval" ],
                                 [ FONTDIR="${libdir}/X11/fonts" ])
-DEFAULT_FONT_PATH="${FONTDIR}/misc/,${FONTDIR}/TTF/,${FONTDIR}/OTF,${FONTDIR}/Type1/,${FONTDIR}/CID/,${FONTDIR}/100dpi/,${FONTDIR}/75dpi/"
+DEFAULT_FONT_PATH="${FONTDIR}/misc/,${FONTDIR}/TTF/,${FONTDIR}/OTF,${FONTDIR}/Type1/,${FONTDIR}/100dpi/,${FONTDIR}/75dpi/"
 AC_ARG_WITH(default-font-path, AS_HELP_STRING([--with-default-font-path=PATH], [Comma separated list of font dirs]),
 				[ FONTPATH="$withval" ],
 				[ FONTPATH="${DEFAULT_FONT_PATH}" ])
@@ -615,10 +614,11 @@ AM_CONDITIONAL(DRI, test "x$DRI" = xyes)
 if test "x$DRI" = xyes; then
 	AC_DEFINE(XF86DRI, 1, [Build DRI extension])
 	PKG_CHECK_MODULES([DRIPROTO], [xf86driproto])
-	PKG_CHECK_MODULES([LIBDRM], [libdrm])
+	PKG_CHECK_MODULES([LIBDRM], [libdrm >= 2.3.0])
 	PKG_CHECK_MODULES([GL], [glproto >= 1.4.1])
 	AC_SUBST(DRIPROTO_CFLAGS)
 	AC_SUBST(LIBDRM_CFLAGS)
+	AC_SUBST(LIBDRM_LIBS)
 	AC_SUBST(GL_CFLAGS)
 fi
 
@@ -1329,6 +1329,7 @@ int main () {
 	AC_DEFINE_DIR(__XCONFIGFILE__, XF86CONFIGFILE, [Name of configuration file])
 	AC_DEFINE_DIR(XF86CONFIGFILE, XF86CONFIGFILE, [Name of configuration file])
 	AC_DEFINE_DIR(DEFAULT_MODULE_PATH, moduledir, [Default module search path])
+	AC_DEFINE_DIR(DEFAULT_LIBRARY_PATH, libdir, [Default library install path])
 	AC_DEFINE_DIR(DEFAULT_LOGPREFIX, LOGPREFIX, [Default log location])
 	AC_DEFINE_UNQUOTED(__VENDORDWEBSUPPORT__, ["$VENDOR_WEB"], [Vendor web address for support])
 
@@ -1743,7 +1744,6 @@ hw/xfree86/loader/Makefile
 hw/xfree86/os-support/Makefile
 hw/xfree86/os-support/bsd/Makefile
 hw/xfree86/os-support/bus/Makefile
-hw/xfree86/os-support/drm/Makefile
 hw/xfree86/os-support/hurd/Makefile
 hw/xfree86/os-support/misc/Makefile
 hw/xfree86/os-support/linux/Makefile

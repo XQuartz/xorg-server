@@ -216,10 +216,10 @@ static unsigned char map[256] = {
 	KEY_UNKNOWN,		/* 134 */
 #elif defined(sparc) || defined(__sparc__)
 	KEY_UNKNOWN,		/* 0x00 */
-	KEY_UNKNOWN,		/* 0x01 */
-	KEY_UNKNOWN,		/* 0x02 */
-	KEY_UNKNOWN,		/* 0x03 */
-	KEY_UNKNOWN,		/* 0x04 */
+	KEY_L1,			/* 0x01 */
+	KEY_AudioLower,		/* 0x02 */
+	KEY_L2,			/* 0x03 */
+	KEY_AudioRaise,		/* 0x04 */
 	KEY_F1,			/* 0x05 */
 	KEY_F2,			/* 0x06 */
 	KEY_F10,		/* 0x07 */
@@ -228,9 +228,9 @@ static unsigned char map[256] = {
 	KEY_F4,			/* 0x0A */
 	KEY_F12,		/* 0x0B */
 	KEY_F5,			/* 0x0C */
-	KEY_UNKNOWN,		/* 0x0D */
+	KEY_AltLang,		/* 0x0D */
 	KEY_F6,			/* 0x0E */
-	KEY_UNKNOWN,		/* 0x0F */
+	0x7a, /* <I02> */	/* 0x0F */	/* Blank key on US Unix */
 	KEY_F7,			/* 0x10 */
 	KEY_F8,			/* 0x11 */
 	KEY_F9,			/* 0x12 */
@@ -240,8 +240,8 @@ static unsigned char map[256] = {
 	KEY_SysReqest,		/* 0x16 */
 	KEY_ScrollLock,		/* 0x17 */
 	KEY_Left,		/* 0x18 */
-	KEY_UNKNOWN,		/* 0x19 */
-	KEY_UNKNOWN,		/* 0x1A */
+	KEY_L3,			/* 0x19 */
+	KEY_L4,			/* 0x1A */
 	KEY_Down,		/* 0x1B */
 	KEY_Right,		/* 0x1C */
 	KEY_Escape,		/* 0x1D */
@@ -260,13 +260,13 @@ static unsigned char map[256] = {
 	KEY_Tilde,		/* 0x2A */
 	KEY_BackSpace,		/* 0x2B */
 	KEY_Insert,		/* 0x2C */
-	KEY_UNKNOWN,		/* 0x2D */
+	KEY_Mute,		/* 0x2D */
 	KEY_KP_Divide,		/* 0x2E */
 	KEY_KP_Multiply,	/* 0x2F */
-	KEY_UNKNOWN,		/* 0x30 */
-	KEY_UNKNOWN,		/* 0x31 */
+	KEY_Power,		/* 0x30 */
+	KEY_L5,			/* 0x31 */
 	KEY_KP_Decimal,		/* 0x32 */
-	KEY_UNKNOWN,		/* 0x33 */
+	KEY_L6,			/* 0x33 */
 	KEY_Home,		/* 0x34 */
 	KEY_Tab,		/* 0x35 */
 	KEY_Q,			/* 0x36 */
@@ -282,13 +282,13 @@ static unsigned char map[256] = {
 	KEY_LBrace,		/* 0x40 */
 	KEY_RBrace,		/* 0x41 */
 	KEY_Delete,		/* 0x42 */
-	KEY_UNKNOWN,		/* 0x43 */
+	KEY_Menu,		/* 0x43 */
 	KEY_KP_7,		/* 0x44 */
 	KEY_KP_8,		/* 0x45 */
 	KEY_KP_9,		/* 0x46 */
 	KEY_KP_Minus,		/* 0x47 */
-	KEY_UNKNOWN,		/* 0x48 */
-	KEY_UNKNOWN,		/* 0x49 */
+	KEY_L7,			/* 0x48 */
+	KEY_L8,			/* 0x49 */
 	KEY_End,		/* 0x4A */
 	KEY_UNKNOWN,		/* 0x4B */
 	KEY_LCtrl,		/* 0x4C */
@@ -310,9 +310,9 @@ static unsigned char map[256] = {
 	KEY_KP_5,		/* 0x5C */
 	KEY_KP_6,		/* 0x5D */
 	KEY_KP_0,		/* 0x5E */
-	KEY_UNKNOWN,		/* 0x5F */
+	KEY_L9,			/* 0x5F */
 	KEY_PgUp,		/* 0x60 */
-	KEY_UNKNOWN,		/* 0x61 */
+	KEY_L10,		/* 0x61 */
 	KEY_NumLock,		/* 0x62 */
 	KEY_ShiftL,		/* 0x63 */
 	KEY_Z,			/* 0x64 */
@@ -333,7 +333,7 @@ static unsigned char map[256] = {
 	KEY_UNKNOWN,		/* 0x73 */
 	KEY_UNKNOWN,		/* 0x74 */
 	KEY_UNKNOWN,		/* 0x75 */
-	KEY_UNKNOWN,		/* 0x76 */
+	KEY_Help,		/* 0x76 */
 	KEY_CapsLock,		/* 0x77 */
 	KEY_LMeta,		/* 0x78 */
 	KEY_Space,		/* 0x79 */

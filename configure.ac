@@ -153,7 +153,7 @@ AC_CACHE_CHECK([for SYSV IPC],
 		[AC_TRY_LINK([
 #include <sys/shm.h>
 ],[
-int main () { 
+{ 
     int id;
     id = shmget(IPC_PRIVATE, 512, SHM_W | SHM_R);
     if (id < 0) return -1;
@@ -298,7 +298,7 @@ DEFAULT_VERSION_MAJOR=7
 DEFAULT_VERSION_MINOR=1
 DEFAULT_VERSION_PATCH=99
 DEFAULT_VERSION_SNAP=903
-DEFAULT_RELEASE_DATE="30 November 2006"
+DEFAULT_RELEASE_DATE="1 December 2006"
 DEFAULT_VENDOR_WEB="http://wiki.x.org"
 
 m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])

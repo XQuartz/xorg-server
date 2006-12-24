@@ -25,7 +25,7 @@ dnl Process this file with autoconf to create configure.
 AC_PREREQ(2.57)
 dnl This is the not the Xorg version number, it's the server version number.
 dnl Yes, that's weird.
-AC_INIT([xorg-server], 1.1.99.903, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+AC_INIT([xorg-server], 1.2.0, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([dist-bzip2 foreign])
 AM_MAINTAINER_MODE
@@ -295,10 +295,10 @@ AC_DEFINE_UNQUOTED(OSNAME, "$OSNAME",
 DEFAULT_VENDOR_NAME="The X.Org Foundation"
 DEFAULT_VENDOR_NAME_SHORT="X.Org"
 DEFAULT_VERSION_MAJOR=7
-DEFAULT_VERSION_MINOR=1
-DEFAULT_VERSION_PATCH=99
-DEFAULT_VERSION_SNAP=903
-DEFAULT_RELEASE_DATE="1 December 2006"
+DEFAULT_VERSION_MINOR=2
+DEFAULT_VERSION_PATCH=0
+DEFAULT_VERSION_SNAP=0
+DEFAULT_RELEASE_DATE="24 December 2006"
 DEFAULT_VENDOR_WEB="http://wiki.x.org"
 
 m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])

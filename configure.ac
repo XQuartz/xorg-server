@@ -1129,10 +1129,6 @@ dnl has it in libc), or if libdl is needed to get it.
 		# on kernels < 2.5.42 it's called 'rate' instead.
 		AC_TRY_COMPILE([
 #include <linux/kd.h>
-#ifdef __sparc__
-#include <asm/param.h>
-#include <asm/kbio.h>
-#endif
 ],[
 int main () { 
 	struct kbd_repeat k;

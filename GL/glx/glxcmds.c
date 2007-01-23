@@ -59,6 +59,19 @@
 #include "indirect_table.h"
 #include "indirect_util.h"
 
+_X_HIDDEN int
+glxCountBits(int word)
+{
+    int ret = 0;
+
+    while (word) {
+        ret += (word & 1);
+        word >>= 1;
+    }
+
+    return ret;
+}
+
 /************************************************************************/
 
 void
@@ -1660,6 +1673,7 @@ DoGetDrawableAttributes(__GLXclientState *cl, XID drawId)
     xGLXGetDrawableAttributesReply reply;
     CARD32 attributes[4];
     int numAttribs;
+    PixmapPtr	pixmap;
 
     glxPixmap = (__GLXpixmap *)LookupIDByType(drawId, __glXPixmapRes);
     if (!glxPixmap) {
@@ -1674,9 +1688,18 @@ DoGetDrawableAttributes(__GLXclientState *cl, XID drawId)
     reply.numAttribs = numAttribs;
 
     attributes[0] = GLX_TEXTURE_TARGET_EXT;
-    attributes[1] = GLX_TEXTURE_RECTANGLE_EXT;
     attributes[2] = GLX_Y_INVERTED_EXT;
     attributes[3] = GL_FALSE;
+
+    /* XXX this is merely less wrong, see fdo bug #8991 */
+    pixmap = (PixmapPtr) glxPixmap->pDraw;
+    if (!(glxCountBits(pixmap->drawable.width) == 1 &&
+	  glxCountBits(pixmap->drawable.height) == 1)
+	/* || strstr(CALL_GetString(GL_EXTENSIONS,
+	             "GL_ARB_texture_non_power_of_two")) */)
+	attributes[1] = GLX_TEXTURE_RECTANGLE_EXT;
+    else
+	attributes[1] = GLX_TEXTURE_2D_EXT;
 
     if (client->swapped) {
 	__glXSwapGetDrawableAttributesReply(client, &reply, attributes);

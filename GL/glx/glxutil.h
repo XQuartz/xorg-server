@@ -60,4 +60,6 @@ extern __GLXcontext *__glXLookupContextByTag(__GLXclientState*, GLXContextTag);
 extern void *__glXglDDXScreenInfo(void);
 extern void *__glXglDDXExtensionInfo(void);
 
+extern int glxCountBits(int);
+
 #endif /* _glxcmds_h_ */

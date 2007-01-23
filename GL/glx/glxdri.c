@@ -289,19 +289,6 @@ __glXDRIcontextForceCurrent(__GLXcontext *baseContext)
 					      &context->driContext);
 }
 
-static int
-glxCountBits(int word)
-{
-    int ret = 0;
-
-    while (word) {
-        ret += (word & 1);
-        word >>= 1;
-    }
-
-    return ret;
-}
-
 static void
 glxFillAlphaChannel (PixmapPtr pixmap, int x, int y, int width, int height)
 {

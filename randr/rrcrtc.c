@@ -81,6 +81,15 @@ RRCrtcCreate (void	*devPrivate)
 }
 
 /*
+ * Set the allowed rotations on a CRTC
+ */
+void
+RRCrtcSetRotations (RRCrtcPtr crtc, Rotation rotations)
+{
+    crtc->rotations = rotations;
+}
+
+/*
  * Attach a Crtc to a screen. This is done as a separate step
  * so that an xf86-based driver can create CRTCs in PreInit
  * before the Screen has been created

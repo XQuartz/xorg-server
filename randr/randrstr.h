@@ -480,6 +480,12 @@ RRCrtcPtr
 RRCrtcCreate (void	*devPrivate);
 
 /*
+ * Set the allowed rotations on a CRTC
+ */
+void
+RRCrtcSetRotations (RRCrtcPtr crtc, Rotation rotations);
+
+/*
  * Attach a CRTC to a screen. Once done, this cannot be
  * undone without destroying the CRTC; it is separate from Create
  * only to allow an xf86-based driver to create objects in preinit

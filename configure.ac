@@ -25,7 +25,7 @@ dnl Process this file with autoconf to create configure.
 AC_PREREQ(2.57)
 dnl This is the not the Xorg version number, it's the server version number.
 dnl Yes, that's weird.
-AC_INIT([xorg-server], 1.1.99.903, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+AC_INIT([xorg-server], 1.2.0, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([dist-bzip2 foreign])
 AM_MAINTAINER_MODE
@@ -295,10 +295,10 @@ AC_DEFINE_UNQUOTED(OSNAME, "$OSNAME",
 DEFAULT_VENDOR_NAME="The X.Org Foundation"
 DEFAULT_VENDOR_NAME_SHORT="X.Org"
 DEFAULT_VERSION_MAJOR=7
-DEFAULT_VERSION_MINOR=1
-DEFAULT_VERSION_PATCH=99
-DEFAULT_VERSION_SNAP=903
-DEFAULT_RELEASE_DATE="1 December 2006"
+DEFAULT_VERSION_MINOR=2
+DEFAULT_VERSION_PATCH=0
+DEFAULT_VERSION_SNAP=0
+DEFAULT_RELEASE_DATE="22 January 2007"
 DEFAULT_VENDOR_WEB="http://wiki.x.org"
 
 m4_ifdef([AS_HELP_STRING], , [m4_define([AS_HELP_STRING], m4_defn([AC_HELP_STRING]))])
@@ -577,7 +577,7 @@ fi
 
 if test "x$GLX" = xyes && ! test "x$MESA_SOURCE" = x; then
 	PKG_CHECK_MODULES([XLIB], [x11])
-	PKG_CHECK_MODULES([GL], [glproto >= 1.4.7])
+	PKG_CHECK_MODULES([GL], [glproto >= 1.4.8])
 	AC_SUBST(XLIB_CFLAGS)
 	AC_DEFINE(GLXEXT, 1, [Build GLX extension])
 	GLX_LIBS='$(top_builddir)/GL/glx/libglx.la $(top_builddir)/GL/mesa/libGLcore.la'
@@ -1129,10 +1129,6 @@ dnl has it in libc), or if libdl is needed to get it.
 		# on kernels < 2.5.42 it's called 'rate' instead.
 		AC_TRY_COMPILE([
 #include <linux/kd.h>
-#ifdef __sparc__
-#include <asm/param.h>
-#include <asm/kbio.h>
-#endif
 ],[
 int main () { 
 	struct kbd_repeat k;
@@ -1528,7 +1524,12 @@ if test "$KDRIVE" = yes; then
     #    $MIEXT_SHADOW_LIB $XPSTUBS_LIB"
     KDRIVE_PURE_LIBS="$FB_LIB $MI_LIB $FIXES_LIB $XEXT_LIB $DBE_LIB $XTRAP_LIB $RECORD_LIB $GLX_LIBS $RENDER_LIB $RANDR_LIB $DAMAGE_LIB $MIEXT_DAMAGE_LIB $MIEXT_SHADOW_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $COMPOSITE_LIB $XPSTUBS_LIB $OS_LIB"
     KDRIVE_LIB='$(top_builddir)/hw/kdrive/src/libkdrive.a'
-    KDRIVE_OS_LIB='$(top_builddir)/hw/kdrive/linux/liblinux.a'
+    case $host_os in
+	*linux*)
+	    KDRIVE_OS_LIB='$(top_builddir)/hw/kdrive/linux/liblinux.a'
+            KDRIVELINUX=yes
+	    ;;
+    esac
     KDRIVE_STUB_LIB='$(top_builddir)/hw/kdrive/src/libkdrivestubs.a'
     KDRIVE_LIBS="$DIX_LIB $KDRIVE_LIB $KDRIVE_OS_LIB $KDRIVE_PURE_LIBS $KDRIVE_STUB_LIB $TSLIB_LIBS"
 
@@ -1546,6 +1547,7 @@ AC_SUBST(KDRIVE_PURE_INCS)
 AC_SUBST(KDRIVE_CFLAGS)
 AC_SUBST(KDRIVE_PURE_LIBS)
 AC_SUBST(KDRIVE_LIBS)
+AM_CONDITIONAL(KDRIVELINUX, [test "x$KDRIVELINUX" = xyes])
 AM_CONDITIONAL(TSLIB, [test "x$HAVE_TSLIB" = xyes])
 AM_CONDITIONAL(H3600_TS, false)
 AM_CONDITIONAL(KDRIVEVESA, [test x"$ac_cv_header_sys_vm86_h" = xyes])
@@ -1597,20 +1599,13 @@ dnl and the rest of these are generic, so they're in config.h
 AC_DEFINE(XFreeXDGA, 1, [Build XDGA support])
 AC_DEFINE(XResExtension, 1, [Build XRes extension])
 
-dnl CYGWIN does not define fd_set if _POSIX_SOURCE is defined
-dnl _*_SOURCE on Solaris restricts to the standards, and removes non-standard
-dnl functions which X uses
-case $host_os in
-	cygwin*) ;;
-	solaris*) ;;
-        darwin*) ;;
-	freebsd*|netbsd*|openbsd*) ;;
-	*) 
-		AC_DEFINE(_POSIX_SOURCE, 1, [POSIX-compliant source])
-		AC_DEFINE(_XOPEN_SOURCE, 500, [X/Open-compliant source])
-		AC_DEFINE(_BSD_SOURCE, 1, [BSD-compliant source])
-		;;
-esac
+AC_TRY_COMPILE([
+#include <features.h>
+#ifndef __GLIBC__
+#error not glibc
+#endif
+], [], [AC_DEFINE(_GNU_SOURCE, 1,
+	[ Enable GNU and other extensions to the C environment for glibc])])
 
 AC_DEFINE_DIR(PROJECTROOT, prefix, [Overall prefix])
 

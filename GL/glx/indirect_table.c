@@ -645,7 +645,7 @@ static const void *Render_function_table[400][2] = {
     /* [ 302] =  4182 */ {__glXDisp_RequestResidentProgramsNV, __glXDispSwap_RequestResidentProgramsNV},
     /* [ 303] =  4183 */ {__glXDisp_LoadProgramNV, __glXDispSwap_LoadProgramNV},
     /* [ 304] =  4184 */ {__glXDisp_ProgramParameter4fvNV, __glXDispSwap_ProgramParameter4fvNV},
-    /* [ 305] =  4185 */ {__glXDisp_ProgramParameter4dvNV, __glXDispSwap_ProgramParameter4dvNV},
+    /* [ 305] =  4185 */ {__glXDisp_ProgramEnvParameter4dvARB, __glXDispSwap_ProgramEnvParameter4dvARB},
     /* [ 306] =  4186 */ {__glXDisp_ProgramParameters4fvNV, __glXDispSwap_ProgramParameters4fvNV},
     /* [ 307] =  4187 */ {__glXDisp_ProgramParameters4dvNV, __glXDispSwap_ProgramParameters4dvNV},
     /* [ 308] =  4188 */ {__glXDisp_TrackMatrixNV, __glXDispSwap_TrackMatrixNV},
@@ -886,10 +886,10 @@ static const int_fast16_t Render_size_table[400][2] = {
     /* [140] =   140 */ {  0, ~0},
     /* [141] =   141 */ {  4, ~0},
     /* [142] =   142 */ {  8, ~0},
-    /* [143] =   143 */ { 40, 20},
-    /* [144] =   144 */ { 28, 21},
-    /* [145] =   145 */ { 64, 22},
-    /* [146] =   146 */ { 44, 23},
+    /* [143] =   143 */ { 28, 20},
+    /* [144] =   144 */ { 20, 21},
+    /* [145] =   145 */ { 48, 22},
+    /* [146] =   146 */ { 32, 23},
     /* [147] =   147 */ { 24, ~0},
     /* [148] =   148 */ { 16, ~0},
     /* [149] =   149 */ { 44, ~0},
@@ -1231,8 +1231,8 @@ const struct __glXDispatchInfo Render_dispatch_info = {
 };
 
 /*****************************************************************/
-/* tree depth = 13 */
-static const int_fast16_t VendorPriv_dispatch_tree[155] = {
+/* tree depth = 12 */
+static const int_fast16_t VendorPriv_dispatch_tree[152] = {
     /* [0] -> opcode range [0, 131072], node depth 1 */
     2,
     5,
@@ -1474,17 +1474,12 @@ static const int_fast16_t VendorPriv_dispatch_tree[155] = {
 
     /* [149] -> opcode range [65536, 65568], node depth 12 */
     1,
-    152,
-    EMPTY_LEAF,
-
-    /* [152] -> opcode range [65536, 65552], node depth 13 */
-    1,
     LEAF(88),
     EMPTY_LEAF,
 
 };
 
-static const void *VendorPriv_function_table[96][2] = {
+static const void *VendorPriv_function_table[104][2] = {
     /* [  0] =     0 */ {NULL, NULL},
     /* [  1] =     1 */ {__glXDisp_GetConvolutionFilterEXT, __glXDispSwap_GetConvolutionFilterEXT},
     /* [  2] =     2 */ {__glXDisp_GetConvolutionParameterfvEXT, __glXDispSwap_GetConvolutionParameterfvEXT},
@@ -1581,6 +1576,14 @@ static const void *VendorPriv_function_table[96][2] = {
     /* [ 93] = 65541 */ {__glXDisp_CreateContextWithConfigSGIX, __glXDispSwap_CreateContextWithConfigSGIX},
     /* [ 94] = 65542 */ {__glXDisp_CreateGLXPixmapWithConfigSGIX, __glXDispSwap_CreateGLXPixmapWithConfigSGIX},
     /* [ 95] = 65543 */ {NULL, NULL},
+    /* [ 96] = 65544 */ {NULL, NULL},
+    /* [ 97] = 65545 */ {NULL, NULL},
+    /* [ 98] = 65546 */ {__glXDisp_GetDrawableAttributesSGIX, __glXDispSwap_GetDrawableAttributesSGIX},
+    /* [ 99] = 65547 */ {NULL, NULL},
+    /* [ 100] = 65548 */ {NULL, NULL},
+    /* [ 101] = 65549 */ {NULL, NULL},
+    /* [ 102] = 65550 */ {NULL, NULL},
+    /* [ 103] = 65551 */ {NULL, NULL},
 };
 
 const struct __glXDispatchInfo VendorPriv_dispatch_info = {

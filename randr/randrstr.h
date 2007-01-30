@@ -548,6 +548,9 @@ Bool
 RRCrtcGammaSetSize (RRCrtcPtr	crtc,
 		    int		size);
 
+void
+RRCrtcGetScanoutSize(RRCrtcPtr crtc, int *width, int *height);
+
 /*
  * Destroy a Crtc at shutdown
  */

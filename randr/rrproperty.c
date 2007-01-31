@@ -215,7 +215,7 @@ RRChangeOutputProperty (RROutputPtr output, Atom property, Atom type,
 	output->properties = prop;
     }
 
-    if (!prop->is_pending) {
+    if (!prop->is_pending && pScrPriv->rrOutputSetProperty) {
 	/* What should we do in case of failure? */
 	pScrPriv->rrOutputSetProperty(output->pScreen, output,
 				      prop->propertyName, prop_value);

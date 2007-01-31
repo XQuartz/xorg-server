@@ -281,14 +281,10 @@ ProcDamageAdd (ClientPtr client)
     REQUEST(xDamageAddReq);
     DrawablePtr	    pDrawable;
     RegionPtr	    pRegion;
-    int		    rc;
 
     REQUEST_SIZE_MATCH(xDamageAddReq);
-    VERIFY_REGION(pRegion, stuff->region, client, DixWriteAccess);
-    rc = dixLookupDrawable(&pDrawable, stuff->drawable, client, 0,
-			   DixReadAccess);
-    if (rc != Success)
-	return rc;
+    VERIFY_REGION(pRegion, stuff->region, client, SecurityWriteAccess);
+    SECURITY_VERIFY_DRAWABLE (pDrawable, stuff->drawable, client, SecurityReadAccess);
 
     /* The region is relative to the drawable origin, so translate it out to
      * screen coordinates like damage expects.

@@ -75,7 +75,8 @@ Bool
 ephyrScreenInitialize (KdScreenInfo *screen, EphyrScrPriv *scrpriv)
 {
   int width = 640, height = 480; 
-
+  unsigned long redMask, greenMask, blueMask;
+  
   if (hostx_want_screen_size(&width, &height) 
       || !screen->width || !screen->height)
     {
@@ -127,30 +128,24 @@ ephyrScreenInitialize (KdScreenInfo *screen, EphyrScrPriv *scrpriv)
 	{
 	  screen->fb[0].depth = 15;
 	  screen->fb[0].bitsPerPixel = 16;
-	  
-	  hostx_get_visual_masks (&screen->fb[0].redMask,
-				  &screen->fb[0].greenMask,
-				  &screen->fb[0].blueMask);
-	  
 	}
       else if (screen->fb[0].depth <= 16)
 	{
 	  screen->fb[0].depth = 16;
 	  screen->fb[0].bitsPerPixel = 16;
-	  
-	  hostx_get_visual_masks (&screen->fb[0].redMask,
-				  &screen->fb[0].greenMask,
-				  &screen->fb[0].blueMask);
 	}
       else
 	{
 	  screen->fb[0].depth = 24;
 	  screen->fb[0].bitsPerPixel = 32;
-	  
-	  hostx_get_visual_masks (&screen->fb[0].redMask,
-				  &screen->fb[0].greenMask,
-				  &screen->fb[0].blueMask);
 	}
+
+      hostx_get_visual_masks (&redMask, &greenMask, &blueMask);
+
+      screen->fb[0].redMask = (Pixel) redMask;
+      screen->fb[0].greenMask = (Pixel) greenMask;
+      screen->fb[0].blueMask = (Pixel) blueMask;
+
     }
   
   scrpriv->randr = screen->randr;

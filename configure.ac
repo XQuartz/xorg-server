@@ -22,6 +22,10 @@ dnl PERFORMANCE OF THIS SOFTWARE.
 dnl
 dnl Process this file with autoconf to create configure.
 
+echo "This branch is no longer under development."
+echo "Please use server-1.3-branch instead."
+exit 1
+
 AC_PREREQ(2.57)
 dnl This is the not the Xorg version number, it's the server version number.
 dnl Yes, that's weird.

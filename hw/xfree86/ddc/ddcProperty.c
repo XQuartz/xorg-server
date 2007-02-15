@@ -31,6 +31,7 @@
 #include "property.h"
 #include "propertyst.h"
 #include "xf86DDC.h"
+#include "xf86_ansic.h"
 
 /*
  * xf86Mode.c should have a some more DisplayModePtr list handling.

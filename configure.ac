@@ -1,4 +1,4 @@
-dnl $Id$
+ dnl $Id$
 dnl
 dnl Copyright © 2003-2005 Keith Packard, Daniel Stone
 dnl

@@ -1042,6 +1042,8 @@ CloseDownConnection(ClientPtr client)
     XdmcpCloseDisplay(oc->fd);
 #endif
     CloseDownFileDescriptor(oc);
+    FreeOsBuffers(oc);
+    xfree(client->osPrivate);
     client->osPrivate = (pointer)NULL;
     if (auditTrailLevel > 1)
 	AuditF("client %d disconnected\n", client->index);

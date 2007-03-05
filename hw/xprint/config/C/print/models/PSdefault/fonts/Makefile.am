@@ -18,7 +18,6 @@ dist_xpc_DATA =				\
 	LubalinGraph-DemiOblique.pmf	\
 	LubalinGraph-Demi.pmf		\
 	NewCenturySchlbk-Bold.pmf	\
-	NewCenturySchlbk-BoldItalic.pmf \
 	NewCenturySchlbk-Italic.pmf	\
 	NewCenturySchlbk-Roman.pmf	\
 	Souvenir-DemiItalic.pmf		\

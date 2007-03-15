@@ -48,6 +48,7 @@ XORG_LIBS = \
             parser/libxf86config.a \
 	    dixmods/libdixmods.la \
 	    modes/libxf86modes.a \
+	    ramdac/libramdac.a \
 	    ddc/libddc.a \
 	    i2c/libi2c.a \
             @XORG_LIBS@

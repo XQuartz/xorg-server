@@ -1180,6 +1180,7 @@ _X_HIDDEN void *xfree86LookupTab[] = {
     SYMVAR(pciNumBuses)
 
     /* modes */
+    SYMVAR(xf86CrtcConfigPrivateIndex)
     SYMFUNC(xf86CrtcConfigInit)
     SYMFUNC(xf86CrtcConfigPrivateIndex)
     SYMFUNC(xf86CrtcCreate)

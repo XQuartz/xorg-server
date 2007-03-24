@@ -51,17 +51,32 @@ RRCrtcChanged (RRCrtcPtr crtc, Bool layoutChanged)
  * Create a CRTC
  */
 RRCrtcPtr
-RRCrtcCreate (void	*devPrivate)
+RRCrtcCreate (ScreenPtr pScreen, void *devPrivate)
 {
-    RRCrtcPtr	crtc;
-    
+    RRCrtcPtr	    crtc;
+    RRCrtcPtr	    *crtcs;
+    rrScrPrivPtr    pScrPriv;
+
     if (!RRInit())
 	return NULL;
+    
+    pScrPriv = rrGetScrPriv(pScreen);
+
+    /* make space for the crtc pointer */
+    if (pScrPriv->numCrtcs)
+	crtcs = xrealloc (pScrPriv->crtcs, 
+			  (pScrPriv->numCrtcs + 1) * sizeof (RRCrtcPtr));
+    else
+	crtcs = xalloc (sizeof (RRCrtcPtr));
+    if (!crtcs)
+	return FALSE;
+    pScrPriv->crtcs = crtcs;
+    
     crtc = xalloc (sizeof (RRCrtcRec));
     if (!crtc)
 	return NULL;
     crtc->id = FakeClientID (0);
-    crtc->pScreen = NULL;
+    crtc->pScreen = pScreen;
     crtc->mode = NULL;
     crtc->x = 0;
     crtc->y = 0;
@@ -77,6 +92,10 @@ RRCrtcCreate (void	*devPrivate)
     if (!AddResource (crtc->id, RRCrtcType, (pointer) crtc))
 	return NULL;
 
+    /* attach the screen and crtc together */
+    crtc->pScreen = pScreen;
+    pScrPriv->crtcs[pScrPriv->numCrtcs++] = crtc;
+    
     return crtc;
 }
 
@@ -87,36 +106,6 @@ void
 RRCrtcSetRotations (RRCrtcPtr crtc, Rotation rotations)
 {
     crtc->rotations = rotations;
-}
-
-/*
- * Attach a Crtc to a screen. This is done as a separate step
- * so that an xf86-based driver can create CRTCs in PreInit
- * before the Screen has been created
- */
-
-Bool
-RRCrtcAttachScreen (RRCrtcPtr crtc, ScreenPtr pScreen)
-{
-    rrScrPriv (pScreen);
-    RRCrtcPtr	*crtcs;
-
-    /* make space for the crtc pointer */
-    if (pScrPriv->numCrtcs)
-	crtcs = xrealloc (pScrPriv->crtcs, 
-			  (pScrPriv->numCrtcs + 1) * sizeof (RRCrtcPtr));
-    else
-	crtcs = xalloc (sizeof (RRCrtcPtr));
-    if (!crtcs)
-	return FALSE;
-    
-    /* attach the screen and crtc together */
-    crtc->pScreen = pScreen;
-    pScrPriv->crtcs = crtcs;
-    pScrPriv->crtcs[pScrPriv->numCrtcs++] = crtc;
-
-    RRCrtcChanged (crtc, TRUE);
-    return TRUE;
 }
 
 /*
@@ -258,6 +247,22 @@ RRDeliverCrtcEvent (ClientPtr client, WindowPtr pWin, RRCrtcPtr crtc)
     WriteEventsToClient (client, 1, (xEvent *) &ce);
 }
 
+static Bool
+RRCrtcPendingProperties (RRCrtcPtr crtc)
+{
+    ScreenPtr	pScreen = crtc->pScreen;
+    rrScrPriv(pScreen);
+    int		o;
+
+    for (o = 0; o < pScrPriv->numOutputs; o++)
+    {
+	RROutputPtr output = pScrPriv->outputs[o];
+	if (output->crtc == crtc && output->pendingProperties)
+	    return TRUE;
+    }
+    return FALSE;
+}
+
 /*
  * Request that the Crtc be reconfigured
  */
@@ -280,7 +285,8 @@ RRCrtcSet (RRCrtcPtr    crtc,
 	crtc->y == y &&
 	crtc->rotation == rotation &&
 	crtc->numOutputs == numOutputs &&
-	!memcmp (crtc->outputs, outputs, numOutputs * sizeof (RROutputPtr)))
+	!memcmp (crtc->outputs, outputs, numOutputs * sizeof (RROutputPtr)) &&
+	!RRCrtcPendingProperties (crtc))
     {
 	ret = TRUE;
     }
@@ -337,7 +343,13 @@ RRCrtcSet (RRCrtcPtr    crtc,
 #endif
 	}
 	if (ret)
+	{
+	    int	o;
 	    RRTellChanged (pScreen);
+
+	    for (o = 0; o < numOutputs; o++)
+		RRPostPendingProperties (outputs[o]);
+	}
     }
     return ret;
 }

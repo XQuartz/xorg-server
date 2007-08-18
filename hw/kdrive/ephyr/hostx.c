@@ -40,6 +40,7 @@
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
 #include <X11/extensions/XShm.h>
+#include <X11/Xmd.h>
 
 /*  
  * All xlib calls go here, which gets built as its own .a .
@@ -79,7 +80,7 @@ static int            HostXWantDamageDebug = 0;
 
 extern KeySym         EphyrKeymap[];
 
-extern KeySym	      kdKeymap[];
+extern CARD32	      kdKeymap[];
 extern int	      kdMinScanCode;
 extern int	      kdMaxScanCode;
 extern int	      kdMinKeyCode;

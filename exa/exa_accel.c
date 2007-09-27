@@ -1223,7 +1223,8 @@ exaFillRegionTiled (DrawablePtr	pDrawable,
     }
 
 fallback:
-    if (alu != GXcopy || planemask != FB_ALLONES)
+    if (alu != GXcopy || planemask != FB_ALLONES || pPatOrg->x != 0 ||
+	pPatOrg->y != 0)
 	return FALSE;
     EXA_FALLBACK(("from %p to %p (%c,%c)\n", pTile, pDrawable,
 		  exaDrawableLocation(&pTile->drawable),

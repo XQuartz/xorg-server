@@ -319,6 +319,10 @@ exaMoveInPixmap (PixmapPtr pPixmap)
     if (pPixmap->drawable.bitsPerPixel < 8)
 	return;
 
+    if (pPixmap->drawable.width > pExaScr->info->maxX ||
+	pPixmap->drawable.height > pExaScr->info->maxY)
+	return;
+
     if (pExaPixmap->area == NULL) {
 	pExaPixmap->area =
 	    exaOffscreenAlloc (pScreen, pExaPixmap->fb_size,

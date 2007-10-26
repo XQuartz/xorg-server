@@ -19,10 +19,12 @@ Japaneselproj_DATA = \
 		    Credits.rtf Localizable.strings
 
 Japaneselprojnibdir = $(Japaneselprojdir)/MainMenu.nib
-Japaneselprojnib_DATA = MainMenu.nib/classes.nib MainMenu.nib/objects.nib
+Japaneselprojnib_DATA = \
+		       MainMenu.nib/classes.nib \
+		       MainMenu.nib/objects.nib
 
 InfoPlist.strings: $(srcdir)/../English.lproj/InfoPlist.strings.cpp
-	 $(RAWCPP) $(RAWCPPFLAGS) $(XDEFS) $(CPP_FILES_FLAGS) $< | $(CPP_SED_MAGIC) | $(SED) -e's/__quote__/"/g' > $@
+	 $(RAWCPP) $(RAWCPPFLAGS) $(XDEFS) $(CPP_FILES_FLAGS) $< | $(CPP_SED_MAGIC) | $(SED) -e's/__quote__/"/g' | iconv -t UTF-16 > $@
 
 XDarwinHelp.html: XDarwinHelp.html.cpp
 	$(RAWCPP) $(RAWCPPFLAGS) $(XDEFS) $(CPP_FILES_FLAGS) $< | $(CPP_SED_MAGIC) > $@
@@ -35,3 +37,4 @@ EXTRA_DIST = \
 	MainMenu.nib/classes.nib \
 	MainMenu.nib/objects.nib \
 	XDarwinHelp.html.cpp
+

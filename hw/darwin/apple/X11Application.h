@@ -1,4 +1,5 @@
 /* X11Application.h -- subclass of NSApplication to multiplex events
+   $Id: X11Application.h,v 1.26 2003/08/08 19:16:13 jharper Exp $
 
    Copyright (c) 2002-2007 Apple Inc. All rights reserved.
 
@@ -79,7 +80,7 @@ extern void X11ApplicationMain (int argc, const char *argv[],
 extern int X11EnableKeyEquivalents;
 extern int quartzHasRoot, quartzEnableRootless;
 
-#define APP_PREFS "com.apple.x11"
+#define APP_PREFS "org.x.X11"
 
 #define PREFS_APPSMENU		"apps_menu"
 #define PREFS_FAKEBUTTONS	"enable_fake_buttons"

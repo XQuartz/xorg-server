@@ -15,13 +15,15 @@ Germanlprojdir = $(resourcesdir)/German.lproj
 Germanlproj_DATA = \
 		    XDarwinHelp.html \
 		    InfoPlist.strings \
-		    Credits.rtf Localizable.strings
+		    Credits.rtf Localizable.strings Localizable.strings
 
 Germanlprojnibdir = $(Germanlprojdir)/MainMenu.nib
-Germanlprojnib_DATA =  MainMenu.nib/classes.nib MainMenu.nib/objects.nib
+Germanlprojnib_DATA = \
+		       MainMenu.nib/classes.nib \
+		       MainMenu.nib/objects.nib
 
 InfoPlist.strings: $(srcdir)/../English.lproj/InfoPlist.strings.cpp
-	 $(RAWCPP) $(RAWCPPFLAGS) $(XDEFS) $(CPP_FILES_FLAGS) $< | $(CPP_SED_MAGIC) | $(SED) -e's/__quote__/"/g' > $@
+	 $(RAWCPP) $(RAWCPPFLAGS) $(XDEFS) $(CPP_FILES_FLAGS) $< | $(CPP_SED_MAGIC) | $(SED) -e's/__quote__/"/g' | iconv -t UTF-16 > $@
 
 XDarwinHelp.html: XDarwinHelp.html.cpp
 	$(RAWCPP) $(RAWCPPFLAGS) $(XDEFS) $(XDEFS) $(CPP_FILES_FLAGS) $< | $(CPP_SED_MAGIC) > $@
@@ -34,3 +36,4 @@ EXTRA_DIST = \
 	MainMenu.nib/classes.nib \
 	MainMenu.nib/objects.nib \
 	XDarwinHelp.html.cpp
+

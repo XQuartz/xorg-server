@@ -1,3 +1,4 @@
+/* $XFree86: xc/lib/GL/dri/xf86dristr.h,v 1.9 2001/03/21 16:01:08 dawes Exp $ */
 /**************************************************************************
 
 Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.

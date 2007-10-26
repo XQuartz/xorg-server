@@ -70,14 +70,15 @@
 
 #include <X11/Xlib.h>
 #include <X11/Xauth.h>
+#include <xcb/xcb.h>
 
 #include <CoreFoundation/CoreFoundation.h>
 #include <SystemConfiguration/SystemConfiguration.h>
 
 #define X_SERVER "/usr/X11/bin/Xquartz"
 #define XTERM_PATH "/usr/X11/bin/xterm"
-#define WM_PATH "/usr/X11/bin/quartz-wm"
-#define DEFAULT_XINITRC "/etc/X11/xinit/xinitrc"
+#define WM_PATH "/usr/bin/quartz-wm"
+#define DEFAULT_XINITRC "/usr/X11/lib/X11/xinit/xinitrc"
 #define DEFAULT_PATH "/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/X11/bin"
 
 /* what xinit does */
@@ -595,15 +596,15 @@ static Boolean
 display_exists_p (int number)
 {
     char buf[64];
-    void *conn;
+    xcb_connection_t *conn;
     char *fullname = NULL;
     int idisplay, iscreen;
     char *conn_auth_name, *conn_auth_data;
     int conn_auth_namelen, conn_auth_datalen;
-#ifdef USE_XTRANS_INTERNALS	
-    extern void *_X11TransConnectDisplay ();
-    extern void _XDisconnectDisplay ();
-#endif	
+    
+    //    extern void *_X11TransConnectDisplay ();
+    //    extern void _XDisconnectDisplay ();
+	
     /* Since connecting to the display waits for a few seconds if the
 	 display doesn't exist, check for trivial non-existence - if the
 	 socket in /tmp exists or not.. (note: if the socket exists, the
@@ -612,20 +613,22 @@ display_exists_p (int number)
     sprintf (buf, "/tmp/.X11-unix/X%d", number);
     if (access (buf, F_OK) != 0)
 		return FALSE;
-#ifdef USE_XTRANS_INTERNALS	
+	
     /* This is a private function that we shouldn't really be calling,
 	 but it's the best way to see if the server exists (without
 	 needing to hold the necessary authentication to use it) */
 	
     sprintf (buf, ":%d", number);
-    conn = _X11TransConnectDisplay (buf, &fullname, &idisplay, &iscreen,
+    /*    conn = _X11TransConnectDisplay (buf, &fullname, &idisplay, &iscreen,
 									&conn_auth_name, &conn_auth_namelen,
-									&conn_auth_data, &conn_auth_datalen);
+									&conn_auth_data, &conn_auth_datalen); */
+    conn = xcb_connect(buf, NULL);
+
     if (conn == NULL)
 		return FALSE;
 	
-    _XDisconnectDisplay (conn);
-#endif
+    //    _XDisconnectDisplay (conn);
+    xcb_disconnect(conn);
     return TRUE;
 }
 

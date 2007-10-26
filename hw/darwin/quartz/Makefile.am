@@ -1,14 +1,16 @@
 noinst_LIBRARIES = libXQuartz.a
 
-AM_CFLAGS = @XORG_CFLAGS@ @DIX_CFLAGS@
-AM_OBJCFLAGS = @XORG_CFLAGS@ @DIX_CFLAGS@
+AM_CFLAGS = @XORG_CFLAGS@
+AM_OBJCFLAGS = @XORG_CFLAGS@
 
 INCLUDES = -I$(srcdir) -I$(srcdir)/.. @XORG_INCS@
 AM_DEFS = -DHAS_CG_MACH_PORT -DHAS_KL_API
 if HAVE_X_PLUGIN
 AM_DEFS += -DBUILD_XPR
+XPR = xpr
 endif
 DEFS = @DEFS@ $(AM_DEFS) -DXBINDIR=\"${bindir}\"
+SUBDIRS = cr fullscreen $(XPR)
 
 libXQuartz_a_SOURCES = \
 		  Preferences.m \
@@ -36,6 +38,7 @@ install-exec-local:
 	-(cd $(DESTDIR)$(BINDIR); rm X; $(LN_S) XDarwinStartup X)
 
 man1_MANS = XDarwinStartup.man
+
 
 EXTRA_DIST = \
 	applewmExt.h \

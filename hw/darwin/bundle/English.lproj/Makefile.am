@@ -17,10 +17,12 @@ Englishlproj_DATA = \
 		    Credits.rtf Localizable.strings
 
 Englishlprojnibdir = $(Englishlprojdir)/MainMenu.nib
-Englishlprojnib_DATA = MainMenu.nib/classes.nib MainMenu.nib/objects.nib
+Englishlprojnib_DATA = \
+		       MainMenu.nib/classes.nib \
+		       MainMenu.nib/objects.nib
 
 InfoPlist.strings: InfoPlist.strings.cpp
-	 $(RAWCPP) $(RAWCPPFLAGS) $(XDEFS) $(CPP_FILES_FLAGS) $< | $(CPP_SED_MAGIC) | $(SED) -e's/__quote__/"/g' > $@
+	 $(RAWCPP) $(RAWCPPFLAGS) $(XDEFS) $(CPP_FILES_FLAGS) $< | $(CPP_SED_MAGIC) | $(SED) -e's/__quote__/"/g' | iconv -t UTF-16 > $@
 
 XDarwinHelp.html: XDarwinHelp.html.cpp
 	$(RAWCPP) $(RAWCPPFLAGS) $(XDEFS) $(CPP_FILES_FLAGS) $< | $(CPP_SED_MAGIC) > $@
@@ -29,7 +31,9 @@ CLEANFILES = XDarwinHelp.html InfoPlist.strings
 
 EXTRA_DIST = \
 	Credits.rtf Localizable.strings \
+	Localizable.strings \
 	MainMenu.nib/classes.nib \
 	MainMenu.nib/objects.nib \
 	XDarwinHelp.html.cpp \
 	InfoPlist.strings.cpp
+

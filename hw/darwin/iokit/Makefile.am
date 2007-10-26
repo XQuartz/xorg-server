@@ -1,6 +1,6 @@
 noinst_LIBRARIES = libiokit.a
 
-AM_CFLAGS = @XORG_CFLAGS@ @DIX_CFLAGS@
+AM_CFLAGS = @XORG_CFLAGS@
 INCLUDES = -I. -I.. -I$(srcdir) -I$(srcdir)/.. @XORG_INCS@
 AM_DEFS =
 if XQUARTZ

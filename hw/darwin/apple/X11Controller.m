@@ -296,17 +296,13 @@
 - (void) launch_client:(NSString *)filename
 {
   const char *command = [filename UTF8String];
-  const char *shell;
   const char *argv[5];
   int child1, child2 = 0;
   int status;
 	
-  shell = getenv("SHELL");
-  if (shell == NULL) shell = "/bin/bash";
-    
-  argv[0] = shell;
-  argv[1] = "-l";
-  argv[2] = "-c";
+  argv[0] = "/usr/bin/login";
+  argv[1] = "-fp";
+  argv[2] = getlogin();
   argv[3] = command;
   argv[4] = NULL;
     
@@ -655,7 +651,7 @@ objectValueForTableColumn:(NSTableColumn *)tableColumn row:(int)row
 
 - (IBAction) x11_help:sender
 {
-  AHLookupAnchor (CFSTR ("Mac Help"), CFSTR ("mchlp2276"));
+  AHLookupAnchor ((CFStringRef)NSLocalizedString(@"Mac Help", no comment), CFSTR ("mchlp2276"));
 }
 
 - (BOOL) validateMenuItem:(NSMenuItem *)item

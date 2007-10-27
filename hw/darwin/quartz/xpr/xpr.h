@@ -26,6 +26,8 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
+/* $XdotOrg: xserver/xorg/hw/darwin/quartz/xpr/xpr.h,v 1.3 2005/07/01 22:43:08 daniels Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/xpr/xpr.h,v 1.4 2003/11/12 20:21:52 torrey Exp $ */
 
 #ifndef XPR_H
 #define XPR_H

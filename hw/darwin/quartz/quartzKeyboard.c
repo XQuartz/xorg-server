@@ -32,14 +32,18 @@
    promote the sale, use or other dealings in this Software without
    prior written authorization.
 */
+/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/quartzKeyboard.c,v 1.1 2003/11/01 08:13:08 torrey Exp $ */
 
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
 #include "quartzCommon.h"
 
 #include <CoreServices/CoreServices.h>
 #include <Carbon/Carbon.h>
 
 #include "darwinKeyboard.h"
-#include "keysym.h"
+#include "X11/keysym.h"
 #include "keysym2ucs.h"
 
 #ifdef HAS_KL_API
@@ -214,35 +218,44 @@ Bool
 DarwinModeReadSystemKeymap (darwinKeyboardInfo *info)
 {
     KeyboardLayoutRef key_layout;
-    const void *chr_data;
+    const void *chr_data = NULL;
     int num_keycodes = NUM_KEYCODES;
     UInt32 keyboard_type = 0;
     int is_uchr, i, j;
     OSStatus err;
     KeySym *k;
 
-    KLGetCurrentKeyboardLayout (&key_layout);
-    KLGetKeyboardLayoutProperty (key_layout, kKLuchrData, &chr_data);
+    TISInputSourceRef currentKeyLayoutRef = TISCopyCurrentKeyboardLayoutInputSource();
+	if (currentKeyLayoutRef)
+	{
+		CFDataRef currentKeyLayoutDataRef = (CFDataRef )TISGetInputSourceProperty(currentKeyLayoutRef, kTISPropertyUnicodeKeyLayoutData);
+		if (currentKeyLayoutDataRef)
+			chr_data = CFDataGetBytePtr(currentKeyLayoutDataRef);
+	}
+	
+	if(chr_data == NULL) {
+		KLGetCurrentKeyboardLayout (&key_layout);
+		KLGetKeyboardLayoutProperty (key_layout, kKLuchrData, &chr_data);
 
-    if (chr_data != NULL)
-    {
-        is_uchr = 1;
-        keyboard_type = LMGetKbdType ();
-    }
-    else
-    {
-        KLGetKeyboardLayoutProperty (key_layout, kKLKCHRData, &chr_data);
+		if (chr_data != NULL)
+		{
+			is_uchr = 1;
+			keyboard_type = LMGetKbdType ();
+		}
+		else
+		{
+			KLGetKeyboardLayoutProperty (key_layout, kKLKCHRData, &chr_data);
 
-        if (chr_data == NULL)
-        {
-            ErrorF ( "Couldn't get uchr or kchr resource\n");
-            return FALSE;
-        }
+			if (chr_data == NULL)
+			{
+				ErrorF ( "Couldn't get uchr or kchr resource\n");
+				return FALSE;
+			}
 
-        is_uchr = 0;
-        num_keycodes = 128;
-    }    
-
+			is_uchr = 0;
+			num_keycodes = 128;
+		}    
+	}
 
     /* Scan the keycode range for the Unicode character that each
        key produces in the four shift states. Then convert that to
@@ -366,6 +379,7 @@ DarwinModeReadSystemKeymap (darwinKeyboardInfo *info)
             }
         }
     }
+	if(currentKeyLayoutRef)	CFRelease(currentKeyLayoutRef);
 
     return TRUE;
 }

@@ -1,4 +1,4 @@
-/*
+/* 
  * This module converts keysym values into the corresponding ISO 10646
  * (UCS, Unicode) values.
  *

@@ -2,8 +2,6 @@
  *
  * Startup code for the Quartz Darwin X Server
  *
- **************************************************************/
-/*
  * Copyright (c) 2001-2004 Torrey T. Lyons. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,7 +26,6 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/quartzStartup.c,v 1.8 2003/11/05 00:15:00 torrey Exp $ */
 
 #include <fcntl.h>
 #include <unistd.h>

@@ -1,3 +1,4 @@
+// $XFree86: dumpkeymap.c,v 1.3 2000/12/05 21:18:34 dawes Exp $
 //=============================================================================
 //
 // Copyright (C) 1999,2000 by Eric Sunshine <sunshine@sunshineco.com>
@@ -143,7 +144,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #if !defined(DUMPKEYMAP_FILE_ONLY)
-#include <drivers/event_status_driver.h>
+#include "event_status_driver.h"
 #endif
 
 #define PROG_NAME "dumpkeymap"

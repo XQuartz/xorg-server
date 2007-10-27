@@ -1,3 +1,4 @@
+/* $XdotOrg: xserver/xorg/hw/darwin/quartz/xpr/xprScreen.c,v 1.6 2005/07/01 22:43:08 daniels Exp $ */
 /*
  * Xplugin rootless implementation screen functions
  */
@@ -27,18 +28,21 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-
-#include "quartzCommon.h"
-#include "quartz.h"
+/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/xpr/xprScreen.c,v 1.11 2004/07/15 18:53:25 torrey Exp $ */
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
+#include "quartz/quartzCommon.h"
+#include "quartz/quartz.h"
 #include "xpr.h"
-#include "pseudoramiX.h"
+#include "quartz/pseudoramiX.h"
 #include "darwin.h"
 #include "rootless.h"
-#include "safeAlpha.h"
+#include "safeAlpha/safeAlpha.h"
 #include "dri.h"
 #include "globals.h"
 #include "Xplugin.h"
-#include "applewmExt.h"
+#include "quartz/applewmExt.h"
 
 #ifdef DAMAGE
 # include "damage.h"
@@ -179,15 +183,15 @@ xprAddPseudoramiXScreens(int *x, int *y, int *width, int *height)
 
         frame = displayScreenBounds(dpy);
 
-        ErrorF("PseudoramiX screen %d added: %dx%d @ (%d,%d).\n", i,
+	/*        ErrorF("PseudoramiX screen %d added: %dx%d @ (%d,%d).\n", i,
                (int)frame.size.width, (int)frame.size.height,
-               (int)frame.origin.x, (int)frame.origin.y);
+               (int)frame.origin.x, (int)frame.origin.y); */
 
         frame.origin.x -= unionRect.origin.x;
         frame.origin.y -= unionRect.origin.y;
 
-        ErrorF("PseudoramiX screen %d placed at X11 coordinate (%d,%d).\n",
-               i, (int)frame.origin.x, (int)frame.origin.y);
+	/*        ErrorF("PseudoramiX screen %d placed at X11 coordinate (%d,%d).\n",
+		  i, (int)frame.origin.x, (int)frame.origin.y); */
 
         PseudoramiXAddScreen(frame.origin.x, frame.origin.y,
                              frame.size.width, frame.size.height);
@@ -206,7 +210,7 @@ xprDisplayInit(void)
 {
     CGDisplayCount displayCount;
 
-    ErrorF("Display mode: Rootless Quartz -- Xplugin implementation\n");
+    //    ErrorF("Display mode: Rootless Quartz -- Xplugin implementation\n");
 
     CGGetActiveDisplayList(0, NULL, &displayCount);
 

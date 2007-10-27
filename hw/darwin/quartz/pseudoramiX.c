@@ -32,14 +32,20 @@ shall not be used in advertising or otherwise to promote the sale, use or other
 dealings in this Software without prior written authorization from Digital
 Equipment Corporation.
 ******************************************************************/
+/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/pseudoramiX.c,v 1.4 2004/07/02 01:30:33 torrey Exp $ */
 
 #include "pseudoramiX.h"
-
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
 #include "extnsionst.h"
 #include "dixstruct.h"
 #include "window.h"
 #include <X11/extensions/panoramiXproto.h>
 #include "globals.h"
+
+extern int noPseudoramiXExtension;
+extern int noPanoramiXExtension;
 
 extern int ProcPanoramiXQueryVersion (ClientPtr client);
 

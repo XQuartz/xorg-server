@@ -28,6 +28,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
+/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/quartzStartup.c,v 1.8 2003/11/05 00:15:00 torrey Exp $ */
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -37,21 +38,35 @@
 #include "quartz.h"
 #include "opaque.h"
 #include "micmap.h"
-
-int NSApplicationMain(int argc, char *argv[]);
-
+#include <assert.h>
 char **envpGlobal;      // argcGlobal and argvGlobal
                         // are from dix/globals.c
 
+
+#ifndef INXQUARTZ
+int NSApplicationMain(int argc, char *argv[]);
+
 // GLX bundle function pointers
+void * __DarwinglXMesaProvider = NULL;
+typedef void (*GlxPushProviderPtr)(void *);
+GlxPushProviderPtr GlxPushProvider = NULL;
 typedef void (*GlxExtensionInitPtr)(void); 
-static GlxExtensionInitPtr GlxExtensionInit = NULL;
-
 typedef void (*GlxWrapInitVisualsPtr)(miInitVisualsProcPtr *);
-static GlxWrapInitVisualsPtr GlxWrapInitVisuals = NULL;
-
 typedef Bool (*QuartzModeBundleInitPtr)(void);
+static GlxExtensionInitPtr GlxExtensionInit = NULL;
+static GlxWrapInitVisualsPtr GlxWrapInitVisuals = NULL;
+#else
+void X11ControllerMain(int argc, char *argv[],
+		       void (*server_thread) (void *), void *server_arg);
+void GlxExtensionInit(void);
+void GlxWrapInitVisuals(miInitVisualsProcPtr *procPtr);
 
+static void server_thread (void *arg) {
+  extern int main(int argc, char **argv, char **envp);
+  
+  exit (main (argcGlobal, argvGlobal, envpGlobal));
+}
+#endif
 
 /*
  * DarwinHandleGUI
@@ -71,7 +86,9 @@ void DarwinHandleGUI(
     int         fd[2];
 
     if (been_here) {
+#ifndef INXQUARTZ      
         QuartzReadPreferences();
+#endif
         return;
     }
     been_here = TRUE;
@@ -106,10 +123,16 @@ void DarwinHandleGUI(
         }
     }
 
+#ifndef INXQUARTZ
     main_exit = NSApplicationMain(argc, argv);
+#else
+    extern void _InitHLTB(void);
+    
+    _InitHLTB();
+    X11ControllerMain(argc, argv, server_thread, NULL);
+#endif
     exit(main_exit);
 }
-
 
 /*
  * QuartzLoadDisplayBundle
@@ -118,6 +141,7 @@ void DarwinHandleGUI(
 Bool QuartzLoadDisplayBundle(
     const char *dpyBundleName)
 {
+#ifndef INXQUARTZ
     CFBundleRef mainBundle;
     CFStringRef bundleName;
     CFURLRef    bundleURL;
@@ -164,7 +188,7 @@ Bool QuartzLoadDisplayBundle(
     // Release the CF objects
     CFRelease(bundleName);
     CFRelease(bundleURL);
-
+#endif
     return TRUE;
 }
 
@@ -186,7 +210,7 @@ static void LoadGlxBundle(void)
 
     // Choose the bundle to load
     ErrorF("Loading GLX bundle ");
-    if (quartzUseAGL) {
+    if (/*quartzUseAGL*/0) {
         bundleName = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault,
                                                      quartzOpenGLBundle,
                                                      kCFStringEncodingASCII,
@@ -213,12 +237,20 @@ static void LoadGlxBundle(void)
     }
 
     // Find the GLX init functions
+
+#ifndef INXQUARTZ
+    __DarwinglXMesaProvider = (void *) CFBundleGetDataPointerForName(
+			       glxBundle, CFSTR("__glXMesaProvider"));
+
+    GlxPushProvider = (void *) CFBundleGetFunctionPointerForName(
+                                glxBundle, CFSTR("GlxPushProvider"));
+
     GlxExtensionInit = (void *) CFBundleGetFunctionPointerForName(
                                 glxBundle, CFSTR("GlxExtensionInit"));
 
     GlxWrapInitVisuals = (void *) CFBundleGetFunctionPointerForName(
                                 glxBundle, CFSTR("GlxWrapInitVisuals"));
-
+#endif
     if (!GlxExtensionInit || !GlxWrapInitVisuals) {
         FatalError("Could not initialize GLX bundle.");
     }
@@ -233,11 +265,25 @@ static void LoadGlxBundle(void)
  * DarwinGlxExtensionInit
  *  Initialize the GLX extension.
  */
-void DarwinGlxExtensionInit(void)
+void DarwinGlxPushProvider(void *impl)
 {
+#ifndef INXQUARTZ
     if (!GlxExtensionInit)
         LoadGlxBundle();
+#endif
+    GlxPushProvider(impl);
+}
 
+/*
+ * DarwinGlxExtensionInit
+ *  Initialize the GLX extension.
+ */
+void DarwinGlxExtensionInit(void)
+{
+#ifndef INXQUARTZ
+    if (!GlxExtensionInit)
+        LoadGlxBundle();
+#endif
     GlxExtensionInit();
 }
 
@@ -248,9 +294,10 @@ void DarwinGlxExtensionInit(void)
 void DarwinGlxWrapInitVisuals(
     miInitVisualsProcPtr *procPtr)
 {
+#ifdef INXQUARTZ
     if (!GlxWrapInitVisuals)
         LoadGlxBundle();
-
+#endif
     GlxWrapInitVisuals(procPtr);
 }
 

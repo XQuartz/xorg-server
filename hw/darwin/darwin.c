@@ -30,6 +30,10 @@
  * use or other dealings in this Software without prior written authorization.
  */
 
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
+
 #include <X11/X.h>
 #include <X11/Xproto.h>
 #include "os.h"
@@ -79,7 +83,6 @@ int                     darwinScreenIndex = 0;
 io_connect_t            darwinParamConnect = 0;
 int                     darwinEventReadFD = -1;
 int                     darwinEventWriteFD = -1;
-int                     darwinMouseAccelChange = 1;
 int                     darwinFakeButtons = 0;
 
 // location of X11's (0,0) point in global screen coordinates
@@ -123,81 +126,16 @@ const int NUMFORMATS = sizeof(formats)/sizeof(formats[0]);
 #ifndef PRE_RELEASE
 #define PRE_RELEASE XORG_VERSION_SNAP
 #endif
+#ifndef BUILD_DATE
+#define BUILD_DATE ""
+#endif
 
 void
 DarwinPrintBanner()
 {
-#if PRE_RELEASE
-  ErrorF("\n"
-    "This is a pre-release version of the " XVENDORNAME " X11.\n"
-    "Portions of this release are based on XFree86 4.4RC2 and selected\n"
-    "files from XFree86 4.4RC3. It is not supported in any way.\n"
-    "Bugs may be filed in the bugzilla at http://bugs.freedesktop.org/.\n"
-    "Select the \"xorg\" product for bugs you find in this release.\n"
-    "Before reporting bugs in pre-release versions please check the\n"
-    "latest version in the " XVENDORNAME " \"monolithic tree\" CVS\n"
-    "repository hosted at http://www.freedesktop.org/Software/xorg/");
-#endif
-#if XORG_VERSION_SNAP > 0
-  ErrorF(".%d", XORG_VERSION_SNAP);
-#endif
-
-#if XORG_VERSION_SNAP >= 900
-  ErrorF(" (%d.%d.0 RC %d)", XORG_VERSION_MAJOR, XORG_VERSION_MINOR + 1,
-				XORG_VERSION_SNAP - 900);
-#endif
-
-#ifdef XORG_CUSTOM_VERSION
-  ErrorF(" (%s)", XF86_CUSTOM_VERSION);
-#endif
-  ErrorF("\nRelease Date: %s\n", XF86_DATE);
-  ErrorF("X Protocol Version %d, Revision %d, %s\n",
-         X_PROTOCOL, X_PROTOCOL_REVISION, XORG_RELEASE );
-  ErrorF("Build Operating System: %s %s\n", OSNAME, OSVENDOR);
-#ifdef HAS_UTSNAME
-  {
-    struct utsname name;
-
-    if (uname(&name) == 0) {
-      ErrorF("Current Operating System: %s %s %s %s %s\n",
-	name.sysname, name.nodename, name.release, name.version, name.machine);
-    }
-  }
-#endif
-#if defined(BUILD_DATE) && (BUILD_DATE > 19000000)
-  {
-    struct tm t;
-    char buf[100];
-
-    bzero(&t, sizeof(t));
-    bzero(buf, sizeof(buf));
-    t.tm_mday = BUILD_DATE % 100;
-    t.tm_mon = (BUILD_DATE / 100) % 100 - 1;
-    t.tm_year = BUILD_DATE / 10000 - 1900;
-    if (strftime(buf, sizeof(buf), "%d %B %Y", &t))
-       ErrorF("Build Date: %s\n", buf);
-  }
-#endif
-#if defined(CLOG_DATE) && (CLOG_DATE > 19000000)
-  {
-    struct tm t;
-    char buf[100];
-
-    bzero(&t, sizeof(t));
-    bzero(buf, sizeof(buf));
-    t.tm_mday = CLOG_DATE % 100;
-    t.tm_mon = (CLOG_DATE / 100) % 100 - 1;
-    t.tm_year = CLOG_DATE / 10000 - 1900;
-    if (strftime(buf, sizeof(buf), "%d %B %Y", &t))
-       ErrorF("Changelog Date: %s\n", buf);
-  }
-#endif
-#if defined(BUILDERSTRING)
-  ErrorF("%s \n",BUILDERSTRING);
-#endif
-  ErrorF("\tBefore reporting problems, check "__VENDORDWEBSUPPORT__"\n"
-	 "\tto make sure that you have the latest version.\n");
-}
+  ErrorF("X11.app starting:\n");
+  ErrorF("Xquartz server based on X.org %s, built on %s\n", XORG_RELEASE, BUILD_DATE );
+ }
 
 
 /*
@@ -349,8 +287,8 @@ static Bool DarwinAddScreen(
     dixScreenOrigins[index].x = dfb->x;
     dixScreenOrigins[index].y = dfb->y;
 
-    ErrorF("Screen %d added: %dx%d @ (%d,%d)\n",
-            index, dfb->width, dfb->height, dfb->x, dfb->y);
+    /*    ErrorF("Screen %d added: %dx%d @ (%d,%d)\n",
+	  index, dfb->width, dfb->height, dfb->x, dfb->y); */
 
     return TRUE;
 }
@@ -362,28 +300,6 @@ static Bool DarwinAddScreen(
 
  =============================================================================
 */
-
-/*
- * DarwinChangePointerControl
- *  Set mouse acceleration and thresholding
- *  FIXME: We currently ignore the threshold in ctrl->threshold.
- */
-static void DarwinChangePointerControl(
-    DeviceIntPtr    device,
-    PtrCtrl         *ctrl )
-{
-    kern_return_t   kr;
-    double          acceleration;
-
-    if (!darwinMouseAccelChange)
-        return;
-
-    acceleration = ctrl->num / ctrl->den;
-    kr = IOHIDSetMouseAcceleration( darwinParamConnect, acceleration );
-    if (kr != KERN_SUCCESS)
-        ErrorF( "Could not set mouse acceleration with kernel return = 0x%x.\n", kr );
-}
-
 
 /*
  * DarwinMouseProc
@@ -410,7 +326,7 @@ static int DarwinMouseProc(
                         map,
                         5,   // numbuttons (4 & 5 are scroll wheel)
                         miPointerGetMotionEvents,
-                        DarwinChangePointerControl,
+		        (PtrCtrlProcPtr)NoopDDA,
                         0 );
 #ifdef XINPUT
             InitValuatorAxisStruct( pPointer,
@@ -633,8 +549,8 @@ DarwinAdjustScreenOrigins(ScreenInfo *pScreenInfo)
         for (i = 0; i < pScreenInfo->numScreens; i++) {
             dixScreenOrigins[i].x -= darwinMainScreenX;
             dixScreenOrigins[i].y -= darwinMainScreenY;
-            ErrorF("Screen %d placed at X11 coordinate (%d,%d).\n",
-                   i, dixScreenOrigins[i].x, dixScreenOrigins[i].y);
+	    /*            ErrorF("Screen %d placed at X11 coordinate (%d,%d).\n",
+			  i, dixScreenOrigins[i].x, dixScreenOrigins[i].y); */
         }
     }
 }
@@ -711,13 +627,13 @@ void OsVendorInit(void)
         if ( !tempStr ) {
             ErrorF("Could not find keymapping file %s.\n", darwinKeymapFile);
         } else {
-            ErrorF("Using keymapping provided in %s.\n", tempStr);
+	  ErrorF("Using keymapping provided in %s.\n", tempStr);
         }
         darwinKeymapFile = tempStr;
     }
 
     if ( !darwinKeymapFile ) {
-        ErrorF("Reading keymap from the system.\n");
+      //        ErrorF("Reading keymap from the system.\n");
     }
 }
 
@@ -916,7 +832,7 @@ void ddxUseMsg( void )
  */
 void ddxGiveUp( void )
 {
-    ErrorF( "Quitting XDarwin...\n" );
+    ErrorF( "Quitting Xquartz...\n" );
 
     DarwinModeGiveUp();
 }

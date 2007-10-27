@@ -1,6 +1,6 @@
 /**************************************************************************
 
-Copyright (c) 2002 Apple Computer, Inc. All Rights Reserved.
+Copyright (c) 2002-2007 Apple Inc. All Rights Reserved.
 Copyright (c) 2003 Torrey T. Lyons. All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a
@@ -24,7 +24,9 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
-
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
 #include "quartzCommon.h"
 
 #define NEED_REPLIES
@@ -43,7 +45,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <X11/Xatom.h>
 #include "darwin.h"
 #define _APPLEWM_SERVER_
-#include "applewmstr.h"
+#include "X11/extensions/applewmstr.h"
 #include "applewmExt.h"
 
 #define DEFINE_ATOM_HELPER(func,atom_name)                      \
@@ -443,9 +445,11 @@ ProcAppleWMSetWindowMenu(
                 break;
         }
     }
-
+#ifdef INXQUARTZ
+    X11ApplicationSetWindowMenu (nitems, items, shortcuts);
+#else
     QuartzSetWindowMenu (nitems, items, shortcuts);
-
+#endif
     free(items);
     free(shortcuts);
 
@@ -460,10 +464,12 @@ ProcAppleWMSetWindowMenuCheck(
     REQUEST(xAppleWMSetWindowMenuCheckReq);
 
     REQUEST_SIZE_MATCH(xAppleWMSetWindowMenuCheckReq);
-
+#ifdef INXQUARTZ
+    X11ApplicationSetWindowMenuCheck (stuff->index);
+#else
     QuartzMessageMainThread(kQuartzSetWindowMenuCheck, &stuff->index,
                             sizeof(stuff->index));
-
+#endif
     return (client->noClientException);
 }
 
@@ -474,8 +480,11 @@ ProcAppleWMSetFrontProcess(
 {
     REQUEST_SIZE_MATCH(xAppleWMSetFrontProcessReq);
 
+#ifdef INXQUARTZ
+    X11ApplicationSetFrontProcess();
+#else
     QuartzMessageMainThread(kQuartzSetFrontProcess, NULL, 0);
-
+#endif
     return (client->noClientException);
 }
 
@@ -517,9 +526,12 @@ ProcAppleWMSetCanQuit(
 
     REQUEST_SIZE_MATCH(xAppleWMSetCanQuitReq);
 
+#ifdef INXQUARTZ
+    X11ApplicationSetCanQuit(stuff->state);
+#else
     QuartzMessageMainThread(kQuartzSetCanQuit, &stuff->state,
                             sizeof(stuff->state));
-
+#endif
     return (client->noClientException);
 }
 

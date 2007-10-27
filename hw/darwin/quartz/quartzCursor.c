@@ -29,7 +29,11 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
+/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/quartzCursor.c,v 1.4 2002/11/19 23:01:30 torrey Exp $ */
 
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
 #include "quartzCommon.h"
 #include "quartzCursor.h"
 #include "darwin.h"

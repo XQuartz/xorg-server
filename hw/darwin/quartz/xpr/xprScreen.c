@@ -1,8 +1,6 @@
-/* $XdotOrg: xserver/xorg/hw/darwin/quartz/xpr/xprScreen.c,v 1.6 2005/07/01 22:43:08 daniels Exp $ */
 /*
  * Xplugin rootless implementation screen functions
- */
-/*
+ *
  * Copyright (c) 2002 Apple Computer, Inc. All Rights Reserved.
  * Copyright (c) 2004 Torrey T. Lyons. All Rights Reserved.
  *
@@ -28,7 +26,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/xpr/xprScreen.c,v 1.11 2004/07/15 18:53:25 torrey Exp $ */
+
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif

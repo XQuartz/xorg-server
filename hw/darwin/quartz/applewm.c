@@ -1,6 +1,6 @@
 /**************************************************************************
 
-Copyright (c) 2002 Apple Computer, Inc. All Rights Reserved.
+Copyright (c) 2002-2007 Apple Inc. All Rights Reserved.
 Copyright (c) 2003 Torrey T. Lyons. All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a
@@ -445,13 +445,11 @@ ProcAppleWMSetWindowMenu(
                 break;
         }
     }
-
 #ifdef INXQUARTZ
     X11ApplicationSetWindowMenu (nitems, items, shortcuts);
 #else
     QuartzSetWindowMenu (nitems, items, shortcuts);
 #endif
-
     free(items);
     free(shortcuts);
 
@@ -467,7 +465,7 @@ ProcAppleWMSetWindowMenuCheck(
 
     REQUEST_SIZE_MATCH(xAppleWMSetWindowMenuCheckReq);
 #ifdef INXQUARTZ
-    X11ApplicationSetWindowMenuCheck(stuff->index);
+    X11ApplicationSetWindowMenuCheck (stuff->index);
 #else
     QuartzMessageMainThread(kQuartzSetWindowMenuCheck, &stuff->index,
                             sizeof(stuff->index));
@@ -481,6 +479,7 @@ ProcAppleWMSetFrontProcess(
 )
 {
     REQUEST_SIZE_MATCH(xAppleWMSetFrontProcessReq);
+
 #ifdef INXQUARTZ
     X11ApplicationSetFrontProcess();
 #else
@@ -524,13 +523,13 @@ ProcAppleWMSetCanQuit(
     REQUEST(xAppleWMSetCanQuitReq);
 
     REQUEST_SIZE_MATCH(xAppleWMSetCanQuitReq);
+
 #ifdef INXQUARTZ
     X11ApplicationSetCanQuit(stuff->state);
 #else
     QuartzMessageMainThread(kQuartzSetCanQuit, &stuff->state,
                             sizeof(stuff->state));
 #endif
-
     return (client->noClientException);
 }
 

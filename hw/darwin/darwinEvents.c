@@ -127,23 +127,19 @@ static void DarwinUpdateModifiers(
     int pressed,        // KeyPress or KeyRelease
     int flags )         // modifier flags that have changed
 {
+    xe->u.u.type = pressed;
+    if (flags & NX_COMMANDMASK) DarwinPressModifierMask(xe, COMMAND_MASK(flags));
+    if (flags & NX_CONTROLMASK) DarwinPressModifierMask(xe, CONTROL_MASK(flags));
+    if (flags & NX_ALTERNATEMASK) DarwinPressModifierMask(xe, ALTERNATE_MASK(flags));
+    if (flags & NX_SHIFTMASK)  DarwinPressModifierMask(xe, SHIFT_MASK(flags));
+    if (flags & NX_SECONDARYFNMASK) DarwinPressModifierMask(xe, NX_SECONDARYFNMASK);
     if (flags & NX_ALPHASHIFTMASK) {
-        DarwinPressModifierMask(pressed, NX_ALPHASHIFTMASK);
-    }
-    if (flags & NX_COMMANDMASK) {
-        DarwinPressModifierMask(pressed, COMMAND_MASK(flags));
-    }
-    if (flags & NX_CONTROLMASK) {
-        DarwinPressModifierMask(pressed, CONTROL_MASK(flags));
-    }
-    if (flags & NX_ALTERNATEMASK) {
-        DarwinPressModifierMask(pressed, ALTERNATE_MASK(flags));
-    }
-    if (flags & NX_SHIFTMASK) {
-        DarwinPressModifierMask(pressed, SHIFT_MASK(flags));
-    }
-    if (flags & NX_SECONDARYFNMASK) {
-        DarwinPressModifierMask(pressed, NX_SECONDARYFNMASK);
+		// Alpha shift only sees KeyDown when enabled and KeyUp when disabled,
+		// but X11 wants to see a up/down pair to enable, and again to disable
+		xe->u.u.type = KeyPress;
+        DarwinPressModifierMask(xe, NX_ALPHASHIFTMASK);
+		xe->u.u.type = KeyRelease;
+        DarwinPressModifierMask(xe, NX_ALPHASHIFTMASK);
     }
 }
 

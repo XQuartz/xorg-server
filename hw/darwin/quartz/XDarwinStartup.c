@@ -38,6 +38,9 @@
  * dealings in this Software without prior written authorization from
  * Torrey T. Lyons.
  */
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
 
 #include <unistd.h>
 #include <stdio.h>

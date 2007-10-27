@@ -1,4 +1,4 @@
-/* $XdotOrg: xc/programs/Xserver/hw/darwin/quartz/quartzCocoa.m,v 1.2 2004/04/23 19:15:17 eich Exp $ */
+/* $XdotOrg: xserver/xorg/hw/darwin/quartz/quartzCocoa.m,v 1.3 2004/07/30 19:12:17 torrey Exp $ */
 /**************************************************************
  *
  * Quartz-specific support for the Darwin X Server
@@ -47,14 +47,16 @@
 
 #include <Cocoa/Cocoa.h>
 
+#ifndef INXQUARTZ
 #import "Preferences.h"
+#endif
 #include "pseudoramiX.h"
 
 extern void FatalError(const char *, ...);
 extern char *display;
 extern int noPanoramiXExtension;
 
-
+#ifndef INXQUARTZ
 /*
  * QuartzReadPreferences
  *  Read the user preferences from the Cocoa front end.
@@ -100,7 +102,7 @@ void QuartzReadPreferences(void)
 
     darwinDesiredDepth = [Preferences depth] - 1;
 }
-
+#endif
 
 /*
  * QuartzWriteCocoaPasteboard
@@ -165,6 +167,7 @@ char *QuartzReadCocoaPasteboard(void)
 int QuartzFSUseQDCursor(
     int depth)  // screen depth
 {
+#ifndef INXQUARTZ
     switch ([Preferences useQDCursor]) {
         case qdCursor_Always:
             return TRUE;
@@ -176,6 +179,7 @@ int QuartzFSUseQDCursor(
             else
                 return FALSE;
     }
+#endif
     return TRUE;
 }
 

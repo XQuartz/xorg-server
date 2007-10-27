@@ -32,8 +32,8 @@
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif
-#include "quartz/quartzCommon.h"
-#include "quartz/cr/cr.h"
+#include "quartzCommon.h"
+#include "cr.h"
 
 #undef BOOL
 #define BOOL xBOOL

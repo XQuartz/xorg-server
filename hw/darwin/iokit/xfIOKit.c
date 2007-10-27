@@ -63,7 +63,6 @@
 #include <IOKit/IOKitLib.h>
 #include <IOKit/hidsystem/IOHIDShared.h>
 #include <IOKit/graphics/IOGraphicsLib.h>
-#include <drivers/event_status_driver.h>
 
 // Define this to work around bugs in the display drivers for
 // older PowerBook G3's. If the X server starts without this

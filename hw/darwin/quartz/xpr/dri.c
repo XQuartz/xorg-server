@@ -1,3 +1,4 @@
+/* $XFree86: xc/programs/Xserver/GL/dri/dri.c,v 1.34 2001/12/10 19:07:19 dawes Exp $ */
 /**************************************************************************
 
 Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.
@@ -37,8 +38,17 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <xorg-config.h>
 #endif
 
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
+#ifdef XFree86LOADER
+#include "xf86.h"
+#include "xf86_ansic.h"
+#else
 #include <sys/time.h>
 #include <unistd.h>
+#endif
+#include <dix-config.h>
 
 #define NEED_REPLIES
 #define NEED_EVENTS
@@ -237,7 +247,7 @@ DRIFinishScreenInit(ScreenPtr pScreen)
     pDRIPriv->wrap.ClipNotify = pScreen->ClipNotify;
     pScreen->ClipNotify = DRIClipNotify;
 
-    ErrorF("[DRI] screen %d installation complete\n", pScreen->myNum);
+    //    ErrorF("[DRI] screen %d installation complete\n", pScreen->myNum);
 
     return TRUE;
 }

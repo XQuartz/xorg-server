@@ -1443,7 +1443,7 @@ static unsigned int detectCPUFeatures(void) {
              "pop %%eax\n"
              "mov $0x0, %%edx\n"
              "xor %%ecx, %%eax\n"
-             "jz 1\n"
+             "jz 1f\n"
 
              "mov $0x00000000, %%eax\n"
 	     "push %%ebx\n"
@@ -1486,7 +1486,7 @@ static unsigned int detectCPUFeatures(void) {
                     "cpuid\n"
                     "xor %%edx, %%edx\n"
                     "cmp $0x1, %%eax\n"
-                    "jge 2\n"
+                    "jge 2f\n"
                     "mov $0x80000001, %%eax\n"
                     "cpuid\n"
                     "2:\n"

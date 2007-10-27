@@ -1,5 +1,4 @@
 /* x-hash.h -- basic hash table class
-   $Id$
 
    Copyright (c) 2002 Apple Computer, Inc. All rights reserved.
 
@@ -27,7 +26,6 @@
    copyright holders shall not be used in advertising or otherwise to
    promote the sale, use or other dealings in this Software without
    prior written authorization. */
-/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/xpr/x-hash.h,v 1.1 2003/04/30 23:15:42 torrey Exp $ */
 
 #ifndef X_HASH_H
 #define X_HASH_H 1

@@ -2,8 +2,6 @@
  *
  * Support for using the Quartz Window Manager cursor
  *
- **************************************************************/
-/*
  * Copyright (c) 2001-2003 Torrey T. Lyons and Greg Parker.
  *                 All Rights Reserved.
  *
@@ -29,7 +27,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/quartzCursor.c,v 1.5 2003/01/23 00:34:26 torrey Exp $ */
+
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif

@@ -25,8 +25,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-/* $XdotOrg: xserver/xorg/hw/darwin/quartz/fullscreen/fullscreen.c,v 1.4 2005/07/01 22:43:08 daniels Exp $ */
-/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/fullscreen/fullscreen.c,v 1.3 2003/11/27 01:59:53 torrey Exp $ */
+
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif

@@ -1,4 +1,3 @@
-/* $XdotOrg: xserver/xorg/hw/darwin/quartz/quartzCocoa.m,v 1.3 2004/07/30 19:12:17 torrey Exp $ */
 /**************************************************************
  *
  * Quartz-specific support for the Darwin X Server
@@ -7,8 +6,7 @@
  * This file is separate from the parts of Quartz support
  * that use X include files to avoid symbol collisions.
  *
- **************************************************************/
-/*
+ *
  * Copyright (c) 2001-2004 Torrey T. Lyons and Greg Parker.
  *                 All Rights Reserved.
  *
@@ -34,7 +32,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/quartzCocoa.m,v 1.5 2004/06/08 22:58:10 torrey Exp $ */
+
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif

@@ -1,7 +1,6 @@
 /*
  * Cocoa rootless implementation frame functions
- */
-/*
+ *
  * Copyright (c) 2001 Greg Parker. All Rights Reserved.
  * Copyright (c) 2002-2003 Torrey T. Lyons. All Rights Reserved.
  *
@@ -27,8 +26,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-/* $XdotOrg: xserver/xorg/hw/darwin/quartz/cr/crFrame.m,v 1.3 2004/10/08 00:35:05 torrey Exp $ */
-/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/cr/crFrame.m,v 1.9 2004/03/19 02:05:29 torrey Exp $ */
+
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif

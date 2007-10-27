@@ -3,8 +3,7 @@
  *
  * External interface of the Quartz display modes seen by the generic, mode
  * independent parts of the Darwin X server.
- */
-/*
+ *
  * Copyright (c) 2001-2003 Greg Parker and Torrey T. Lyons.
  *                 All Rights Reserved.
  *
@@ -30,8 +29,6 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-/* $XdotOrg: xserver/xorg/hw/darwin/quartz/quartz.h,v 1.4 2005/07/01 22:43:07 daniels Exp $ */
-/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/quartz.h,v 1.7 2003/11/12 20:21:51 torrey Exp $ */
 
 #ifndef _QUARTZ_H
 #define _QUARTZ_H

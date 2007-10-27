@@ -1,10 +1,7 @@
-/* $XdotOrg: xserver/xorg/hw/darwin/quartz/quartz.c,v 1.4 2005/07/01 22:43:07 daniels Exp $ */
-/**************************************************************
+/*
  *
  * Quartz-specific support for the Darwin X Server
  *
- **************************************************************/
-/*
  * Copyright (c) 2001-2004 Greg Parker and Torrey T. Lyons.
  *                 All Rights Reserved.
  *
@@ -30,7 +27,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/quartz.c,v 1.16 2004/07/02 01:30:33 torrey Exp $ */
+
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif

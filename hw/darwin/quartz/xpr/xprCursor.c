@@ -2,8 +2,6 @@
  *
  * Xplugin cursor support
  *
- **************************************************************/
-/*
  * Copyright (c) 2001 Torrey T. Lyons and Greg Parker.
  * Copyright (c) 2002 Apple Computer, Inc.
  *                 All Rights Reserved.
@@ -30,7 +28,7 @@
  * holders shall not be used in advertising or otherwise to promote the sale,
  * use or other dealings in this Software without prior written authorization.
  */
-/* $XFree86: xc/programs/Xserver/hw/darwin/quartz/xpr/xprCursor.c,v 1.1 2003/04/30 23:15:42 torrey Exp $ */
+
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif

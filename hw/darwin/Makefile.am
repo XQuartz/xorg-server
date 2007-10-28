@@ -235,7 +235,6 @@ glxMesa_la_DEPENDENCIES = XDarwinApp
 endif
 
 endif
-if HAVE_X_PLUGIN
 
 xprplugindir = $(darwinappdir)/Contents/Resources/xpr.bundle/Contents/MacOS
 xprplugin_LTLIBRARIES =
@@ -259,9 +258,6 @@ xpr_la_LDFLAGS = -shrext '' -Wl,-framework,ApplicationServices \
 		-module -avoid-version -no-undefined
 xpr_la_DEPENDENCIES = XDarwinApp	
 
-endif
-
-if HAVE_AGL_FRAMEWORK
 glxCGLplugindir = $(darwinappdir)/Contents/Resources/glxCGL.bundle/Contents/MacOS
 glxCGLplugin_LTLIBRARIES =
 glxCGL_la_SOURCES =
@@ -292,10 +288,6 @@ glxAGL_la_LDFLAGS = -shrext '' \
 		-XCClinker -bundle_loader -XCClinker XDarwinApp \
 		-module -avoid-version -no-undefined
 glxAGL_la_DEPENDENCIES = XDarwinApp	
-
-
-
-endif
 
 man1_MANS = XDarwin.man
 

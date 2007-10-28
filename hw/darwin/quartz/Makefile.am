@@ -5,10 +5,9 @@ AM_OBJCFLAGS = @XORG_CFLAGS@
 
 INCLUDES = -I$(srcdir) -I$(srcdir)/.. @XORG_INCS@
 AM_DEFS = -DHAS_CG_MACH_PORT -DHAS_KL_API
-if HAVE_X_PLUGIN
 AM_DEFS += -DBUILD_XPR
 XPR = xpr
-endif
+
 DEFS = @DEFS@ $(AM_DEFS) -DXBINDIR=\"${bindir}\"
 SUBDIRS = cr fullscreen $(XPR)
 

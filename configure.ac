@@ -517,11 +517,11 @@ AC_ARG_ENABLE(xfree86-utils,     AS_HELP_STRING([--enable-xfree86-utils], [Build
 
 dnl DDXes.
 AC_ARG_ENABLE(xorg,    	      AS_HELP_STRING([--enable-xorg], [Build Xorg server (default: auto)]), [XORG=$enableval], [XORG=auto])
-AC_ARG_ENABLE(dmx,    	      AS_HELP_STRING([--enable-dmx], [Build DMX server (default: no)]), [DMX=$enableval], [DMX=no])
-AC_ARG_ENABLE(xvfb,    	      AS_HELP_STRING([--enable-xvfb], [Build Xvfb server (default: no)]), [XVFB=$enableval], [XVFB=yes])
+AC_ARG_ENABLE(dmx,    	      AS_HELP_STRING([--enable-dmx], [Build DMX server (default: auto)]), [DMX=$enableval], [DMX=auto])
+AC_ARG_ENABLE(xvfb,    	      AS_HELP_STRING([--enable-xvfb], [Build Xvfb server (default: yes)]), [XVFB=$enableval], [XVFB=yes])
 AC_ARG_ENABLE(xnest,   	      AS_HELP_STRING([--enable-xnest], [Build Xnest server (default: auto)]), [XNEST=$enableval], [XNEST=auto])
 AC_ARG_ENABLE(xwin,    	      AS_HELP_STRING([--enable-xwin], [Build XWin server (default: auto)]), [XWIN=$enableval], [XWIN=auto])
-AC_ARG_ENABLE(xprint,         AS_HELP_STRING([--enable-xprint], [Build Xprint extension and server (default: no)]), [XPRINT=$enableval], [XPRINT=no])
+AC_ARG_ENABLE(xprint,         AS_HELP_STRING([--enable-xprint], [Build Xprint extension and server (default: auto)]), [XPRINT=$enableval], [XPRINT=auto])
 AC_ARG_ENABLE(xgl,            AS_HELP_STRING([--enable-xgl], [Build Xgl server (default: no)]), [XGL=$enableval], [XGL=no])
 AC_ARG_ENABLE(xglx,           AS_HELP_STRING([--enable-xglx], [Build Xglx xgl module (default: no)]), [XGLX=$enableval], [XGLX=no])
 AC_ARG_ENABLE(xegl,           AS_HELP_STRING([--enable-xegl], [Build Xegl xgl module (default: no)]), [XEGL=$enableval], [XEGL=no])
@@ -555,7 +555,7 @@ if test "x$SETUID" = "xauto" ; then
 	   	case $host_cpu in
 		    sparc)	SETUID="no"  ;;
 		    *)		SETUID="yes" ;;
-		esac
+		esac ;;
 	esac
 	if test "x$SETUID" = xyes; then
 		touch testfile
@@ -722,7 +722,10 @@ if test "x$GLX" = xyes && ! test "x$MESA_SOURCE" = x; then
 	PKG_CHECK_MODULES([GL], [glproto >= 1.4.8])
 	AC_SUBST(XLIB_CFLAGS)
 	AC_DEFINE(GLXEXT, 1, [Build GLX extension])
-	GLX_LIBS='$(top_builddir)/GL/glx/libglx.la $(top_builddir)/GL/mesa/libGLcore.la'
+    case $host_os in
+      darwin*) GLX_LIBS='$(top_builddir)/GL/apple/indirect.o $(top_builddir)/GL/glx/libglx.la' ;;
+	  *)       GLX_LIBS='$(top_builddir)/GL/glx/libglx.la $(top_builddir)/GL/mesa/libGLcore.la' ;;
+	esac
 	test -d GL || mkdir GL
 	case $host_os in
 	  solaris*) 	
@@ -967,7 +970,7 @@ AC_SUBST([VENDOR_NAME])
 AC_SUBST([VENDOR_NAME_SHORT])
 AC_SUBST([VENDOR_RELEASE])
 AC_SUBST([VENDOR_MAN_VERSION])
-
+AC_SUBST([XORG_DATE])
 AC_DEFINE(DDXOSINIT, 1, [Use OsVendorInit])
 AC_DEFINE(SERVER_LOCK, 1, [Use a lock to prevent multiple servers on a display])
 AC_DEFINE(SMART_SCHEDULE, 1, [Include time-based scheduler])
@@ -1280,64 +1283,61 @@ dnl has it in libc), or if libdl is needed to get it.
 		AC_CHECK_LIB([dl], [dlopen], XORG_LIBS="$XORG_LIBS -ldl"))
 
 	case $host_os in
-         darwin*)
-               XORG_OS="Darwin"
-               build_darwin=yes
-               if test "X$XQUARTZ" = Xauto; then
-                 AC_CACHE_CHECK([for Carbon framework],xorg_cv_Carbon_framework,[
-                 save_LDFLAGS=$LDFLAGS
-                 LDFLAGS="$LDFLAGS -framework Carbon"
-                 AC_LINK_IFELSE([char FSFindFolder();
+	  darwin*)
+		XORG_OS="Darwin"
+		build_darwin=yes
+	  	if test "X$XQUARTZ" = Xauto; then
+	    	  AC_CACHE_CHECK([for Carbon framework],xorg_cv_Carbon_framework,[
+	    	  save_LDFLAGS=$LDFLAGS
+	    	  LDFLAGS="$LDFLAGS -framework Carbon"
+	    	  AC_LINK_IFELSE([char FSFindFolder();
 int main() {
 FSFindFolder();
 return 0;}
-                 ],[xorg_cv_Carbon_framework=yes],
-                  [xorg_cv_Carbon_framework=no])
-                  LDFLAGS=$save_LDFLAGS])
-                 if test "X$xorg_cv_Carbon_framework" = Xyes; then
-                   AC_DEFINE([DARWIN_WITH_QUARTZ],[1],
-                         [Have Quartz])
-                   XQUARTZ=yes
-                 else
-                   XQUARTZ=no
-                 fi
-               fi
-#	       glxAGL / glxCGL don't work yet
-#               AC_CACHE_CHECK([for AGL framework],xorg_cv_AGL_framework,[
-#               save_LDFLAGS=$LDFLAGS
-#               LDFLAGS="$LDFLAGS -framework AGL"
-#               AC_LINK_IFELSE([char aglEnable();
-#int main() {
-#aglEnable();
-#return 0;}
-#               ],[xorg_cv_AGL_framework=yes],
-#               [xorg_cv_AGL_framework=no])
-#               LDFLAGS=$save_LDFLAGS
-#               ])
-               xorg_cv_AGL_framework=no
-	       DARWIN_LIBS="$FB_LIB $MI_LIB $FIXES_LIB $XEXT_LIB $CONFIG_LIB $DBE_LIB $XTRAP_LIB $RECORD_LIB $GLX_LIBS $RENDER_LIB $RANDR_LIB $DAMAGE_LIB $MIEXT_DAMAGE_LIB $MIEXT_SHADOW_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $COMPOSITE_LIB $XPSTUBS_LIB $OS_LIB"
-	       AC_SUBST([DARWIN_LIBS])
-               AC_CHECK_LIB([Xplugin],[xp_init],[:])
-               AC_SUBST([APPLE_APPLICATIONS_DIR])
-               CFLAGS="${CFLAGS} -D__DARWIN__"
-               PLIST_VERSION_STRING=$PACKAGE_VERSION
-               AC_SUBST([PLIST_VERSION_STRING])
-               PLIST_VENDOR_WEB=$VENDOR_WEB
-               AC_SUBST([PLIST_VENDOR_WEB])
-               # Not sure that we should be disabling all these...
-               if test "x$XF86MISC" = xyes || test "x$XF86MISC" = xauto; then
-                       AC_MSG_NOTICE([Disabling XF86Misc extension])
-                       XF86MISC=no
-               fi
-               if test "x$XF86VIDMODE" = xyes || test "x$XF86VIDMODE" = xauto; then
-                       AC_MSG_NOTICE([Disabling XF86VidMode extension])
-                       XF86VIDMODE=no
-               fi
-               if test "x$DGA" = xyes || test "x$DGA" = xauto; then
-                       AC_MSG_NOTICE([Disabling DGA extension])
-                       DGA=no
-               fi
-               ;;
+		  ],[xorg_cv_Carbon_framework=yes],
+		   [xorg_cv_Carbon_framework=no])
+	    	   LDFLAGS=$save_LDFLAGS])
+		  if test "X$xorg_cv_Carbon_framework" = Xyes; then
+		    AC_DEFINE([DARWIN_WITH_QUARTZ],[1],
+			  [Have Quartz])
+		    XQUARTZ=yes
+		  else
+		    XQUARTZ=no
+		  fi
+    	  	fi
+		AC_DEFINE(ROOTLESS,1,[Build Rootless code])
+		AC_CACHE_CHECK([for AGL framework],xorg_cv_AGL_framework,[
+	    	save_LDFLAGS=$LDFLAGS
+	    	LDFLAGS="$LDFLAGS -framework AGL"
+	    	AC_LINK_IFELSE([char aglEnable();
+int main() {
+aglEnable();
+return 0;}
+		],[xorg_cv_AGL_framework=yes],
+		[xorg_cv_AGL_framework=no])
+	    	LDFLAGS=$save_LDFLAGS
+		])	
+		AC_CHECK_LIB([Xplugin],[xp_init],[:])
+		AC_SUBST([APPLE_APPLICATIONS_DIR])
+		CFLAGS="${CFLAGS} -D__DARWIN__"
+		PLIST_VERSION_STRING=$VENDOR_VERSION_STRING
+		AC_SUBST([PLIST_VERSION_STRING])
+		PLIST_VENDOR_WEB=$VENDOR_WEB
+		AC_SUBST([PLIST_VENDOR_WEB])	
+		# Not sure that we should be disabling all these...
+	        if test "x$XF86MISC" = xyes; then
+	                AC_MSG_NOTICE([Disabling XF86Misc extension])
+	                XF86MISC=no
+	        fi
+		if test "x$XF86VIDMODE" = xyes; then
+			AC_MSG_NOTICE([Disabling XF86VidMode extension])
+			XF86VIDMODE=no
+		fi
+		if test "x$DGA" = xyes; then
+			AC_MSG_NOTICE([Disabling DGA extension])
+			DGA=no
+		fi
+	 	;;
 	  linux*)
 		if test "x$LNXAPM" = xyes; then
 			XORG_CFLAGS="$XORG_CFLAGS -DXF86PM"
@@ -1458,10 +1458,6 @@ return 0;}
 		Free/Open/NetBSD, Solaris, and OS X. If you are interested in porting \
 	        Xorg to your platform, please email xorg@lists.freedesktop.org.])
 		;;
-	esac
-
-	case $host_cpu in
-	  i*86)
                case $host_os in
                  darwin*) ;;
                  *) xorg_bus_ix86pci=yes ;;
@@ -1542,6 +1538,32 @@ return 0;}
 	fi
 	AC_SUBST(PERL)
 
+	# The Xorg binary needs to export symbols so that they can be used from modules
+	# Some platforms require extra flags to do this.   gcc should set these flags
+	# when -rdynamic is passed to it, other compilers/linkers may need to be added
+	# here.
+	if test "x$GCC" = "xyes"; then
+		GCC_WARNINGS1="-Wall -Wpointer-arith -Wstrict-prototypes"
+		GCC_WARNINGS2="-Wmissing-prototypes -Wmissing-declarations"
+		GCC_WARNINGS3="-Wnested-externs -fno-strict-aliasing"
+		GCC_WARNINGS="$GCC_WARNINGS1 $GCC_WARNINGS2 $GCC_WARNINGS3"
+		if test "x$WERROR" = "xyes"; then
+			GCC_WARNINGS="${GCC_WARNINGS} -Werror"
+		fi
+		XSERVER_CFLAGS="$GCC_WARNINGS $XSERVER_CFLAGS"
+		case $host_os in
+		  darwin*) ;; # Symbols are exported by default, no need
+		  # to do anything special. I think that the following
+		  # is wrong anyway when using libtool. Should be using
+		  # the libtool flag -export-dynamic?
+		  *)LD_EXPORT_SYMBOLS_FLAG="-rdynamic" ;;
+		esac
+	fi
+	case $host_os in
+		openbsd*)
+		LD_EXPORT_SYMBOLS_FLAG="-Wl,--export-dynamic"
+		;;
+	esac
 	AC_SUBST([XORG_CFLAGS])
 
 	dnl these only go in xorg-config.h
@@ -1575,6 +1597,26 @@ return 0;}
 	AC_SUBST([extdir])
 	AC_SUBST([logdir])
 fi
+
+if test "x$XF86VIDMODE" = xyes; then
+	AC_DEFINE(XF86VIDMODE, 1, [Support XFree86 Video Mode extension])
+fi
+
+if test "x$XF86MISC" = xyes; then
+	AC_DEFINE(XF86MISC, 1, [Support XFree86 miscellaneous extensions])
+fi
+# Support for objc in autotools is minimal and not documented.
+OBJC='$(CC)'
+OBJCLD='$(CCLD)'
+OBJCLINK='$(LINK)'
+OBJCFLAGS='$(CFLAGS)'
+AC_SUBST([OBJC])
+AC_SUBST([OBJCCLD])
+AC_SUBST([OBJCLINK])
+AC_SUBST([OBJCFLAGS])
+# internal, undocumented automake func follows :(
+_AM_DEPENDENCIES([OBJC])
+
 AM_CONDITIONAL([XORG], [test "x$XORG" = xyes])
 AM_CONDITIONAL([XORG_BUS_LINUXPCI], [test "x$xorg_bus_linuxpci" = xyes])
 AM_CONDITIONAL([XORG_BUS_FREEBSDPCI], [test "x$xorg_bus_freebsdpci" = xyes])
@@ -1660,7 +1702,6 @@ if test "x$XPRINT" = xyes; then
 	# end freetype support
 fi
 AM_CONDITIONAL(XP_USE_FREETYPE, [test "x$XPRINT" = xyes && test "x$XP_USE_FREETYPE" = xyes])
-
 
 dnl XWin DDX
 
@@ -1888,6 +1929,10 @@ AC_DEFINE_DIR(XKM_OUTPUT_DIR, XKBOUTPUT, [Path to XKB output dir])
 
 AC_SUBST(XKB_COMPILED_DIR)
 
+AM_CONDITIONAL(DGA, [test "x$DGA" = xyes])
+if test "x$DGA" = xyes; then
+	AC_DEFINE(DGA, 1, [Support DGA extension])
+fi
 dnl and the rest of these are generic, so they're in config.h
 AC_DEFINE(XResExtension, 1, [Build XRes extension])
 
@@ -2095,6 +2140,9 @@ hw/darwin/bundle/Swedish.lproj/Makefile
 hw/darwin/bundle/ko.lproj/Makefile
 hw/darwin/iokit/Makefile
 hw/darwin/quartz/Makefile
+hw/darwin/quartz/cr/Makefile
+hw/darwin/quartz/fullscreen/Makefile
+hw/darwin/quartz/xpr/Makefile
 hw/darwin/utils/Makefile
 hw/kdrive/Makefile
 hw/kdrive/ati/Makefile

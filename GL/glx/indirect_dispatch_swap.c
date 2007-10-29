@@ -35,6 +35,11 @@
 #define bswap_16 __swap16
 #define bswap_32 __swap32
 #define bswap_64 __swap64
+#elif defined(__APPLE__)
+#include <libkern/OSByteOrder.h>
+#define bswap_16 OSSwapInt16
+#define bswap_32 OSSwapInt32
+#define bswap_64 OSSwapInt64
 #else
 #include <sys/endian.h>
 #define bswap_16 bswap16

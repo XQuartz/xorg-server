@@ -79,8 +79,7 @@ XDarwin_LDADD = \
 		$(top_builddir)/miext/rootless/librootless.la \
 		$(top_builddir)/miext/rootless/safeAlpha/libsafeAlpha.la \
 		$(top_builddir)/miext/rootless/accel/librlAccel.la \
-		@XORG_LIBS@ \
-		-lXau -lXdmcp -lXfont -lfreetype
+		$(XSERVER_LIBS)
 
 Xquartz_LDADD = \
 		$(top_builddir)/dix/dixfonts.lo \
@@ -90,6 +89,7 @@ Xquartz_LDADD = \
 		$(top_builddir)/dix/libxpstubs.la \
 		$(top_builddir)/miext/shadow/libshadow.la \
 		$(top_builddir)/fb/libfb.la \
+		$(top_builddir)/mi/libmi.la \
 		$(top_builddir)/composite/libcomposite.la \
 		$(top_builddir)/damageext/libdamageext.la \
 		$(top_builddir)/miext/damage/libdamage.la \
@@ -105,8 +105,7 @@ Xquartz_LDADD = \
 		$(top_builddir)/miext/rootless/librootless.la \
 		$(top_builddir)/miext/rootless/safeAlpha/libsafeAlpha.la \
 		$(top_builddir)/miext/rootless/accel/librlAccel.la \
-		@XORG_LIBS@ \
-		-lXau -lXdmcp -lXfont -lfreetype -lXplugin
+		$(XSERVER_LIBS)
 
 XDarwin_LDFLAGS =  \
                  -XCClinker -Objc \
@@ -258,6 +257,8 @@ xpr_la_LDFLAGS = -shrext '' -Wl,-framework,ApplicationServices \
 		-module -avoid-version -no-undefined
 xpr_la_DEPENDENCIES = XDarwinApp	
 
+
+if HAVE_AGL_FRAMEWORK
 glxCGLplugindir = $(darwinappdir)/Contents/Resources/glxCGL.bundle/Contents/MacOS
 glxCGLplugin_LTLIBRARIES =
 glxCGL_la_SOURCES =
@@ -288,6 +289,10 @@ glxAGL_la_LDFLAGS = -shrext '' \
 		-XCClinker -bundle_loader -XCClinker XDarwinApp \
 		-module -avoid-version -no-undefined
 glxAGL_la_DEPENDENCIES = XDarwinApp	
+
+
+
+endif
 
 man1_MANS = XDarwin.man
 

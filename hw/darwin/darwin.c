@@ -6,6 +6,7 @@
  **************************************************************/
 /*
  * Copyright (c) 2001-2004 Torrey T. Lyons. All Rights Reserved.
+ * Copyright (c) 2007 Apple Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -30,9 +31,7 @@
  * use or other dealings in this Software without prior written authorization.
  */
 
-#ifdef HAVE_XORG_CONFIG_H
-#include <xorg-config.h>
-#endif
+#include <dix-config.h>
 
 #include <X11/X.h>
 #include <X11/Xproto.h>
@@ -46,8 +45,6 @@
 #include "fb.h"			// fb framebuffer code
 #include "site.h"
 #include "globals.h"
-#include "xorgVersion.h"
-#include "xf86Date.h"
 #include "dix.h"
 
 #ifdef XINPUT
@@ -83,6 +80,7 @@ int                     darwinScreenIndex = 0;
 io_connect_t            darwinParamConnect = 0;
 int                     darwinEventReadFD = -1;
 int                     darwinEventWriteFD = -1;
+// int                     darwinMouseAccelChange = 1;
 int                     darwinFakeButtons = 0;
 
 // location of X11's (0,0) point in global screen coordinates
@@ -129,13 +127,21 @@ const int NUMFORMATS = sizeof(formats)/sizeof(formats[0]);
 #ifndef BUILD_DATE
 #define BUILD_DATE ""
 #endif
+#ifndef XORG_RELEASE
+#define XORG_RELEASE "?"
+#endif
+
+void DDXRingBell(int volume, int pitch, int duration) {
+  // FIXME -- make some noise, yo
+}
 
 void
-DarwinPrintBanner()
-{
+DarwinPrintBanner(void)
+{ 
+  // this should change depending on which specific server we are building
   ErrorF("X11.app starting:\n");
   ErrorF("Xquartz server based on X.org %s, built on %s\n", XORG_RELEASE, BUILD_DATE );
- }
+}
 
 
 /*
@@ -300,6 +306,29 @@ static Bool DarwinAddScreen(
 
  =============================================================================
 */
+
+#if 0
+/*
+ * DarwinChangePointerControl
+ *  Set mouse acceleration and thresholding
+ *  FIXME: We currently ignore the threshold in ctrl->threshold.
+ */
+static void DarwinChangePointerControl(
+    DeviceIntPtr    device,
+    PtrCtrl         *ctrl )
+{
+    kern_return_t   kr;
+    double          acceleration;
+
+    if (!darwinMouseAccelChange)
+        return;
+
+    acceleration = ctrl->num / ctrl->den;
+    kr = IOHIDSetMouseAcceleration( darwinParamConnect, acceleration );
+    if (kr != KERN_SUCCESS)
+        ErrorF( "Could not set mouse acceleration with kernel return = 0x%x.\n", kr );
+}
+#endif
 
 /*
  * DarwinMouseProc
@@ -549,8 +578,8 @@ DarwinAdjustScreenOrigins(ScreenInfo *pScreenInfo)
         for (i = 0; i < pScreenInfo->numScreens; i++) {
             dixScreenOrigins[i].x -= darwinMainScreenX;
             dixScreenOrigins[i].y -= darwinMainScreenY;
-	    /*            ErrorF("Screen %d placed at X11 coordinate (%d,%d).\n",
-			  i, dixScreenOrigins[i].x, dixScreenOrigins[i].y); */
+    /*            ErrorF("Screen %d placed at X11 coordinate (%d,%d).\n",
+		  i, dixScreenOrigins[i].x, dixScreenOrigins[i].y); */
         }
     }
 }
@@ -627,13 +656,9 @@ void OsVendorInit(void)
         if ( !tempStr ) {
             ErrorF("Could not find keymapping file %s.\n", darwinKeymapFile);
         } else {
-	  ErrorF("Using keymapping provided in %s.\n", tempStr);
+            ErrorF("Using keymapping provided in %s.\n", tempStr);
         }
         darwinKeymapFile = tempStr;
-    }
-
-    if ( !darwinKeymapFile ) {
-      //        ErrorF("Reading keymap from the system.\n");
     }
 }
 
@@ -832,7 +857,7 @@ void ddxUseMsg( void )
  */
 void ddxGiveUp( void )
 {
-    ErrorF( "Quitting Xquartz...\n" );
+    ErrorF( "Quitting XQuartz...\n" );
 
     DarwinModeGiveUp();
 }
@@ -855,7 +880,6 @@ void AbortDDX( void )
 }
 
 
-#ifdef DPMSExtension
 /*
  * DPMS extension stubs
  */
@@ -872,8 +896,6 @@ int DPMSGet(int *level)
 {
     return -1;
 }
-#endif
-
 
 #include "mivalidate.h" // for union _Validate used by windowstr.h
 #include "windowstr.h"  // for struct _Window

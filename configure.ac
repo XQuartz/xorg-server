@@ -95,6 +95,8 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h stdlib.h string.h unistd.h])
 
+AC_CHECK_PROG(HAVE_LAUNCHD, [launchd], [yes], [])
+
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_BIGENDIAN([ENDIAN="X_BIG_ENDIAN"], [ENDIAN="X_LITTLE_ENDIAN"])
@@ -181,6 +183,7 @@ AC_CHECK_FUNC([getpeerucred],
 	AC_DEFINE(HAS_GETPEERUCRED, 1, [Have the 'getpeerucred' function.]))
 AC_CHECK_FUNC([strlcat], HAVE_STRLCAT=yes, HAVE_STRLCAT=no)
 AM_CONDITIONAL(NEED_STRLCAT, [test x$HAVE_STRLCAT = xno])	
+AC_CHECK_FUNC([strlcpy], AC_DEFINE(HAS_STRLCPY, 1, [Have the 'strlcpy' function]))
 
 AM_CONDITIONAL(NEED_VSNPRINTF, [test x$HAVE_VSNPRINTF = xno])
 
@@ -487,7 +490,6 @@ AC_ARG_ENABLE(xres,           AS_HELP_STRING([--disable-xres], [Build XRes exten
 AC_ARG_ENABLE(xtrap,          AS_HELP_STRING([--disable-xtrap], [Build XTrap extension (default: enabled)]), [XTRAP=$enableval], [XTRAP=yes])
 AC_ARG_ENABLE(record,         AS_HELP_STRING([--disable-record], [Build Record extension (default: enabled)]), [RECORD=$enableval], [RECORD=yes])
 AC_ARG_ENABLE(xv,             AS_HELP_STRING([--disable-xv], [Build Xv extension (default: enabled)]), [XV=$enableval], [XV=yes])
-AC_ARG_ENABLE(quartz,         AS_HELP_STRING([--enable-quartz], [Build with darwin quartz support (default: auto)]), [XQUARTZ=$enableval], [XQUARTZ=auto])
 AC_ARG_ENABLE(xvmc,           AS_HELP_STRING([--disable-xvmc], [Build XvMC extension (default: enabled)]), [XVMC=$enableval], [XVMC=yes])
 AC_ARG_ENABLE(dga,            AS_HELP_STRING([--disable-dga], [Build DGA extension (default: auto)]), [DGA=$enableval], [DGA=auto])
 AC_ARG_ENABLE(screensaver,    AS_HELP_STRING([--disable-screensaver], [Build ScreenSaver extension (default: enabled)]), [SCREENSAVER=$enableval], [SCREENSAVER=yes])
@@ -517,11 +519,15 @@ AC_ARG_ENABLE(xfree86-utils,     AS_HELP_STRING([--enable-xfree86-utils], [Build
 
 dnl DDXes.
 AC_ARG_ENABLE(xorg,    	      AS_HELP_STRING([--enable-xorg], [Build Xorg server (default: auto)]), [XORG=$enableval], [XORG=auto])
-AC_ARG_ENABLE(dmx,    	      AS_HELP_STRING([--enable-dmx], [Build DMX server (default: auto)]), [DMX=$enableval], [DMX=auto])
-AC_ARG_ENABLE(xvfb,    	      AS_HELP_STRING([--enable-xvfb], [Build Xvfb server (default: yes)]), [XVFB=$enableval], [XVFB=yes])
-AC_ARG_ENABLE(xnest,   	      AS_HELP_STRING([--enable-xnest], [Build Xnest server (default: auto)]), [XNEST=$enableval], [XNEST=auto])
+AC_ARG_ENABLE(dmx,    	      AS_HELP_STRING([--enable-dmx], [Build DMX server (default: no)]), [DMX=$enableval], [DMX=no])
+AC_ARG_ENABLE(xvfb,    	      AS_HELP_STRING([--enable-xvfb], [Build Xvfb server (default: no)]), [XVFB=$enableval], [XVFB=no])
+AC_ARG_ENABLE(xnest,   	      AS_HELP_STRING([--enable-xnest], [Build Xnest server (default: no)]), [XNEST=$enableval], [XNEST=no])
+AC_ARG_ENABLE(xdarwin, 	      AS_HELP_STRING([--enable-xdarwin], [Build XDarwin server (default: auto)]), [XDARWIN=$enableval], [XDARWIN=auto])
+AC_ARG_ENABLE(xdarwinapp,     AS_HELP_STRING([--enable-xdarwinapp], [Build XDarwin.app server (default: no)]), [XDARWINAPP=$enableval], [XDARWINAPP=no])
+AC_ARG_ENABLE(xquartz,        AS_HELP_STRING([--disable-xquartz], [Build Xquartz server on Darwin (default: auto)]), [XQUARTZ=$enableval], [XQUARTZ=auto])
+AC_ARG_ENABLE(x11app,         AS_HELP_STRING([--enable-x11app], [Build Apple's X11.app wrapper for Xquartz (default: no)]), [X11APP=$enableval], [X11APP=no])
 AC_ARG_ENABLE(xwin,    	      AS_HELP_STRING([--enable-xwin], [Build XWin server (default: auto)]), [XWIN=$enableval], [XWIN=auto])
-AC_ARG_ENABLE(xprint,         AS_HELP_STRING([--enable-xprint], [Build Xprint extension and server (default: auto)]), [XPRINT=$enableval], [XPRINT=auto])
+AC_ARG_ENABLE(xprint,         AS_HELP_STRING([--enable-xprint], [Build Xprint extension and server (default: no)]), [XPRINT=$enableval], [XPRINT=no])
 AC_ARG_ENABLE(xgl,            AS_HELP_STRING([--enable-xgl], [Build Xgl server (default: no)]), [XGL=$enableval], [XGL=no])
 AC_ARG_ENABLE(xglx,           AS_HELP_STRING([--enable-xglx], [Build Xglx xgl module (default: no)]), [XGLX=$enableval], [XGLX=no])
 AC_ARG_ENABLE(xegl,           AS_HELP_STRING([--enable-xegl], [Build Xegl xgl module (default: no)]), [XEGL=$enableval], [XEGL=no])
@@ -1283,61 +1289,6 @@ dnl has it in libc), or if libdl is needed to get it.
 		AC_CHECK_LIB([dl], [dlopen], XORG_LIBS="$XORG_LIBS -ldl"))
 
 	case $host_os in
-	  darwin*)
-		XORG_OS="Darwin"
-		build_darwin=yes
-	  	if test "X$XQUARTZ" = Xauto; then
-	    	  AC_CACHE_CHECK([for Carbon framework],xorg_cv_Carbon_framework,[
-	    	  save_LDFLAGS=$LDFLAGS
-	    	  LDFLAGS="$LDFLAGS -framework Carbon"
-	    	  AC_LINK_IFELSE([char FSFindFolder();
-int main() {
-FSFindFolder();
-return 0;}
-		  ],[xorg_cv_Carbon_framework=yes],
-		   [xorg_cv_Carbon_framework=no])
-	    	   LDFLAGS=$save_LDFLAGS])
-		  if test "X$xorg_cv_Carbon_framework" = Xyes; then
-		    AC_DEFINE([DARWIN_WITH_QUARTZ],[1],
-			  [Have Quartz])
-		    XQUARTZ=yes
-		  else
-		    XQUARTZ=no
-		  fi
-    	  	fi
-		AC_DEFINE(ROOTLESS,1,[Build Rootless code])
-		AC_CACHE_CHECK([for AGL framework],xorg_cv_AGL_framework,[
-	    	save_LDFLAGS=$LDFLAGS
-	    	LDFLAGS="$LDFLAGS -framework AGL"
-	    	AC_LINK_IFELSE([char aglEnable();
-int main() {
-aglEnable();
-return 0;}
-		],[xorg_cv_AGL_framework=yes],
-		[xorg_cv_AGL_framework=no])
-	    	LDFLAGS=$save_LDFLAGS
-		])	
-		AC_CHECK_LIB([Xplugin],[xp_init],[:])
-		AC_SUBST([APPLE_APPLICATIONS_DIR])
-		CFLAGS="${CFLAGS} -D__DARWIN__"
-		PLIST_VERSION_STRING=$VENDOR_VERSION_STRING
-		AC_SUBST([PLIST_VERSION_STRING])
-		PLIST_VENDOR_WEB=$VENDOR_WEB
-		AC_SUBST([PLIST_VENDOR_WEB])	
-		# Not sure that we should be disabling all these...
-	        if test "x$XF86MISC" = xyes; then
-	                AC_MSG_NOTICE([Disabling XF86Misc extension])
-	                XF86MISC=no
-	        fi
-		if test "x$XF86VIDMODE" = xyes; then
-			AC_MSG_NOTICE([Disabling XF86VidMode extension])
-			XF86VIDMODE=no
-		fi
-		if test "x$DGA" = xyes; then
-			AC_MSG_NOTICE([Disabling DGA extension])
-			DGA=no
-		fi
-	 	;;
 	  linux*)
 		if test "x$LNXAPM" = xyes; then
 			XORG_CFLAGS="$XORG_CFLAGS -DXF86PM"
@@ -1597,26 +1548,6 @@ return 0;}
 	AC_SUBST([extdir])
 	AC_SUBST([logdir])
 fi
-
-if test "x$XF86VIDMODE" = xyes; then
-	AC_DEFINE(XF86VIDMODE, 1, [Support XFree86 Video Mode extension])
-fi
-
-if test "x$XF86MISC" = xyes; then
-	AC_DEFINE(XF86MISC, 1, [Support XFree86 miscellaneous extensions])
-fi
-# Support for objc in autotools is minimal and not documented.
-OBJC='$(CC)'
-OBJCLD='$(CCLD)'
-OBJCLINK='$(LINK)'
-OBJCFLAGS='$(CFLAGS)'
-AC_SUBST([OBJC])
-AC_SUBST([OBJCCLD])
-AC_SUBST([OBJCLINK])
-AC_SUBST([OBJCFLAGS])
-# internal, undocumented automake func follows :(
-_AM_DEPENDENCIES([OBJC])
-
 AM_CONDITIONAL([XORG], [test "x$XORG" = xyes])
 AM_CONDITIONAL([XORG_BUS_LINUXPCI], [test "x$xorg_bus_linuxpci" = xyes])
 AM_CONDITIONAL([XORG_BUS_FREEBSDPCI], [test "x$xorg_bus_freebsdpci" = xyes])
@@ -1772,10 +1703,75 @@ AM_CONDITIONAL(XWIN_RANDR, [test "x$XWIN" = xyes])
 AM_CONDITIONAL(XWIN_XV, [test "x$XWIN" = xyes && test "x$XV" = xyes])
 
 dnl Darwin / OS X DDX
-AM_CONDITIONAL(HAVE_X_PLUGIN, [test "x$ac_cv_lib_Xplugin_xp_init" = xyes])
-AM_CONDITIONAL(HAVE_AGL_FRAMEWORK, [test "x$xorg_cv_AGL_framework" = xyes])
-# Support for objc in autotools is minimal and not
-# documented.
+AC_MSG_CHECKING([whether to build XDarwin (Mac OS X) DDX])
+if test "x$XDARWIN" = xauto; then
+	case $host_os in
+		darwin*) XDARWIN="yes" ;;
+		*) XDARWIN="no" ;;
+	esac
+fi
+AC_MSG_RESULT([$XDARWIN])
+
+if test "x$XDARWIN" = xyes; then
+        if test "X$XQUARTZ" = Xauto; then
+                 AC_CACHE_CHECK([for Carbon framework],xorg_cv_Carbon_framework,[
+                 save_LDFLAGS=$LDFLAGS
+                 LDFLAGS="$LDFLAGS -framework Carbon"
+                 AC_LINK_IFELSE([char FSFindFolder();
+int main() {
+FSFindFolder();
+return 0;}
+                 ],[xorg_cv_Carbon_framework=yes],
+                  [xorg_cv_Carbon_framework=no])
+                  LDFLAGS=$save_LDFLAGS])
+                 if test "X$xorg_cv_Carbon_framework" = Xyes; then
+                   AC_DEFINE([DARWIN_WITH_QUARTZ],[1],
+                         [Have Quartz])
+                   XQUARTZ=yes
+                 else
+                   XQUARTZ=no
+                 fi
+               fi
+#	       glxAGL / glxCGL don't work yet
+#               AC_CACHE_CHECK([for AGL framework],xorg_cv_AGL_framework,[
+#               save_LDFLAGS=$LDFLAGS
+#               LDFLAGS="$LDFLAGS -framework AGL"
+#               AC_LINK_IFELSE([char aglEnable();
+#int main() {
+#aglEnable();
+#return 0;}
+#               ],[xorg_cv_AGL_framework=yes],
+#               [xorg_cv_AGL_framework=no])
+#               LDFLAGS=$save_LDFLAGS
+#               ])
+               xorg_cv_AGL_framework=no
+	       DARWIN_LIBS="$MI_LIB $OS_LIB $DIX_LIB $FB_LIB $FIXES_LIB $XEXT_LIB $CONFIG_LIB $DBE_LIB $XTRAP_LIB $RECORD_LIB $GLX_LIBS $RENDER_LIB $RANDR_LIB $DAMAGE_LIB $MIEXT_DAMAGE_LIB $MIEXT_SHADOW_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $COMPOSITE_LIB $XPSTUBS_LIB"
+	       AC_SUBST([DARWIN_LIBS])
+               AC_CHECK_LIB([Xplugin],[xp_init],[:])
+               AC_SUBST([APPLE_APPLICATIONS_DIR])
+               CFLAGS="${CFLAGS} -D__DARWIN__"
+               PLIST_VERSION_STRING=$PACKAGE_VERSION
+               AC_SUBST([PLIST_VERSION_STRING])
+               PLIST_VENDOR_WEB=$VENDOR_WEB
+               AC_SUBST([PLIST_VENDOR_WEB])
+               if test "x$XF86MISC" = xyes || test "x$XF86MISC" = xauto; then
+                       AC_MSG_NOTICE([Disabling XF86Misc extension])
+                       XF86MISC=no
+               fi
+               if test "x$XF86VIDMODE" = xyes || test "x$XF86VIDMODE" = xauto; then
+                       AC_MSG_NOTICE([Disabling XF86VidMode extension])
+                       XF86VIDMODE=no
+               fi
+               if test "x$XF86BIGFONT" = xyes || test "x$XF86BIGFONT" = xauto; then
+                       AC_MSG_NOTICE([Disabling XF86BigFont extension])
+                       XF86BIGFONT=no
+               fi
+               if test "x$DGA" = xyes || test "x$DGA" = xauto; then
+                       AC_MSG_NOTICE([Disabling DGA extension])
+                       DGA=no
+               fi
+fi
+# Support for objc in autotools is minimal and not documented.
 OBJC='$(CC)'
 OBJCLD='$(CCLD)'
 OBJCLINK='$(LINK)'
@@ -1786,6 +1782,11 @@ AC_SUBST([OBJCLINK])
 AC_SUBST([OBJCFLAGS])
 # internal, undocumented automake func follows :(
 _AM_DEPENDENCIES([OBJC])
+AM_CONDITIONAL(HAVE_XPLUGIN, [test "x$ac_cv_lib_Xplugin_xp_init" = xyes])
+AM_CONDITIONAL(HAVE_AGL_FRAMEWORK, [test "x$xorg_cv_AGL_framework" = xyes])
+AM_CONDITIONAL(XDARWIN, [test "x$XDARWIN" = xyes])
+AM_CONDITIONAL(XDARWINAPP, [test "x$XDARWINAPP" = xyes])
+AM_CONDITIONAL(XQUARTZ, [test "x$XQUARTZ" = xyes])
 
 dnl kdrive DDX
 

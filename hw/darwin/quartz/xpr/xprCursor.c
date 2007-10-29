@@ -83,8 +83,17 @@ load_cursor(CursorPtr src, int screen)
 #ifdef ARGB_CURSOR
     if (src->bits->argb != NULL)
     {
-        rowbytes = src->bits->width * sizeof(CARD32);
+#if BITMAP_BIT_ORDER == MSBFirst
+        rowbytes = src->bits->width * sizeof (CARD32);
         data = (uint32_t *) src->bits->argb;
+#else
+        const uint32_t *be_data=(uint32_t *) src->bits->argb;
+        unsigned i;
+        rowbytes = src->bits->width * sizeof (CARD32);
+        data=alloca (rowbytes * src->bits->height);
+        for(i=0;i<(src->bits->width*src->bits->height);i++)
+            data[i]=ntohl(be_data[i]);
+#endif
     }
     else
 #endif

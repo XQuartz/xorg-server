@@ -1,6 +1,7 @@
 noinst_LIBRARIES = libdarwinShared.a
 libdarwin_XINPUT_SRCS = darwinXinput.c
 
+# -O2 inexplicably causes quartzKeyboard.o to break?!
 AM_CFLAGS = @XORG_CFLAGS@
 INCLUDES = @XORG_INCS@ -I../../miext/rootless
 
@@ -79,7 +80,7 @@ XDarwin_LDADD = \
 		$(top_builddir)/miext/rootless/librootless.la \
 		$(top_builddir)/miext/rootless/safeAlpha/libsafeAlpha.la \
 		$(top_builddir)/miext/rootless/accel/librlAccel.la \
-		$(XSERVER_LIBS)
+		$(XSERVER_LIBS) -lXplugin
 
 Xquartz_LDADD = \
 		$(top_builddir)/dix/dixfonts.lo \
@@ -105,7 +106,7 @@ Xquartz_LDADD = \
 		$(top_builddir)/miext/rootless/librootless.la \
 		$(top_builddir)/miext/rootless/safeAlpha/libsafeAlpha.la \
 		$(top_builddir)/miext/rootless/accel/librlAccel.la \
-		$(XSERVER_LIBS)
+		$(DARWIN_LIBS) $(XSERVER_LIBS) -lXplugin
 
 XDarwin_LDFLAGS =  \
                  -XCClinker -Objc \

@@ -43,8 +43,6 @@
 # include "micmap.h"
 #undef BOOL
 
-#include "xf86Version.h"
-
 #include <mach/mach.h>
 #include <unistd.h>
 #include <pthread.h>

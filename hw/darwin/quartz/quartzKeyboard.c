@@ -166,7 +166,8 @@ DarwinModeSystemKeymapSeed (void)
     return seed;
 }
 
-static inline UniChar
+//static inline UniChar
+UniChar
 macroman2ucs (unsigned char c)
 {
     /* Precalculated table mapping MacRoman-128 to Unicode. Generated

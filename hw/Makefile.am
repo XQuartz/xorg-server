@@ -1,11 +1,3 @@
-if DMX
-DMX_SUBDIRS = dmx
-endif
-
-if XORG
-XORG_SUBDIRS = xfree86
-endif
-
 if XVFB
 XVFB_SUBDIRS = vfb
 endif
@@ -30,7 +22,7 @@ if XPRINT
 XPRINT_SUBDIRS = xprint
 endif
 
-# need to add darwin support here
+DARWIN_SUBDIRS = darwin
 
 SUBDIRS =			\
 	$(XORG_SUBDIRS)		\
@@ -40,6 +32,7 @@ SUBDIRS =			\
 	$(XNEST_SUBDIRS)	\
 	$(DMX_SUBDIRS)          \
         $(KDRIVE_SUBDIRS)	\
+        $(DARWIN_SUBDIRS)	\
 	$(XPRINT_SUBDIRS)
 
 DIST_SUBDIRS = dmx xfree86 vfb xnest xwin darwin kdrive xgl xprint

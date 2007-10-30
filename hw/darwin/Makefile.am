@@ -314,4 +314,16 @@ EXTRA_DIST = \
 	darwinKeyboard.c \
 	darwinKeyboard.h \
 	darwinXinput.c \
+	apple/X11Application.h \
+	apple/X11Controller.h \
+	apple/Info.plist \
+	apple/X11.icns \
+	apple/Xquartz.man \
+	apple/bundle-main.c \
+	apple/English.lproj/InfoPlist.strings \
+	apple/English.lproj/Localizable.strings \
+	apple/English.lproj/main.nib/classes.nib \
+	apple/English.lproj/main.nib/info.nib \
+	apple/English.lproj/main.nib/keyedobjects.nib \
+	apple/X11.xcodeproj/project.pbxproj \
 	XDarwin.man

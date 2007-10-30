@@ -35,4 +35,5 @@ CLEANFILES = startXClients
 
 EXTRA_DIST = \
 	XDarwin.icns \
+	startXClients.cpp \
 	Info.plist

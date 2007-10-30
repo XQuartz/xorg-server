@@ -22,6 +22,8 @@ xprbundledir = @APPLE_APPLICATIONS_DIR@/Resources/xpr.bundle/Contents/MacOS
 EXTRA_DIST = \
 	dri.h \
 	dristruct.h \
+	appledri.h \
+	appledristr.h \
 	x-hash.h \
 	x-hook.h \
 	x-list.h \

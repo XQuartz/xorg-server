@@ -1402,7 +1402,7 @@ ProcQueryFont(ClientPtr client)
 	rlength = sizeof(xQueryFontReply) +
 	             FONTINFONPROPS(FONTCHARSET(pFont)) * sizeof(xFontProp)  +
 		     nprotoxcistructs * sizeof(xCharInfo);
-	reply = (xQueryFontReply *)ALLOCATE_LOCAL(rlength);
+	reply = (xQueryFontReply *)xalloc(rlength);
 	if(!reply)
 	{
 	    return(BadAlloc);
@@ -1414,7 +1414,7 @@ ProcQueryFont(ClientPtr client)
 	QueryFont( pFont, reply, nprotoxcistructs);
 
         WriteReplyToClient(client, rlength, reply);
-	DEALLOCATE_LOCAL(reply);
+	xfree(reply);
 	return(client->noClientException);
     }
 }
@@ -2260,7 +2260,7 @@ DoGetImage(ClientPtr client, int format, Drawable drawable,
 		length += widthBytesLine;
 	    }
 	}
-	if(!(pBuf = (char *) ALLOCATE_LOCAL(length)))
+	if(!(pBuf = (char *)xalloc(length)))
 	    return (BadAlloc);
 	WriteReplyToClient(client, sizeof (xGetImageReply), &xgi);
     }
@@ -2362,7 +2362,7 @@ DoGetImage(ClientPtr client, int format, Drawable drawable,
     if (pVisibleRegion)
 	REGION_DESTROY(pDraw->pScreen, pVisibleRegion);
     if (!im_return)
-	DEALLOCATE_LOCAL(pBuf);
+	xfree(pBuf);
     return (client->noClientException);
 }
 

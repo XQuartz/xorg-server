@@ -895,12 +895,11 @@ check_xinitrc (void)
 	
     /* FIXME: put localized strings into Resources/English.lproj */
 	
-    msg = NSLocalizedString (
-							 @"You have an existing ~/.xinitrc file.\n\n\
-							 Windows displayed by X11 applications may not have titlebars, or may look \
-							 different to windows displayed by native applications.\n\n\
-							 Would you like to move aside the existing file and use the standard X11 \
-							 environment?", @"Startup xinitrc dialog");
+    msg = NSLocalizedString (@"You have an existing ~/.xinitrc file.\n\n\
+Windows displayed by X11 applications may not have titlebars, or may look \
+different to windows displayed by native applications.\n\n\
+Would you like to move aside the existing file and use the standard X11 \
+environment?", @"Startup xinitrc dialog");
 	
     if (NSRunAlertPanel (nil, msg, NSLocalizedString (@"Yes", @""),
 						 NSLocalizedString (@"No", @""), nil)

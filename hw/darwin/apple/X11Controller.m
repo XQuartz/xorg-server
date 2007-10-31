@@ -296,15 +296,17 @@
 - (void) launch_client:(NSString *)filename
 {
   const char *command = [filename UTF8String];
-  const char *argv[5];
+  const char *argv[7];
   int child1, child2 = 0;
   int status;
 	
   argv[0] = "/usr/bin/login";
   argv[1] = "-fp";
   argv[2] = getlogin();
-  argv[3] = command;
-  argv[4] = NULL;
+  argv[3] = "/bin/sh";
+  argv[4] = "-c";
+  argv[5] = command;
+  argv[6] = NULL;
     
   /* Do the fork-twice trick to avoid having to reap zombies */
     

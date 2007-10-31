@@ -143,6 +143,16 @@ static void DarwinUpdateModifiers(
     }
 }
 
+/*
+ * DarwinReleaseModifiers
+ * This hacky function releases all modifier keys.  It should be called when X11.app
+ * is deactivated (kXDarwinDeactivate) to prevent modifiers from getting stuck if they
+ * are held down during a "context" switch -- otherwise, we would miss the KeyUp.
+ */
+static void DarwinReleaseModifiers(void) {
+	xEvent e;
+	DarwinUpdateModifiers(&e, KeyRelease, COMMAND_MASK(-1) | CONTROL_MASK(-1) | ALTERNATE_MASK(-1) | SHIFT_MASK(-1));
+}
 
 /*
  * DarwinSimulateMouseClick
@@ -467,6 +477,9 @@ void ProcessInputEvents(void)
                 break;
             }
 
+			case kXDarwinDeactivate:
+				DarwinReleaseModifiers();
+				// fall through
             default:
                 // Check for mode specific event
                 DarwinModeProcessEvent(&xe);

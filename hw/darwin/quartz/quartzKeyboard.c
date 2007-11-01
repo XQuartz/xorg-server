@@ -220,7 +220,7 @@ DarwinModeReadSystemKeymap (darwinKeyboardInfo *info)
     const void *chr_data = NULL;
     int num_keycodes = NUM_KEYCODES;
     UInt32 keyboard_type = 0;
-    int is_uchr = 0, i, j;
+    int is_uchr = 1, i, j;
     OSStatus err;
     KeySym *k;
 

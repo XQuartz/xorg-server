@@ -360,10 +360,7 @@ message_kit_thread (SEL selector, NSObject *arg)
 
 - (void) set_front_process:unused
 {
-    [NSApp activateIgnoringOtherApps:YES];
-	
-    if ([self modalWindow] == nil)
-		[self activateX:YES];
+    QuartzMessageServerThread(kXDarwinBringAllToFront, 0);
 }
 
 - (void) set_can_quit:(NSNumber *)state

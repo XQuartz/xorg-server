@@ -395,6 +395,10 @@ void DarwinModeProcessEvent(
             QuartzUpdateScreens();
             break;
 
+        case kXDarwinBringAllToFront:
+	    RootlessOrderAllWindows();
+            break;
+
         case kXDarwinWindowState:
         case kXDarwinWindowMoved:
             // FIXME: Not implemented yet

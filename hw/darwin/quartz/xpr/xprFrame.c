@@ -68,6 +68,7 @@ static inline xp_error
 xprConfigureWindow(xp_window_id id, unsigned int mask,
                    const xp_window_changes *values)
 {
+  //  ErrorF("xprConfigureWindow()\n");
     if (!no_configure_window)
         return xp_configure_window(id, mask, values);
     else
@@ -185,7 +186,7 @@ xprMoveFrame(RootlessFrameID wid, ScreenPtr pScreen, int newX, int newY)
 
     wc.x = newX;
     wc.y = newY;
-
+    //    ErrorF("xprMoveFrame(%d, %p, %d, %d)\n", wid, pScreen, newX, newY);
     xprConfigureWindow((xp_window_id) wid, XP_ORIGIN, &wc);
 }
 
@@ -411,7 +412,7 @@ xprInit(ScreenPtr pScreen)
  * Given the id of a physical window, try to find the top-level (or root)
  * X window that it represents.
  */
-static WindowPtr
+WindowPtr
 xprGetXWindow(xp_window_id wid)
 {
     RootlessWindowRec *winRec;

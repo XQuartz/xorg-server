@@ -60,10 +60,12 @@ eventHandler(unsigned int type, const void *arg,
     switch (type)
     {
     case XP_EVENT_DISPLAY_CHANGED:
+      //      ErrorF("XP_EVENT_DISPLAY_MOVED\n");
         QuartzMessageServerThread(kXDarwinDisplayChanged, 0);
         break;
 
     case XP_EVENT_WINDOW_STATE_CHANGED:
+      //      ErrorF("XP_EVENT_WINDOW_STATE_CHANGED\n");
         if (arg_size >= sizeof(xp_window_state_event))
         {
             const xp_window_state_event *ws_arg = arg;
@@ -74,16 +76,24 @@ eventHandler(unsigned int type, const void *arg,
         break;
 
     case XP_EVENT_WINDOW_MOVED:
+      //      ErrorF("XP_EVENT_WINDOW_MOVED\n");
         if (arg_size == sizeof(xp_window_id))
         {
             xp_window_id id = * (xp_window_id *) arg;
-
-            QuartzMessageServerThread(kXDarwinWindowMoved, 1, id);
+	    WindowPtr pWin = xprGetXWindow(id);
+	    BoxRec box;
+	    xp_error retval  = xp_get_window_bounds(id, &box);
+	    if (retval != Success) {
+	      ErrorF("Unable to find new bounds for window\n");
+	      break;
+	    }
+            QuartzMessageServerThread(kXDarwinWindowMoved, 3, pWin, box.x1, box.y1);
         }
         break;
 
     case XP_EVENT_SURFACE_DESTROYED:
     case XP_EVENT_SURFACE_CHANGED:
+      //      ErrorF("XP_EVENT_SURFACE_MOVED\n");
         if (arg_size == sizeof(xp_surface_id))
         {
             int kind;

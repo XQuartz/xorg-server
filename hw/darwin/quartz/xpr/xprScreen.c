@@ -46,9 +46,12 @@
 # include "damage.h"
 #endif
 
+/* 10.4's deferred update makes X slower.. have to live with the tearing
+   for now.. */
+#define XP_NO_DEFERRED_UPDATES 8
+
 // Name of GLX bundle for native OpenGL
 static const char *xprOpenGLBundle = "glxCGL.bundle";
-
 
 /*
  * eventHandler
@@ -230,7 +233,7 @@ xprDisplayInit(void)
     else
         darwinScreensFound =  1;
 
-    if (xp_init(XP_IN_BACKGROUND) != Success)
+    if (xp_init(XP_IN_BACKGROUND | XP_NO_DEFERRED_UPDATES) != Success)
     {
         FatalError("Could not initialize the Xplugin library.");
     }

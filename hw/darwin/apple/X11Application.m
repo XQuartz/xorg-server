@@ -207,140 +207,111 @@ message_kit_thread (SEL selector, NSObject *arg)
 
 - (void) sendEvent:(NSEvent *)e
 {
-    NSEventType type;
-    BOOL for_appkit, for_x;
+  NSEventType type;
+  BOOL for_appkit, for_x;
+  
+  type = [e type];
+  
+  /* By default pass down the responder chain and to X. */
+  for_appkit = YES;
+  for_x = YES;
+  
+  switch (type) {
+  case NSLeftMouseDown: case NSRightMouseDown: case NSOtherMouseDown:
+  case NSLeftMouseUp: case NSRightMouseUp: case NSOtherMouseUp:
+    if ([e window] != nil) {
+      /* Pointer event has an (AppKit) window. Probably something for the kit. */
+      for_x = NO;
+      if (_x_active) [self activateX:NO];
+    } else if ([self modalWindow] == nil) {
+      /* Must be an X window. Tell appkit it doesn't have focus. */
+      for_appkit = NO;
+      
+      if ([self isActive]) {
+	[self deactivate];
 	
-    type = [e type];
-	
-    /* By default pass down the responder chain and to X. */
-    for_appkit = YES;
-    for_x = YES;
-	
-    switch (type)
-    {
-    case NSLeftMouseDown: case NSRightMouseDown: case NSOtherMouseDown:
-    case NSLeftMouseUp: case NSRightMouseUp: case NSOtherMouseUp:
-		if ([e window] != nil)
-		{
-			/* Pointer event has a window. Probably something for the kit. */
-			
-			for_x = NO;
-			
-			if (_x_active)
-				[self activateX:NO];
-		}
-		else if ([self modalWindow] == nil)
-		{
-			/* Must be an X window. Tell appkit it doesn't have focus. */
-			
-			for_appkit = NO;
-			
-			if ([self isActive])
-			{
-				[self deactivate];
-				
-				if (!_x_active && quartzProcs->IsX11Window([e window],
-														   [e windowNumber]))
-				[self activateX:YES];
-			}
-		}
-		break;
+	if (!_x_active && quartzProcs->IsX11Window([e window],
+						   [e windowNumber]))
+	  [self activateX:YES];
+      }
+    }
+    break;
 		
     case NSKeyDown: case NSKeyUp:
-		if (_x_active)
-		{
-			static int swallow_up;
-			
-			/* No kit window is focused, so send it to X. */
-			
-			for_appkit = NO;
-			
-			if (type == NSKeyDown)
-			{
-				/* Before that though, see if there are any global
-				 shortcuts bound to it. */
-				
-				if (X11EnableKeyEquivalents
-					&& [[self mainMenu] performKeyEquivalent:e])
-				{
-					swallow_up = [e keyCode];
-					for_x = NO;
-				}
-				else if (!quartzEnableRootless
-						 && ([e modifierFlags] & ALL_KEY_MASKS)
-						 == (NSCommandKeyMask | NSAlternateKeyMask)
-						 && ([e keyCode] == 0 /*a*/
-							 || [e keyCode] == 53 /*Esc*/))
-				{
-					swallow_up = 0;
-					for_x = NO;
+      if (_x_active) {
+	static int swallow_up;
+	
+	/* No kit window is focused, so send it to X. */
+	for_appkit = NO;
+	if (type == NSKeyDown) {
+	  /* Before that though, see if there are any global
+	     shortcuts bound to it. */
+	  
+	  if (X11EnableKeyEquivalents
+	      && [[self mainMenu] performKeyEquivalent:e]) {
+	    swallow_up = [e keyCode];
+	    for_x = NO;
+	  } else if (!quartzEnableRootless
+		     && ([e modifierFlags] & ALL_KEY_MASKS)
+		     == (NSCommandKeyMask | NSAlternateKeyMask)
+		     && ([e keyCode] == 0 /*a*/
+		      || [e keyCode] == 53 /*Esc*/)) {
+	    swallow_up = 0;
+	    for_x = NO;
 #ifdef DARWIN_DDX_MISSING
-					QuartzMessageServerThread (kXDarwinToggleFullscreen, 0);
+	    QuartzMessageServerThread (kXDarwinToggleFullscreen, 0);
 #endif
-				}
-			}
-			else
-			{
-				/* If we saw a key equivalent on the down, don't pass
-				 the up through to X. */
-				
-				if (swallow_up != 0 && [e keyCode] == swallow_up)
-				{
-					swallow_up = 0;
-					for_x = NO;
-				}
-			}
-		}
-		else
-		{
-			for_x = NO;
-		}
-		break;
-		
-    case NSFlagsChanged:
-		/* For the l33t X users who remap modifier keys to normal keysyms. */
-		if (!_x_active)
-			for_x = NO;
-		break;
-		
-    case NSAppKitDefined:
-		switch ([e subtype])
-		{
-		case NSApplicationActivatedEventType:
-			for_x = NO;
-			if ([self modalWindow] == nil)
-			{
-				for_appkit = NO;
-				
-				/* FIXME: hack to avoid having to pass the event to appkit,
-				 which would cause it to raise one of its windows. */
-				_appFlags._active = YES;
-				
-				[self activateX:YES];
-				if ([e data2] & 0x10) X11ApplicationSetFrontProcess();
-			}
-			break;
-			
-		case 18: /* ApplicationDidReactivate */
-			if (quartzHasRoot)
-				for_appkit = NO;
-			break;
-			
-		case NSApplicationDeactivatedEventType:
-			for_x = NO;
-			[self activateX:NO];
-			break;
-		}
-		break;
-		
-    default: break; /* for gcc */
+	  }
+	} else  {
+	  /* If we saw a key equivalent on the down, don't pass
+	     the up through to X. */
+	  
+	  if (swallow_up != 0 && [e keyCode] == swallow_up) {
+	    swallow_up = 0;
+	    for_x = NO;
+	  }
+	}
+      } else for_x = NO;
+      break;
+      
+  case NSFlagsChanged:
+    /* For the l33t X users who remap modifier keys to normal keysyms. */
+    if (!_x_active) for_x = NO;
+    break;
+    
+  case NSAppKitDefined:
+    switch ([e subtype]) {
+    case NSApplicationActivatedEventType:
+      for_x = NO;
+      if ([self modalWindow] == nil) {
+	for_appkit = NO;
+	
+	/* FIXME: hack to avoid having to pass the event to appkit,
+	   which would cause it to raise one of its windows. */
+	_appFlags._active = YES;
+	    
+	[self activateX:YES];
+	if ([e data2] & 0x10) X11ApplicationSetFrontProcess();
+      }
+      break;
+	
+      case 18: /* ApplicationDidReactivate */
+	if (quartzHasRoot) for_appkit = NO;
+	break;
+	
+    case NSApplicationDeactivatedEventType:
+      for_x = NO;
+      [self activateX:NO];
+      break;
     }
-	
-    if (for_appkit)
-		[super sendEvent:e];
-	
-    if (for_x)
-		send_nsevent (type, e);
+    break;
+    
+  default: break; /* for gcc */
+  }
+  
+  if (for_appkit) [super sendEvent:e];
+  
+  if (for_x) send_nsevent (type, e);
 }
 
 - (void) set_window_menu:(NSArray *)list
@@ -697,57 +668,53 @@ cfarray_to_nsarray (CFArrayRef in)
     const char *tem;
 	
     quartzUseSysBeep = [self prefs_get_boolean:@PREFS_SYSBEEP
-									   default:quartzUseSysBeep];
+                        default:quartzUseSysBeep];
     quartzEnableRootless = [self prefs_get_boolean:@PREFS_ROOTLESS
-										   default:quartzEnableRootless];
+                        default:quartzEnableRootless];
 #ifdef DARWIN_DDX_MISSING
     quartzFullscreenDisableHotkeys = ![self prefs_get_boolean:
-									   @PREFS_FULLSCREEN_HOTKEYS default:
-									   !quartzFullscreenDisableHotkeys];
+					      @PREFS_FULLSCREEN_HOTKEYS default:
+					      !quartzFullscreenDisableHotkeys];
     quartzXpluginOptions = [self prefs_get_integer:@PREFS_XP_OPTIONS
-										   default:quartzXpluginOptions];
+                            default:quartzXpluginOptions];
 #endif
 	
     darwinSwapAltMeta = [self prefs_get_boolean:@PREFS_SWAP_ALT_META
-										default:darwinSwapAltMeta];
+                         default:darwinSwapAltMeta];
     darwinFakeButtons = [self prefs_get_boolean:@PREFS_FAKEBUTTONS
-										default:darwinFakeButtons];
-    if (darwinFakeButtons)
-    {
-        const char *fake2, *fake3;
-		
-        fake2 = [self prefs_get_string:@PREFS_FAKE_BUTTON2 default:NULL];
-        fake3 = [self prefs_get_string:@PREFS_FAKE_BUTTON3 default:NULL];
-		
-		if (fake2 != NULL) darwinFakeMouse2Mask = DarwinParseModifierList(fake2);
-		if (fake3 != NULL) darwinFakeMouse3Mask = DarwinParseModifierList(fake3);
-		
+                         default:darwinFakeButtons];
+    if (darwinFakeButtons) {
+      const char *fake2, *fake3;
+      
+      fake2 = [self prefs_get_string:@PREFS_FAKE_BUTTON2 default:NULL];
+      fake3 = [self prefs_get_string:@PREFS_FAKE_BUTTON3 default:NULL];
+      
+      if (fake2 != NULL) darwinFakeMouse2Mask = DarwinParseModifierList(fake2);
+      if (fake3 != NULL) darwinFakeMouse3Mask = DarwinParseModifierList(fake3);
     }
 	
     X11EnableKeyEquivalents = [self prefs_get_boolean:@PREFS_KEYEQUIVS
-											  default:X11EnableKeyEquivalents];
+                               default:X11EnableKeyEquivalents];
 	
     darwinSyncKeymap = [self prefs_get_boolean:@PREFS_SYNC_KEYMAP
-									   default:darwinSyncKeymap];
+                        default:darwinSyncKeymap];
 	
     tem = [self prefs_get_string:@PREFS_KEYMAP_FILE default:NULL];
-    if (tem != NULL)
-		darwinKeymapFile = strdup (tem);
-    else
-        darwinKeymapFile = NULL;
+    if (tem != NULL) darwinKeymapFile = strdup (tem);
+    else             darwinKeymapFile = NULL;
 	
     darwinDesiredDepth = [self prefs_get_integer:@PREFS_DEPTH
-										 default:darwinDesiredDepth];
+                          default:darwinDesiredDepth];
 	
     enable_stereo = [self prefs_get_boolean:@PREFS_ENABLE_STEREO
-									default:false];
+                     default:false];
 }
 
 /* This will end up at the end of the responder chain. */
 - (void) copy:sender
 {
     QuartzMessageServerThread (kXDarwinPasteboardNotify, 1,
-							   AppleWMCopyToPasteboard);
+			       AppleWMCopyToPasteboard);
 }
 
 - (BOOL) x_active
@@ -991,135 +958,133 @@ convert_flags (unsigned int nsflags)
 static void
 send_nsevent (NSEventType type, NSEvent *e)
 {
-    static unsigned int button_state = 0;
-    NSRect screen;
-    NSPoint location;
-    NSWindow *window;
-    int pointer_x, pointer_y;
-    xEvent xe;
-	
-    memset (&xe, 0, sizeof (xe));
-	
-    /* This field should be filled in for every event */
-    xe.u.keyButtonPointer.time = GetTimeInMillis();
-
-	/* convert location to global top-left coordinates */
-	location = [e locationInWindow];
-	window = [e window];
-	screen = [[[NSScreen screens] objectAtIndex:0] frame];
-		
-	if (window != nil)	{
-		NSRect frame = [window frame];
-		pointer_x = location.x + frame.origin.x;
-		pointer_y = (((screen.origin.y + screen.size.height)
-					  - location.y) - frame.origin.y);
-	} else {
-		pointer_x = location.x;
-		pointer_y = (screen.origin.y + screen.size.height) - location.y;
-	}
-		
-	xe.u.keyButtonPointer.rootX = pointer_x;
-	xe.u.keyButtonPointer.rootY = pointer_y;
-	
-	switch (type) {
-		float count;
-		
-    case NSLeftMouseDown:
-		xe.u.u.type = ButtonPress;
-		xe.u.u.detail = 1;
-		goto do_press_event;
-		
-    case NSRightMouseDown:
-		xe.u.u.type = ButtonPress;
-		xe.u.u.detail = 3;
-		goto do_press_event;
-		
-    case NSOtherMouseDown:
-		xe.u.u.type = ButtonPress;
-		xe.u.u.detail = 2; /* FIXME? */
-		goto do_press_event;
-		
-do_press_event:
-		if (!quartzProcs->IsX11Window([e window], [e windowNumber])) {
-			/* X server doesn't grok this window, drop the event.
-			 
-			 Note: theoretically this isn't necessary, but if I click
-			 on the menubar, we get sent a LeftMouseDown when the
-			 release happens, but no LeftMouseUp is ever seen! */
-			
-			break;
-		}
-		goto do_event;
-		
-    case NSLeftMouseUp:
-		xe.u.u.type = ButtonRelease;
-		xe.u.u.detail = 1;
-		goto do_release_event;
-		
-    case NSRightMouseUp:
-		xe.u.u.type = ButtonRelease;
-		xe.u.u.detail = 3;
-		goto do_release_event;
-		
-    case NSOtherMouseUp:
-		xe.u.u.type = ButtonRelease;
-		xe.u.u.detail = 2; /* FIXME? */
-		goto do_release_event;
-		
-do_release_event:
-		if ((button_state & (1 << xe.u.u.detail)) == 0)
-		{
-			/* X didn't see the button press for this release, so skip it */
-			break;
-		}
-		goto do_event;
-		
-    case NSMouseMoved:
-    case NSLeftMouseDragged:
-    case NSRightMouseDragged:
-    case NSOtherMouseDragged:
-		xe.u.u.type = MotionNotify;
-		goto do_event;
-		
-    case NSKeyDown:
-		xe.u.u.type = KeyPress;
-		xe.u.u.detail = [e keyCode];
-		goto do_event;
-		
-    case NSKeyUp:
-		xe.u.u.type = KeyRelease;
-		xe.u.u.detail = [e keyCode];
-		goto do_event;
-		
-    case NSScrollWheel:
-		xe.u.keyButtonPointer.state = convert_flags ([e modifierFlags]);
-		count = [e deltaY];
-		xe.u.u.detail = count > 0.0f ? 4 : 5;
-		for (count = fabs(count); count > 0.0; count = count - 1.0f) {
-			xe.u.u.type = ButtonPress;
-			DarwinEQEnqueue(&xe);
-			xe.u.u.type = ButtonRelease;
-			DarwinEQEnqueue(&xe);
-		}
-		xe.u.u.type = 0;
-		break;
-		
-    case NSFlagsChanged:
-        xe.u.u.type = kXDarwinUpdateModifiers;
-        xe.u.clientMessage.u.l.longs0 = [e modifierFlags];
-        DarwinEQEnqueue (&xe);
-        break;
-		
-do_event:
-		//	xe.u.keyButtonPointer.state = convert_flags ([e modifierFlags]);
-		DarwinEQEnqueue (&xe);
-		break;
-		
-    default: break; /* for gcc */
+  static unsigned int button_state = 0;
+  NSRect screen;
+  NSPoint location;
+  NSWindow *window;
+  int pointer_x, pointer_y;
+  xEvent xe;
+  
+  memset (&xe, 0, sizeof (xe));
+  
+  /* This field should be filled in for every event */
+  xe.u.keyButtonPointer.time = GetTimeInMillis();
+  
+  /* convert location to global top-left coordinates */
+  location = [e locationInWindow];
+  window = [e window];
+  screen = [[[NSScreen screens] objectAtIndex:0] frame];
+  
+  if (window != nil)	{
+    NSRect frame = [window frame];
+    pointer_x = location.x + frame.origin.x;
+    pointer_y = (((screen.origin.y + screen.size.height)
+		  - location.y) - frame.origin.y);
+  } else {
+    pointer_x = location.x;
+    pointer_y = (screen.origin.y + screen.size.height) - location.y;
+  }
+  
+  xe.u.keyButtonPointer.rootX = pointer_x;
+  xe.u.keyButtonPointer.rootY = pointer_y;
+  
+  switch (type) {
+    float count;
+    
+  case NSLeftMouseDown:
+    xe.u.u.type = ButtonPress;
+    xe.u.u.detail = 1;
+    goto do_press_event;
+    
+  case NSRightMouseDown:
+    xe.u.u.type = ButtonPress;
+    xe.u.u.detail = 3;
+    goto do_press_event;
+    
+  case NSOtherMouseDown:
+    xe.u.u.type = ButtonPress;
+    xe.u.u.detail = 2; /* FIXME? */
+    goto do_press_event;
+    
+  do_press_event:
+    if (!quartzProcs->IsX11Window([e window], [e windowNumber])) {
+      /* X server doesn't grok this window, drop the event.
+	 
+	 Note: theoretically this isn't necessary, but if I click
+	 on the menubar, we get sent a LeftMouseDown when the
+	 release happens, but no LeftMouseUp is ever seen! */
+      
+      break;
     }
-	
-    if (xe.u.u.type == ButtonPress)
-		button_state |= (1 << xe.u.u.detail);
-    else if (xe.u.u.type == ButtonRelease)
-		button_state &= ~(1 << xe.u.u.detail);
+    goto do_event;
+    
+  case NSLeftMouseUp:
+    xe.u.u.type = ButtonRelease;
+    xe.u.u.detail = 1;
+    goto do_release_event;
+    
+  case NSRightMouseUp:
+    xe.u.u.type = ButtonRelease;
+    xe.u.u.detail = 3;
+    goto do_release_event;
+    
+  case NSOtherMouseUp:
+    xe.u.u.type = ButtonRelease;
+    xe.u.u.detail = 2; /* FIXME? */
+    goto do_release_event;
+    
+  do_release_event:
+    if ((button_state & (1 << xe.u.u.detail)) == 0)
+      {
+	/* X didn't see the button press for this release, so skip it */
+	break;
+      }
+    goto do_event;
+    
+  case NSMouseMoved:
+  case NSLeftMouseDragged:
+  case NSRightMouseDragged:
+  case NSOtherMouseDragged:
+    xe.u.u.type = MotionNotify;
+    goto do_event;
+    
+  case NSKeyDown:
+    xe.u.u.type = KeyPress;
+    xe.u.u.detail = [e keyCode];
+    goto do_event;
+    
+  case NSKeyUp:
+    xe.u.u.type = KeyRelease;
+    xe.u.u.detail = [e keyCode];
+    goto do_event;
+    
+  case NSScrollWheel:
+    xe.u.keyButtonPointer.state = convert_flags ([e modifierFlags]);
+    count = [e deltaY];
+    xe.u.u.detail = count > 0.0f ? 4 : 5;
+    for (count = fabs(count); count > 0.0; count = count - 1.0f) {
+      xe.u.u.type = ButtonPress;
+      DarwinEQEnqueue(&xe);
+      xe.u.u.type = ButtonRelease;
+      DarwinEQEnqueue(&xe);
+    }
+    xe.u.u.type = 0;
+    break;
+    
+  case NSFlagsChanged:
+    xe.u.u.type = kXDarwinUpdateModifiers;
+    xe.u.clientMessage.u.l.longs0 = [e modifierFlags];
+    DarwinEQEnqueue (&xe);
+    break;
+    
+  do_event:
+    //	xe.u.keyButtonPointer.state = convert_flags ([e modifierFlags]);
+    DarwinEQEnqueue (&xe);
+    break;
+    
+  default: break; /* for gcc */
+  }
+  
+  if (xe.u.u.type == ButtonPress) button_state |= (1 << xe.u.u.detail);
+  else if (xe.u.u.type == ButtonRelease) button_state &= ~(1 << xe.u.u.detail);
 }

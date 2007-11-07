@@ -127,7 +127,6 @@ enum {
             = LASTEvent+1,    // (from X.h list of event names)
     kXDarwinUpdateButtons,    // update state of mouse buttons 2 and up
     kXDarwinScrollWheel,      // scroll wheel event
-
     /*
      * Quartz-specific events -- not used in IOKit mode
      */
@@ -138,6 +137,8 @@ enum {
     kXDarwinReadPasteboard,   // copy Mac OS X pasteboard into X cut buffer
     kXDarwinWritePasteboard,  // copy X cut buffer onto Mac OS X pasteboard
     kXDarwinBringAllToFront,  // bring all X windows to front
+    kXDarwinToggleFullscreen, // Enable/Disable fullscreen mode
+    kXDarwinSetRootless,      // Set rootless mode
     /*
      * AppleWM events
      */

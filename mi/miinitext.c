@@ -338,7 +338,7 @@ extern void XFree86DGAExtensionInit(INITARGS);
 #endif
 #ifdef GLXEXT
 typedef struct __GLXprovider __GLXprovider;
-#if defined(__DARWIN__) && !defined(INXQUARTZ)
+#if defined(__DARWIN__) && defined(INXDARWINAPP)
 extern __GLXprovider* __DarwinglXMesaProvider;
 extern void DarwinGlxPushProvider(__GLXprovider *impl);
 extern void DarwinGlxExtensionInit(INITARGS);
@@ -633,7 +633,7 @@ InitExtensions(argc, argv)
 #endif
 
 #ifdef GLXEXT
-#if defined(__DARWIN__) && !defined(INXQUARTZ)
+#if defined(__DARWIN__) && defined(INXDARWINAPP)
     DarwinGlxPushProvider(__DarwinglXMesaProvider);
     if (!noGlxExtension) DarwinGlxExtensionInit();
 #else

@@ -838,13 +838,13 @@ RootlessCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
         top = TopLevelParent(pWin);
         if (top == NULL) {
             RL_DEBUG_MSG("no parent\n");
-            return;
+            goto out;
         }
 
         winRec = WINREC(top);
         if (winRec == NULL) {
             RL_DEBUG_MSG("not framed\n");
-            return;
+            goto out;
         }
 
         /* Move region to window local coords */
@@ -867,6 +867,7 @@ RootlessCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
         RootlessDamageRegion(pWin, prgnSrc);
     }
 
+out:
     REGION_UNINIT(pScreen, &rgnDst);
     fbValidateDrawable(&pWin->drawable);
 

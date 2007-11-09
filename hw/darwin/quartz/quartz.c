@@ -186,6 +186,7 @@ void DarwinModeInitInput(
     char **argv )
 {
 #ifdef INXQUARTZ
+    X11ApplicationSetCanQuit(1);
     X11ApplicationServerReady();
 #else
     QuartzMessageMainThread(kQuartzServerStarted, NULL, 0);

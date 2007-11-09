@@ -22,7 +22,9 @@ if XPRINT
 XPRINT_SUBDIRS = xprint
 endif
 
+if XDARWIN
 DARWIN_SUBDIRS = darwin
+endif
 
 SUBDIRS =			\
 	$(XORG_SUBDIRS)		\

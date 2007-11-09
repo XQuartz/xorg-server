@@ -259,7 +259,7 @@ main(int argc, char *argv[], char *envp[])
     /* Quartz support on Mac OS X requires that the Cocoa event loop be in
      * the main thread. This allows the X server main to be called again
      * from another thread. */
-#if defined(__DARWIN__) && defined(DARWIN_WITH_QUARTZ)
+#ifdef DARWIN_WITH_QUARTZ
     DarwinHandleGUI(argc, argv, envp);
 #endif
 

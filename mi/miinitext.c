@@ -672,10 +672,10 @@ InitVisualWrap()
 {
     miResetInitVisuals();
 #ifdef GLXEXT
-#ifndef __DARWIN__
-    GlxWrapInitVisuals(&miInitVisualsProc);
-#else
+#ifdef INXQUARTZ
     DarwinGlxWrapInitVisuals(&miInitVisualsProc);
+#else
+    GlxWrapInitVisuals(&miInitVisualsProc);
 #endif
 #endif
 }

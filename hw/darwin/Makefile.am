@@ -303,9 +303,9 @@ uninstall-hook:
 install-data-hook: $(HOOK_TARGETS)
 
 xquartz-install-hook:
-	cd apple && xcodebuild install
-	cd launcher && xcodebuild install
-
+	cd apple && xcodebuild install DSTROOT=$(DESTDIR) INSTALL_PATH=/usr/X11 DEPLOYMENT_LOCATION=YES SKIP_INSTALL=NO
+	cd launcher && xcodebuild install DSTROOT=$(DESTDIR) INSTALL_PATH=/Applications/Utilities DEPLOYMENT_LOCATION=YES SKIP_INSTALL=NO
+ 
 EXTRA_DIST = \
 	darwin.c \
 	darwinClut8.h \

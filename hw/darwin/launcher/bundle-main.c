@@ -37,7 +37,7 @@
 
 int main (int argc, char **argv) {
   char *command = DEFAULT_APP;
-  const char *newargv[5];
+  const char *newargv[7];
   int child;
   
 
@@ -60,8 +60,10 @@ int main (int argc, char **argv) {
 	newargv[0] = "/usr/bin/login";
 	newargv[1] = "-fp";
 	newargv[2] = getlogin();
-	newargv[3] = command;
-	newargv[4] = NULL;
+	newargv[3] = "/bin/sh";
+	newargv[4] = "-c";
+	newargv[5] = command;
+	newargv[6] = NULL;
 
     child = fork();
 	

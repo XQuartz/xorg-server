@@ -47,6 +47,7 @@ InitCard (char *name)
 void
 InitOutput (ScreenInfo *pScreenInfo, int argc, char **argv)
 {
+  noGlxExtension=TRUE;
   KdInitOutput (pScreenInfo, argc, argv);
 }
 

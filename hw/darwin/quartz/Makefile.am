@@ -25,20 +25,6 @@ libXQuartz_a_SOURCES = \
 	          quartzStartup.c \
 	          pseudoramiX.c
 
-bin_PROGRAMS = XDarwinStartup
-
-XDarwinStartup_SOURCES = XDarwinStartup.c
-XDarwinStartup_LDFLAGS = -Wl,-framework,CoreFoundation \
-			 -Wl,-framework,ApplicationServices
-XDarwinStartupCFLAGS = -DXBINDIR="${bindir}"
-XDARWINROOT = @APPLE_APPLICATIONS_DIR@
-BINDIR = $(bindir)
-install-exec-local:
-	-(cd $(DESTDIR)$(BINDIR); rm X; $(LN_S) XDarwinStartup X)
-
-man1_MANS = XDarwinStartup.man
-
-
 EXTRA_DIST = \
 	applewmExt.h \
 	keysym2ucs.h \

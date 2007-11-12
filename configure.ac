@@ -456,10 +456,10 @@ AC_ARG_WITH(rgb-path,         AS_HELP_STRING([--with-rgb-path=PATH], [Path to RG
 AC_ARG_WITH(dri-driver-path,  AS_HELP_STRING([--with-dri-driver-path=PATH], [Path to DRI drivers (default: ${libdir}/dri)]),
 				[ DRI_DRIVER_PATH="$withval" ],
 				[ DRI_DRIVER_PATH="${libdir}/dri" ])
-APPLE_APPLICATIONS_DIR="${bindir}/Applications"
-AC_ARG_WITH(apple-applications-dir,AS_HELP_STRING([--with-apple-applications-dir=PATH], [Path to the Applications directory (default: ${bindir}/Applications)]),
+APPLE_APPLICATIONS_DIR="/Applications/Utilities"
+AC_ARG_WITH(apple-applications-dir,AS_HELP_STRING([--with-apple-applications-dir=PATH], [Path to the Applications directory (default: /Applications/Utilities)]),
 				[ APPLE_APPLICATIONS_DIR="${withval}" ].
-				[ APPLE_APPLICATIONS_DIR="${bindir}/Applications" ])
+				[ APPLE_APPLICATIONS_DIR="/Applications/Utilities" ])
 
 AC_ARG_ENABLE(builddocs,      AS_HELP_STRING([--enable-builddocs], [Build docs (default: disabled)]),
                                 [BUILDDOCS=$enableval],
@@ -511,9 +511,8 @@ AC_ARG_ENABLE(dmx,    	      AS_HELP_STRING([--enable-dmx], [Build DMX server (d
 AC_ARG_ENABLE(xvfb,    	      AS_HELP_STRING([--enable-xvfb], [Build Xvfb server (default: no)]), [XVFB=$enableval], [XVFB=no])
 AC_ARG_ENABLE(xnest,   	      AS_HELP_STRING([--enable-xnest], [Build Xnest server (default: no)]), [XNEST=$enableval], [XNEST=no])
 AC_ARG_ENABLE(xdarwin, 	      AS_HELP_STRING([--enable-xdarwin], [Build XDarwin server (default: auto)]), [XDARWIN=$enableval], [XDARWIN=auto])
-AC_ARG_ENABLE(xdarwinapp,     AS_HELP_STRING([--enable-xdarwinapp], [Build XDarwin.app server (default: no)]), [XDARWINAPP=$enableval], [XDARWINAPP=no])
 AC_ARG_ENABLE(xquartz,        AS_HELP_STRING([--disable-xquartz], [Build Xquartz server on Darwin (default: auto)]), [XQUARTZ=$enableval], [XQUARTZ=auto])
-AC_ARG_ENABLE(x11app,         AS_HELP_STRING([--enable-x11app], [Build Apple's X11.app wrapper for Xquartz (default: no)]), [X11APP=$enableval], [X11APP=no])
+AC_ARG_ENABLE(x11app,         AS_HELP_STRING([--enable-x11app], [Build Apple's X11.app wrapper for Xquartz (default: auto)]), [X11APP=$enableval], [X11APP=auto])
 AC_ARG_ENABLE(xwin,    	      AS_HELP_STRING([--enable-xwin], [Build XWin server (default: auto)]), [XWIN=$enableval], [XWIN=auto])
 AC_ARG_ENABLE(xprint,         AS_HELP_STRING([--enable-xprint], [Build Xprint extension and server (default: no)]), [XPRINT=$enableval], [XPRINT=no])
 AC_ARG_ENABLE(xgl,            AS_HELP_STRING([--enable-xgl], [Build Xgl server (default: no)]), [XGL=$enableval], [XGL=no])
@@ -1479,7 +1478,6 @@ AM_CONDITIONAL(MFB, [test "x$XORG" = xyes])
 AM_CONDITIONAL(CFB, [test "x$XORG" = xyes])
 AM_CONDITIONAL(AFB, [test "x$XORG" = xyes])
 AM_CONDITIONAL([BUILD_DARWIN],[test "X$build_darwin" = Xyes])
-AM_CONDITIONAL([XQUARTZ],[test "X$XQUARTZ" = Xyes]) 
 
 dnl Xprint DDX
 
@@ -1603,7 +1601,7 @@ AM_CONDITIONAL(XWIN_RANDR, [test "x$XWIN" = xyes])
 AM_CONDITIONAL(XWIN_XV, [test "x$XWIN" = xyes && test "x$XV" = xyes])
 
 dnl Darwin / OS X DDX
-AC_MSG_CHECKING([whether to build XDarwin (Mac OS X) DDX])
+AC_MSG_CHECKING([whether to build XDarwin/Xquartz])
 if test "x$XDARWIN" = xauto; then
 	case $host_os in
 		darwin*) XDARWIN="yes" ;;
@@ -1613,25 +1611,33 @@ fi
 AC_MSG_RESULT([$XDARWIN])
 
 if test "x$XDARWIN" = xyes; then
-        if test "X$XQUARTZ" = Xauto; then
-                 AC_CACHE_CHECK([for Carbon framework],xorg_cv_Carbon_framework,[
-                 save_LDFLAGS=$LDFLAGS
-                 LDFLAGS="$LDFLAGS -framework Carbon"
-                 AC_LINK_IFELSE([char FSFindFolder();
-int main() {
-FSFindFolder();
-return 0;}
-                 ],[xorg_cv_Carbon_framework=yes],
-                  [xorg_cv_Carbon_framework=no])
-                  LDFLAGS=$save_LDFLAGS])
-                 if test "X$xorg_cv_Carbon_framework" = Xyes; then
-                   AC_DEFINE([DARWIN_WITH_QUARTZ],[1],
-                         [Have Quartz])
-                   XQUARTZ=yes
-                 else
-                   XQUARTZ=no
-                 fi
-               fi
+	if test "X$XQUARTZ" = Xauto; then
+		AC_CACHE_CHECK([whether to build Xquartz],xorg_cv_Carbon_framework,[
+		 	save_LDFLAGS=$LDFLAGS
+			LDFLAGS="$LDFLAGS -framework Carbon"
+			AC_LINK_IFELSE([char FSFindFolder(); int main() { FSFindFolder(); return 0;}],
+				[xorg_cv_Carbon_framework=yes],
+				[xorg_cv_Carbon_framework=no])
+			LDFLAGS=$save_LDFLAGS])
+                 
+		if test "X$xorg_cv_Carbon_framework" = Xyes; then
+			AC_DEFINE([DARWIN_WITH_QUARTZ],[1],[Have Quartz])
+			XQUARTZ=yes
+		else
+			XQUARTZ=no
+		fi
+	fi
+
+	if test "x$X11APP" = xauto; then
+		AC_MSG_CHECKING([whether to build X11.app])
+		if test "x$XQUARTZ" = xyes ; then
+			X11APP=yes
+		else
+			X11APP=no
+		fi
+		AC_MSG_RESULT([$X11APP])
+	fi
+
 #	       glxAGL / glxCGL don't work yet
 #               AC_CACHE_CHECK([for AGL framework],xorg_cv_AGL_framework,[
 #               save_LDFLAGS=$LDFLAGS
@@ -1686,8 +1692,8 @@ _AM_DEPENDENCIES([OBJC])
 AM_CONDITIONAL(HAVE_XPLUGIN, [test "x$ac_cv_lib_Xplugin_xp_init" = xyes])
 AM_CONDITIONAL(HAVE_AGL_FRAMEWORK, [test "x$xorg_cv_AGL_framework" = xyes])
 AM_CONDITIONAL(XDARWIN, [test "x$XDARWIN" = xyes])
-AM_CONDITIONAL(XDARWINAPP, [test "x$XDARWINAPP" = xyes])
 AM_CONDITIONAL(XQUARTZ, [test "x$XQUARTZ" = xyes])
+AM_CONDITIONAL(X11APP,[test "X$X11APP" = Xyes]) 
 
 dnl kdrive DDX
 

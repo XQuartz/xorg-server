@@ -14,8 +14,12 @@ endif
 SUBDIRS = \
 	  iokit \
 	  $(XQUARTZ_SUBDIRS) \
-	  utils \
-	  .
+	  utils
+
+DIST_SUBDIRS = \
+	  iokit \
+	  quartz \
+	  utils
 
 libdarwinShared_a_SOURCES = darwin.c \
 			  darwinEvents.c \
@@ -139,17 +143,24 @@ x11app:
 x11launcher:
 	cd launcher && xcodebuild CFLAGS="$(XSERVERCFLAGS_CFLAGS)" LDFLAGS="$(XSERVERCFLAGS_LIBS)"
 
-x11app-install-hook:
-	cd apple && xcodebuild install DSTROOT=$(DESTDIR) INSTALL_PATH=$(prefixdir) DEPLOYMENT_LOCATION=YES SKIP_INSTALL=NO
+x11app-install:
+	cd apple && xcodebuild install DSTROOT=$(DESTDIR) INSTALL_PATH=$(prefix) DEPLOYMENT_LOCATION=YES SKIP_INSTALL=NO
+
+x11launcher-install:
 	cd launcher && xcodebuild install DSTROOT=$(DESTDIR) INSTALL_PATH=$(APPLE_APPLICATIONS_DIR) DEPLOYMENT_LOCATION=YES SKIP_INSTALL=NO
 
-HOOK_TARGETS = x11app-install-hook
+x11app-clean:
+	rm -rf apple/build
+
+x11launcher-clean:
+	rm -rf launcher/build
+
+install-data-hook: x11app-install x11launcher-install
+clean-local: x11app-clean x11launcher-clean
 
 endif
 
 man1_MANS = XDarwin.man
-
-install-data-hook: $(HOOK_TARGETS)
 
 EXTRA_DIST = \
 	darwin.c \
@@ -171,4 +182,8 @@ EXTRA_DIST = \
 	apple/English.lproj/main.nib/info.nib \
 	apple/English.lproj/main.nib/keyedobjects.nib \
 	apple/X11.xcodeproj/project.pbxproj \
+	launcher/bundle-main.c \
+	launcher/Info.plist \
+	launcher/X11.icns \
+	launcher/X11.xcodeproj/project.pbxproj \
 	XDarwin.man

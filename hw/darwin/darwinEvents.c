@@ -154,6 +154,7 @@ static void DarwinReleaseModifiers(void) {
   xEvent ke;
   int i = 0, j = 0, nevents = 0; 
  
+  if (!darwinKeyc) return;
   map = darwinKeyc->curKeySyms.map;
   
   for (i = darwinKeyc->curKeySyms.minKeyCode, map = darwinKeyc->curKeySyms.map;

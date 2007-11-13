@@ -1,11 +1,10 @@
 noinst_LIBRARIES = libdarwinShared.a
 libdarwin_XINPUT_SRCS = darwinXinput.c
 
-# -O2 inexplicably causes quartzKeyboard.o to break?!
 AM_CFLAGS = @XORG_CFLAGS@
 INCLUDES = @XORG_INCS@ -I../../miext/rootless
 
-DEFS = @DEFS@ -DUSE_NEW_CLUT
+DEFS = @DEFS@ -DUSE_NEW_CLUT -DXFree86Server -DBUILD_DATE=\"$(BUILD_DATE)\" 
 
 if XQUARTZ
 XQUARTZ_SUBDIRS = quartz

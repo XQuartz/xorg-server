@@ -41,7 +41,6 @@ in this Software without prior written authorization from The Open Group.
 #include   "mi.h"
 #include   "scrnintstr.h"
 #include   "mipointer.h"
-
 #include "darwin.h"
 #include "darwinKeyboard.h"
 
@@ -77,6 +76,8 @@ typedef struct _EventQueue {
 
 static EventQueueRec darwinEventQueue;
 xEvent *darwinEvents;
+extern KeyClassPtr darwinKeyc;
+#define KeyPressed(k) (darwinKeyc->down[k >> 3] & (1 << (k & 7)))
 
 /*
  * DarwinPressModifierMask
@@ -150,8 +151,37 @@ static void DarwinUpdateModifiers(
  * are held down during a "context" switch -- otherwise, we would miss the KeyUp.
  */
 static void DarwinReleaseModifiers(void) {
-	xEvent e;
-	DarwinUpdateModifiers(&e, KeyRelease, COMMAND_MASK(-1) | CONTROL_MASK(-1) | ALTERNATE_MASK(-1) | SHIFT_MASK(-1));
+  KeySym *map = NULL;
+  xEvent ke;
+  int i = 0, j = 0, nevents = 0; 
+ 
+  map = darwinKeyc->curKeySyms.map;
+  
+  for (i = darwinKeyc->curKeySyms.minKeyCode, map = darwinKeyc->curKeySyms.map;
+       i < darwinKeyc->curKeySyms.maxKeyCode;
+       i++, map += darwinKeyc->curKeySyms.mapWidth) {
+    if (KeyPressed(i)) {
+      switch (*map) {
+	/* Don't release the lock keys */
+      case XK_Caps_Lock:
+      case XK_Shift_Lock:
+      case XK_Num_Lock:
+      case XK_Scroll_Lock:
+      case XK_Kana_Lock:
+	break;
+      default:
+	  ke.u.keyButtonPointer.time = GetTimeInMillis();
+	  ke.u.keyButtonPointer.rootX = 0;
+	  ke.u.keyButtonPointer.rootY = 0;
+	  ke.u.u.type = KeyRelease;
+	  ke.u.u.detail = i;
+	  (*darwinEventQueue.pKbd->processInputProc)(&ke,
+		    (DeviceIntPtr)darwinEventQueue.pKbd, 1);
+	break;
+      }
+    }
+  }
+  ProcessInputEvents();
 }
 
 /*

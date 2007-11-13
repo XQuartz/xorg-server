@@ -220,6 +220,7 @@ static void DarwinChangeKeyboardControl( DeviceIntPtr device, KeybdCtrl *ctrl )
 static darwinKeyboardInfo keyInfo;
 static FILE *fref = NULL;
 static char *inBuffer = NULL;
+KeyClassPtr darwinKeyc = NULL;
 
 //-----------------------------------------------------------------------------
 // Data Stream Object
@@ -835,6 +836,7 @@ InitModMap(register KeyClassPtr keyc)
     CARD8 keysPerModifier[8];
     CARD8 mask;
 
+    darwinKeyc = keyc;
     if (keyc->modifierKeyMap != NULL)
         xfree (keyc->modifierKeyMap);
 

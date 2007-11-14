@@ -71,6 +71,9 @@ AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h stdlib.h string.h unistd.h])
 
 AC_CHECK_PROG(HAVE_LAUNCHD, [launchd], [yes], [])
+if test "x$HAVE_LAUNCHD" = xyes; then
+	AC_DEFINE(HAS_LAUNCHD, 1, [launchd support available])
+fi
 
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -1656,7 +1659,7 @@ if test "x$XDARWIN" = xyes; then
 	       AC_SUBST([DARWIN_LIBS])
                AC_CHECK_LIB([Xplugin],[xp_init],[:])
                AC_SUBST([APPLE_APPLICATIONS_DIR])
-               CFLAGS="${CFLAGS} -D__DARWIN__ -DDARWIN_WITH_QUARTZ -DROOTLESS_WORKAROUND"
+               CFLAGS="${CFLAGS} -DHAVE_LAUNCHD -D__DARWIN__ -DDARWIN_WITH_QUARTZ -DROOTLESS_WORKAROUND"
                PLIST_VERSION_STRING=$PACKAGE_VERSION
                AC_SUBST([PLIST_VERSION_STRING])
                PLIST_VENDOR_WEB=$VENDOR_WEB

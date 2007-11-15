@@ -2,7 +2,7 @@ noinst_LIBRARIES = libXQuartz.a
 
 AM_CFLAGS = @XORG_CFLAGS@
 AM_OBJCFLAGS = @XORG_CFLAGS@
-AM_CPPFLAGS = -I$(srcdir) -I$(srcdir)/.. @XORG_INCS@ -DXBINDIR=\"${bindir}\" -DINXQUARTZ -DHAS_KL_API -DHAVE_XORG_CONFIG_H
+AM_CPPFLAGS = -I$(srcdir) -I$(srcdir)/.. @XORG_INCS@ -DXBINDIR=\"${bindir}\" -DHAS_KL_API -DHAVE_XORG_CONFIG_H
 
 SUBDIRS = cr fullscreen xpr
 

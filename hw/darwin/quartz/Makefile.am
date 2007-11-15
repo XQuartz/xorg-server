@@ -2,41 +2,30 @@ noinst_LIBRARIES = libXQuartz.a
 
 AM_CFLAGS = @XORG_CFLAGS@
 AM_OBJCFLAGS = @XORG_CFLAGS@
+AM_CPPFLAGS = -I$(srcdir) -I$(srcdir)/.. @XORG_INCS@ -DXBINDIR=\"${bindir}\" -DINXQUARTZ -DHAS_KL_API -DHAVE_XORG_CONFIG_H
 
-INCLUDES = -I$(srcdir) -I$(srcdir)/.. @XORG_INCS@
-AM_DEFS = -DHAS_CG_MACH_PORT -DHAS_KL_API
-AM_DEFS += -DBUILD_XPR
-XPR = xpr
-
-DEFS = @DEFS@ $(AM_DEFS) -DXBINDIR=\"${bindir}\"
-SUBDIRS = cr fullscreen $(XPR)
+SUBDIRS = cr fullscreen xpr
 
 libXQuartz_a_SOURCES = \
-		  Preferences.m \
-	          XApplication.m \
-	          XServer.m \
+		  ../apple/X11Application.m \
+		  ../apple/X11Controller.m \
 	          applewm.c \
 	          keysym2ucs.c \
+	          pseudoramiX.c \
 	          quartz.c \
 	          quartzAudio.c \
 	          quartzCocoa.m \
-	          quartzPasteboard.c \
 	          quartzKeyboard.c \
-	          quartzStartup.c \
-	          pseudoramiX.c
+	          quartzPasteboard.c \
+	          quartzStartup.c
 
 EXTRA_DIST = \
 	applewmExt.h \
 	keysym2ucs.h \
-	Preferences.h \
 	pseudoramiX.h \
 	quartzAudio.h \
 	quartzCommon.h \
 	quartzCursor.c \
 	quartzCursor.h \
 	quartz.h \
-	quartzPasteboard.h \
-	XApplication.h \
-	XDarwin.pbproj/project.pbxproj \
-	XServer.h \
-	XDarwinStartup.man
+	quartzPasteboard.h

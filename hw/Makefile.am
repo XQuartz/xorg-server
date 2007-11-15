@@ -22,7 +22,7 @@ if XPRINT
 XPRINT_SUBDIRS = xprint
 endif
 
-if XDARWIN
+if XQUARTZ
 DARWIN_SUBDIRS = darwin
 endif
 

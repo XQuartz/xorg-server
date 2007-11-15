@@ -130,6 +130,9 @@
 /* Define to 1 if launchd is available. */
 #undef HAVE_LAUNCHD
 
+/* Have Quartz */
+#undef XQUARTZ
+
 /* Define to 1 if you have the `m' library (-lm). */
 #undef HAVE_LIBM
 

@@ -1,98 +1,27 @@
-noinst_LIBRARIES = libdarwinShared.a
-libdarwin_XINPUT_SRCS = darwinXinput.c
-
 AM_CFLAGS = @XORG_CFLAGS@
-INCLUDES = @XORG_INCS@ -I../../miext/rootless
-
-DEFS = @DEFS@ -DUSE_NEW_CLUT -DXFree86Server -DBUILD_DATE=\"$(BUILD_DATE)\" 
-
-if XQUARTZ
-XQUARTZ_SUBDIRS = quartz
-endif
-
-SUBDIRS = \
-	  iokit \
-	  $(XQUARTZ_SUBDIRS) \
-	  utils
-
-DIST_SUBDIRS = \
-	  iokit \
-	  quartz \
-	  utils
-
-libdarwinShared_a_SOURCES = darwin.c \
-			  darwinEvents.c \
-			  darwinKeyboard.c \
-			  $(darwin_XINPUT_SRCS) 
-
-if XQUARTZ
+AM_CPPFLAGS = @XORG_INCS@ -I../../miext/rootless -DUSE_NEW_CLUT -DBUILD_DATE=\"$(BUILD_DATE)\" -DHAVE_XORG_CONFIG_H -DXFree86Server
+  
+SUBDIRS = quartz utils
+  
 bin_PROGRAMS = Xquartz
-else
-bin_PROGRAMS = XDarwin
-endif
+man1_MANS = apple/Xquartz.man
+  
+Xquartz_SOURCES = darwin.c \
+		  darwinEvents.c \
+		  darwinKeyboard.c \
+		  darwinXinput.c \
+		  $(top_srcdir)/fb/fbcmap.c \
+		  $(top_srcdir)/mi/miinitext.c
 
-XDarwin_SOURCES = \
-                  $(top_srcdir)/fb/fbcmap.c \
-                  $(top_srcdir)/mi/miinitext.c \
-                  $(top_srcdir)/Xi/stubs.c
+#		We should probably add these once they're working, or are these obsolete and to be removed?
+#		./quartz/cr/libcr.a
+#		./quartz/fullscreen/libfullscreen.a
 
-Xquartz_SOURCES = \
-                  $(top_srcdir)/fb/fbcmap.c \
-                  $(top_srcdir)/mi/miinitext.c \
-                  $(top_srcdir)/Xi/stubs.c \
-                  apple/X11Application.m \
-                  apple/X11Controller.m \
-                  quartz/applewm.c \
-                  quartz/keysym2ucs.c \
-                  quartz/pseudoramiX.c \
-                  quartz/quartz.c \
-                  quartz/quartzAudio.c \
-                  quartz/quartzCocoa.m \
-                  quartz/quartzKeyboard.c \
-                  quartz/quartzPasteboard.c \
-                  quartz/quartzStartup.c \
-                  quartz/xpr/appledri.c \
-                  quartz/xpr/dri.c \
-                  quartz/xpr/xprAppleWM.c \
-                  quartz/xpr/xprCursor.c \
-                  quartz/xpr/xprFrame.c \
-                  quartz/xpr/xprScreen.c \
-                  quartz/xpr/x-hash.c \
-                  quartz/xpr/x-hook.c \
-                  quartz/xpr/x-list.c
-
-XDarwin_LDADD = \
+Xquartz_LDADD = ./quartz/libXquartz.a \
+		./quartz/xpr/libxpr.a \
 		$(top_builddir)/dix/dixfonts.lo \
 		$(top_builddir)/dix/libdix.la \
 		$(top_builddir)/os/libos.la \
-		./libdarwinShared.a \
-		./iokit/libiokit.a \
-		$(top_builddir)/dix/libxpstubs.la \
-		$(top_builddir)/miext/shadow/libshadow.la \
-		$(top_builddir)/fb/libfb.la \
-		$(top_builddir)/composite/libcomposite.la \
-		$(top_builddir)/damageext/libdamageext.la \
-		$(top_builddir)/miext/damage/libdamage.la \
-		$(top_builddir)/xfixes/libxfixes.la \
-		$(top_builddir)/miext/cw/libcw.la \
-		$(top_builddir)/Xext/libXext.la \
-		$(top_builddir)/xkb/libxkb.la \
-		$(top_builddir)/xkb/libxkbstubs.la \
-		$(top_builddir)/Xi/libXi.la \
-		$(top_builddir)/dbe/libdbe.la \
-		$(top_builddir)/record/librecord.la \
-		$(top_builddir)/XTrap/libxtrap.la \
-		$(XGLX_LIBS) \
-		$(top_builddir)/miext/rootless/librootless.la \
-		$(top_builddir)/miext/rootless/safeAlpha/libsafeAlpha.la \
-		$(top_builddir)/miext/rootless/accel/librlAccel.la \
-		$(XSERVER_LIBS) -lXplugin
-
-Xquartz_LDADD = \
-		$(top_builddir)/dix/dixfonts.lo \
-		$(top_builddir)/dix/libdix.la \
-		$(top_builddir)/os/libos.la \
-		./libdarwinShared.a \
 		$(top_builddir)/dix/libxpstubs.la \
 		$(top_builddir)/miext/shadow/libshadow.la \
 		$(top_builddir)/fb/libfb.la \
@@ -114,33 +43,24 @@ Xquartz_LDADD = \
 		$(top_builddir)/miext/rootless/accel/librlAccel.la \
 		$(DARWIN_LIBS) $(XSERVER_LIBS) -lXplugin
 
-XDarwin_LDFLAGS =  \
-                 -XCClinker -Objc \
-                 -Wl,-u,_miDCInitialize \
-                 -Wl,-framework,IOKit
 
-Xquartz_LDFLAGS =  \
-                 -XCClinker -Objc \
-                 -Wl,-u,_miDCInitialize \
-                 -Wl,-framework,Carbon \
-	         -L/System/Library/Frameworks/OpenGL.framework/Libraries -lGL \
-                 -Wl,-framework,OpenGL \
-                 -Wl,-framework,Cocoa \
-                 -Wl,-framework,CoreAudio \
-                 -Wl,-framework,IOKit
-
-XDarwin_CFLAGS = -DINXDARWIN
-Xquartz_CFLAGS = -DINXQUARTZ -DHAS_CG_MACH_PORT -DHAS_KL_API  -DHAVE_XORG_CONFIG_H
-Xquartz_OBJCFLAGS = -DINXQUARTZ -DHAS_CG_MACH_PORT -DHAS_KL_API  -DHAVE_XORG_CONFIG_H
+Xquartz_LDFLAGS =  -XCClinker -Objc \
+		   -Wl,-u,_miDCInitialize \
+		   -Wl,-framework,Carbon \
+		   -L/System/Library/Frameworks/OpenGL.framework/Libraries -lGL \
+		   -Wl,-framework,OpenGL \
+		   -Wl,-framework,Cocoa \
+		   -Wl,-framework,CoreAudio \
+	  	   -Wl,-framework,IOKit
 
 if X11APP
 bin_SCRIPTS = x11app x11launcher
 
 x11app:
-	cd apple && xcodebuild CFLAGS="$(XSERVERCFLAGS_CFLAGS)" LDFLAGS="$(XSERVERCFLAGS_LIBS)"
+	cd apple && xcodebuild CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
 x11launcher:
-	cd launcher && xcodebuild CFLAGS="$(XSERVERCFLAGS_CFLAGS)" LDFLAGS="$(XSERVERCFLAGS_LIBS)"
+	cd launcher && xcodebuild CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
 x11app-install:
 	cd apple && xcodebuild install DSTROOT=$(DESTDIR) INSTALL_PATH=$(prefix) DEPLOYMENT_LOCATION=YES SKIP_INSTALL=NO
@@ -156,19 +76,12 @@ x11launcher-clean:
 
 install-data-hook: x11app-install x11launcher-install
 clean-local: x11app-clean x11launcher-clean
-
 endif
 
-man1_MANS = XDarwin.man
-
 EXTRA_DIST = \
-	darwin.c \
 	darwinClut8.h \
-	darwinEvents.c \
 	darwin.h \
-	darwinKeyboard.c \
 	darwinKeyboard.h \
-	darwinXinput.c \
 	apple/X11Application.h \
 	apple/X11Controller.h \
 	apple/Info.plist \
@@ -184,5 +97,4 @@ EXTRA_DIST = \
 	launcher/bundle-main.c \
 	launcher/Info.plist \
 	launcher/X11.icns \
-	launcher/X11.xcodeproj/project.pbxproj \
-	XDarwin.man
+	launcher/X11.xcodeproj/project.pbxproj

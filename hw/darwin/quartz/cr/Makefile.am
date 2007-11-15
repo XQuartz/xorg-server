@@ -1,8 +1,8 @@
 noinst_LIBRARIES = libcr.a
 AM_CFLAGS =  @XORG_CFLAGS@
 AM_OBJCFLAGS =  @XORG_CFLAGS@
-DEFS = @DEFS@ -DDEFER_NSWINDOW
-INCLUDES = @XORG_INCS@ \
+AM_CPPFLAGS = -DDEFER_NSWINDOW \
+	   @XORG_INCS@ \
 	   -I../fullscreen \
 	   -I$(srcdir) -I$(srcdir)/.. -I$(srcdir)/../.. \
 	   -I$(top_srcdir)/miext/rootless \

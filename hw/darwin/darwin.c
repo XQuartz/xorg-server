@@ -667,6 +667,7 @@ void OsVendorInit(void)
 	}
 #endif
     }
+    //    DEBUG_LOG("Xquartz started at %s\n", ctime(time(NULL)));
 
     // Find the full path to the keymapping file.
     if ( darwinKeymapFile ) {

@@ -38,14 +38,6 @@
 #include "screenint.h"
 #include "window.h"
 
-//#define DEBUG 1
-
-#ifdef DEBUG
-#define TRACE(msg, args...) ErrorF("%s:%d: " msg, __FUNCTION__, __LINE__, ##args )
-#else
-#define TRACE(msg, args...) 
-#endif
-
 /*------------------------------------------
    Quartz display mode function types
   ------------------------------------------*/

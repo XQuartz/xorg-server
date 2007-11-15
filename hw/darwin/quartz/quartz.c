@@ -249,7 +249,7 @@ static void QuartzUpdateScreens(void)
     int x, y, width, height, sx, sy;
     xEvent e;
 
-    TRACE("QuartzUpdateScreens()\n");
+    DEBUG_LOG("QuartzUpdateScreens()\n");
     if (noPseudoramiXExtension || screenInfo.numScreens != 1)
     {
         /* FIXME: if not using Xinerama, we have multiple screens, and
@@ -414,7 +414,7 @@ void DarwinModeProcessEvent(
 {
     switch (xe->u.u.type) {
         case kXDarwinControllerNotify:
-	  TRACE("kXDarwinControllerNotify\n");
+	  DEBUG_LOG("kXDarwinControllerNotify\n");
             AppleWMSendEvent(AppleWMControllerNotify,
                              AppleWMControllerNotifyMask,
                              xe->u.clientMessage.u.l.longs0,
@@ -422,7 +422,7 @@ void DarwinModeProcessEvent(
             break;
 
         case kXDarwinPasteboardNotify:
-	  TRACE("kXDarwinPasteboardNotify\n");
+	  DEBUG_LOG("kXDarwinPasteboardNotify\n");
             AppleWMSendEvent(AppleWMPasteboardNotify,
                              AppleWMPasteboardNotifyMask,
                              xe->u.clientMessage.u.l.longs0,
@@ -430,7 +430,7 @@ void DarwinModeProcessEvent(
             break;
 
         case kXDarwinActivate:
-	  TRACE("kXDarwinActivate\n");
+	  DEBUG_LOG("kXDarwinActivate\n");
             QuartzShow(xe->u.keyButtonPointer.rootX,
                        xe->u.keyButtonPointer.rootY);
             AppleWMSendEvent(AppleWMActivationNotify,
@@ -439,7 +439,7 @@ void DarwinModeProcessEvent(
             break;
 
         case kXDarwinDeactivate:
-  	  TRACE("kXDarwinDeactivate\n");
+  	  DEBUG_LOG("kXDarwinDeactivate\n");
             AppleWMSendEvent(AppleWMActivationNotify,
                              AppleWMActivationNotifyMask,
                              AppleWMIsInactive, 0);
@@ -447,23 +447,23 @@ void DarwinModeProcessEvent(
             break;
 
         case kXDarwinDisplayChanged:
-	    TRACE("kXDarwinDisplayChanged\n");
+	    DEBUG_LOG("kXDarwinDisplayChanged\n");
             QuartzUpdateScreens();
             break;
 
         case kXDarwinWindowState:
-	  TRACE("kXDarwinWindowState\n");
+	  DEBUG_LOG("kXDarwinWindowState\n");
             RootlessNativeWindowStateChanged(xe->u.clientMessage.u.l.longs0,
 		  			     xe->u.clientMessage.u.l.longs1);
 	    break;
 	  
         case kXDarwinWindowMoved:
-	  TRACE("kXDarwinWindowMoved\n");
+	  DEBUG_LOG("kXDarwinWindowMoved\n");
             RootlessNativeWindowMoved (xe->u.clientMessage.u.l.longs0);
 	    break;
 
         case kXDarwinToggleFullscreen:
-	  TRACE("kXDarwinToggleFullscreen\n");
+	  DEBUG_LOG("kXDarwinToggleFullscreen\n");
 #ifdef DARWIN_DDX_MISSING
             if (quartzEnableRootless) QuartzSetFullscreen(!quartzHasRoot);
             else if (quartzHasRoot) QuartzHide();
@@ -499,7 +499,7 @@ void DarwinModeProcessEvent(
             break;
 
         case kXDarwinBringAllToFront:
-  	  TRACE("kXDarwinBringAllToFront\n");
+  	  DEBUG_LOG("kXDarwinBringAllToFront\n");
 	    RootlessOrderAllWindows();
             break;
 

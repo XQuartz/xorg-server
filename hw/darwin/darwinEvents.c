@@ -84,6 +84,7 @@ static void DarwinPressModifierMask(
 {
     int key = DarwinModifierNXMaskToNXKey(mask);
 
+    DEBUG_LOG("DarwinPressModifierMask(%p, %x, %d)\n", xe, mask, key);
     if (key != -1) {
         int keycode = DarwinModifierNXKeyToNXKeycode(key, 0);
         if (keycode != 0) {
@@ -127,6 +128,7 @@ static void DarwinUpdateModifiers(
     int pressed,        // KeyPress or KeyRelease
     int flags )         // modifier flags that have changed
 {
+    DEBUG_LOG("DarwinUpdateModifiers(%p, %d, %x)\n", xe, pressed, flags);
     xe->u.u.type = pressed;
     if (flags & NX_COMMANDMASK) DarwinPressModifierMask(xe, COMMAND_MASK(flags));
     if (flags & NX_CONTROLMASK) DarwinPressModifierMask(xe, CONTROL_MASK(flags));
@@ -154,6 +156,7 @@ static void DarwinReleaseModifiers(void) {
   xEvent ke;
   int i = 0, j = 0, nevents = 0; 
  
+  DEBUG_LOG("DarwinReleaseModifiers(%p)\n", darwinKeyc);
   if (!darwinKeyc) return;
   map = darwinKeyc->curKeySyms.map;
   
@@ -170,6 +173,7 @@ static void DarwinReleaseModifiers(void) {
       case XK_Kana_Lock:
 	break;
       default:
+	DEBUG_LOG("DarwinReleaseModifiers: releasing key %d\n", i);
 	  ke.u.keyButtonPointer.time = GetTimeInMillis();
 	  ke.u.keyButtonPointer.rootX = 0;
 	  ke.u.keyButtonPointer.rootY = 0;
@@ -201,6 +205,7 @@ static void DarwinSimulateMouseClick(
     int whichButton,    // mouse button to be pressed
     int modifierMask)   // modifiers used for the fake click
 {
+  DEBUG_LOG("DarwinSimulateMouseClick(%p, %d, %x)\n", xe, whichButton, modifierMask);
     // first fool X into forgetting about the keys
 	// for some reason, it's not enough to tell X we released the Command key -- 
 	// it has to be the *left* Command key.
@@ -448,6 +453,7 @@ void ProcessInputEvents(void)
                 // Update modifier state.
                 // Any amount of modifiers may have changed.
                 int flags = xe.u.clientMessage.u.l.longs0;
+		DEBUG_LOG("kxDarwinUpdateModifiers(%x, %x)\n", old_flags, flags);
                 DarwinUpdateModifiers(&xe, KeyRelease,
                                       old_flags & ~flags);
                 DarwinUpdateModifiers(&xe, KeyPress,
@@ -508,6 +514,7 @@ void ProcessInputEvents(void)
             }
 
 	    case kXDarwinDeactivate:
+	      DEBUG_LOG("kxDarwinDeactivate\n");
 	      DarwinReleaseModifiers();
 	      old_flags=0;
 	      // fall through

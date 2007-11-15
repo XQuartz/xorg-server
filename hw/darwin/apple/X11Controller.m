@@ -54,8 +54,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
-#define TRACE() fprintf (stderr, "%s\n", __FUNCTION__)
-
 @implementation X11Controller
 
 - (void) awakeFromNib

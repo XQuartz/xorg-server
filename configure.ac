@@ -70,11 +70,6 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_CHECK_HEADERS([fcntl.h stdlib.h string.h unistd.h])
 
-AC_CHECK_PROG(HAVE_LAUNCHD, [launchd], [yes], [])
-if test "x$HAVE_LAUNCHD" = xyes; then
-	AC_DEFINE(HAS_LAUNCHD, 1, [launchd support available])
-fi
-
 dnl Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_BIGENDIAN([ENDIAN="X_BIG_ENDIAN"], [ENDIAN="X_LITTLE_ENDIAN"])
@@ -463,6 +458,8 @@ APPLE_APPLICATIONS_DIR="/Applications/Utilities"
 AC_ARG_WITH(apple-applications-dir,AS_HELP_STRING([--with-apple-applications-dir=PATH], [Path to the Applications directory (default: /Applications/Utilities)]),
 				[ APPLE_APPLICATIONS_DIR="${withval}" ].
 				[ APPLE_APPLICATIONS_DIR="/Applications/Utilities" ])
+
+AC_ARG_WITH(launchd,          AS_HELP_STRING([--with-launchd], [Build with support for Apple's launchd (default: auto)]), [LAUNCHD=$withval], [LAUNCHD=auto])
 
 AC_ARG_ENABLE(builddocs,      AS_HELP_STRING([--enable-builddocs], [Build docs (default: disabled)]),
                                 [BUILDDOCS=$enableval],
@@ -1613,7 +1610,7 @@ if test "X$XQUARTZ" = Xauto; then
 		LDFLAGS=$save_LDFLAGS])
                 
 	if test "X$xorg_cv_Carbon_framework" = Xyes; then
-		AC_DEFINE([DARWIN_WITH_QUARTZ],[1],[Have Quartz])
+		AC_DEFINE([XQUARTZ],[1],[Have Quartz])
 		XQUARTZ=yes
 	else
 		XQUARTZ=no
@@ -1649,7 +1646,7 @@ if test "x$XQUARTZ" = xyes; then
 	       AC_SUBST([DARWIN_LIBS])
                AC_CHECK_LIB([Xplugin],[xp_init],[:])
                AC_SUBST([APPLE_APPLICATIONS_DIR])
-               CFLAGS="${CFLAGS} -DHAVE_LAUNCHD -D__DARWIN__ -DDARWIN_WITH_QUARTZ -DROOTLESS_WORKAROUND"
+               CFLAGS="${CFLAGS} -D__DARWIN__ -DROOTLESS_WORKAROUND"
                PLIST_VERSION_STRING=$PACKAGE_VERSION
                AC_SUBST([PLIST_VERSION_STRING])
                PLIST_VENDOR_WEB=$VENDOR_WEB
@@ -1671,6 +1668,23 @@ if test "x$XQUARTZ" = xyes; then
                        DGA=no
                fi
 fi
+
+if test "x$LAUNCHD" = xauto; then
+	# Do we want to have this default to on for Xquartz builds only or any time we have launchd (like Xnest or Xvfb on OS-X)
+	#AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no])
+	AC_MSG_CHECKING([whether to support launchd])
+	if test "x$XQUARTZ" = xyes ; then
+		LAUNCHD=yes
+	else
+		LAUNCHD=no
+	fi
+	AC_MSG_RESULT([$LAUNCHD])
+fi
+
+if test "x$LAUNCHD" = xyes ; then
+	AC_DEFINE(HAVE_LAUNCHD, 1, [launchd support available])
+fi
+
 # Support for objc in autotools is minimal and not documented.
 OBJC='$(CC)'
 OBJCLD='$(CCLD)'
@@ -2000,17 +2014,6 @@ hw/xgl/glxext/module/Makefile
 hw/xnest/Makefile
 hw/xwin/Makefile
 hw/darwin/Makefile
-hw/darwin/bundle/Makefile
-hw/darwin/bundle/Dutch.lproj/Makefile
-hw/darwin/bundle/English.lproj/Makefile
-hw/darwin/bundle/French.lproj/Makefile
-hw/darwin/bundle/German.lproj/Makefile
-hw/darwin/bundle/Japanese.lproj/Makefile
-hw/darwin/bundle/Portuguese.lproj/Makefile
-hw/darwin/bundle/Spanish.lproj/Makefile
-hw/darwin/bundle/Swedish.lproj/Makefile
-hw/darwin/bundle/ko.lproj/Makefile
-hw/darwin/iokit/Makefile
 hw/darwin/quartz/Makefile
 hw/darwin/quartz/cr/Makefile
 hw/darwin/quartz/fullscreen/Makefile

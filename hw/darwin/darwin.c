@@ -836,14 +836,11 @@ void ddxUseMsg( void )
     ErrorF("-keymap <file> : read the keymapping from a file instead of the kernel.\n");
     ErrorF("-version : show the server version.\n");
     ErrorF("\n");
-#ifdef DARWIN_WITH_QUARTZ
-    ErrorF("Quartz modes:\n");
+    ErrorF("Quartz modes (Experimental / In Development):\n");
     ErrorF("-fullscreen : run full screen in parallel with Mac OS X window server.\n");
     ErrorF("-rootless : run rootless inside Mac OS X window server.\n");
-    ErrorF("-quartz : use default Mac OS X window server mode\n");
     ErrorF("\n");
     ErrorF("Options ignored in rootless mode:\n");
-#endif
     ErrorF("-size <height> <width> : use a screen resolution of <height> x <width>.\n");
     ErrorF("-depth <8,15,24> : use this bit depth.\n");
     ErrorF("-refresh <rate> : use a monitor refresh rate of <rate> Hz.\n");

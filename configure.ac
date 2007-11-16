@@ -1610,7 +1610,6 @@ if test "X$XQUARTZ" = Xauto; then
 		LDFLAGS=$save_LDFLAGS])
                 
 	if test "X$xorg_cv_Carbon_framework" = Xyes; then
-		AC_DEFINE([XQUARTZ],[1],[Have Quartz])
 		XQUARTZ=yes
 	else
 		XQUARTZ=no
@@ -1618,15 +1617,7 @@ if test "X$XQUARTZ" = Xauto; then
 fi
 
 if test "x$XQUARTZ" = xyes; then
-	if test "x$X11APP" = xauto; then
-		AC_MSG_CHECKING([whether to build X11.app])
-		if test "x$XQUARTZ" = xyes ; then
-			X11APP=yes
-		else
-			X11APP=no
-		fi
-		AC_MSG_RESULT([$X11APP])
-	fi
+	AC_DEFINE([XQUARTZ],[1],[Have Quartz])
 
 #	       glxAGL / glxCGL don't work yet
 #               AC_CACHE_CHECK([for AGL framework],xorg_cv_AGL_framework,[
@@ -1667,6 +1658,16 @@ if test "x$XQUARTZ" = xyes; then
                        AC_MSG_NOTICE([Disabling DGA extension])
                        DGA=no
                fi
+fi
+
+if test "x$X11APP" = xauto; then
+	AC_MSG_CHECKING([whether to build X11.app])
+	if test "x$XQUARTZ" = xyes ; then
+		X11APP=yes
+	else
+		X11APP=no
+	fi
+	AC_MSG_RESULT([$X11APP])
 fi
 
 if test "x$LAUNCHD" = xauto; then

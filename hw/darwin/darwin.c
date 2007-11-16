@@ -69,6 +69,11 @@
 #include <IOKit/hidsystem/IOHIDLib.h>
 #include <IOKit/hidsystem/ev_keymap.h>
 
+#ifdef MITSHM
+#define _XSHM_SERVER_
+#include <X11/extensions/XShm.h>
+#endif
+
 #include "darwin.h"
 #include "darwinClut8.h"
 
@@ -186,7 +191,9 @@ static Bool DarwinAddScreen(
 
     // allocate space for private per screen storage
     dfb = xalloc(sizeof(DarwinFramebufferRec));
-    SCREEN_PRIV(pScreen) = dfb;
+
+    // SCREEN_PRIV(pScreen) = dfb;
+    pScreen->devPrivates[darwinScreenIndex].ptr = dfb;
 
     // setup hardware/mode specific details
     ret = DarwinModeAddScreen(foundIndex, pScreen);
@@ -342,7 +349,7 @@ static int DarwinMouseProc(
     DeviceIntPtr    pPointer,
     int             what )
 {
-    char map[6];
+    CARD8 map[6];
 
     switch (what) {
 
@@ -699,10 +706,30 @@ void ddxInitGlobals(void)
  */
 int ddxProcessArgument( int argc, char *argv[], int i )
 {
-    int numDone;
+    if ( !strcmp( argv[i], "-fullscreen" ) ) {
+        ErrorF( "Running full screen in parallel with Mac OS X Quartz window server.\n" );
+        return 1;
+    }
 
-    if ((numDone = DarwinModeProcessArgument( argc, argv, i )))
-        return numDone;
+    if ( !strcmp( argv[i], "-rootless" ) ) {
+        ErrorF( "Running rootless inside Mac OS X window server.\n" );
+        return 1;
+    }
+
+    if ( !strcmp( argv[i], "-quartz" ) ) {
+        ErrorF( "Running in parallel with Mac OS X Quartz window server.\n" );
+        return 1;
+    }
+
+    // The Mac OS X front end uses this argument, which we just ignore here.
+    if ( !strcmp( argv[i], "-nostartx" ) ) {
+        return 1;
+    }
+
+    // This command line arg is passed when launched from the Aqua GUI.
+    if ( !strncmp( argv[i], "-psn_", 5 ) ) {
+        return 1;
+    }
 
     if ( !strcmp( argv[i], "-fakebuttons" ) ) {
         darwinFakeButtons = TRUE;

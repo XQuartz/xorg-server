@@ -1,5 +1,5 @@
 AM_CFLAGS = @XORG_CFLAGS@
-AM_CPPFLAGS = @XORG_INCS@ -I../../miext/rootless -DUSE_NEW_CLUT -DBUILD_DATE=\"$(BUILD_DATE)\" -DHAVE_XORG_CONFIG_H -DXFree86Server -DINXQUARTZ
+AM_CPPFLAGS = @XORG_INCS@ -I$(top_srcdir)/Xext -I$(top_srcdir)/miext/rootless -DUSE_NEW_CLUT -DBUILD_DATE=\"$(BUILD_DATE)\" -DHAVE_XORG_CONFIG_H -DXFree86Server -DINXQUARTZ
   
 SUBDIRS = quartz utils
   

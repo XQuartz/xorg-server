@@ -36,6 +36,7 @@
 
 #include "rootlessCommon.h"
 
+#include <Xplugin.h>
 
 Bool RootlessCreateWindow(WindowPtr pWin);
 Bool RootlessDestroyWindow(WindowPtr pWin);
@@ -59,5 +60,7 @@ void RootlessPaintWindowBackground(WindowPtr pWin, RegionPtr pRegion,
 void RootlessPaintWindowBorder(WindowPtr pWin, RegionPtr pRegion,
                                int what);
 void RootlessChangeBorderWidth(WindowPtr pWin, unsigned int width);
+void RootlessNativeWindowMoved (WindowPtr pWin);
+void RootlessNativeWindowStateChanged (xp_window_id id, unsigned int state); 
 
 #endif

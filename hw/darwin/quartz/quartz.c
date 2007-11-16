@@ -464,7 +464,7 @@ void DarwinModeProcessEvent(
 	  
         case kXDarwinWindowMoved:
 	  DEBUG_LOG("kXDarwinWindowMoved\n");
-            RootlessNativeWindowMoved (xe->u.clientMessage.u.l.longs0);
+	  RootlessNativeWindowMoved ((WindowPtr)xe->u.clientMessage.u.l.longs0);
 	    break;
 
         case kXDarwinToggleFullscreen:

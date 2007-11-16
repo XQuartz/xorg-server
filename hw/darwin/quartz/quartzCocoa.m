@@ -123,9 +123,9 @@ int QuartzFSUseQDCursor(
  *  Clean out any autoreleased objects.
  */
 void QuartzBlockHandler(
-    void *blockData,
-    void *pTimeout,
-    void *pReadmask)
+    pointer blockData,
+    OSTimePtr pTimeout,
+    pointer pReadmask)
 {
     static NSAutoreleasePool *aPool = nil;
 
@@ -138,9 +138,9 @@ void QuartzBlockHandler(
  * QuartzWakeupHandler
  */
 void QuartzWakeupHandler(
-    void *blockData,
+    pointer blockData,
     int result,
-    void *pReadmask)
+    pointer pReadmask)
 {
     // nothing here
 }

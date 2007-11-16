@@ -88,13 +88,7 @@ eventHandler(unsigned int type, const void *arg,
         {
             xp_window_id id = * (xp_window_id *) arg;
 	    WindowPtr pWin = xprGetXWindow(id);
-	    BoxRec box;
-	    xp_error retval  = xp_get_window_bounds(id, &box);
-	    if (retval != Success) {
-	      ErrorF("Unable to find new bounds for window\n");
-	      break;
-	    }
-            QuartzMessageServerThread(kXDarwinWindowMoved, 3, pWin, box.x1, box.y1);
+            QuartzMessageServerThread(kXDarwinWindowMoved, 1, pWin);
         }
         break;
 

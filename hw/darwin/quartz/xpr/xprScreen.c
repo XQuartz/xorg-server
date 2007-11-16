@@ -42,6 +42,9 @@
 #include "Xplugin.h"
 #include "quartz/applewmExt.h"
 
+// From xprFrame.c
+WindowPtr xprGetXWindow(xp_window_id wid);
+
 #ifdef DAMAGE
 # include "damage.h"
 #endif

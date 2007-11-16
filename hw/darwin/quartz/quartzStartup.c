@@ -40,14 +40,10 @@ char **envpGlobal;      // argcGlobal and argvGlobal
                         // are from dix/globals.c
 
 
-void X11ControllerMain(int argc, char *argv[],
-		       void (*server_thread) (void *), void *server_arg);
-void GlxExtensionInit(void);
-void GlxWrapInitVisuals(miInitVisualsProcPtr *procPtr);
+void X11ControllerMain(int argc, char *argv[], void (*server_thread) (void *), void *server_arg);
 
 static void server_thread (void *arg) {
   extern int main(int argc, char **argv, char **envp);
-  
   exit (main (argcGlobal, argvGlobal, envpGlobal));
 }
 
@@ -65,7 +61,7 @@ void DarwinHandleGUI(
     char        *envp[] )
 {
     static Bool been_here = FALSE;
-    int         main_exit, i;
+    int         i;
     int         fd[2];
 
     if (been_here) {
@@ -107,135 +103,5 @@ void DarwinHandleGUI(
     
     _InitHLTB();
     X11ControllerMain(argc, argv, server_thread, NULL);
-    exit(main_exit);
-}
-
-/*
- * QuartzLoadDisplayBundle
- *  Try to load the appropriate bundle containing the back end display code.
- */
-Bool QuartzLoadDisplayBundle(
-    const char *dpyBundleName)
-{
-    return TRUE;
-}
-
-
-/*
- * LoadGlxBundle
- *  The Quartz mode X server needs to dynamically load the appropriate
- *  bundle before initializing GLX.
- */
-static void LoadGlxBundle(void)
-{
-    CFBundleRef mainBundle;
-    CFStringRef bundleName;
-    CFURLRef    bundleURL;
-    CFBundleRef glxBundle;
-
-    // Get the main bundle for the application
-    mainBundle = CFBundleGetMainBundle();
-
-    // Choose the bundle to load
-    ErrorF("Loading GLX bundle ");
-    if (/*quartzUseAGL*/0) {
-        bundleName = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault,
-                                                     quartzOpenGLBundle,
-                                                     kCFStringEncodingASCII,
-                                                     kCFAllocatorNull);
-        ErrorF("%s (using Apple's OpenGL)\n", quartzOpenGLBundle);
-    } else {
-        bundleName = CFSTR("glxMesa.bundle");
-        CFRetain(bundleName);			// so we can release later
-        ErrorF("glxMesa.bundle (using Mesa)\n");
-    }
-
-    // Look for the appropriate GLX bundle in the main bundle by name
-    bundleURL = CFBundleCopyResourceURL(mainBundle, bundleName,
-                                        NULL, NULL);
-    if (!bundleURL) {
-        FatalError("Could not find GLX bundle.");
-    }
-
-    // Make a bundle instance using the URLRef
-    glxBundle = CFBundleCreate(kCFAllocatorDefault, bundleURL);
-
-    if (!CFBundleLoadExecutable(glxBundle)) {
-        FatalError("Could not load GLX bundle.");
-    }
-
-    // Find the GLX init functions
-    if (!GlxExtensionInit || !GlxWrapInitVisuals) {
-        FatalError("Could not initialize GLX bundle.");
-    }
-
-    // Release the CF objects
-    CFRelease(bundleName);
-    CFRelease(bundleURL);
-}
-
-
-/*
- * DarwinGlxExtensionInit
- *  Initialize the GLX extension.
- */
-void DarwinGlxPushProvider(void *impl)
-{
-    GlxPushProvider(impl);
-}
-
-/*
- * DarwinGlxExtensionInit
- *  Initialize the GLX extension.
- */
-void DarwinGlxExtensionInit(void)
-{
-    GlxExtensionInit();
-}
-
-
-/*
- * DarwinGlxWrapInitVisuals
- */
-void DarwinGlxWrapInitVisuals(
-    miInitVisualsProcPtr *procPtr)
-{
-    if (!GlxWrapInitVisuals)
-        LoadGlxBundle();
-    GlxWrapInitVisuals(procPtr);
-}
-
-
-int DarwinModeProcessArgument( int argc, char *argv[], int i )
-{
-    // fullscreen: CoreGraphics full-screen mode
-    // rootless: Cocoa rootless mode
-    // quartz: Default, either fullscreen or rootless
-
-    if ( !strcmp( argv[i], "-fullscreen" ) ) {
-        ErrorF( "Running full screen in parallel with Mac OS X Quartz window server.\n" );
-        return 1;
-    }
-
-    if ( !strcmp( argv[i], "-rootless" ) ) {
-        ErrorF( "Running rootless inside Mac OS X window server.\n" );
-        return 1;
-    }
-
-    if ( !strcmp( argv[i], "-quartz" ) ) {
-        ErrorF( "Running in parallel with Mac OS X Quartz window server.\n" );
-        return 1;
-    }
-
-    // The Mac OS X front end uses this argument, which we just ignore here.
-    if ( !strcmp( argv[i], "-nostartx" ) ) {
-        return 1;
-    }
-
-    // This command line arg is passed when launched from the Aqua GUI.
-    if ( !strncmp( argv[i], "-psn_", 5 ) ) {
-        return 1;
-    }
-
-    return 0;
+    exit(0);
 }

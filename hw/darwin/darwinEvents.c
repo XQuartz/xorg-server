@@ -257,7 +257,7 @@ static void DarwinUpdateModifiers(
 void DarwinReleaseModifiers(void) {
   KeySym *map = NULL;
   xEvent ke;
-  int i = 0, j = 0, nevents = 0; 
+  int i = 0; 
  
   DEBUG_LOG("DarwinReleaseModifiers(%p)\n", &keyInfo.keyMap);
   

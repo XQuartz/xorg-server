@@ -260,11 +260,6 @@ main(int argc, char *argv[], char *envp[])
     /* Quartz support on Mac OS X requires that the Cocoa event loop be in
      * the main thread. This allows the X server main to be called again
      * from another thread. */
-
-    /* TODO: Put some runtime conditioning on this, so it doesn't get
-     * executed by Xvfb, Xnest, Xfake, Xephyr, etc when built at the same
-     * time as Xquartz
-     */
     DarwinHandleGUI(argc, argv, envp);
 #endif
 

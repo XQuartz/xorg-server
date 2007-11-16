@@ -76,7 +76,6 @@ Bool DarwinModeAddScreen(int index, ScreenPtr pScreen);
 Bool DarwinModeSetupScreen(int index, ScreenPtr pScreen);
 void DarwinModeInitOutput(int argc,char **argv);
 void DarwinModeInitInput(int argc, char **argv);
-int DarwinModeProcessArgument(int argc, char *argv[], int i);
 void DarwinModeProcessEvent(xEvent *xe);
 void DarwinModeGiveUp(void);
 void DarwinModeBell(int volume, DeviceIntPtr pDevice, pointer ctrl, int class);

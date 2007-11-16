@@ -47,6 +47,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define _APPLEWM_SERVER_
 #include "X11/extensions/applewmstr.h"
 #include "applewmExt.h"
+#include "X11Application.h"
 
 #define DEFINE_ATOM_HELPER(func,atom_name)                      \
 static Atom func (void) {                                       \

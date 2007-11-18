@@ -525,6 +525,8 @@ AC_ARG_ENABLE(xvfb,    	      AS_HELP_STRING([--enable-xvfb], [Build Xvfb server
 AC_ARG_ENABLE(xnest,   	      AS_HELP_STRING([--enable-xnest], [Build Xnest server (default: no)]), [XNEST=$enableval], [XNEST=no])
 AC_ARG_ENABLE(xquartz,        AS_HELP_STRING([--enable-xquartz], [Build Xquartz server for OS-X (default: auto)]), [XQUARTZ=$enableval], [XQUARTZ=auto])
 AC_ARG_ENABLE(x11app,         AS_HELP_STRING([--enable-x11app], [Build Apple's X11.app for Xquartz (default: auto)]), [X11APP=$enableval], [X11APP=auto])
+AC_ARG_WITH(x11app-archs,     AS_HELP_STRING([--with-x11app-archs=ARCHS], [Architectures to build X11.app for, space delimeted (default: "ppc i386")]), [X11APP_ARCHS=$enableval], [X11APP_ARCHS="ppc i386"])
+AC_SUBST([X11APP_ARCHS])
 AC_ARG_ENABLE(xwin,    	      AS_HELP_STRING([--enable-xwin], [Build XWin server (default: auto)]), [XWIN=$enableval], [XWIN=auto])
 AC_ARG_ENABLE(xprint,         AS_HELP_STRING([--enable-xprint], [Build Xprint extension and server (default: no)]), [XPRINT=$enableval], [XPRINT=no])
 AC_ARG_ENABLE(xgl,            AS_HELP_STRING([--enable-xgl], [Build Xgl server (default: no)]), [XGL=$enableval], [XGL=no])

@@ -1,11 +1,11 @@
 AM_CFLAGS = @XORG_CFLAGS@
 AM_CPPFLAGS = @XORG_INCS@ -I$(top_srcdir)/Xext -I$(top_srcdir)/miext/rootless -DUSE_NEW_CLUT -DBUILD_DATE=\"$(BUILD_DATE)\" -DHAVE_XORG_CONFIG_H -DXFree86Server -DINXQUARTZ
-  
+
 SUBDIRS = quartz utils
-  
+
 bin_PROGRAMS = Xquartz
 man1_MANS = apple/Xquartz.man
-  
+
 Xquartz_SOURCES = darwin.c \
 		  darwinEvents.c \
 		  darwinKeyboard.c \
@@ -43,7 +43,6 @@ Xquartz_LDADD = ./quartz/libXquartz.a \
 		$(top_builddir)/miext/rootless/accel/librlAccel.la \
 		$(DARWIN_LIBS) $(XSERVER_LIBS) -lXplugin
 
-
 Xquartz_LDFLAGS =  -XCClinker -Objc \
 		   -Wl,-u,_miDCInitialize \
 		   -Wl,-framework,Carbon \
@@ -57,16 +56,16 @@ if X11APP
 bin_SCRIPTS = x11app x11launcher
 
 x11app:
-	cd apple && xcodebuild CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
+	cd apple && xcodebuild CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" ARCHS="$(X11APP_ARCHS)"
 
 x11launcher:
-	cd launcher && xcodebuild CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
+	cd launcher && xcodebuild CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" ARCHS="$(X11APP_ARCHS)"
 
 x11app-install:
-	cd apple && xcodebuild install DSTROOT=$(DESTDIR) INSTALL_PATH=$(prefix) DEPLOYMENT_LOCATION=YES SKIP_INSTALL=NO
+	cd apple && xcodebuild install DSTROOT=$(DESTDIR) INSTALL_PATH=$(prefix) DEPLOYMENT_LOCATION=YES SKIP_INSTALL=NO ARCHS="$(X11APP_ARCHS)"
 
 x11launcher-install:
-	cd launcher && xcodebuild install DSTROOT=$(DESTDIR) INSTALL_PATH=$(APPLE_APPLICATIONS_DIR) DEPLOYMENT_LOCATION=YES SKIP_INSTALL=NO
+	cd launcher && xcodebuild install DSTROOT=$(DESTDIR) INSTALL_PATH=$(APPLE_APPLICATIONS_DIR) DEPLOYMENT_LOCATION=YES SKIP_INSTALL=NO ARCHS="$(X11APP_ARCHS)"
 
 x11app-clean:
 	rm -rf apple/build

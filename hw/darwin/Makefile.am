@@ -4,7 +4,7 @@ AM_CPPFLAGS = @XORG_INCS@ -I$(top_srcdir)/Xext -I$(top_srcdir)/miext/rootless -D
 SUBDIRS = quartz utils
 
 bin_PROGRAMS = Xquartz
-man1_MANS = apple/Xquartz.man
+man1_MANS = Xquartz.man
 
 Xquartz_SOURCES = darwin.c \
 		  darwinEvents.c \

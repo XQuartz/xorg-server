@@ -2,13 +2,13 @@ noinst_LIBRARIES = libXQuartz.a
 
 AM_CFLAGS = @XORG_CFLAGS@
 AM_OBJCFLAGS = @XORG_CFLAGS@
-AM_CPPFLAGS = -I$(srcdir) -I$(srcdir)/.. -I$(srcdir)/../apple -I$(top_srcdir)/miext/rootless @XORG_INCS@ -DXBINDIR=\"${bindir}\" -DHAS_KL_API -DHAVE_XORG_CONFIG_H
+AM_CPPFLAGS = -I$(srcdir) -I$(srcdir)/.. -I$(top_srcdir)/miext/rootless @XORG_INCS@ -DXBINDIR=\"${bindir}\" -DHAS_KL_API -DHAVE_XORG_CONFIG_H
 
 SUBDIRS = cr fullscreen xpr
 
 libXQuartz_a_SOURCES = \
-		  ../apple/X11Application.m \
-		  ../apple/X11Controller.m \
+		  X11Application.m \
+		  X11Controller.m \
 	          applewm.c \
 	          keysym2ucs.c \
 	          pseudoramiX.c \

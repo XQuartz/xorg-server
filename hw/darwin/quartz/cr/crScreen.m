@@ -36,12 +36,12 @@
 #undef BOOL
 #define BOOL xBOOL
 #include "darwin.h"
-#include "quartz.h"
-#include "quartzCursor.h"
+#include "quartz/quartz.h"
+#include "quartz/quartzCursor.h"
 #include "rootless.h"
-#include "safeAlpha.h"
-#include "pseudoramiX.h"
-#include "applewmExt.h"
+#include "safeAlpha/safeAlpha.h"
+#include "quartz/pseudoramiX.h"
+#include "quartz/applewmExt.h"
 
 #include "regionstr.h"
 #include "scrnintstr.h"

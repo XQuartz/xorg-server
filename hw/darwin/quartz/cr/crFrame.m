@@ -36,7 +36,7 @@
 #undef BOOL
 #define BOOL xBOOL
 #include "rootless.h"
-#include "applewmExt.h"
+#include "quartz/applewmExt.h"
 #include "windowstr.h"
 #undef BOOL
 

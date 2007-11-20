@@ -110,9 +110,8 @@ eventHandler(unsigned int type, const void *arg,
     }
 }
 
-
 /*
- * displayScreenBounds
+ * displayAtIndex
  *  Return the display ID for a particular display index.
  */
 static CGDirectDisplayID
@@ -128,7 +127,6 @@ displayAtIndex(int index)
     else
         return kCGNullDirectDisplay;
 }
-
 
 /*
  * displayScreenBounds
@@ -151,7 +149,6 @@ displayScreenBounds(CGDirectDisplayID id)
 
     return frame;
 }
-
 
 /*
  * xprAddPseudoramiXScreens
@@ -208,7 +205,6 @@ xprAddPseudoramiXScreens(int *x, int *y, int *width, int *height)
     xfree(displayList);
 }
 
-
 /*
  * xprDisplayInit
  *  Find number of CoreGraphics displays and initialize Xplugin.
@@ -231,9 +227,7 @@ xprDisplayInit(void)
         darwinScreensFound =  1;
 
     if (xp_init(XP_BACKGROUND_EVENTS | XP_NO_DEFERRED_UPDATES) != Success)
-    {
         FatalError("Could not initialize the Xplugin library.");
-    }
 
     xp_select_events(XP_EVENT_DISPLAY_CHANGED
                      | XP_EVENT_WINDOW_STATE_CHANGED
@@ -245,7 +239,6 @@ xprDisplayInit(void)
     AppleDRIExtensionInit();
     xprAppleWMInit();
 }
-
 
 /*
  * xprAddScreen
@@ -316,7 +309,6 @@ xprAddScreen(int index, ScreenPtr pScreen)
     return TRUE;
 }
 
-
 /*
  * xprSetupScreen
  *  Setup the screen for rootless access.
@@ -353,7 +345,6 @@ xprSetupScreen(int index, ScreenPtr pScreen)
     return DRIFinishScreenInit(pScreen);
 }
 
-
 /*
  * xprUpdateScreen
  *  Update screen after configuation change.
@@ -370,7 +361,6 @@ xprUpdateScreen(ScreenPtr pScreen)
     RootlessUpdateScreenPixmap(pScreen);
 }
 
-
 /*
  * xprInitInput
  *  Finalize xpr specific setup.
@@ -386,7 +376,6 @@ xprInitInput(int argc, char **argv)
     for (i = 0; i < screenInfo.numScreens; i++)
         AppleWMSetScreenOrigin(WindowTable[i]);
 }
-
 
 /*
  * Quartz display mode function list.
@@ -412,7 +401,6 @@ static QuartzModeProcsRec xprModeProcs = {
     DRICreateSurface,
     DRIDestroySurface
 };
-
 
 /*
  * QuartzModeBundleInit

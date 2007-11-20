@@ -31,8 +31,8 @@
 #endif
 #include "quartzCommon.h"
 #include "darwin.h"
-#include "quartz.h"
-#include "quartzCursor.h"
+#include "quartz/quartz.h"
+#include "quartz/quartzCursor.h"
 #include "colormapst.h"
 #include "scrnintstr.h"
 #include "micmap.h"

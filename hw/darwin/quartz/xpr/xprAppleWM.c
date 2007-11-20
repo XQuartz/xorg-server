@@ -36,7 +36,6 @@
 #include "Xplugin.h"
 #include <X11/X.h>
 
-
 static int xprSetWindowLevel(
     WindowPtr pWin,
     int level)

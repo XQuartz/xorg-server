@@ -841,6 +841,7 @@ DuplicateModule(ModuleDescPtr mod, ModuleDescPtr parent)
 static const char *compiled_in_modules[] = {
     "ddc",
     "i2c",
+    "ramdac",
     NULL
 };
 
@@ -861,14 +862,14 @@ doLoadModule(const char *module, const char *path, const char **subdirlist,
     PatternPtr patterns = NULL;
     int noncanonical = 0;
     char *m = NULL;
-    char **cim;
+    const char **cim;
 
     xf86MsgVerb(X_INFO, 3, "LoadModule: \"%s\"", module);
 
     for (cim = compiled_in_modules; *cim; cim++)
 	if (!strcmp (module, *cim))
 	{
-	    xf86MsgVerb(X_INFO, 3, "Module alread ybuilt-in");
+	    xf86MsgVerb(X_INFO, 0, "Module already built-in\n");
 	    return (ModuleDescPtr) 1;
 	}
 

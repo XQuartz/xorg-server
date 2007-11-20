@@ -25,17 +25,30 @@
  *
  */
 
-#ifndef _I830_XF86MODES_H_
-#define _I830_XF86MODES_H_
+#ifndef _XF86MODES_H_
+#define _XF86MODES_H_
+
+#include <stddef.h>
+#include <string.h>
+#include <stdio.h>
+
+#include "xf86.h"
 #include "xorgVersion.h"
-#include "xf86Parser.h"
 #include "edid.h"
+#include "xf86Parser.h"
 #if XF86_MODES_RENAME
 #include "xf86Rename.h"
 #endif
 
 double xf86ModeHSync(DisplayModePtr mode);
 double xf86ModeVRefresh(DisplayModePtr mode);
+
+int
+xf86ModeWidth (DisplayModePtr mode, Rotation rotation);
+    
+int
+xf86ModeHeight (DisplayModePtr mode, Rotation rotation);
+
 DisplayModePtr xf86DuplicateMode(DisplayModePtr pMode);
 DisplayModePtr xf86DuplicateModes(ScrnInfoPtr pScrn,
 				       DisplayModePtr modeList);
@@ -82,4 +95,4 @@ xf86GetMonitorModes (ScrnInfoPtr pScrn, XF86ConfMonitorPtr conf_monitor);
 DisplayModePtr
 xf86GetDefaultModes (Bool interlaceAllowed, Bool doubleScanAllowed);
 
-#endif /* _I830_XF86MODES_H_ */
+#endif /* _XF86MODES_H_ */

@@ -337,6 +337,12 @@ DDCRead_DDC2(int scrnIndex, I2CBusPtr pBus, int start, int len)
     unsigned char *R_Buffer;
     int i;
     
+    /*
+     * Slow down the bus so that older monitors don't 
+     * miss things.
+     */
+    pBus->RiseFallTime = 20;
+    
     if (!(dev = xf86I2CFindDev(pBus, 0x00A0))) {
 	dev = xf86CreateI2CDevRec();
 	dev->DevName = "ddc2";
@@ -344,7 +350,6 @@ DDCRead_DDC2(int scrnIndex, I2CBusPtr pBus, int start, int len)
 	dev->ByteTimeout = 2200; /* VESA DDC spec 3 p. 43 (+10 %) */
 	dev->StartTimeout = 550;
 	dev->BitTimeout = 40;
-	dev->ByteTimeout = 40;
 	dev->AcknTimeout = 40;
 
 	dev->pI2CBus = pBus;

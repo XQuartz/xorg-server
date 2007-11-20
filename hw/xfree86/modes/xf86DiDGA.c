@@ -22,6 +22,10 @@
 
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
+#else
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #endif
 
 #include "xf86.h"
@@ -31,6 +35,8 @@
 #include "xf86Crtc.h"
 #include "xf86Modes.h"
 #include "gcstruct.h"
+#include "scrnintstr.h"
+#include "windowstr.h"
 
 static Bool
 xf86_dga_get_modes (ScreenPtr pScreen)

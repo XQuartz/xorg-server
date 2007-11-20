@@ -79,8 +79,7 @@ struct _rrMode {
     int		    refcnt;
     xRRModeInfo	    mode;
     char	    *name;
-    void	    *devPrivate;
-    Bool	    userDefined;
+    ScreenPtr	    userScreen;
 };
 
 struct _rrPropertyValue {
@@ -135,8 +134,11 @@ struct _rrOutput {
     int		    numModes;
     int		    numPreferred;
     RRModePtr	    *modes;
+    int		    numUserModes;
+    RRModePtr	    *userModes;
     Bool	    changed;
     RRPropertyPtr   properties;
+    Bool	    pendingProperties;
     void	    *devPrivate;
 };
 
@@ -163,6 +165,13 @@ typedef Bool (*RROutputSetPropertyProcPtr) (ScreenPtr		pScreen,
 					    RROutputPtr		output,
 					    Atom		property,
 					    RRPropertyValuePtr	value);
+
+typedef Bool (*RROutputValidateModeProcPtr) (ScreenPtr		pScreen,
+					     RROutputPtr	output,
+					     RRModePtr		mode);
+
+typedef void (*RRModeDestroyProcPtr) (ScreenPtr	    pScreen,
+				      RRModePtr	    mode);
 
 #endif
 
@@ -208,6 +217,8 @@ typedef struct _rrScrPriv {
     RRCrtcSetProcPtr	    rrCrtcSet;
     RRCrtcSetGammaProcPtr   rrCrtcSetGamma;
     RROutputSetPropertyProcPtr	rrOutputSetProperty;
+    RROutputValidateModeProcPtr	rrOutputValidateMode;
+    RRModeDestroyProcPtr	rrModeDestroy;
 #endif
     
     /*
@@ -394,6 +405,15 @@ miRROutputSetProperty (ScreenPtr	    pScreen,
 		       Atom		    property,
 		       RRPropertyValuePtr   value);
 
+Bool
+miRROutputValidateMode (ScreenPtr	    pScreen,
+			RROutputPtr	    output,
+			RRModePtr	    mode);
+
+void
+miRRModeDestroy (ScreenPtr  pScreen,
+		 RRModePtr  mode);
+
 /* randr.c */
 /*
  * Send all pending events
@@ -477,7 +497,7 @@ RRCrtcChanged (RRCrtcPtr crtc, Bool layoutChanged);
  * Create a CRTC
  */
 RRCrtcPtr
-RRCrtcCreate (void	*devPrivate);
+RRCrtcCreate (ScreenPtr pScreen, void	*devPrivate);
 
 /*
  * Set the allowed rotations on a CRTC
@@ -485,14 +505,6 @@ RRCrtcCreate (void	*devPrivate);
 void
 RRCrtcSetRotations (RRCrtcPtr crtc, Rotation rotations);
 
-/*
- * Attach a CRTC to a screen. Once done, this cannot be
- * undone without destroying the CRTC; it is separate from Create
- * only to allow an xf86-based driver to create objects in preinit
- */
-Bool
-RRCrtcAttachScreen (RRCrtcPtr crtc, ScreenPtr pScreen);
-    
 /*
  * Notify the extension that the Crtc has been reconfigured,
  * the driver calls this whenever it has updated the mode
@@ -548,6 +560,10 @@ Bool
 RRCrtcGammaSetSize (RRCrtcPtr	crtc,
 		    int		size);
 
+/*
+ * Return the area of the frame buffer scanned out by the crtc,
+ * taking into account the current mode and rotation
+ */
 void
 RRCrtcGetScanoutSize(RRCrtcPtr crtc, int *width, int *height);
 
@@ -645,17 +661,10 @@ RROutputChanged (RROutputPtr output, Bool configChanged);
  */
 
 RROutputPtr
-RROutputCreate (const char  *name,
+RROutputCreate (ScreenPtr   pScreen,
+		const char  *name,
 		int	    nameLength,
 		void	    *devPrivate);
-
-/*
- * Attach an output to a screen, again split from creation so
- * xf86 DDXen can create randr resources before the ScreenRec
- * exists
- */
-Bool
-RROutputAttachScreen (RROutputPtr output, ScreenPtr pScreen);
 
 /*
  * Notify extension that output parameters have been changed
@@ -670,6 +679,14 @@ RROutputSetModes (RROutputPtr	output,
 		  RRModePtr	*modes,
 		  int		numModes,
 		  int		numPreferred);
+
+int
+RROutputAddUserMode (RROutputPtr    output,
+		     RRModePtr	    mode);
+
+int
+RROutputDeleteUserMode (RROutputPtr output,
+			RRModePtr   mode);
 
 Bool
 RROutputSetCrtcs (RROutputPtr	output,
@@ -728,10 +745,13 @@ RRQueryOutputProperty (RROutputPtr output, Atom property);
 void
 RRDeleteOutputProperty (RROutputPtr output, Atom property);
 
+Bool
+RRPostPendingProperties (RROutputPtr output);
+    
 int
 RRChangeOutputProperty (RROutputPtr output, Atom property, Atom type,
 			int format, int mode, unsigned long len,
-			pointer value, Bool sendevent);
+			pointer value, Bool sendevent, Bool pending);
 
 int
 RRConfigureOutputProperty (RROutputPtr output, Atom property,

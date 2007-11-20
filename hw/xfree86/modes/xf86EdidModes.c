@@ -27,6 +27,10 @@
  */
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
+#else
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #endif
 
 #include "xf86.h"
@@ -76,6 +80,16 @@ static Bool quirk_prefer_large_60 (int scrnIndex, xf86MonPtr DDC)
     /* Belinea 10 15 55 */
     if (memcmp (DDC->vendor.name, "MAX", 4) == 0 &&
 	DDC->vendor.prod_id == 1516)
+	return TRUE;
+    
+    /* Acer AL1706 */
+    if (memcmp (DDC->vendor.name, "ACR", 4) == 0 &&
+	DDC->vendor.prod_id == 44358)
+	return TRUE;
+
+    /* Samsung SyncMaster 226BW */
+    if (memcmp (DDC->vendor.name, "SAM", 4) == 0 &&
+	DDC->vendor.prod_id == 638)
 	return TRUE;
     
     return FALSE;

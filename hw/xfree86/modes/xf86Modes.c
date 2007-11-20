@@ -30,13 +30,12 @@
 
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
+#else
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #endif
 
-#include <stddef.h>
-#include <string.h>
-#include <stdio.h>
-
-#include "xf86.h"
 #include "xf86Modes.h"
 #include "xf86Priv.h"
 
@@ -88,6 +87,36 @@ xf86ModeVRefresh(DisplayModePtr mode)
 	    refresh /= (float)(mode->VScan);
     }
     return refresh;
+}
+
+int
+xf86ModeWidth (DisplayModePtr mode, Rotation rotation)
+{
+    switch (rotation & 0xf) {
+    case RR_Rotate_0:
+    case RR_Rotate_180:
+	return mode->HDisplay;
+    case RR_Rotate_90:
+    case RR_Rotate_270:
+	return mode->VDisplay;
+    default:
+	return 0;
+    }
+}
+
+int
+xf86ModeHeight (DisplayModePtr mode, Rotation rotation)
+{
+    switch (rotation & 0xf) {
+    case RR_Rotate_0:
+    case RR_Rotate_180:
+	return mode->VDisplay;
+    case RR_Rotate_90:
+    case RR_Rotate_270:
+	return mode->HDisplay;
+    default:
+	return 0;
+    }
 }
 
 /** Sets a default mode name of <width>x<height> on a mode. */

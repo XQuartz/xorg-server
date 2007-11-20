@@ -33,9 +33,14 @@
 
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
+#else
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 #endif
 
 #include "xf86.h"
+#include "xf86Modes.h"
 
 #include <string.h>
 

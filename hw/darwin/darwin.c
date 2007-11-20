@@ -362,12 +362,10 @@ static int DarwinMouseProc(
             map[3] = 3;
             map[4] = 4;
             map[5] = 5;
-            InitPointerDeviceStruct( (DevicePtr)pPointer,
-                        map,
-                        5,   // numbuttons (4 & 5 are scroll wheel)
-                        miPointerGetMotionEvents,
-		        (PtrCtrlProcPtr)NoopDDA,
-                        0 );
+            InitPointerDeviceStruct((DevicePtr)pPointer, map, 5,
+                                    GetMotionHistory,
+                                    (PtrCtrlProcPtr)NoopDDA,
+                                    GetMotionHistorySize(), 2);
 #ifdef XINPUT
             InitValuatorAxisStruct( pPointer,
                                     0,     // X axis

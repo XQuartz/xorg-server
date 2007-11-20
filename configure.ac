@@ -70,13 +70,16 @@ AC_ARG_WITH(dtrace, AS_HELP_STRING([--with-dtrace=PATH],
 	     [Enable dtrace probes (default: enabled if dtrace found)]),
 	     [WDTRACE=$withval], [WDTRACE=auto])
 if test "x$WDTRACE" = "xyes" -o "x$WDTRACE" = "xauto" ; then
-	AC_PATH_PROG(DTRACE, [dtrace], [not_found], [$PATH:/usr/sbin])
-	if test "x$DTRACE" = "xnot_found" ; then
-		if test "x$WDTRACE" = "xyes" ; then
-			AC_MSG_FAILURE([dtrace requested but not found])
-		fi
-		WDTRACE="no"
-	fi
+	case $host_os in
+	        darwin*) WDTRACE="no" ;;
+		*) AC_PATH_PROG(DTRACE, [dtrace], [not_found], [$PATH:/usr/sbin])
+		   if test "x$DTRACE" = "xnot_found" ; then
+			if test "x$WDTRACE" = "xyes" ; then
+				AC_MSG_FAILURE([dtrace requested but not found])
+			fi
+		   	WDTRACE="no"
+		fi ;;
+	esac
 fi
 if test "x$WDTRACE" != "xno" ; then
   AC_DEFINE(XSERVER_DTRACE, 1, 

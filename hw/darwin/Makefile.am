@@ -1,5 +1,10 @@
-AM_CFLAGS = @XORG_CFLAGS@
-AM_CPPFLAGS = @XORG_INCS@ -I$(top_srcdir)/Xext -I$(top_srcdir)/miext/rootless -DUSE_NEW_CLUT -DBUILD_DATE=\"$(BUILD_DATE)\" -DHAVE_XORG_CONFIG_H -DXFree86Server -DINXQUARTZ
+AM_CFLAGS = $(XORG_CFLAGS) $(PIXMAN_CFLAGS)
+AM_CPPFLAGS = $(XORG_INCS) -DUSE_NEW_CLUT -DBUILD_DATE=\"$(BUILD_DATE)\" -DHAVE_XORG_CONFIG_H -DXFree86Server -DINXQUARTZ \
+	-I$(top_srcdir)/fb \
+	-I$(top_srcdir)/mi \
+	-I$(top_srcdir)/miext/rootless \
+	-I$(top_srcdir)/render \
+	-I$(top_srcdir)/Xext
 
 SUBDIRS = quartz utils
 
@@ -10,7 +15,7 @@ Xquartz_SOURCES = darwin.c \
 		  darwinEvents.c \
 		  darwinKeyboard.c \
 		  darwinXinput.c \
-		  $(top_srcdir)/fb/fbcmap.c \
+		  $(top_srcdir)/fb/fbcmap_mi.c \
 		  $(top_srcdir)/mi/miinitext.c
 
 #		We should probably add these once they're working, or are these obsolete and to be removed?
@@ -41,7 +46,7 @@ Xquartz_LDADD = ./quartz/libXquartz.a \
 		$(top_builddir)/miext/rootless/librootless.la \
 		$(top_builddir)/miext/rootless/safeAlpha/libsafeAlpha.la \
 		$(top_builddir)/miext/rootless/accel/librlAccel.la \
-		$(DARWIN_LIBS) $(XSERVER_LIBS) -lXplugin
+		$(DARWIN_LIBS) $(XSERVER_LIBS) $(PIXMAN_LIBS) -lXplugin
 
 Xquartz_LDFLAGS =  -XCClinker -Objc \
 		   -Wl,-u,_miDCInitialize \

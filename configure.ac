@@ -562,7 +562,7 @@ if test "x$SETUID" = "xauto" ; then
 	   	case $host_cpu in
 		    sparc)	SETUID="no"  ;;
 		    *)		SETUID="yes" ;;
-		esac ;;
+		esac
 	esac
 	if test "x$SETUID" = xyes; then
 		touch testfile
@@ -1205,6 +1205,7 @@ if test "x$XORG" = xauto; then
 	XORG="yes"
 	case $host_os in
 		cygwin*) XORG="no" ;;
+		darwin*) XORG="no" ;;
 	esac
 fi
 AC_MSG_RESULT([$XORG])
@@ -1407,10 +1408,14 @@ dnl has it in libc), or if libdl is needed to get it.
 		Free/Open/NetBSD, Solaris, and OS X. If you are interested in porting \
 	        Xorg to your platform, please email xorg@lists.freedesktop.org.])
 		;;
-               case $host_os in
-                 darwin*) ;;
-                 *) xorg_bus_ix86pci=yes ;;
-               esac
+	esac
+        
+	case $host_cpu in
+	  i*86)
+		case $host_os in
+                  darwin*) ;;
+                  *) xorg_bus_ix86pci=yes ;;
+		esac
 		;;
 	  powerpc*)
 		case $host_os in
@@ -2101,6 +2106,7 @@ hw/xfree86/os-support/misc/Makefile
 hw/xfree86/os-support/linux/Makefile
 hw/xfree86/os-support/lynxos/Makefile
 hw/xfree86/os-support/sco/Makefile
+hw/xfree86/os-support/solaris/Makefile
 hw/xfree86/os-support/sysv/Makefile
 hw/xfree86/os-support/usl/Makefile
 hw/xfree86/parser/Makefile

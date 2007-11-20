@@ -111,7 +111,7 @@ eventHandler(unsigned int type, const void *arg,
 }
 
 /*
- * displayScreenBounds
+ * displayAtIndex
  *  Return the display ID for a particular display index.
  */
 static CGDirectDisplayID

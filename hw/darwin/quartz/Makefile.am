@@ -20,6 +20,8 @@ libXQuartz_a_SOURCES = \
 	          quartzStartup.c
 
 EXTRA_DIST = \
+	X11Application.h \
+	X11Controller.h \
 	applewmExt.h \
 	keysym2ucs.h \
 	pseudoramiX.h \

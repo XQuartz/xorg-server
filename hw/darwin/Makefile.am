@@ -78,14 +78,12 @@ clean-local: x11app-clean x11launcher-clean
 endif
 
 EXTRA_DIST = \
+	Xquartz.man \
 	darwinClut8.h \
 	darwin.h \
 	darwinKeyboard.h \
-	apple/X11Application.h \
-	apple/X11Controller.h \
 	apple/Info.plist \
 	apple/X11.icns \
-	apple/Xquartz.man \
 	apple/bundle-main.c \
 	apple/English.lproj/InfoPlist.strings \
 	apple/English.lproj/Localizable.strings \

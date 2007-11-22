@@ -1,5 +1,5 @@
 SUBDIRS = bus @XORG_OS_SUBDIR@ misc
-DIST_SUBDIRS = bsd bus misc linux lynxos sysv sco usl hurd
+DIST_SUBDIRS = bsd bus misc linux lynxos sysv sco solaris usl hurd
 
 sdk_HEADERS = xf86_OSproc.h xf86_OSlib.h xf86_ansic.h xf86_libc.h \
               assyntax.h xf86OSKbd.h xf86OSmouse.h

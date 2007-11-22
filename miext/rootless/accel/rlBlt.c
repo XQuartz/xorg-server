@@ -31,6 +31,7 @@
 #include <dix-config.h>
 #endif
 
+#include <stddef.h> /* For NULL */
 #include <string.h>
 #include "fb.h"
 #include "rootlessCommon.h"

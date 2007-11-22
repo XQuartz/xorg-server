@@ -6,7 +6,6 @@
  * This file is separate from the parts of Quartz support
  * that use X include files to avoid symbol collisions.
  *
- *
  * Copyright (c) 2001-2004 Torrey T. Lyons and Greg Parker.
  *                 All Rights Reserved.
  *

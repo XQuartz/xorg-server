@@ -9,4 +9,3 @@ man1_MANS = dumpkeymap.man
 EXTRA_DIST = \
 	     README.txt \
 	     dumpkeymap.man
-

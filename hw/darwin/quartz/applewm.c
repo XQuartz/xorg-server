@@ -461,7 +461,7 @@ ProcAppleWMSetWindowMenuCheck(
     REQUEST(xAppleWMSetWindowMenuCheckReq);
 
     REQUEST_SIZE_MATCH(xAppleWMSetWindowMenuCheckReq);
-    X11ApplicationSetWindowMenuCheck (stuff->index);
+    X11ApplicationSetWindowMenuCheck(stuff->index);
     return (client->noClientException);
 }
 

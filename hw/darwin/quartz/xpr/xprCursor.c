@@ -32,6 +32,7 @@
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif
+
 #include "quartz/quartzCommon.h"
 #include "xpr.h"
 #include "darwin.h"

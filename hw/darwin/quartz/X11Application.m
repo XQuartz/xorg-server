@@ -27,19 +27,17 @@
  promote the sale, use or other dealings in this Software without
  prior written authorization. */
 
-#include "../quartz/quartzCommon.h"
+#include "quartzCommon.h"
 
 #import "X11Application.h"
 #include <Carbon/Carbon.h>
 
 /* ouch! */
 #define BOOL X_BOOL
-//# include "Xproto.h"
 # include "darwin.h"
-# include "../quartz/quartz.h"
+# include "quartz.h"
 # define _APPLEWM_SERVER_
 # include "X11/extensions/applewm.h"
-//# include "X.h"
 # include "micmap.h"
 #undef BOOL
 

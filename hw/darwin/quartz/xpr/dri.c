@@ -34,9 +34,12 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
+#include <dix-config.h>
+
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif
+
 #ifdef XFree86LOADER
 #include "xf86.h"
 #include "xf86_ansic.h"
@@ -44,7 +47,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <sys/time.h>
 #include <unistd.h>
 #endif
-#include <dix-config.h>
 
 #define NEED_REPLIES
 #define NEED_EVENTS

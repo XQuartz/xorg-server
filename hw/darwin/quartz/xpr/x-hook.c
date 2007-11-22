@@ -30,6 +30,7 @@
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif
+
 #include "x-hook.h"
 #include <stdlib.h>
 #include <assert.h>

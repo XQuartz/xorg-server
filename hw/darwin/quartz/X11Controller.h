@@ -1,5 +1,4 @@
 /* X11Controller.h -- connect the IB ui
-   $Id: X11Controller.h,v 1.21 2003/07/24 17:52:29 jharper Exp $
 
    Copyright (c) 2002 Apple Computer, Inc. All rights reserved.
 
@@ -34,7 +33,7 @@
 #if __OBJC__
 
 #import <Cocoa/Cocoa.h>
-#include "../quartz/xpr/x-list.h"
+#include "xpr/x-list.h"
 
 @interface X11Controller : NSObject
 {

@@ -8,6 +8,5 @@ man1_MANS = dumpkeymap.man
 
 EXTRA_DIST = \
 	     README.txt \
-	     event_status_driver.h \
 	     dumpkeymap.man
 

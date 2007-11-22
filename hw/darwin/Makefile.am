@@ -88,6 +88,7 @@ x11launcher-clean:
 
 install-data-hook: x11app-install x11launcher-install
 clean-local: x11app-clean x11launcher-clean
+
 endif
 
 EXTRA_DIST = \

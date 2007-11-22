@@ -1,5 +1,5 @@
 noinst_LIBRARIES = libxpr.a
-AM_CFLAGS =  $(XORG_CFLAGS) $(PIXMAN_CFLAGS)
+AM_CFLAGS =  $(XORG_CFLAGS)
 AM_CPPFLAGS = $(XORG_INCS) \
 	-DHAVE_XORG_CONFIG_H \
 	-I$(srcdir) -I$(srcdir)/.. -I$(srcdir)/../.. \

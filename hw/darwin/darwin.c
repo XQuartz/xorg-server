@@ -3,8 +3,6 @@
  * Shared code for the Darwin X Server
  * running with Quartz or IOKit display mode
  *
- **************************************************************/
-/*
  * Copyright (c) 2001-2004 Torrey T. Lyons. All Rights Reserved.
  * Copyright (c) 2007 Apple Inc.
  *
@@ -362,10 +360,11 @@ static int DarwinMouseProc(
             map[3] = 3;
             map[4] = 4;
             map[5] = 5;
-            InitPointerDeviceStruct((DevicePtr)pPointer, map, 5,
-                                    GetMotionHistory,
-                                    (PtrCtrlProcPtr)NoopDDA,
-                                    GetMotionHistorySize(), 2);
+            InitPointerDeviceStruct( (DevicePtr)pPointer, map, 5,
+				     GetMotionHistory,
+				     (PtrCtrlProcPtr)NoopDDA,
+				     GetMotionHistorySize(), 2);
+
 #ifdef XINPUT
             InitValuatorAxisStruct( pPointer,
                                     0,     // X axis

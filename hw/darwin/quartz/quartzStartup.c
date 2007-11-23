@@ -36,6 +36,7 @@
 #include "opaque.h"
 #include "micmap.h"
 #include <assert.h>
+
 char **envpGlobal;      // argcGlobal and argvGlobal
                         // are from dix/globals.c
 
@@ -99,9 +100,19 @@ void DarwinHandleGUI(
         }
     }
 
+
+    /* Initially I ran the X server on the main thread, and received
+       events on the second thread. But now we may be using Carbon,
+       that needs to run on the main thread. (Otherwise, when it's
+       prebound, it will initialize itself on the wrong thread)
+       
+       grr.. but doing that means that if the X thread gets scheduled
+       before the main thread when we're _not_ prebound, things fail,
+       so initialize by hand. */
+
     extern void _InitHLTB(void);
     
-    _InitHLTB();
+    _InitHLTB();    
     X11ControllerMain(argc, argv, server_thread, NULL);
     exit(0);
 }

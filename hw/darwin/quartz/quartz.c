@@ -28,9 +28,8 @@
  * use or other dealings in this Software without prior written authorization.
  */
 
-#ifdef HAVE_XORG_CONFIG_H
-#include <xorg-config.h>
-#endif
+#include <dix-config.h>
+
 #include "quartzCommon.h"
 #include "quartz.h"
 #include "darwin.h"
@@ -292,7 +291,7 @@ static void QuartzUpdateScreens(void)
     pRoot = WindowTable[pScreen->myNum];
     AppleWMSetScreenOrigin(pRoot);
     pScreen->ResizeWindow(pRoot, x - sx, y - sy, width, height, NULL);
-    pScreen->PaintWindowBackground(pRoot, &pRoot->borderClip,  PW_BACKGROUND);
+    miPaintWindow(pRoot, &pRoot->borderClip,  PW_BACKGROUND);
 //    QuartzIgnoreNextWarpCursor();
     DefineInitialRootWindow(pRoot);
 

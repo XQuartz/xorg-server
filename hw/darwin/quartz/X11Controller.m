@@ -1,5 +1,4 @@
 /* X11Controller.m -- connect the IB ui, also the NSApp delegate
-   $Id: X11Controller.m,v 1.40 2006/09/06 21:19:32 jharper Exp $
  
    Copyright (c) 2002-2007 Apple Inc. All rights reserved.
  
@@ -30,7 +29,7 @@
 
 #define DEFAULT_PATH "/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/X11/bin"
 
-#include "../quartz/quartzCommon.h"
+#include "quartzCommon.h"
 
 #import "X11Controller.h"
 #import "X11Application.h"
@@ -38,14 +37,12 @@
 
 /* ouch! */
 #define BOOL X_BOOL
-//# include "Xproto.h"
 #include "opaque.h"
 # include "darwin.h"
-# include "../quartz/quartz.h"
+# include "quartz.h"
 # define _APPLEWM_SERVER_
 # include "X11/extensions/applewm.h"
-# include "../quartz/applewmExt.h"
-//# include "X.h"
+# include "applewmExt.h"
 #undef BOOL
 
 #include <stdio.h>
@@ -305,7 +302,7 @@
   argv[4] = "-c";
   argv[5] = command;
   argv[6] = NULL;
-    
+
   /* Do the fork-twice trick to avoid having to reap zombies */
     
   child1 = fork();

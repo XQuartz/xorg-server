@@ -28,11 +28,10 @@
  * use or other dealings in this Software without prior written authorization.
  */
 
-#ifdef HAVE_XORG_CONFIG_H
-#include <xorg-config.h>
-#endif
-#include "quartzCommon.h"
-#include "quartzCursor.h"
+#include <dix-config.h>
+
+#include "quartz/quartzCommon.h"
+#include "quartz/quartzCursor.h"
 #include "darwin.h"
 
 #include <pthread.h>

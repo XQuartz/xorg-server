@@ -24,9 +24,9 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
-#ifdef HAVE_XORG_CONFIG_H
-#include <xorg-config.h>
-#endif
+
+#include <dix-config.h>
+
 #include "quartzCommon.h"
 
 #define NEED_REPLIES
@@ -461,7 +461,7 @@ ProcAppleWMSetWindowMenuCheck(
     REQUEST(xAppleWMSetWindowMenuCheckReq);
 
     REQUEST_SIZE_MATCH(xAppleWMSetWindowMenuCheckReq);
-    X11ApplicationSetWindowMenuCheck (stuff->index);
+    X11ApplicationSetWindowMenuCheck(stuff->index);
     return (client->noClientException);
 }
 

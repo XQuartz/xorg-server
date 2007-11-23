@@ -1,28 +1,26 @@
 noinst_LIBRARIES = libXQuartz.a
 
-AM_CFLAGS = $(XORG_CFLAGS) $(PIXMAN_CFLAGS)
-AM_OBJCFLAGS = $(XORG_CFLAGS) $(PIXMAN_CFLAGS)
-AM_CPPFLAGS = $(XORG_INCS) -DXBINDIR=\"${bindir}\" -DHAS_KL_API -DHAVE_XORG_CONFIG_H \
+AM_CFLAGS = $(XORG_CFLAGS) $(DIX_CFLAGS)
+AM_OBJCFLAGS = $(XORG_CFLAGS) $(DIX_CFLAGS)
+AM_CPPFLAGS = $(XORG_INCS) \
+	-DHAS_KL_API \
 	-I$(srcdir) -I$(srcdir)/.. \
-	-I$(top_srcdir)/fb \
-	-I$(top_srcdir)/mi \
-	-I$(top_srcdir)/miext/rootless \
-	-I$(top_srcdir)/render
+	-I$(top_srcdir)/miext/rootless
 
-SUBDIRS = cr fullscreen xpr
+SUBDIRS = xpr
 
 libXQuartz_a_SOURCES = \
-		  X11Application.m \
-		  X11Controller.m \
-	          applewm.c \
-	          keysym2ucs.c \
-	          pseudoramiX.c \
-	          quartz.c \
-	          quartzAudio.c \
-	          quartzCocoa.m \
-	          quartzKeyboard.c \
-	          quartzPasteboard.c \
-	          quartzStartup.c
+	X11Application.m \
+	X11Controller.m \
+	applewm.c \
+	keysym2ucs.c \
+	pseudoramiX.c \
+	quartz.c \
+	quartzAudio.c \
+	quartzCocoa.m \
+	quartzKeyboard.c \
+	quartzPasteboard.c \
+	quartzStartup.c
 
 EXTRA_DIST = \
 	X11Application.h \

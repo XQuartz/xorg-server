@@ -1,15 +1,11 @@
 noinst_LIBRARIES = libxpr.a
-AM_CFLAGS =  $(XORG_CFLAGS) $(PIXMAN_CFLAGS)
+AM_CFLAGS =  $(XORG_CFLAGS) $(DIX_CFLAGS)
 AM_CPPFLAGS = $(XORG_INCS) \
 	   -DHAVE_XORG_CONFIG_H \
 	   -I$(srcdir) -I$(srcdir)/.. -I$(srcdir)/../.. \
-	   -I$(top_srcdir)/fb \
-	   -I$(top_srcdir)/mi \
 	   -I$(top_srcdir)/miext \
-	   -I$(top_srcdir)/miext/damage \
 	   -I$(top_srcdir)/miext/rootless \
-	   -I$(top_srcdir)/miext/rootless/safeAlpha \
-	   -I$(top_srcdir)/render
+	   -I$(top_srcdir)/miext/rootless/safeAlpha
 
 libxpr_a_SOURCES = \
 	appledri.c \
@@ -32,4 +28,3 @@ EXTRA_DIST = \
 	x-list.h \
 	Xplugin.h \
 	xpr.h
-	

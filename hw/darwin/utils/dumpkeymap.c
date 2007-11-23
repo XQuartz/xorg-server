@@ -143,7 +143,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #if !defined(DUMPKEYMAP_FILE_ONLY)
-#include "event_status_driver.h"
+#include <IOKit/hidsystem/event_status_driver.h>
 #endif
 
 #define PROG_NAME "dumpkeymap"

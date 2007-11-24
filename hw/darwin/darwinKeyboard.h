@@ -44,6 +44,24 @@ typedef struct darwinKeyboardInfo_struct {
     unsigned char modifierKeycodes[32][2];
 } darwinKeyboardInfo;
 
+typedef struct KeySymRemapList_struct {
+	KeySym from;
+	KeySym to;
+	struct KeySymRemapList_struct *next;
+} KeySymRemapList;
+
+typedef struct ModMaskRemapList_struct {
+	KeySym key;
+	CARD8 modMask;
+	struct ModMaskRemapList_struct *next;
+} ModMaskRemapList;
+
+/* Add remappings to our lists.
+ * Return true on success.
+ */
+Bool DarwinKeyboardKeySymRemapStr(const char *from, const char *to);
+Bool DarwinKeyboardModMaskRemapStr(const char *key, const char *mask);
+
 void DarwinKeyboardReload(DeviceIntPtr pDev);
 unsigned int DarwinModeSystemKeymapSeed(void);
 Bool DarwinModeReadSystemKeymap(darwinKeyboardInfo *info);

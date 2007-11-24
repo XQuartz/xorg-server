@@ -58,10 +58,7 @@
 
 // Define this to get a diagnostic output to stderr which is helpful
 // in determining how the X server is interpreting the Darwin keymap.
-#undef DUMP_DARWIN_KEYMAP
-
-/* Define this to use Alt for Mode_switch. */
-//#define ALT_IS_MODE_SWITCH 1
+#define DUMP_DARWIN_KEYMAP
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -76,9 +73,6 @@
 #define AltMask         Mod1Mask
 #define MetaMask        Mod2Mask
 #define FunctionMask    Mod3Mask
-
-// FIXME: It would be nice to support some of the extra keys in XF86keysym.h,
-// at least the volume controls that now ship on every Apple keyboard.
 
 #define UK(a)           NoSymbol    // unknown symbol
 
@@ -218,6 +212,9 @@ static void DarwinChangeKeyboardControl( DeviceIntPtr device, KeybdCtrl *ctrl )
 }
 
 darwinKeyboardInfo keyInfo;
+KeySymRemapList *keySymRemapList = NULL;
+ModMaskRemapList *modMaskRemapList = NULL;
+
 static FILE *fref = NULL;
 static char *inBuffer = NULL;
 
@@ -464,6 +461,8 @@ Bool DarwinParseNXKeyMapping(
         }
     }
 
+    DEBUG_LOG("DarwinParseNXKeyMapping: Parsing keymap file: %s.", darwinKeymapFile);
+
     if (!haveKeymap) {
         // get the Darwin keyboard map
         keyMap.size = NXKeyMappingLength( darwinParamConnect );
@@ -513,7 +512,7 @@ Bool DarwinParseNXKeyMapping(
                         break;
                     case NX_MODIFIERKEY_ALTERNATE:
                         info->keyMap[keyCode * GLYPHS_PER_KEY] =
-                                (left ? XK_Mode_switch : XK_Alt_R);
+                                (left ? XK_Alt_L : XK_Alt_R);
                         break;
                     case NX_MODIFIERKEY_COMMAND:
                         info->keyMap[keyCode * GLYPHS_PER_KEY] =
@@ -638,6 +637,107 @@ Bool DarwinParseNXKeyMapping(
     return TRUE;
 }
 
+/* Return the modifier mask for the given string.  If no match, return -1 */
+static CARD8 strToXModMask(const char *str) {
+    if(!strcmp(str, "shift")) {
+        return ShiftMask;
+    } else if(!strcmp(str, "lock")) {
+        return LockMask;
+    } else if(!strcmp(str, "control")) {
+        return ControlMask;
+    } else if(!strcmp(str, "mod1")) {
+        return Mod1Mask;
+    } else if(!strcmp(str, "mod2")) {
+        return Mod2Mask;
+    } else if(!strcmp(str, "mod3")) {
+        return Mod3Mask;
+    } else if(!strcmp(str, "mod4")) {
+        return Mod4Mask;
+    } else if(!strcmp(str, "mod5")) {
+        return Mod5Mask;
+    }
+    DEBUG_LOG("strToXModMask: Invalid str: %s", str);
+    return -1;
+}
+
+/* Return the KeySym for the given string.  If no match, return -1 */
+static KeySym strToXKeySym(const char *str) {
+    if(!strcmp(str, "Shift_L")) {
+        return XK_Shift_L;
+    } else if(!strcmp(str, "Shift_R")) {
+        return XK_Shift_R;
+    } else if(!strcmp(str, "Caps_Lock")) {
+        return XK_Caps_Lock;
+    } else if(!strcmp(str, "Control_L")) {
+        return XK_Control_L;
+    } else if(!strcmp(str, "Control_R")) {
+        return XK_Control_R;
+    } else if(!strcmp(str, "Alt_L")) {
+        return XK_Alt_L;
+    } else if(!strcmp(str, "Alt_R")) {
+        return XK_Alt_R;
+    } else if(!strcmp(str, "Meta_L")) {
+        return XK_Meta_L;
+    } else if(!strcmp(str, "Meta_R")) {
+        return XK_Meta_R;
+    } else if(!strcmp(str, "Mode_switch")) {
+        return XK_Mode_switch;
+    } else if(!strcmp(str, "Multi_key")) {
+        return XK_Multi_key;
+    }
+    DEBUG_LOG("strToXKeySym: Invalid str: %s", str);
+    return -1;
+}
+
+Bool DarwinKeyboardModMaskRemapStr(const char *keyS, const char *mask) {
+    KeySym key;
+    KeySym modMask;
+    ModMaskRemapList *m;
+
+    key = strToXKeySym(keyS);
+    modMask = strToXModMask(mask);
+
+    if(key == -1 || modMask == -1)
+        return 0;
+
+    m = (ModMaskRemapList *)xalloc(sizeof(ModMaskRemapList));
+    if(!m) {
+        DEBUG_LOG("DarwinKeyboardModMaskRemapStr: Error allocating memory.");
+        return 0;
+    }
+
+    m->key = key;
+    m->modMask = modMask;
+    m->next = modMaskRemapList;
+    modMaskRemapList = m;
+
+    return 1;
+}
+
+Bool DarwinKeyboardKeySymRemapStr(const char *fromS, const char *toS) {
+    KeySym from;
+    KeySym to;
+    KeySymRemapList *m;
+
+    from = strToXKeySym(fromS);
+    to = strToXKeySym(toS);
+    
+    if(from == -1 || to == -1)
+        return 0;
+    
+    m = (KeySymRemapList *)xalloc(sizeof(KeySymRemapList));
+    if(!m) {
+        DEBUG_LOG("DarwinKeyboardKeySymRemapStr: Error allocating memory.");
+        return 0;
+    }
+    
+    m->from = from;
+    m->to = to;
+    m->next = keySymRemapList;
+    keySymRemapList = m;
+
+    return 1;
+}
 
 /*
  * DarwinBuildModifierMaps
@@ -645,20 +745,17 @@ Bool DarwinParseNXKeyMapping(
  *      the modMap and modifierKeycodes fields.
  */
 static void
-DarwinBuildModifierMaps(
-    darwinKeyboardInfo *info)
-{
+DarwinBuildModifierMaps(darwinKeyboardInfo *info) {
     int i;
     KeySym *k;
 
     memset(info->modMap, NoSymbol, sizeof(info->modMap));
     memset(info->modifierKeycodes, 0, sizeof(info->modifierKeycodes));
 
-    for (i = 0; i < NUM_KEYCODES; i++)
-    {
+    for (i = 0; i < NUM_KEYCODES; i++) {
         k = info->keyMap + i * GLYPHS_PER_KEY;
 
-        switch (k[0]) {
+        switch (*k) {
             case XK_Shift_L:
                 info->modifierKeycodes[NX_MODIFIERKEY_SHIFT][0] = i;
                 info->modMap[MIN_KEYCODE + i] = ShiftMask;
@@ -729,32 +826,13 @@ DarwinBuildModifierMaps(
                 break;
         }
 
-        if (darwinSwapAltMeta)
-        {
-            switch (k[0])
-            {
-            case XK_Alt_L:
-                k[0] = XK_Meta_L;
-                break;
-            case XK_Alt_R:
-                k[0] = XK_Meta_R;
-                break;
-            case XK_Meta_L:
-                k[0] = XK_Alt_L;
-                break;
-            case XK_Meta_R:
-                k[0] = XK_Alt_R;
-                break;
-            }
-        }
-
-#if ALT_IS_MODE_SWITCH
-        if (k[0] == XK_Alt_L)
-            k[0] = XK_Mode_switch;
-#endif
+        /* Use modMaskRemapList to overwrite default ModMasks */
+        ModMaskRemapList *m;
+        for(m = modMaskRemapList; m; m = m->next)
+            if(*k == m->key)
+                info->modMap[MIN_KEYCODE + i] = m->modMask;
     }
 }
-
 
 /*
  * DarwinLoadKeyboardMapping
@@ -764,31 +842,52 @@ DarwinBuildModifierMaps(
 static void
 DarwinLoadKeyboardMapping(KeySymsRec *keySyms)
 {
+    int i;
+    KeySym *k;
+
     memset(keyInfo.keyMap, 0, sizeof(keyInfo.keyMap));
 
+    /* TODO: Clean this up
+     * DarwinModeReadSystemKeymap is in quartz/quartzKeyboard.c
+     * DarwinParseNXKeyMapping is here
+     */
     if (!DarwinParseNXKeyMapping(&keyInfo)) {
+        DEBUG_LOG("DarwinParseNXKeyMapping returned 0... running DarwinModeReadSystemKeymap().");
         if (!DarwinModeReadSystemKeymap(&keyInfo)) {
             FatalError("Could not build a valid keymap.");
         }
     }
 
+    /* Use keySymRemapList to overwrite default key mappings.
+     * We do this because IOKit doesn't know about Mode_shift, etc and we
+     * want to allow the user to set thisa key to this.  We could use
+     * custom keymap files, but this is easier for the user to work with.
+     */
+    for (i = 0; i < NUM_KEYCODES; i++) {
+        k = keyInfo.keyMap + i * GLYPHS_PER_KEY;
+        KeySymRemapList *m;
+        for(m = keySymRemapList; m; m = m->next)
+            if(*k == m->from)
+                *k = m->to;
+    }
+ 
     DarwinBuildModifierMaps(&keyInfo);
 
 #ifdef DUMP_DARWIN_KEYMAP
-    ErrorF("Darwin -> X converted keyboard map\n");
-    for (i = 0, k = info->keyMap; i < NX_NUMKEYCODES;
+    DEBUG_LOG("Darwin -> X converted keyboard map\n");
+    for (i = 0, k = keyInfo.keyMap; i < NX_NUMKEYCODES;
          i++, k += GLYPHS_PER_KEY)
     {
         int j;
-        ErrorF("0x%02x:", i);
+        DEBUG_LOG("0x%02x:", i);
         for (j = 0; j < GLYPHS_PER_KEY; j++) {
             if (k[j] == NoSymbol) {
-                ErrorF("\tNoSym");
+                DEBUG_LOG("\tNoSym");
             } else {
-                ErrorF("\t0x%x", k[j]);
+                DEBUG_LOG("\t0x%lx", k[j]);
             }
         }
-        ErrorF("\n");
+        DEBUG_LOG("\n");
     }
 #endif
 
@@ -937,32 +1036,6 @@ int DarwinModifierNXKeycodeToNXKey(unsigned char keycode, int *outSide)
 }
 
 /*
- * DarwinModifierNXMaskToNXKeyCode
- *      Returns 0 if mask is not a known modifier mask.
- */
-int DarwinModifierNXMaskToNXKeyCode(int mask)
-{
-  switch (mask) {
-  case NX_ALPHASHIFTMASK:       return XK_Caps_Lock;
-  case NX_SHIFTMASK: ErrorF("Warning: Received NX_SHIFTMASK, treating as NX_DEVICELSHIFTKEYMASK\n");
-  case NX_DEVICELSHIFTKEYMASK:  return NX_MODIFIERKEY_SHIFT; //XK_Shift_L;
-  case NX_DEVICERSHIFTKEYMASK:  return NX_MODIFIERKEY_RSHIFT; //XK_Shift_R;
-  case NX_CONTROLMASK: ErrorF("Warning: Received NX_CONTROLMASK, treating as NX_DEVICELCTLKEYMASK\n");
-  case NX_DEVICELCTLKEYMASK:    return XK_Control_L;
-  case NX_DEVICERCTLKEYMASK:    return XK_Control_R;
-  case NX_ALTERNATEMASK: ErrorF("Warning: Received NX_ALTERNATEMASK, treating as NX_DEVICELALTKEYMASK\n");
-  case NX_DEVICELALTKEYMASK:    return XK_Alt_L;
-  case NX_DEVICERALTKEYMASK:    return XK_Alt_R;
-  case NX_COMMANDMASK: ErrorF("Warning: Received NX_COMMANDMASK, treating as NX_DEVICELCMDKEYMASK\n");
-  case NX_DEVICELCMDKEYMASK:    return XK_Meta_L;
-  case NX_DEVICERCMDKEYMASK:    return XK_Meta_R;
-  case NX_NUMERICPADMASK:       return XK_Num_Lock;
-  case NX_HELPMASK:             return XK_Help;
-  case NX_SECONDARYFNMASK:      return XK_Control_L; // this seems very wrong, but is what the old code did
-    }
-}
-
-/*
  * DarwinModifierNXMaskToNXKey
  *      Returns -1 if mask is not a known modifier mask.
  */
@@ -997,25 +1070,25 @@ int DarwinModifierNXMaskToNXKey(int mask)
     return -1;
 }
 
-char * DarwinModifierNXMaskTostring(int mask)
+const char *DarwinModifierNXMaskTostring(int mask)
 {
     switch (mask) {
-    case NX_ALPHASHIFTMASK: return "NX_ALPHASHIFTMASK";
-    case NX_SHIFTMASK: return "NX_SHIFTMASK";
-    case NX_DEVICELSHIFTKEYMASK: return "NX_DEVICELSHIFTKEYMASK";
-    case NX_DEVICERSHIFTKEYMASK: return "NX_DEVICERSHIFTKEYMASK";
-    case NX_CONTROLMASK: return "NX_CONTROLMASK";
-    case NX_DEVICELCTLKEYMASK: return "NX_DEVICELCTLKEYMASK";
-    case NX_DEVICERCTLKEYMASK: return "NX_DEVICERCTLKEYMASK";
-    case NX_ALTERNATEMASK: return "NX_ALTERNATEMASK";
-    case NX_DEVICELALTKEYMASK: return "NX_DEVICELALTKEYMASK";
-    case NX_DEVICERALTKEYMASK: return "NX_DEVICERALTKEYMASK";
-    case NX_COMMANDMASK: return "NX_COMMANDMASK";
-    case NX_DEVICELCMDKEYMASK: return "NX_DEVICELCMDKEYMASK";
-    case NX_DEVICERCMDKEYMASK: return "NX_DEVICERCMDKEYMASK";
-    case NX_NUMERICPADMASK: return "NX_NUMERICPADMASK";
-    case NX_HELPMASK: return "NX_HELPMASK";
-    case NX_SECONDARYFNMASK: return "NX_SECONDARYFNMASK";
+        case NX_ALPHASHIFTMASK:      return "NX_ALPHASHIFTMASK";
+        case NX_SHIFTMASK:           return "NX_SHIFTMASK";
+        case NX_DEVICELSHIFTKEYMASK: return "NX_DEVICELSHIFTKEYMASK";
+        case NX_DEVICERSHIFTKEYMASK: return "NX_DEVICERSHIFTKEYMASK";
+        case NX_CONTROLMASK:         return "NX_CONTROLMASK";
+        case NX_DEVICELCTLKEYMASK:   return "NX_DEVICELCTLKEYMASK";
+        case NX_DEVICERCTLKEYMASK:   return "NX_DEVICERCTLKEYMASK";
+        case NX_ALTERNATEMASK:       return "NX_ALTERNATEMASK";
+        case NX_DEVICELALTKEYMASK:   return "NX_DEVICELALTKEYMASK";
+        case NX_DEVICERALTKEYMASK:   return "NX_DEVICERALTKEYMASK";
+        case NX_COMMANDMASK:         return "NX_COMMANDMASK";
+        case NX_DEVICELCMDKEYMASK:   return "NX_DEVICELCMDKEYMASK";
+        case NX_DEVICERCMDKEYMASK:   return "NX_DEVICERCMDKEYMASK";
+        case NX_NUMERICPADMASK:      return "NX_NUMERICPADMASK";
+        case NX_HELPMASK:            return "NX_HELPMASK";
+        case NX_SECONDARYFNMASK:     return "NX_SECONDARYFNMASK";
     }
     return "unknown mask";
 }

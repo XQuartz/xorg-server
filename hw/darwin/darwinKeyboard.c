@@ -461,7 +461,7 @@ Bool DarwinParseNXKeyMapping(
         }
     }
 
-    DEBUG_LOG("DarwinParseNXKeyMapping: Parsing keymap file: %s.", darwinKeymapFile);
+    DEBUG_LOG("DarwinParseNXKeyMapping: Parsing keymap file: %s.\n", darwinKeymapFile);
 
     if (!haveKeymap) {
         // get the Darwin keyboard map
@@ -656,7 +656,7 @@ static CARD8 strToXModMask(const char *str) {
     } else if(!strcmp(str, "mod5")) {
         return Mod5Mask;
     }
-    DEBUG_LOG("strToXModMask: Invalid str: %s", str);
+    DEBUG_LOG("Invalid str: %s\n", str);
     return -1;
 }
 
@@ -685,7 +685,7 @@ static KeySym strToXKeySym(const char *str) {
     } else if(!strcmp(str, "Multi_key")) {
         return XK_Multi_key;
     }
-    DEBUG_LOG("strToXKeySym: Invalid str: %s", str);
+    DEBUG_LOG("Invalid str: %s\n", str);
     return -1;
 }
 
@@ -702,7 +702,7 @@ Bool DarwinKeyboardModMaskRemapStr(const char *keyS, const char *mask) {
 
     m = (ModMaskRemapList *)xalloc(sizeof(ModMaskRemapList));
     if(!m) {
-        DEBUG_LOG("DarwinKeyboardModMaskRemapStr: Error allocating memory.");
+        DEBUG_LOG("Error allocating memory.\n");
         return 0;
     }
 
@@ -727,7 +727,7 @@ Bool DarwinKeyboardKeySymRemapStr(const char *fromS, const char *toS) {
     
     m = (KeySymRemapList *)xalloc(sizeof(KeySymRemapList));
     if(!m) {
-        DEBUG_LOG("DarwinKeyboardKeySymRemapStr: Error allocating memory.");
+        DEBUG_LOG("Error allocating memory.\n");
         return 0;
     }
     
@@ -852,7 +852,7 @@ DarwinLoadKeyboardMapping(KeySymsRec *keySyms)
      * DarwinParseNXKeyMapping is here
      */
     if (!DarwinParseNXKeyMapping(&keyInfo)) {
-        DEBUG_LOG("DarwinParseNXKeyMapping returned 0... running DarwinModeReadSystemKeymap().");
+        DEBUG_LOG("DarwinParseNXKeyMapping returned 0... running DarwinModeReadSystemKeymap().\n");
         if (!DarwinModeReadSystemKeymap(&keyInfo)) {
             FatalError("Could not build a valid keymap.");
         }
@@ -879,15 +879,13 @@ DarwinLoadKeyboardMapping(KeySymsRec *keySyms)
          i++, k += GLYPHS_PER_KEY)
     {
         int j;
-        DEBUG_LOG("0x%02x:", i);
         for (j = 0; j < GLYPHS_PER_KEY; j++) {
             if (k[j] == NoSymbol) {
-                DEBUG_LOG("\tNoSym");
+                DEBUG_LOG("0x%02x:\tNoSym\n", i);
             } else {
-                DEBUG_LOG("\t0x%lx", k[j]);
+                DEBUG_LOG("0x%02x:\t0x%lx\n", i, k[j]);
             }
         }
-        DEBUG_LOG("\n");
     }
 #endif
 

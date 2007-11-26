@@ -1,21 +1,14 @@
 noinst_LIBRARIES = libXQuartz.a
 
-AM_CFLAGS = $(XORG_CFLAGS)
-AM_OBJCFLAGS = $(XORG_CFLAGS)
-AM_CPPFLAGS = $(XORG_INCS) \
-	-DXBINDIR=\"${bindir}\" \
+AM_CFLAGS = $(XSERVER_CFLAGS) $(DIX_CFLAGS)
+AM_OBJCFLAGS = $(XSERVER_CFLAGS) $(DIX_CFLAGS)
+AM_CPPFLAGS = \
 	-DHAS_KL_API \
 	-DHAVE_XORG_CONFIG_H \
 	-I$(srcdir) -I$(srcdir)/.. \
-	-I$(top_srcdir)/fb \
-	-I$(top_srcdir)/mi \
-	-I$(top_srcdir)/miext/rootless \
-	-I$(top_srcdir)/render
+	-I$(top_srcdir)/miext/rootless
 
 SUBDIRS = xpr
-
-# Keeping around cr and fullscreen for reference for now, but don't need to build them
-DIST_SUBDIRS = cr fullscreen xpr
 
 libXQuartz_a_SOURCES = \
 	X11Application.m \

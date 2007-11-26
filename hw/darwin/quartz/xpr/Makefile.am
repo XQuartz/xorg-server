@@ -9,14 +9,14 @@ AM_CPPFLAGS = \
 
 libxpr_a_SOURCES = \
 	appledri.c \
-        dri.c \
-        xprAppleWM.c \
-        xprCursor.c \
-        xprFrame.c \
-        xprScreen.c \
-        x-hash.c \
-        x-hook.c \
-        x-list.c
+	dri.c \
+	xprAppleWM.c \
+	xprCursor.c \
+	xprFrame.c \
+	xprScreen.c \
+	x-hash.c \
+	x-hook.c \
+	x-list.c
 
 EXTRA_DIST = \
 	dri.h \

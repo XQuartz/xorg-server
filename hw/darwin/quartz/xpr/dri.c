@@ -34,8 +34,6 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
 
-#include <dix-config.h>
-
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif

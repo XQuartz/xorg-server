@@ -33,6 +33,7 @@
 #ifdef HAVE_XORG_CONFIG_H
 #include <xorg-config.h>
 #endif
+
 #include "quartzPasteboard.h"
 
 #include <X11/Xatom.h>

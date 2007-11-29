@@ -27,6 +27,10 @@
  promote the sale, use or other dealings in this Software without
  prior written authorization. */
 
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
+
 #include "quartzCommon.h"
 
 #import "X11Application.h"

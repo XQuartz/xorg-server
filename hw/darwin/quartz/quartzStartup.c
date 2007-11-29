@@ -27,6 +27,11 @@
  * use or other dealings in this Software without prior written authorization.
  */
 
+// Including this crashes us... why?
+// #ifdef HAVE_XORG_CONFIG_H
+// #include <xorg-config.h>
+// #endif
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <CoreFoundation/CoreFoundation.h>

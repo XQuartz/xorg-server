@@ -56,9 +56,14 @@
 ===========================================================================
 */
 
+// Including this crashes us... why?
+// #ifdef HAVE_XORG_CONFIG_H
+// #include <xorg-config.h>
+// #endif
+
 // Define this to get a diagnostic output to stderr which is helpful
 // in determining how the X server is interpreting the Darwin keymap.
-#define DUMP_DARWIN_KEYMAP
+// #define DUMP_DARWIN_KEYMAP
 
 #include <stdio.h>
 #include <stdlib.h>

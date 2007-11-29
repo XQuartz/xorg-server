@@ -27,6 +27,10 @@
    promote the sale, use or other dealings in this Software without
    prior written authorization. */
 
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
+
 #define DEFAULT_PATH "/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/X11/bin"
 
 #include "quartzCommon.h"

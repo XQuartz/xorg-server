@@ -56,8 +56,8 @@
 ===========================================================================
 */
 
-#ifdef HAVE_XORG_CONFIG_H
-#include <xorg-config.h>
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
 #endif
 
 // Define this to get a diagnostic output to stderr which is helpful

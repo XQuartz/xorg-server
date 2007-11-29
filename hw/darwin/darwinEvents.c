@@ -30,8 +30,8 @@ used in advertising or otherwise to promote the sale, use or other dealings
 in this Software without prior written authorization from The Open Group.
  */
 
-#ifdef HAVE_XORG_CONFIG_H
-#include <xorg-config.h>
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
 #endif
 
 #define NEED_EVENTS

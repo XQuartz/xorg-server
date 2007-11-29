@@ -29,8 +29,8 @@
  * use or other dealings in this Software without prior written authorization.
  */
 
-#ifdef HAVE_XORG_CONFIG_H
-#include <xorg-config.h>
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
 #endif
 
 #include <X11/X.h>

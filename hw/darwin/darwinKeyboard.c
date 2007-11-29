@@ -56,10 +56,9 @@
 ===========================================================================
 */
 
-// Including this crashes us... why?
-// #ifdef HAVE_XORG_CONFIG_H
-// #include <xorg-config.h>
-// #endif
+#ifdef HAVE_XORG_CONFIG_H
+#include <xorg-config.h>
+#endif
 
 // Define this to get a diagnostic output to stderr which is helpful
 // in determining how the X server is interpreting the Darwin keymap.
@@ -74,7 +73,15 @@
 #include <architecture/byte_order.h>  // For the NXSwap*
 #include "darwin.h"
 #include "darwinKeyboard.h"
+
+#ifdef NDEBUG
+#undef NDEBUG
 #include <assert.h>
+#define NDEBUG 1
+#else
+#include <assert.h>
+#endif
+
 #define AltMask         Mod1Mask
 #define MetaMask        Mod2Mask
 #define FunctionMask    Mod3Mask

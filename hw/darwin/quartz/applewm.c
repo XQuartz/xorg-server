@@ -24,9 +24,11 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
-#ifdef HAVE_XORG_CONFIG_H
-#include <xorg-config.h>
+
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
 #endif
+
 #include "quartzCommon.h"
 
 #define NEED_REPLIES

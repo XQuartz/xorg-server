@@ -56,9 +56,13 @@
 ===========================================================================
 */
 
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
+#endif
+
 // Define this to get a diagnostic output to stderr which is helpful
 // in determining how the X server is interpreting the Darwin keymap.
-#define DUMP_DARWIN_KEYMAP
+// #define DUMP_DARWIN_KEYMAP
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,7 +73,15 @@
 #include <architecture/byte_order.h>  // For the NXSwap*
 #include "darwin.h"
 #include "darwinKeyboard.h"
+
+#ifdef NDEBUG
+#undef NDEBUG
 #include <assert.h>
+#define NDEBUG 1
+#else
+#include <assert.h>
+#endif
+
 #define AltMask         Mod1Mask
 #define MetaMask        Mod2Mask
 #define FunctionMask    Mod3Mask
@@ -212,9 +224,6 @@ static void DarwinChangeKeyboardControl( DeviceIntPtr device, KeybdCtrl *ctrl )
 }
 
 darwinKeyboardInfo keyInfo;
-KeySymRemapList *keySymRemapList = NULL;
-ModMaskRemapList *modMaskRemapList = NULL;
-
 static FILE *fref = NULL;
 static char *inBuffer = NULL;
 
@@ -461,8 +470,6 @@ Bool DarwinParseNXKeyMapping(
         }
     }
 
-    DEBUG_LOG("DarwinParseNXKeyMapping: Parsing keymap file: %s.\n", darwinKeymapFile);
-
     if (!haveKeymap) {
         // get the Darwin keyboard map
         keyMap.size = NXKeyMappingLength( darwinParamConnect );
@@ -637,108 +644,6 @@ Bool DarwinParseNXKeyMapping(
     return TRUE;
 }
 
-/* Return the modifier mask for the given string.  If no match, return -1 */
-static CARD8 strToXModMask(const char *str) {
-    if(!strcmp(str, "shift")) {
-        return ShiftMask;
-    } else if(!strcmp(str, "lock")) {
-        return LockMask;
-    } else if(!strcmp(str, "control")) {
-        return ControlMask;
-    } else if(!strcmp(str, "mod1")) {
-        return Mod1Mask;
-    } else if(!strcmp(str, "mod2")) {
-        return Mod2Mask;
-    } else if(!strcmp(str, "mod3")) {
-        return Mod3Mask;
-    } else if(!strcmp(str, "mod4")) {
-        return Mod4Mask;
-    } else if(!strcmp(str, "mod5")) {
-        return Mod5Mask;
-    }
-    DEBUG_LOG("Invalid str: %s\n", str);
-    return -1;
-}
-
-/* Return the KeySym for the given string.  If no match, return -1 */
-static KeySym strToXKeySym(const char *str) {
-    if(!strcmp(str, "Shift_L")) {
-        return XK_Shift_L;
-    } else if(!strcmp(str, "Shift_R")) {
-        return XK_Shift_R;
-    } else if(!strcmp(str, "Caps_Lock")) {
-        return XK_Caps_Lock;
-    } else if(!strcmp(str, "Control_L")) {
-        return XK_Control_L;
-    } else if(!strcmp(str, "Control_R")) {
-        return XK_Control_R;
-    } else if(!strcmp(str, "Alt_L")) {
-        return XK_Alt_L;
-    } else if(!strcmp(str, "Alt_R")) {
-        return XK_Alt_R;
-    } else if(!strcmp(str, "Meta_L")) {
-        return XK_Meta_L;
-    } else if(!strcmp(str, "Meta_R")) {
-        return XK_Meta_R;
-    } else if(!strcmp(str, "Mode_switch")) {
-        return XK_Mode_switch;
-    } else if(!strcmp(str, "Multi_key")) {
-        return XK_Multi_key;
-    }
-    DEBUG_LOG("Invalid str: %s\n", str);
-    return -1;
-}
-
-Bool DarwinKeyboardModMaskRemapStr(const char *keyS, const char *mask) {
-    KeySym key;
-    KeySym modMask;
-    ModMaskRemapList *m;
-
-    key = strToXKeySym(keyS);
-    modMask = strToXModMask(mask);
-
-    if(key == -1 || modMask == -1)
-        return 0;
-
-    m = (ModMaskRemapList *)xalloc(sizeof(ModMaskRemapList));
-    if(!m) {
-        DEBUG_LOG("Error allocating memory.\n");
-        return 0;
-    }
-
-    m->key = key;
-    m->modMask = modMask;
-    m->next = modMaskRemapList;
-    modMaskRemapList = m;
-
-    return 1;
-}
-
-Bool DarwinKeyboardKeySymRemapStr(const char *fromS, const char *toS) {
-    KeySym from;
-    KeySym to;
-    KeySymRemapList *m;
-
-    from = strToXKeySym(fromS);
-    to = strToXKeySym(toS);
-    
-    if(from == -1 || to == -1)
-        return 0;
-    
-    m = (KeySymRemapList *)xalloc(sizeof(KeySymRemapList));
-    if(!m) {
-        DEBUG_LOG("Error allocating memory.\n");
-        return 0;
-    }
-    
-    m->from = from;
-    m->to = to;
-    m->next = keySymRemapList;
-    keySymRemapList = m;
-
-    return 1;
-}
-
 /*
  * DarwinBuildModifierMaps
  *      Use the keyMap field of keyboard info structure to populate
@@ -825,12 +730,6 @@ DarwinBuildModifierMaps(darwinKeyboardInfo *info) {
                 info->modMap[MIN_KEYCODE + i] = Mod3Mask;
                 break;
         }
-
-        /* Use modMaskRemapList to overwrite default ModMasks */
-        ModMaskRemapList *m;
-        for(m = modMaskRemapList; m; m = m->next)
-            if(*k == m->key)
-                info->modMap[MIN_KEYCODE + i] = m->modMask;
     }
 }
 
@@ -858,19 +757,6 @@ DarwinLoadKeyboardMapping(KeySymsRec *keySyms)
         }
     }
 
-    /* Use keySymRemapList to overwrite default key mappings.
-     * We do this because IOKit doesn't know about Mode_shift, etc and we
-     * want to allow the user to set thisa key to this.  We could use
-     * custom keymap files, but this is easier for the user to work with.
-     */
-    for (i = 0; i < NUM_KEYCODES; i++) {
-        k = keyInfo.keyMap + i * GLYPHS_PER_KEY;
-        KeySymRemapList *m;
-        for(m = keySymRemapList; m; m = m->next)
-            if(*k == m->from)
-                *k = m->to;
-    }
- 
     DarwinBuildModifierMaps(&keyInfo);
 
 #ifdef DUMP_DARWIN_KEYMAP

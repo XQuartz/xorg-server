@@ -4,7 +4,6 @@ AM_CFLAGS = $(XSERVER_CFLAGS) $(DIX_CFLAGS)
 AM_OBJCFLAGS = $(XSERVER_CFLAGS) $(DIX_CFLAGS)
 AM_CPPFLAGS = \
 	-DHAS_KL_API \
-	-DHAVE_XORG_CONFIG_H \
 	-I$(srcdir) -I$(srcdir)/.. \
 	-I$(top_srcdir)/miext/rootless
 

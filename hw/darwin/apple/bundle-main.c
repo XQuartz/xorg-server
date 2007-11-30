@@ -614,20 +614,9 @@ display_exists_p (int number)
     if (access (buf, F_OK) != 0)
 		return FALSE;
 	
-    /* This is a private function that we shouldn't really be calling,
-	 but it's the best way to see if the server exists (without
-	 needing to hold the necessary authentication to use it) */
-	
     sprintf (buf, ":%d", number);
-    /*    conn = _X11TransConnectDisplay (buf, &fullname, &idisplay, &iscreen,
-									&conn_auth_name, &conn_auth_namelen,
-									&conn_auth_data, &conn_auth_datalen); */
-    conn = xcb_connect(buf, NULL);
-
-    if (conn == NULL)
-		return FALSE;
+    if (xcb_connection_has_error(conn)) return FALSE;
 	
-    //    _XDisconnectDisplay (conn);
     xcb_disconnect(conn);
     return TRUE;
 }

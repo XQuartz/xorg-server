@@ -55,6 +55,12 @@ WindowPtr xprGetXWindowFromAppKit(int windowNumber); // xpr/xprFrame.c
 
 #define DEFAULTS_FILE "/usr/X11/lib/X11/xserver/Xquartz.plist"
 
+/* Fake button press/release for scroll wheel move. */
+#define SCROLLWHEELUPFAKE    4
+#define SCROLLWHEELDOWNFAKE  5
+#define SCROLLWHEELLEFTFAKE  6
+#define SCROLLWHEELRIGHTFAKE 7
+
 int X11EnableKeyEquivalents = TRUE;
 int quartzHasRoot = FALSE, quartzEnableRootless = TRUE;
 
@@ -878,8 +884,9 @@ static void send_nsevent (NSEventType type, NSEvent *e) {
     xe.u.keyButtonPointer.rootY = pointer_y;
     
     switch (type) {
-        float count;
-            
+      float countX, countY;
+      int signX, signY;
+
         case NSLeftMouseDown:
             xe.u.u.type = ButtonPress;
             xe.u.u.detail = 1;
@@ -947,16 +954,37 @@ static void send_nsevent (NSEventType type, NSEvent *e) {
             xe.u.u.detail = [e keyCode];
             goto do_event;
             
-            case NSScrollWheel:
-            xe.u.keyButtonPointer.state = convert_flags ([e modifierFlags]);
-            count = [e deltaY];
-            xe.u.u.detail = count > 0.0f ? 4 : 5;
-            for (count = fabs(count); count > 0.0; count = count - 1.0f) {
+       case NSScrollWheel:
+//          xe.u.keyButtonPointer.state = convert_flags ([e modifierFlags]);
+            countY = [e deltaY];
+            countX = [e deltaX];
+            signY = countY > 0.0f ? 
+	      SCROLLWHEELUPFAKE : SCROLLWHEELDOWNFAKE;
+            signX = countX > 0.0f ? 
+	      SCROLLWHEELLEFTFAKE : SCROLLWHEELRIGHTFAKE;
+	    
+	    countX = fabs(countX);
+	    countY = fabs(countY);
+
+	    while ((countX > 0.0f) || (countY > 0.0f)) {
+	      if (countX > 0.0f) {
+		xe.u.u.detail = signX;
                 xe.u.u.type = ButtonPress;
                 DarwinEQEnqueue(&xe);
                 xe.u.u.type = ButtonRelease;
                 DarwinEQEnqueue(&xe);
-            }
+		countX = countX - 1.0f;
+	      }
+
+	      if (countY > 0.0f) {
+		xe.u.u.detail = signY;
+                xe.u.u.type = ButtonPress;
+                DarwinEQEnqueue(&xe);
+                xe.u.u.type = ButtonRelease;
+                DarwinEQEnqueue(&xe);
+		countY = countY - 1.0f;
+	      }
+	    }
             xe.u.u.type = 0;
             break;
             

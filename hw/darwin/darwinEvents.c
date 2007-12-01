@@ -53,10 +53,6 @@ in this Software without prior written authorization from The Open Group.
 #include <unistd.h>
 #include <IOKit/hidsystem/IOLLEvent.h>
 
-/* Fake button press/release for scroll wheel move. */
-#define SCROLLWHEELUPFAKE   4
-#define SCROLLWHEELDOWNFAKE 5
-
 #define QUEUE_SIZE 256
 
 typedef struct _Event {
@@ -572,28 +568,6 @@ void ProcessInputEvents(void)
                         (*darwinEventQueue.pPtr->processInputProc)
                     (&xe, (DeviceIntPtr)darwinEventQueue.pPtr, 1);
                     }
-                }
-                break;
-            }
-
-            case kXDarwinScrollWheel:
-            {
-                short count = xe.u.clientMessage.u.s.shorts0;
-
-                if (count > 0) {
-                    xe.u.u.detail = SCROLLWHEELUPFAKE;
-                } else {
-                    xe.u.u.detail = SCROLLWHEELDOWNFAKE;
-                    count = -count;
-                }
-
-                for (; count; --count) {
-                    xe.u.u.type = ButtonPress;
-                    (*darwinEventQueue.pPtr->processInputProc)
-                            (&xe, (DeviceIntPtr)darwinEventQueue.pPtr, 1);
-                    xe.u.u.type = ButtonRelease;
-                    (*darwinEventQueue.pPtr->processInputProc)
-                            (&xe, (DeviceIntPtr)darwinEventQueue.pPtr, 1);
                 }
                 break;
             }

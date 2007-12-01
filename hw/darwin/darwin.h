@@ -124,7 +124,6 @@ enum {
     kXDarwinUpdateModifiers   // update all modifier keys
             = LASTEvent+1,    // (from X.h list of event names)
     kXDarwinUpdateButtons,    // update state of mouse buttons 2 and up
-    kXDarwinScrollWheel,      // scroll wheel event
     /*
      * Quartz-specific events -- not used in IOKit mode
      */

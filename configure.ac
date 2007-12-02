@@ -1643,6 +1643,7 @@ if test "x$XQUARTZ" = xyes; then
                xorg_cv_AGL_framework=no
 	       DARWIN_GLX_LIBS='$(top_builddir)/GL/apple/indirect.o $(top_builddir)/GL/glx/libglx.la'
 	       DARWIN_LIBS="$MI_LIB $OS_LIB $DIX_LIB $FB_LIB $FIXES_LIB $XEXT_LIB $CONFIG_LIB $DBE_LIB $XTRAP_LIB $RECORD_LIB $RENDER_LIB $RANDR_LIB $DAMAGE_LIB $MIEXT_DAMAGE_LIB $MIEXT_SHADOW_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $COMPOSITE_LIB $XPSTUBS_LIB $DARWIN_GLX_LIBS"
+	       DEFAULT_FONT_PATH="${DEFAULT_FONT_PATH},/Library/Fonts,/System/Library/Fonts"
 	       AC_SUBST([DARWIN_LIBS])
                AC_CHECK_LIB([Xplugin],[xp_init],[:])
                AC_SUBST([APPLE_APPLICATIONS_DIR])

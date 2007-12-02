@@ -19,14 +19,16 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.0</string>
+	<string>2.1.0</string>
 	<key>CFBundleSignature</key>
 	<string>x11a</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2003-2007, Apple Inc.
-Copyright © 2003, XFree86 Project, Inc.</string>
+Copyright © 2003, XFree86 Project, Inc.
+Copyright © 2003-2007, X.org Project, Inc.
+</string>
 	<key>NSMainNibFile</key>
 	<string>main</string>
 	<key>NSPrincipalClass</key>

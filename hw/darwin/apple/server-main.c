@@ -512,7 +512,7 @@ start_client (void)
 	case 0:					/* child */
 		/* Setup environment */
 		temp = getenv("DISPLAY");
-		if (temp != NULL && temp[0] != 0)
+//		if (temp == NULL && temp[0] != 0)
 			setenv("DISPLAY", server_name, TRUE);
 
 		temp = getenv("PATH");

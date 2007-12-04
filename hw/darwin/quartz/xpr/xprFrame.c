@@ -31,6 +31,7 @@
 #include <dix-config.h>
 #endif
 
+#include <unistd.h>
 #include "xpr.h"
 #include "rootlessCommon.h"
 #include "Xplugin.h"
@@ -398,10 +399,19 @@ xprInit(ScreenPtr pScreen)
 {
     RootlessInit(pScreen, &xprRootlessProcs);
 
-    rootless_CopyBytes_threshold = xp_copy_bytes_threshold;
-    rootless_FillBytes_threshold = xp_fill_bytes_threshold;
-    rootless_CompositePixels_threshold = xp_composite_area_threshold;
-    rootless_CopyWindow_threshold = xp_scroll_area_threshold;
+    if(!access("/tmp/disable_fb.txt", F_OK)) {
+      // always use the xp functions, dammit
+      fprintf(stderr,"setting rootless thresholds to zero to disable fb usage\n");
+      rootless_CopyBytes_threshold = 0;
+      rootless_FillBytes_threshold = 0;
+      rootless_CompositePixels_threshold = 0;
+      rootless_CopyWindow_threshold = 0;
+    } else {
+      rootless_CopyBytes_threshold = xp_copy_bytes_threshold;
+      rootless_FillBytes_threshold = xp_fill_bytes_threshold;
+      rootless_CompositePixels_threshold = xp_composite_area_threshold;
+      rootless_CopyWindow_threshold = xp_scroll_area_threshold;
+    }
 
     no_configure_window = FALSE;
 

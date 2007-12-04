@@ -2155,7 +2155,6 @@ hw/xnest/Makefile
 hw/xwin/Makefile
 hw/darwin/Makefile
 hw/darwin/apple/Makefile
-hw/darwin/launcher/Makefile
 hw/darwin/quartz/Makefile
 hw/darwin/quartz/xpr/Makefile
 hw/darwin/utils/Makefile

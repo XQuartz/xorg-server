@@ -31,6 +31,7 @@
 #include <X11/Xlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 
 int launcher_main(int argc, char **argv);
 int server_main(int argc, char **argv);
@@ -38,40 +39,44 @@ int server_main(int argc, char **argv);
 int main(int argc, char **argv) {
     Display *display;
   
-    //fprintf(stderr, "X11.app: main(): argc=%d\n", argc);
-    //int i;
-    //for(i=0; i < argc; i++) {
-    //    fprintf(stderr, "\targv[%d] = %s\n", i, argv[i]);
-    //}
+    fprintf(stderr, "X11.app: main(): argc=%d\n", argc);
+    int i;
+    for(i=0; i < argc; i++) {
+        fprintf(stderr, "\targv[%d] = %s\n", i, argv[i]);
+    }
     
-    /* If we have command line arguments, assume we want a server */
-    if(argc > 1) {
-        if(strncmp(argv[1], "--launchd", 9) == 0) {
-            argc--;
-            argv[1] = argv[0];
-            argv++;
-        }
-        //fprintf(stderr, "X11.app: main(): running server_main()");
+    /* First check if launchd started us */
+    if(strncmp(argv[1], "--launchd", 9) == 0) {
+        argc--;
+        argv[1] = argv[0];
+        argv++;
+        fprintf(stderr, "X11.app: main(): launchd called us, running server_main()");
         return server_main(argc, argv);
     }
 
-    /* Now, try to open a display, if so, run the launcher */
-    display = XOpenDisplay(NULL);
-    if(display) {
-        fprintf(stderr, "X11.app: main(): closing the display");
-        /* Could open the display, start the launcher */
-        XCloseDisplay(display);
+    /* If we have a process serial number and it's our only arg, act as if
+     * the user double clicked the app bundle: launch app_to_run if possible
+     */
+    if(argc == 1 || (argc == 2 && !strncmp(argv[1], "-psn_", 5))) {
+        /* Now, try to open a display, if so, run the launcher */
+        display = XOpenDisplay(NULL);
+        if(display) {
+            fprintf(stderr, "X11.app: main(): closing the display");
+            /* Could open the display, start the launcher */
+            XCloseDisplay(display);
 
-        /* Give 2 seconds for the server to start... 
-         * TODO: *Really* fix this race condition
-         */
-        usleep(2000);
-        //fprintf(stderr, "X11.app: main(): running launcher_main()");
-        return launcher_main(argc, argv);
+            /* Give 2 seconds for the server to start... 
+             * TODO: *Really* fix this race condition
+             */
+            usleep(2000);
+            fprintf(stderr, "X11.app: main(): running launcher_main()");
+            return launcher_main(argc, argv);
+        }
     }
 
-    /* Couldn't open the display, assume we just want to start a server */
-    //fprintf(stderr, "X11.app: main(): running server_main()");
+    /* Couldn't open the display or we were called with arguments,
+     * just want to start a server.
+     */
+    fprintf(stderr, "X11.app: main(): running server_main()");
     return server_main(argc, argv);
 }
-

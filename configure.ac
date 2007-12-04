@@ -2157,7 +2157,6 @@ hw/darwin/Makefile
 hw/darwin/apple/Makefile
 hw/darwin/quartz/Makefile
 hw/darwin/quartz/xpr/Makefile
-hw/darwin/utils/Makefile
 hw/kdrive/Makefile
 hw/kdrive/ati/Makefile
 hw/kdrive/chips/Makefile

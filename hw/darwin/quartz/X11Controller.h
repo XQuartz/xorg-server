@@ -33,7 +33,7 @@
 #if __OBJC__
 
 #import <Cocoa/Cocoa.h>
-#include "xpr/x-list.h"
+#include "x-list.h"
 
 @interface X11Controller : NSObject
 {

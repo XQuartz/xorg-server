@@ -71,7 +71,6 @@ typedef struct _EventQueue {
 } EventQueueRec, *EventQueuePtr;
 
 static EventQueueRec darwinEventQueue;
-extern darwinKeyboardInfo keyInfo;
 #define KeyPressed(k) (((DeviceIntPtr)darwinEventQueue.pKbd)->key->down[k >> 3] & (1 << (k & 7)))
 
 #ifdef NX_DEVICELCTLKEYMASK

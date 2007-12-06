@@ -46,6 +46,7 @@ in this Software without prior written authorization from The Open Group.
 #include   "scrnintstr.h"
 #include   "mipointer.h"
 #include "darwin.h"
+#include "quartz.h"
 #include "darwinKeyboard.h"
 
 #include <sys/types.h>
@@ -578,7 +579,7 @@ void ProcessInputEvents(void)
 	      // fall through
             default:
                 // Check for mode specific event
-                DarwinModeProcessEvent(&xe);
+                QuartzProcessEvent(&xe);
             }
         }
     }

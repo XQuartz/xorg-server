@@ -55,6 +55,10 @@ WindowPtr xprGetXWindowFromAppKit(int windowNumber); // xpr/xprFrame.c
 
 #define DEFAULTS_FILE "/usr/X11/lib/X11/xserver/Xquartz.plist"
 
+#ifndef XSERVER_VERSION
+#define XSERVER_VERSION "?"
+#endif
+
 int X11EnableKeyEquivalents = TRUE;
 int quartzHasRoot = FALSE, quartzEnableRootless = TRUE;
 
@@ -151,7 +155,7 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
 	
     tem = [infoDict objectForKey:@"CFBundleShortVersionString"];
 	
-    [dict setObject:[NSString stringWithFormat:@"X11.app %@ - X.org X11R7.3", tem] 
+    [dict setObject:[NSString stringWithFormat:@"X11.app %@ - (xorg-server %s)", tem, XSERVER_VERSION] 
 	  forKey:@"ApplicationVersion"];
 	
     [self orderFrontStandardAboutPanelWithOptions: dict];

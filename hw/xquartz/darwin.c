@@ -135,8 +135,8 @@ const int NUMFORMATS = sizeof(formats)/sizeof(formats[0]);
 #ifndef BUILD_DATE
 #define BUILD_DATE ""
 #endif
-#ifndef XORG_RELEASE
-#define XORG_RELEASE "?"
+#ifndef XSERVER_VERSION
+#define XSERVER_VERSION "?"
 #endif
 
 void DDXRingBell(int volume, int pitch, int duration) {
@@ -148,7 +148,7 @@ DarwinPrintBanner(void)
 { 
   // this should change depending on which specific server we are building
   ErrorF("X11.app starting:\n");
-  ErrorF("Xquartz server based on X.org %s, built on %s\n", XORG_RELEASE, BUILD_DATE );
+  ErrorF("X.Org Xquartz X Server %s\nBuild Date: %s\n", XSERVER_VERSION, BUILD_DATE );
 }
 
 

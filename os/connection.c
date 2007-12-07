@@ -1014,9 +1014,12 @@ CheckConnections(void)
 	    curclient = curoff + (i * (sizeof(fd_mask)*8));
             FD_ZERO(&tmask);
             FD_SET(curclient, &tmask);
-            r = Select (curclient + 1, &tmask, NULL, NULL, &notime);
+            do {
+                r = Select (curclient + 1, &tmask, NULL, NULL, &notime);
+            } while (r < 0 && (errno == EINTR || errno == EAGAIN));
             if (r < 0)
-		CloseDownClient(clients[ConnectionTranslation[curclient]]);
+                if (ConnectionTranslation[curclient] > 0)
+                    CloseDownClient(clients[ConnectionTranslation[curclient]]);
 	    mask &= ~((fd_mask)1 << curoff);
 	}
     }	
@@ -1027,9 +1030,12 @@ CheckConnections(void)
 	curclient = XFD_FD(&savedAllClients, i);
 	FD_ZERO(&tmask);
 	FD_SET(curclient, &tmask);
-	r = Select (curclient + 1, &tmask, NULL, NULL, &notime);
-	if (r < 0 && GetConnectionTranslation(curclient) > 0)
-	    CloseDownClient(clients[GetConnectionTranslation(curclient)]);
+        do {
+            r = Select (curclient + 1, &tmask, NULL, NULL, &notime);
+        } while (r < 0 && (errno == EINTR || errno == EAGAIN));
+	if (r < 0)
+            if (GetConnectionTranslation(curclient) > 0)
+                CloseDownClient(clients[GetConnectionTranslation(curclient)]);
     }	
 #endif
 }

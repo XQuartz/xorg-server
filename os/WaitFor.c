@@ -262,7 +262,7 @@ WaitForSomething(int *pClientsReady)
 		    FatalError("WaitForSomething(): select: errno=%d\n",
 			selecterr);
             }
-		else if (selecterr != EINTR)
+		else if (selecterr != EINTR && selecterr != EAGAIN)
 		{
 		    ErrorF("WaitForSomething(): select: errno=%d\n",
 			selecterr);

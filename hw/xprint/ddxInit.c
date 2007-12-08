@@ -199,7 +199,7 @@ ProcessInputEvents(void)
 {
 }
 
-#ifdef __DARWIN__
+#ifdef __APPLE__
 #include "micmap.h"
 
 void GlxExtensionInit(void);

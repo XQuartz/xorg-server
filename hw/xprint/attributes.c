@@ -1379,7 +1379,7 @@ ReplaceAllKeywords(
     defined(ISC) || \
     defined(Lynx) || \
     defined(__QNX__) || \
-    defined(__DARWIN__)
+    defined(__APPLE__)
 #define iswspace(c) (isascii(c) && isspace(toascii(c)))
 #endif
 

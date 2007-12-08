@@ -23,7 +23,7 @@ XPRINT_SUBDIRS = xprint
 endif
 
 if XQUARTZ
-DARWIN_SUBDIRS = xquartz
+XQUARTZ_SUBDIRS = xquartz
 endif
 
 SUBDIRS =			\
@@ -32,9 +32,9 @@ SUBDIRS =			\
 	$(XWIN_SUBDIRS)		\
 	$(XVFB_SUBDIRS)		\
 	$(XNEST_SUBDIRS)	\
-	$(DMX_SUBDIRS)          \
-        $(KDRIVE_SUBDIRS)	\
-        $(DARWIN_SUBDIRS)	\
+	$(DMX_SUBDIRS)		\
+	$(KDRIVE_SUBDIRS)	\
+	$(XQUARTZ_SUBDIRS)	\
 	$(XPRINT_SUBDIRS)
 
 DIST_SUBDIRS = dmx xfree86 vfb xnest xwin xquartz kdrive xgl xprint

@@ -691,7 +691,7 @@ fbBltOne24 (FbStip	*srcLine,
 		{
 		    mask = fbStipple24Bits[rot >> 3][stip] & leftMask;
 		    CHECK_BOUNDS(dst, dstEnd);
-			WRITE(dst, (READ(dst) & ~mask) | (FbRot24(fgxor, rot) & mask));
+		    WRITE(dst, (READ(dst) & ~mask) | (FbRot24(fgxor, rot) & mask));
 		}
 		dst++;
 		fbNextStipBits (rot, stip);
@@ -702,7 +702,7 @@ fbBltOne24 (FbStip	*srcLine,
 		if (stip)
 		{
 		    mask = fbStipple24Bits[rot>>3][stip];
-			CHECK_BOUNDS(dst, dstEnd);
+		    CHECK_BOUNDS(dst, dstEnd);
 		    WRITE(dst, (READ(dst) & ~mask) | (FbRot24(fgxor,rot) & mask));
 		}
 		dst++;
@@ -713,7 +713,7 @@ fbBltOne24 (FbStip	*srcLine,
 		if (stip)
 		{
 		    mask = fbStipple24Bits[rot >> 3][stip] & rightMask;
-			CHECK_BOUNDS(dst, dstEnd);
+		    CHECK_BOUNDS(dst, dstEnd);
 		    WRITE(dst, (READ(dst) & ~mask) | (FbRot24(fgxor, rot) & mask));
 		}
 	    }

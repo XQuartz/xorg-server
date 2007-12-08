@@ -37,39 +37,36 @@ int launcher_main(int argc, char **argv);
 int server_main(int argc, char **argv);
 
 int main(int argc, char **argv) {
-    int launchd = 0;
-    size_t i;
-    int retval;  
+    Display *display;
 
-    fprintf(stderr, "X11.app: main(): argc=%d\n", argc);
-    for(i=0; i < argc; i++) {
-        fprintf(stderr, "\targv[%u] = %s\n", (unsigned)i, argv[i]);
-    }
+    //size_t i;
+    //fprintf(stderr, "X11.app: main(): argc=%d\n", argc);
+    //for(i=0; i < argc; i++) {
+    //    fprintf(stderr, "\targv[%u] = %s\n", (unsigned)i, argv[i]);
+    //}
     
-    /* First check if launchd started us */
-    for(i=1; i < argc; i++) {
-        if(!strncmp(argv[i], "-launchd", 8)) {
-            launchd = 1;
-            break;
+    /* If we have a process serial number and it's our only arg, act as if
+     * the user double clicked the app bundle: launch app_to_run if possible
+     */
+    if(argc == 1 || (argc == 2 && !strncmp(argv[1], "-psn_", 5))) {
+        /* Now, try to open a display, if so, run the launcher */
+        display = XOpenDisplay(NULL);
+        if(display) {
+            fprintf(stderr, "X11.app: main(): closing the display");
+            /* Could open the display, start the launcher */
+            XCloseDisplay(display);
+            
+            /* Give 2 seconds for the server to start... 
+             * TODO: *Really* fix this race condition
+             */
+            usleep(2000);
+            //fprintf(stderr, "X11.app: main(): running launcher_main()");
+            return launcher_main(argc, argv);
         }
     }
-
+    
     /* Start the server */
-    fprintf(stderr, "X11.app: main(): running server_main()");
-    retval = server_main(argc, argv);
-    if(retval != 0)
-        return retval;
-
-    /* If we weren't started by launcd, then run the launcher. */
-    if(!launchd) {
-        /* Give 2 seconds for the server to start... 
-         * TODO: *Really* fix this race condition
-         */
-        usleep(2000);
-        fprintf(stderr, "X11.app: main(): running launcher_main()");
-        return launcher_main(argc, argv);
-    }
-
-    return 0;
+    //fprintf(stderr, "X11.app: main(): running server_main()");
+    return server_main(argc, argv);
 }
 

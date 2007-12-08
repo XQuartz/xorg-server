@@ -169,6 +169,11 @@ typedef CARD32		    FbStip;
 
 typedef int		    FbStride;
 
+#define CHECK_NULL(ptr) \
+  if ((ptr) == NULL) {\
+    ErrorF("%s:%d: null pointer\n", __FILE__, __LINE__); \
+    return; \
+  }
 
 #ifdef FB_DEBUG
 extern void fbValidateDrawable(DrawablePtr d);
@@ -713,6 +718,7 @@ typedef struct {
     (pointer) = (FbBits *) _pPix->devPrivate.ptr; \
     (stride) = ((int) _pPix->devKind) / sizeof (FbBits); (void)(stride); \
     (bpp) = _pPix->drawable.bitsPerPixel;  (void)(bpp); \
+    CHECK_NULL(pointer); \
 }
 
 #define fbGetStipDrawable(pDrawable, pointer, stride, bpp, xoff, yoff) { \
@@ -730,6 +736,7 @@ typedef struct {
     (pointer) = (FbStip *) _pPix->devPrivate.ptr; \
     (stride) = ((int) _pPix->devKind) / sizeof (FbStip); (void)(stride); \
     (bpp) = _pPix->drawable.bitsPerPixel; (void)(bpp); \
+    CHECK_NULL(pointer); \
 }
 
 /*

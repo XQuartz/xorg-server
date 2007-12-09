@@ -193,7 +193,7 @@ fbBltOne (FbStip    *src,
      * Do not read or write past the end of the buffer!
      */
     srcEnd = src + height * srcStride;
-    dstEnd = dst + height * dstStride;
+    dstEnd = dst + dstX + height * dstStride;
 
     /*
      * Number of destination units in FbBits == number of stipple pixels
@@ -614,7 +614,7 @@ fbBltOne24 (FbStip	*srcLine,
      * Do not read or write past the end of the buffer!
      */
     srcEnd = srcLine + height * srcStride;
-    dstEnd = dst + height * dstStride;
+    dstEnd = dst + dstX + height * dstStride;
 
     srcLine += srcX >> FB_STIP_SHIFT;
     dst += dstX >> FB_SHIFT;

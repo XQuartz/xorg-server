@@ -452,7 +452,7 @@ void ProcessInputEvents(void)
                     static unsigned int last_seed;
                     unsigned int this_seed;
 
-                    this_seed = DarwinModeSystemKeymapSeed();
+                    this_seed = QuartzSystemKeymapSeed();
                     if (this_seed != last_seed)
                     {
                         last_seed = this_seed;

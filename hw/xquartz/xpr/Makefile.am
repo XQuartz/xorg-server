@@ -66,5 +66,4 @@ EXTRA_DIST = \
 	x-hash.h \
 	x-hook.h \
 	x-list.h \
-	Xplugin.h \
 	xpr.h

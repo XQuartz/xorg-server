@@ -318,6 +318,15 @@ fbPixmapToRegion(PixmapPtr pPix)
     return(pReg);
 }
 
+int fb_null_pointer(char *file, unsigned int line) {
+  ErrorF("%s:%u: null pointer (break on fb_null_pointer to debug)\n", file, line);
+#ifdef FB_DEBUG
+  return 0; // ignore error, die horrible death
+#else
+  return 1; // harmlessly return to caller, hope we don't crash later
+#endif
+}
+
 #ifdef FB_DEBUG
 
 #ifndef WIN32
@@ -357,6 +366,9 @@ fbValidateDrawable (DrawablePtr pDrawable)
     if (pDrawable->type != DRAWABLE_PIXMAP)
 	pDrawable = (DrawablePtr) fbGetWindowPixmap(pDrawable);
     fbGetStipDrawable(pDrawable, bits, stride, bpp, xoff, yoff);
+#ifdef __APPLE__
+    if (bits >= 0xb0000000) return; // don't validate CG memory
+#endif
     first = bits - stride;
     last = bits + stride * pDrawable->height;
     if (!fbValidateBits (first, stride, FB_HEAD_BITS) ||

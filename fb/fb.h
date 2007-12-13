@@ -133,10 +133,11 @@ typedef CARD32		    FbStip;
 
 typedef int		    FbStride;
 
+int fb_null_pointer(char *file, unsigned int line);
+
 #define CHECK_NULL(ptr) \
   if ((ptr) == NULL) {\
-    ErrorF("%s:%d: null pointer\n", __FILE__, __LINE__); \
-    return; \
+    if (fb_null_pointer(__FILE__, __LINE__)) return; \
   }
 
 #ifdef FB_DEBUG

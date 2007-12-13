@@ -454,13 +454,15 @@ AC_ARG_WITH(rgb-path,         AS_HELP_STRING([--with-rgb-path=PATH], [Path to RG
 AC_ARG_WITH(serverconfig-path, AS_HELP_STRING([--with-serverconfig-path=PATH], [Path to server config (default: ${libdir}/xserver)]),
 				[ SERVERCONFIG="$withval" ],
 				[ SERVERCONFIG="${libdir}/xserver" ])
-APPLE_APPLICATIONS_DIR="/Applications/Utilities"
 AC_ARG_WITH(apple-applications-dir,AS_HELP_STRING([--with-apple-applications-dir=PATH], [Path to the Applications directory (default: /Applications/Utilities)]),
-				[ APPLE_APPLICATIONS_DIR="${withval}" ].
+				[ APPLE_APPLICATIONS_DIR="${withval}" ],
 				[ APPLE_APPLICATIONS_DIR="/Applications/Utilities" ])
-
+AC_SUBST([APPLE_APPLICATIONS_DIR])
 AC_ARG_WITH(launchd,          AS_HELP_STRING([--with-launchd], [Build with support for Apple's launchd (default: auto)]), [LAUNCHD=$withval], [LAUNCHD=auto])
-
+AC_ARG_WITH(launchagents-dir,AS_HELP_STRING([--with-launchagents-dir=PATH], [Path to launchd's LaunchAgents directory (default: /Library/LaunchAgents)]),
+				[ launchagentsdir="${withval}" ],
+				[ launchagentsdir="/Library/LaunchAgents" ])
+AC_SUBST([launchagentsdir])
 AC_ARG_ENABLE(builddocs,      AS_HELP_STRING([--enable-builddocs], [Build docs (default: disabled)]),
                                 [BUILDDOCS=$enableval],
                                 [BUILDDOCS=no])
@@ -1745,7 +1747,6 @@ if test "x$XQUARTZ" = xyes; then
 	DARWIN_LIBS="$MI_LIB $OS_LIB $DIX_LIB $FB_LIB $FIXES_LIB $XEXT_LIB $CONFIG_LIB $DBE_LIB $XTRAP_LIB $RECORD_LIB $RENDER_LIB $RANDR_LIB $DAMAGE_LIB $MIEXT_DAMAGE_LIB $MIEXT_SHADOW_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $COMPOSITE_LIB $XPSTUBS_LIB $DARWIN_GLX_LIBS"
 	AC_SUBST([DARWIN_LIBS])
 	AC_CHECK_LIB([Xplugin],[xp_init],[:])
-	AC_SUBST([APPLE_APPLICATIONS_DIR])
 	CFLAGS="${CFLAGS} -DROOTLESS_WORKAROUND -DNO_ALLOCA"
 	if test "x$XF86MISC" = xyes || test "x$XF86MISC" = xauto; then
 		AC_MSG_NOTICE([Disabling XF86Misc extension])
@@ -1791,22 +1792,18 @@ if test "x$X11APP" = xauto; then
 fi
 AM_CONDITIONAL(X11APP,[test "X$X11APP" = Xyes]) 
 
-if test "x$LAUNCHD" = xauto; then
-	# Do we want to have this default to on for Xquartz builds only or any time we have launchd (like Xnest or Xvfb on OS-X)
-	#AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no])
-	AC_MSG_CHECKING([whether to support launchd])
-	if test "x$XQUARTZ" = xyes ; then
+if test "x$LAUNCHD" = "xauto"; then
+	if test "x$XQUARTZ" = "xyes" ; then
 		LAUNCHD=yes
 	else
-		LAUNCHD=no
+		AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no])
 	fi
-	AC_MSG_RESULT([$LAUNCHD])
 fi
 
-if test "x$LAUNCHD" = xyes ; then
+if test "x$LAUNCHD" = "xyes" ; then
 	AC_DEFINE(HAVE_LAUNCHD, 1, [launchd support available])
 fi
-AM_CONDITIONAL(LAUNCHD, [test "x$LAUNCHD" = xyes])
+AM_CONDITIONAL(LAUNCHD, [test "x$LAUNCHD" = "xyes"])
 
 dnl kdrive DDX
 

@@ -1697,6 +1697,7 @@ if test "x$LAUNCHD" = "xauto"; then
 	if test "x$XQUARTZ" = "xyes" ; then
 		LAUNCHD=yes
 	else
+		unset LAUNCHD
 		AC_CHECK_PROG(LAUNCHD, [launchd], [yes], [no])
 	fi
 fi

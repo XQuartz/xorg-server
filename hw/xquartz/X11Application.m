@@ -800,7 +800,7 @@ environment?", @"Startup xinitrc dialog");
     [X11App prefs_synchronize];
 }
 
-void X11ApplicationMain (int argc, char **argv, void (*server_thread) (void *), void *server_arg) {
+void X11ApplicationMain (int argc, const char **argv, void (*server_thread) (void *), void *server_arg) {
     NSAutoreleasePool *pool;
 
 #ifdef DEBUG

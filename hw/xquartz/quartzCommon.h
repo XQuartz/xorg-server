@@ -63,7 +63,6 @@ typedef struct {
 
 // Data stored at startup for Cocoa front end
 extern int              quartzEventWriteFD;
-extern int              quartzStartClients;
 
 // User preferences used by Quartz modes
 extern int              quartzRootless;

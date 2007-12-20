@@ -61,7 +61,6 @@
 
 // Shared global variables for Quartz modes
 int                     quartzEventWriteFD = -1;
-int                     quartzStartClients = 1;
 int                     quartzRootless = -1;
 int                     quartzUseSysBeep = 0;
 int                     quartzUseAGL = 1;
@@ -416,12 +415,10 @@ QuartzMessageServerThread(
  * QuartzProcessEvent
  *  Process Quartz specific events.
  */
-void QuartzProcessEvent(
-    xEvent *xe)
-{
+void QuartzProcessEvent(xEvent *xe) {
     switch (xe->u.u.type) {
         case kXDarwinControllerNotify:
-	  DEBUG_LOG("kXDarwinControllerNotify\n");
+            DEBUG_LOG("kXDarwinControllerNotify\n");
             AppleWMSendEvent(AppleWMControllerNotify,
                              AppleWMControllerNotifyMask,
                              xe->u.clientMessage.u.l.longs0,
@@ -429,7 +426,7 @@ void QuartzProcessEvent(
             break;
 
         case kXDarwinPasteboardNotify:
-	  DEBUG_LOG("kXDarwinPasteboardNotify\n");
+            DEBUG_LOG("kXDarwinPasteboardNotify\n");
             AppleWMSendEvent(AppleWMPasteboardNotify,
                              AppleWMPasteboardNotifyMask,
                              xe->u.clientMessage.u.l.longs0,
@@ -437,7 +434,7 @@ void QuartzProcessEvent(
             break;
 
         case kXDarwinActivate:
-	  DEBUG_LOG("kXDarwinActivate\n");
+            DEBUG_LOG("kXDarwinActivate\n");
             QuartzShow(xe->u.keyButtonPointer.rootX,
                        xe->u.keyButtonPointer.rootY);
             AppleWMSendEvent(AppleWMActivationNotify,
@@ -446,7 +443,7 @@ void QuartzProcessEvent(
             break;
 
         case kXDarwinDeactivate:
-  	  DEBUG_LOG("kXDarwinDeactivate\n");
+            DEBUG_LOG("kXDarwinDeactivate\n");
             AppleWMSendEvent(AppleWMActivationNotify,
                              AppleWMActivationNotifyMask,
                              AppleWMIsInactive, 0);
@@ -454,23 +451,23 @@ void QuartzProcessEvent(
             break;
 
         case kXDarwinDisplayChanged:
-	    DEBUG_LOG("kXDarwinDisplayChanged\n");
+            DEBUG_LOG("kXDarwinDisplayChanged\n");
             QuartzUpdateScreens();
             break;
 
         case kXDarwinWindowState:
-	  DEBUG_LOG("kXDarwinWindowState\n");
+            DEBUG_LOG("kXDarwinWindowState\n");
             RootlessNativeWindowStateChanged(xe->u.clientMessage.u.l.longs0,
 		  			     xe->u.clientMessage.u.l.longs1);
 	    break;
 	  
         case kXDarwinWindowMoved:
-	  DEBUG_LOG("kXDarwinWindowMoved\n");
-	  RootlessNativeWindowMoved ((WindowPtr)xe->u.clientMessage.u.l.longs0);
+            DEBUG_LOG("kXDarwinWindowMoved\n");
+            RootlessNativeWindowMoved ((WindowPtr)xe->u.clientMessage.u.l.longs0);
 	    break;
 
         case kXDarwinToggleFullscreen:
-	  DEBUG_LOG("kXDarwinToggleFullscreen\n");
+            DEBUG_LOG("kXDarwinToggleFullscreen\n");
 #ifdef DARWIN_DDX_MISSING
             if (quartzEnableRootless) QuartzSetFullscreen(!quartzHasRoot);
             else if (quartzHasRoot) QuartzHide();
@@ -481,6 +478,7 @@ void QuartzProcessEvent(
             break;
 
         case kXDarwinSetRootless:
+            DEBUG_LOG("kXDarwinSetRootless\n");
 #ifdef DARWIN_DDX_MISSING
             QuartzSetRootless(xe->u.clientMessage.u.l.longs0);
             if (!quartzEnableRootless && !quartzHasRoot) QuartzHide();
@@ -506,34 +504,11 @@ void QuartzProcessEvent(
             break;
 
         case kXDarwinBringAllToFront:
-  	  DEBUG_LOG("kXDarwinBringAllToFront\n");
-	    RootlessOrderAllWindows();
+            DEBUG_LOG("kXDarwinBringAllToFront\n");
+            RootlessOrderAllWindows();
             break;
 
         default:
             ErrorF("Unknown application defined event type %d.\n", xe->u.u.type);
     }
-}
-
-
-/*
- * QuartzGiveUp
- *  Cleanup before X server shutdown
- *  Release the screen and restore the Aqua cursor.
- */
-void QuartzGiveUp(void)
-{
-#if 0
-// Trying to switch cursors when quitting causes deadlock
-    int i;
-
-    for (i = 0; i < screenInfo.numScreens; i++) {
-        if (screenInfo.screens[i]) {
-            QuartzSuspendXCursor(screenInfo.screens[i]);
-        }
-    }
-#endif
-
-    if (!quartzRootless)
-        quartzProcs->ReleaseScreens();
 }

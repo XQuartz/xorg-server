@@ -150,9 +150,9 @@ void
 DarwinPrintBanner(void)
 { 
   // this should change depending on which specific server we are building
-  ErrorF("X11.app starting:\n");
+  ErrorF("XQuartz starting:\n");
   ErrorF("X.org Release 7.2\n"); // This is here to help fink until they fix their packages.
-  ErrorF("X.Org Xquartz X Server %s\nBuild Date: %s\n", XSERVER_VERSION, BUILD_DATE );
+  ErrorF("X.Org X Server %s\nBuild Date: %s\n", XSERVER_VERSION, BUILD_DATE );
 }
 
 

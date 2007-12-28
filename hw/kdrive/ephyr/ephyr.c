@@ -394,6 +394,7 @@ ephyrUnsetInternalDamage (ScreenPtr pScreen)
   
   pPixmap = (*pScreen->GetScreenPixmap) (pScreen);
   DamageUnregister (&pPixmap->drawable, scrpriv->pDamage);
+  DamageDestroy (scrpriv->pDamage);
   
   RemoveBlockAndWakeupHandlers (ephyrInternalDamageBlockHandler,
 				ephyrInternalDamageWakeupHandler,

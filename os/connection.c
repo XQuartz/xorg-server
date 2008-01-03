@@ -354,7 +354,8 @@ InitConnectionLimits(void)
 #endif
 
 #if !defined(WIN32)
-    ConnectionTranslation = (int *)xnfalloc(sizeof(int)*(lastfdesc + 1));
+    if (!ConnectionTranslation)
+        ConnectionTranslation = (int *)xnfalloc(sizeof(int)*(lastfdesc + 1));
 #else
     InitConnectionTranslation();
 #endif

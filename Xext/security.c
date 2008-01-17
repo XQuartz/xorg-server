@@ -1563,7 +1563,7 @@ SecurityLoadPropertyAccessList(void)
     if (!SecurityPolicyFile)
 	return;
 
-    f = fopen(SecurityPolicyFile, "r");
+    f = Fopen(SecurityPolicyFile, "r");
     if (!f)
     {
 	ErrorF("error opening security policy file %s\n",
@@ -1646,7 +1646,7 @@ SecurityLoadPropertyAccessList(void)
     }
 #endif /* PROPDEBUG */
 
-    fclose(f);
+    Fclose(f);
 } /* SecurityLoadPropertyAccessList */
 
 

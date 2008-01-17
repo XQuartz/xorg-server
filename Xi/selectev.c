@@ -84,19 +84,16 @@ int
 SProcXSelectExtensionEvent(register ClientPtr client)
 {
     register char n;
-    register long *p;
-    register int i;
 
     REQUEST(xSelectExtensionEventReq);
     swaps(&stuff->length, n);
     REQUEST_AT_LEAST_SIZE(xSelectExtensionEventReq);
     swapl(&stuff->window, n);
     swaps(&stuff->count, n);
-    p = (long *)&stuff[1];
-    for (i = 0; i < stuff->count; i++) {
-	swapl(p, n);
-	p++;
-    }
+    REQUEST_FIXED_SIZE(xSelectExtensionEventReq,
+                      stuff->count * sizeof(CARD32));
+    SwapLongs((CARD32 *) (&stuff[1]), stuff->count);
+
     return (ProcXSelectExtensionEvent(client));
 }
 

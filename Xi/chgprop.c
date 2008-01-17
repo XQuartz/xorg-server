@@ -81,19 +81,15 @@ int
 SProcXChangeDeviceDontPropagateList(register ClientPtr client)
 {
     register char n;
-    register long *p;
-    register int i;
 
     REQUEST(xChangeDeviceDontPropagateListReq);
     swaps(&stuff->length, n);
     REQUEST_AT_LEAST_SIZE(xChangeDeviceDontPropagateListReq);
     swapl(&stuff->window, n);
     swaps(&stuff->count, n);
-    p = (long *)&stuff[1];
-    for (i = 0; i < stuff->count; i++) {
-	swapl(p, n);
-	p++;
-    }
+    REQUEST_FIXED_SIZE(xChangeDeviceDontPropagateListReq,
+                      stuff->count * sizeof(CARD32));
+    SwapLongs((CARD32 *) (&stuff[1]), stuff->count);
     return (ProcXChangeDeviceDontPropagateList(client));
 }
 

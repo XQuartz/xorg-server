@@ -83,7 +83,7 @@ int
 SProcXSendExtensionEvent(register ClientPtr client)
 {
     register char n;
-    register long *p;
+    register CARD32 *p;
     register int i;
     xEvent eventT;
     xEvent *eventP;
@@ -94,6 +94,11 @@ SProcXSendExtensionEvent(register ClientPtr client)
     REQUEST_AT_LEAST_SIZE(xSendExtensionEventReq);
     swapl(&stuff->destination, n);
     swaps(&stuff->count, n);
+
+    if (stuff->length != (sizeof(xSendExtensionEventReq) >> 2) + stuff->count +
+       (stuff->num_events * (sizeof(xEvent) >> 2)))
+       return BadLength;
+
     eventP = (xEvent *) & stuff[1];
     for (i = 0; i < stuff->num_events; i++, eventP++) {
 	proc = EventSwapVector[eventP->u.u.type & 0177];
@@ -103,11 +108,8 @@ SProcXSendExtensionEvent(register ClientPtr client)
 	*eventP = eventT;
     }
 
-    p = (long *)(((xEvent *) & stuff[1]) + stuff->num_events);
-    for (i = 0; i < stuff->count; i++) {
-	swapl(p, n);
-	p++;
-    }
+    p = (CARD32 *)(((xEvent *) & stuff[1]) + stuff->num_events);
+    SwapLongs(p, stuff->count);
     return (ProcXSendExtensionEvent(client));
 }
 

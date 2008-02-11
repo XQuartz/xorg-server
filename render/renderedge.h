@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Copyright © 2004 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -50,20 +48,7 @@
  * and can be quickly stepped across small or large gaps in the
  * sample grid
  */
-
-typedef struct {
-    xFixed   x;
-    xFixed   e;
-    xFixed   stepx;
-    xFixed   signdx;
-    xFixed   dy;
-    xFixed   dx;
-
-    xFixed   stepx_small;
-    xFixed   stepx_big;
-    xFixed   dx_small;
-    xFixed   dx_big;
-} RenderEdge;
+typedef pixman_edge_t RenderEdge;
 
 /*
  * Step across a small sample grid gap

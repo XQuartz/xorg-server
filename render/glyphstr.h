@@ -25,7 +25,6 @@
 #ifndef _GLYPHSTR_H_
 #define _GLYPHSTR_H_
 
-#include <X11/Xdefs.h>
 #include <X11/extensions/renderproto.h>
 #include "picture.h"
 #include "screenint.h"
@@ -91,8 +90,6 @@ typedef struct _GlyphList {
     CARD8	    len;
     PictFormatPtr   format;
 } GlyphListRec, *GlyphListPtr;
-
-extern GlyphHashRec	globalGlyphs[GlyphFormatNum];
 
 GlyphHashSetPtr
 FindGlyphHashSet (CARD32 filled);

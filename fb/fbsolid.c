@@ -1,6 +1,4 @@
 /*
- * $XFree86$
- *
  * Copyright © 1998 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -70,12 +68,12 @@ fbSolid (FbBits	    *dst,
 	n = nmiddle;
 	if (!and)
 	    while (n--)
-		*dst++ = xor;
+		WRITE(dst++, xor);
 	else
 	    while (n--)
 	    {
-		*dst = FbDoRRop (*dst, and, xor);
-		dst++;
+		WRITE(dst, FbDoRRop (READ(dst), and, xor));
+                dst++;
 	    }
 	if (endmask)
 	    FbDoRightMaskByteRRop(dst,endbyte,endmask,and,xor);
@@ -160,26 +158,26 @@ fbSolid24 (FbBits   *dst,
     {
 	if (startmask)
 	{
-	    *dst = FbDoMaskRRop(*dst, andS, xorS, startmask);
-	    dst++;
+	    WRITE(dst, FbDoMaskRRop(READ(dst), andS, xorS, startmask));
+            dst++;
 	}
 	n = nmiddle;
 	if (!and0)
 	{
 	    while (n >= 3)
 	    {
-		*dst++ = xor0;
-		*dst++ = xor1;
-		*dst++ = xor2;
+		WRITE(dst++, xor0);
+		WRITE(dst++, xor1);
+		WRITE(dst++, xor2);
 		n -= 3;
 	    }
 	    if (n)
 	    {
-		*dst++ = xor0;
+		WRITE(dst++, xor0);
 		n--;
 		if (n)
 		{
-		    *dst++ = xor1;
+		    WRITE(dst++, xor1);
 		}
 	    }
 	}
@@ -187,28 +185,28 @@ fbSolid24 (FbBits   *dst,
 	{
 	    while (n >= 3)
 	    {
-		*dst = FbDoRRop (*dst, and0, xor0);
-		dst++;
-		*dst = FbDoRRop (*dst, and1, xor1);
-		dst++;
-		*dst = FbDoRRop (*dst, and2, xor2);
-		dst++;
+		WRITE(dst, FbDoRRop (READ(dst), and0, xor0));
+                dst++;
+		WRITE(dst, FbDoRRop (READ(dst), and1, xor1));
+                dst++;
+		WRITE(dst, FbDoRRop (READ(dst), and2, xor2));
+                dst++;
 		n -= 3;
 	    }
 	    if (n)
 	    {
-		*dst = FbDoRRop (*dst, and0, xor0);
-		dst++;
+		WRITE(dst, FbDoRRop (READ(dst), and0, xor0));
+                dst++;
 		n--;
 		if (n)
 		{
-		    *dst = FbDoRRop (*dst, and1, xor1);
-		    dst++;
+		    WRITE(dst, FbDoRRop (READ(dst), and1, xor1));
+                    dst++;
 		}
 	    }
 	}
 	if (endmask)
-	    *dst = FbDoMaskRRop (*dst, andE, xorE, endmask);
+	    WRITE(dst, FbDoMaskRRop (READ(dst), andE, xorE, endmask));
 	dst += dstStride;
     }
 }

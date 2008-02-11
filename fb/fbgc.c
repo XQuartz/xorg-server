@@ -1,6 +1,4 @@
 /*
- * Id: fbgc.c,v 1.1 1999/11/02 03:54:45 keithp Exp $
- *
  * Copyright © 1998 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -106,16 +104,18 @@ fbPadPixmap (PixmapPtr pPixmap)
     mask = FbBitsMask (0, width);
     while (height--)
     {
-	b = *bits & mask;
+	b = READ(bits) & mask;
 	w = width;
 	while (w < FB_UNIT)
 	{
 	    b = b | FbScrRight(b, w);
 	    w <<= 1;
 	}
-	*bits = b;
+	WRITE(bits, b);
 	bits += stride;
     }
+
+    fbFinishAccess (&pPixmap->drawable);
 }
 
 /*
@@ -153,7 +153,7 @@ fbLineRepeat (FbBits *bits, int len, int width)
     width = (width + FB_UNIT-1) >> FB_SHIFT;
     bits++;
     while (--width)
-	if (*bits != first)
+	if (READ(bits) != first)
 	    return FALSE;
     return TRUE;
 }
@@ -183,10 +183,13 @@ fbCanEvenStipple (PixmapPtr pStipple, int bpp)
     /* check to see that the stipple repeats horizontally */
     while (h--)
     {
-	if (!fbLineRepeat (bits, len, pStipple->drawable.width))
+	if (!fbLineRepeat (bits, len, pStipple->drawable.width)) {
+	    fbFinishAccess (&pStipple->drawable);
 	    return FALSE;
+	}
 	bits += stride;
     }
+    fbFinishAccess (&pStipple->drawable);
     return TRUE;
 }
 

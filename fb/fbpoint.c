@@ -1,6 +1,4 @@
 /*
- * Id: fbpoint.c,v 1.1 1999/11/02 03:54:45 keithp Exp $
- *
  * Copyright © 1998 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -90,20 +88,20 @@ fbDots (FbBits	    *dstOrig,
 		FbMaskStip (x, 24, leftMask, n, rightMask);
 		if (leftMask)
 		{
-		    *d = FbDoMaskRRop (*d, andT, xorT, leftMask);
+		    WRITE(d, FbDoMaskRRop (READ(d), andT, xorT, leftMask));
 		    andT = FbNext24Stip(andT);
 		    xorT = FbNext24Stip(xorT);
 		    d++;
 		}
 		if (rightMask)
-		    *d = FbDoMaskRRop(*d, andT, xorT, rightMask);
+		    WRITE(d, FbDoMaskRRop(READ(d), andT, xorT, rightMask));
 	    }
 	    else
 #endif
 	    {
 		FbStip	mask;
 		mask = FbStipMask(x, dstBpp);
-		*d = FbDoMaskRRop (*d, and, xor, mask);
+		WRITE(d, FbDoMaskRRop (READ(d), and, xor, mask));
 	    }
 	}
     }
@@ -160,4 +158,5 @@ fbPolyPoint (DrawablePtr    pDrawable,
 	 nBox--; pBox++)
 	(*dots) (dst, dstStride, dstBpp, pBox, pptInit, nptInit, 
 		 pDrawable->x, pDrawable->y, dstXoff, dstYoff, and, xor);
+    fbFinishAccess (pDrawable);
 }

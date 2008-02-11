@@ -1,6 +1,4 @@
 /*
- * Id: fbstipple.c,v 1.1 1999/11/02 03:54:45 keithp Exp $
- *
  * Copyright © 1998 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -155,7 +153,7 @@ fbEvenStipple (FbBits	*dst,
 	/*
 	 * Extract stipple bits for this scanline;
 	 */
-	bits = *s;
+	bits = READ(s);
 	s += stipStride;
 	if (s == stipEnd)
 	    s = stip;
@@ -199,12 +197,12 @@ fbEvenStipple (FbBits	*dst,
 	    n = nmiddle;
 	    if (!and)
 		while (n--)
-		    *dst++ = xor;
+		    WRITE(dst++, xor);
 	    else
 	    {
 		while (n--)
 		{
-		    *dst = FbDoRRop (*dst, and, xor);
+		    WRITE(dst, FbDoRRop (READ(dst), and, xor));
 		    dst++;
 		}
 	    }

@@ -1,4 +1,4 @@
-noinst_LTLIBRARIES = libfb.la libfbmmx.la
+noinst_LTLIBRARIES = libfb.la libwfb.la
 
 INCLUDES = \
 	-I$(top_srcdir)/hw/xfree86/os-support \
@@ -7,25 +7,12 @@ INCLUDES = \
 AM_CFLAGS = $(DIX_CFLAGS)
 
 if XORG
-sdk_HEADERS = fb.h fbrop.h fbpseudocolor.h fboverlay.h
+sdk_HEADERS = fb.h fbrop.h fbpseudocolor.h fboverlay.h wfbrename.h
 endif
 
-if MMX_CAPABLE
-AM_CFLAGS += -DUSE_MMX
+libfb_la_CFLAGS = $(AM_CFLAGS)
 
-libfbmmx_la_CFLAGS =				\
-	$(DIX_CFLAGS)				\
-	-DUSE_MMX				\
-	-mmmx					\
-	-msse					\
-	-Winline				\
-	--param inline-unit-growth=10000	\
-        --param large-function-growth=10000
-endif
-
-libfbmmx_la_SOURCES =	\
-	fbmmx.c		\
-	fbmmx.h
+libwfb_la_CFLAGS = $(AM_CFLAGS) -DFB_ACCESS_WRAPPER
 
 libfb_la_SOURCES = 	\
 	fb.h		\
@@ -38,7 +25,6 @@ libfb_la_SOURCES = 	\
 	fbblt.c		\
 	fbbltone.c	\
 	fbbstore.c	\
-	fbcompose.c	\
 	fbcopy.c	\
 	fbfill.c	\
 	fbfillrect.c	\
@@ -66,10 +52,8 @@ libfb_la_SOURCES = 	\
 	fbutil.c	\
 	fbwindow.c	\
 	fbpseudocolor.c \
-	fbpseudocolor.h \
-	fbedge.c	\
-	fbedgeimp.h
+	fbpseudocolor.h
 
-libfb_la_LIBADD = libfbmmx.la
+libwfb_la_SOURCES = $(libfb_la_SOURCES)
 
-EXTRA_DIST = fbcmap.c
+EXTRA_DIST = fbcmap.c fbcmap_mi.c

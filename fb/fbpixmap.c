@@ -1,6 +1,4 @@
 /*
- * Id: fbpixmap.c,v 1.1 1999/11/02 03:54:45 keithp Exp $
- *
  * Copyright © 1998 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -43,11 +41,7 @@ fbCreatePixmapBpp (ScreenPtr pScreen, int width, int height, int depth, int bpp)
     if (paddedWidth / 4 > 32767 || height > 32767)
 	return NullPixmap;
     datasize = height * paddedWidth;
-#ifdef PIXPRIV
     base = pScreen->totalPixmapSize;
-#else
-    base = sizeof (PixmapRec);
-#endif
     adjust = 0;
     if (base & 7)
 	adjust = 8 - (base & 7);
@@ -160,6 +154,8 @@ fbPixmapToRegion(PixmapPtr pPix)
     FirstRect = REGION_BOXPTR(pReg);
     rects = FirstRect;
 
+    fbPrepareAccess(&pPix->drawable);
+
     pwLine = (FbBits *) pPix->devPrivate.ptr;
     nWidth = pPix->devKind >> (FB_SHIFT-3);
 
@@ -174,7 +170,7 @@ fbPixmapToRegion(PixmapPtr pPix)
 	irectLineStart = rects - FirstRect;
 	/* If the Screen left most bit of the word is set, we're starting in
 	 * a box */
-	if(*pw & mask0)
+	if(READ(pw) & mask0)
 	{
 	    fInBox = TRUE;
 	    rx1 = 0;
@@ -185,7 +181,7 @@ fbPixmapToRegion(PixmapPtr pPix)
 	pwLineEnd = pw + (width >> FB_SHIFT);
 	for (base = 0; pw < pwLineEnd; base += FB_UNIT)
 	{
-	    w = *pw++;
+	    w = READ(pw++);
 	    if (fInBox)
 	    {
 		if (!~w)
@@ -226,7 +222,7 @@ fbPixmapToRegion(PixmapPtr pPix)
 	if(width & FB_MASK)
 	{
 	    /* Process final partial word on line */
-	    w = *pw++;
+	    w = READ(pw++);
 	    for(ib = 0; ib < (width & FB_MASK); ib++)
 	    {
 	        /* If the Screen left most bit of the word is set, we're
@@ -311,20 +307,13 @@ fbPixmapToRegion(PixmapPtr pPix)
 	    pReg->data = (RegDataPtr)NULL;
 	}
     }
+
+    fbFinishAccess(&pPix->drawable);
 #ifdef DEBUG
     if (!miValidRegion(pReg))
 	FatalError("Assertion failed file %s, line %d: expr\n", __FILE__, __LINE__);
 #endif
     return(pReg);
-}
-
-int fb_null_pointer(char *file, unsigned int line) {
-  ErrorF("%s:%u: null pointer (break on fb_null_pointer to debug)\n", file, line);
-#ifdef FB_DEBUG
-  return 0; // ignore error, die horrible death
-#else
-  return 1; // harmlessly return to caller, hope we don't crash later
-#endif
 }
 
 #ifdef FB_DEBUG
@@ -366,14 +355,12 @@ fbValidateDrawable (DrawablePtr pDrawable)
     if (pDrawable->type != DRAWABLE_PIXMAP)
 	pDrawable = (DrawablePtr) fbGetWindowPixmap(pDrawable);
     fbGetStipDrawable(pDrawable, bits, stride, bpp, xoff, yoff);
-#ifdef __APPLE__
-    if (bits >= 0xb0000000) return; // don't validate CG memory
-#endif
     first = bits - stride;
     last = bits + stride * pDrawable->height;
     if (!fbValidateBits (first, stride, FB_HEAD_BITS) ||
 	!fbValidateBits (last, stride, FB_TAIL_BITS))
 	fbInitializeDrawable(pDrawable);
+    fbFinishAccess (pDrawable);
 }
 
 void
@@ -395,5 +382,6 @@ fbInitializeDrawable (DrawablePtr pDrawable)
     last = bits + stride * pDrawable->height;
     fbSetBits (first, stride, FB_HEAD_BITS);
     fbSetBits (last, stride, FB_TAIL_BITS);
+    fbFinishAccess (pDrawable);
 }
 #endif /* FB_DEBUG */

@@ -1,6 +1,4 @@
 /*
- * Id: fbimage.c,v 1.1 1999/11/02 03:54:45 keithp Exp $
- *
  * Copyright © 1998 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -170,6 +168,8 @@ fbPutZImage (DrawablePtr	pDrawable,
 		   pm,
 		   dstBpp);
     }
+
+    fbFinishAccess (pDrawable);
 }
 	     
 void
@@ -277,6 +277,8 @@ fbPutXYImage (DrawablePtr	pDrawable,
 		      fgand, fgxor, bgand, bgxor);
 	}
     }
+
+    fbFinishAccess (pDrawable);
 }
 
 void
@@ -361,4 +363,6 @@ fbGetImage (DrawablePtr	    pDrawable,
 		    fbXorStip(GXcopy,0,FB_STIP_ALLONES),
 		    planeMask);
     }
+
+    fbFinishAccess (pDrawable);
 }

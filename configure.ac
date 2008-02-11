@@ -604,9 +604,13 @@ XEXT_INC='-I$(top_srcdir)/Xext'
 XEXT_LIB='$(top_builddir)/Xext/libXext.la'
 XEXTXORG_LIB='$(top_builddir)/Xext/libXextbuiltin.la'
 
+PIXMAN="[pixman-1 >= 0.9.5]"
+PKG_CHECK_MODULES(PIXMAN, $PIXMAN)
+AC_SUBST(PIXMAN_CFLAGS)
+
 dnl Core modules for most extensions, et al.
 REQUIRED_MODULES="[randrproto >= 1.2] renderproto [fixesproto >= 4.0] [damageproto >= 1.1] xcmiscproto xextproto xproto xtrans xf86miscproto xf86vidmodeproto [scrnsaverproto >= 1.1] bigreqsproto resourceproto fontsproto inputproto xf86dgaproto [kbproto >= 1.0.3]"
-REQUIRED_LIBS="xfont xau fontenc"
+REQUIRED_LIBS="xfont xau fontenc $PIXMAN"
 
 AM_CONDITIONAL(XV, [test "x$XV" = xyes])
 if test "x$XV" = xyes; then
@@ -1028,7 +1032,7 @@ dnl ---------------------------------------------------------------------------
 dnl DMX DDX
 
 AC_MSG_CHECKING([whether to build Xdmx DDX])
-PKG_CHECK_MODULES([DMXMODULES], [xmuu xext x11 xrender xfixes xfont xi dmxproto xau $XDMCP_MODULES], [have_dmx=yes], [have_dmx=no])
+PKG_CHECK_MODULES([DMXMODULES], [xmuu xext x11 xrender xfixes xfont xi dmxproto xau $XDMCP_MODULES $PIXMAN], [have_dmx=yes], [have_dmx=no])
 if test "x$DMX" = xauto; then
 	DMX="$have_dmx"
 fi
@@ -1498,7 +1502,7 @@ AC_MSG_CHECKING([whether to build Xprint DDX])
 AC_MSG_RESULT([$XPRINT])
 
 if test "x$XPRINT" = xyes; then
-	PKG_CHECK_MODULES([XPRINT], [printproto x11 xfont $XDMCP_MODULES xau])
+	PKG_CHECK_MODULES([XPRINT], [printproto x11 xfont $XDMCP_MODULES xau $PIXMAN])
 	XPRINT_EXTENSIONS="$XEXT_LIB $DBE_LIB $XTRAP_LIB $RECORD_LIB $RENDER_LIB $COMPOSITE_LIB $RANDR_LIB $XI_LIB $FIXES_LIB $DAMAGE_LIB $XI_LIB $GLX_LIBS"
 	XPRINT_LIBS="$DIX_LIB $XPRINT_LIBS $XKB_LIB $XKB_STUB_LIB $XPRINT_EXTENSIONS $MI_LIB $MIEXT_DAMAGE_LIB $CWRAP_LIB $OS_LIB"
 	AC_SUBST([XPRINT_CFLAGS])
@@ -1852,6 +1856,7 @@ AC_ARG_ENABLE(xorgcfg, AS_HELP_STRING([--enable-xorgcfg],
 if test x$XORGCFG = xyes ; then
 	PKG_CHECK_MODULES([XORGCFG_DEP], 
 	    [xkbui >= 1.0.2 xkbfile xxf86misc xxf86vm xaw7 xmu xt xpm xext x11])
+	XORGCFG_DEP_CFLAGS="$XORGCFG_DEP_CFLAGS $PIXMAN_CFLAGS"
 	AC_CHECK_LIB([curses],[waddstr],
 	    [XORGCFG_DEP_LIBS="$XORGCFG_DEP_LIBS -lcurses"; CURSES=yes],
 	    AC_CHECK_LIB([ncurses],[waddstr],

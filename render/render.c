@@ -560,7 +560,7 @@ ProcRenderQueryPictIndexValues (ClientPtr client)
     pFormat = (PictFormatPtr) SecurityLookupIDByType (client, 
 						      stuff->format,
 						      PictFormatType,
-						      DixReadAccess);
+						      SecurityReadAccess);
 
     if (!pFormat)
     {
@@ -627,14 +627,14 @@ ProcRenderCreatePicture (ClientPtr client)
 
     LEGAL_NEW_RESOURCE(stuff->pid, client);
     rc = dixLookupDrawable(&pDrawable, stuff->drawable, client, 0,
-			   DixWriteAccess);
+			   SecurityWriteAccess);
     if (rc != Success)
 	return rc;
 
     pFormat = (PictFormatPtr) SecurityLookupIDByType (client, 
 						      stuff->format,
 						      PictFormatType,
-						      DixReadAccess);
+						      SecurityReadAccess);
     if (!pFormat)
     {
 	client->errorValue = stuff->format;
@@ -668,7 +668,7 @@ ProcRenderChangePicture (ClientPtr client)
     int len;
 
     REQUEST_AT_LEAST_SIZE(xRenderChangePictureReq);
-    VERIFY_PICTURE (pPicture, stuff->picture, client, DixWriteAccess,
+    VERIFY_PICTURE (pPicture, stuff->picture, client, SecurityWriteAccess,
 		    RenderErrBase + BadPicture);
 
     len = client->req_len - (sizeof(xRenderChangePictureReq) >> 2);
@@ -688,7 +688,7 @@ ProcRenderSetPictureClipRectangles (ClientPtr client)
     int		    result;
 
     REQUEST_AT_LEAST_SIZE(xRenderSetPictureClipRectanglesReq);
-    VERIFY_PICTURE (pPicture, stuff->picture, client, DixWriteAccess,
+    VERIFY_PICTURE (pPicture, stuff->picture, client, SecurityWriteAccess,
 		    RenderErrBase + BadPicture);
     if (!pPicture->pDrawable)
         return BadDrawable;
@@ -714,7 +714,7 @@ ProcRenderFreePicture (ClientPtr client)
 
     REQUEST_SIZE_MATCH(xRenderFreePictureReq);
 
-    VERIFY_PICTURE (pPicture, stuff->picture, client, DixDestroyAccess,
+    VERIFY_PICTURE (pPicture, stuff->picture, client, SecurityDestroyAccess,
 		    RenderErrBase + BadPicture);
     FreeResource (stuff->picture, RT_NONE);
     return(client->noClientException);
@@ -744,13 +744,13 @@ ProcRenderComposite (ClientPtr client)
 	client->errorValue = stuff->op;
 	return BadValue;
     }
-    VERIFY_PICTURE (pDst, stuff->dst, client, DixWriteAccess,
+    VERIFY_PICTURE (pDst, stuff->dst, client, SecurityWriteAccess,
 		    RenderErrBase + BadPicture);
     if (!pDst->pDrawable)
         return BadDrawable;
-    VERIFY_PICTURE (pSrc, stuff->src, client, DixReadAccess, 
+    VERIFY_PICTURE (pSrc, stuff->src, client, SecurityReadAccess, 
 		    RenderErrBase + BadPicture);
-    VERIFY_ALPHA (pMask, stuff->mask, client, DixReadAccess, 
+    VERIFY_ALPHA (pMask, stuff->mask, client, SecurityReadAccess, 
 		  RenderErrBase + BadPicture);
     if ((pSrc->pDrawable && pSrc->pDrawable->pScreen != pDst->pDrawable->pScreen) ||
 	(pMask && pMask->pDrawable && pDst->pDrawable->pScreen != pMask->pDrawable->pScreen))
@@ -790,9 +790,9 @@ ProcRenderTrapezoids (ClientPtr client)
 	client->errorValue = stuff->op;
 	return BadValue;
     }
-    VERIFY_PICTURE (pSrc, stuff->src, client, DixReadAccess, 
+    VERIFY_PICTURE (pSrc, stuff->src, client, SecurityReadAccess, 
 		    RenderErrBase + BadPicture);
-    VERIFY_PICTURE (pDst, stuff->dst, client, DixWriteAccess, 
+    VERIFY_PICTURE (pDst, stuff->dst, client, SecurityWriteAccess, 
 		    RenderErrBase + BadPicture);
     if (!pDst->pDrawable)
         return BadDrawable;
@@ -803,7 +803,7 @@ ProcRenderTrapezoids (ClientPtr client)
 	pFormat = (PictFormatPtr) SecurityLookupIDByType (client,
 							  stuff->maskFormat,
 							  PictFormatType,
-							  DixReadAccess);
+							  SecurityReadAccess);
 	if (!pFormat)
 	{
 	    client->errorValue = stuff->maskFormat;
@@ -837,9 +837,9 @@ ProcRenderTriangles (ClientPtr client)
 	client->errorValue = stuff->op;
 	return BadValue;
     }
-    VERIFY_PICTURE (pSrc, stuff->src, client, DixReadAccess, 
+    VERIFY_PICTURE (pSrc, stuff->src, client, SecurityReadAccess, 
 		    RenderErrBase + BadPicture);
-    VERIFY_PICTURE (pDst, stuff->dst, client, DixWriteAccess, 
+    VERIFY_PICTURE (pDst, stuff->dst, client, SecurityWriteAccess, 
 		    RenderErrBase + BadPicture);
     if (!pDst->pDrawable)
         return BadDrawable;
@@ -850,7 +850,7 @@ ProcRenderTriangles (ClientPtr client)
 	pFormat = (PictFormatPtr) SecurityLookupIDByType (client,
 							  stuff->maskFormat,
 							  PictFormatType,
-							  DixReadAccess);
+							  SecurityReadAccess);
 	if (!pFormat)
 	{
 	    client->errorValue = stuff->maskFormat;
@@ -884,9 +884,9 @@ ProcRenderTriStrip (ClientPtr client)
 	client->errorValue = stuff->op;
 	return BadValue;
     }
-    VERIFY_PICTURE (pSrc, stuff->src, client, DixReadAccess, 
+    VERIFY_PICTURE (pSrc, stuff->src, client, SecurityReadAccess, 
 		    RenderErrBase + BadPicture);
-    VERIFY_PICTURE (pDst, stuff->dst, client, DixWriteAccess, 
+    VERIFY_PICTURE (pDst, stuff->dst, client, SecurityWriteAccess, 
 		    RenderErrBase + BadPicture);
     if (!pDst->pDrawable)
         return BadDrawable;
@@ -897,7 +897,7 @@ ProcRenderTriStrip (ClientPtr client)
 	pFormat = (PictFormatPtr) SecurityLookupIDByType (client,
 							  stuff->maskFormat,
 							  PictFormatType,
-							  DixReadAccess);
+							  SecurityReadAccess);
 	if (!pFormat)
 	{
 	    client->errorValue = stuff->maskFormat;
@@ -931,9 +931,9 @@ ProcRenderTriFan (ClientPtr client)
 	client->errorValue = stuff->op;
 	return BadValue;
     }
-    VERIFY_PICTURE (pSrc, stuff->src, client, DixReadAccess, 
+    VERIFY_PICTURE (pSrc, stuff->src, client, SecurityReadAccess, 
 		    RenderErrBase + BadPicture);
-    VERIFY_PICTURE (pDst, stuff->dst, client, DixWriteAccess, 
+    VERIFY_PICTURE (pDst, stuff->dst, client, SecurityWriteAccess, 
 		    RenderErrBase + BadPicture);
     if (!pDst->pDrawable)
         return BadDrawable;
@@ -944,7 +944,7 @@ ProcRenderTriFan (ClientPtr client)
 	pFormat = (PictFormatPtr) SecurityLookupIDByType (client,
 							  stuff->maskFormat,
 							  PictFormatType,
-							  DixReadAccess);
+							  SecurityReadAccess);
 	if (!pFormat)
 	{
 	    client->errorValue = stuff->maskFormat;
@@ -996,7 +996,7 @@ ProcRenderCreateGlyphSet (ClientPtr client)
     format = (PictFormatPtr) SecurityLookupIDByType (client,
 						     stuff->format,
 						     PictFormatType,
-						     DixReadAccess);
+						     SecurityReadAccess);
     if (!format)
     {
 	client->errorValue = stuff->format;
@@ -1044,7 +1044,7 @@ ProcRenderReferenceGlyphSet (ClientPtr client)
     glyphSet = (GlyphSetPtr) SecurityLookupIDByType (client,
 						     stuff->existing,
 						     GlyphSetType,
-						     DixWriteAccess);
+						     SecurityWriteAccess);
     if (!glyphSet)
     {
 	client->errorValue = stuff->existing;
@@ -1069,7 +1069,7 @@ ProcRenderFreeGlyphSet (ClientPtr client)
     glyphSet = (GlyphSetPtr) SecurityLookupIDByType (client,
 						     stuff->glyphset,
 						     GlyphSetType,
-						     DixDestroyAccess);
+						     SecurityDestroyAccess);
     if (!glyphSet)
     {
 	client->errorValue = stuff->glyphset;
@@ -1103,7 +1103,7 @@ ProcRenderAddGlyphs (ClientPtr client)
     glyphSet = (GlyphSetPtr) SecurityLookupIDByType (client,
 						     stuff->glyphset,
 						     GlyphSetType,
-						     DixWriteAccess);
+						     SecurityWriteAccess);
     if (!glyphSet)
     {
 	client->errorValue = stuff->glyphset;
@@ -1207,7 +1207,7 @@ ProcRenderFreeGlyphs (ClientPtr client)
     glyphSet = (GlyphSetPtr) SecurityLookupIDByType (client,
 						     stuff->glyphset,
 						     GlyphSetType,
-						     DixWriteAccess);
+						     SecurityWriteAccess);
     if (!glyphSet)
     {
 	client->errorValue = stuff->glyphset;
@@ -1262,9 +1262,9 @@ ProcRenderCompositeGlyphs (ClientPtr client)
 	client->errorValue = stuff->op;
 	return BadValue;
     }
-    VERIFY_PICTURE (pSrc, stuff->src, client, DixReadAccess,
+    VERIFY_PICTURE (pSrc, stuff->src, client, SecurityReadAccess,
 		    RenderErrBase + BadPicture);
-    VERIFY_PICTURE (pDst, stuff->dst, client, DixWriteAccess,
+    VERIFY_PICTURE (pDst, stuff->dst, client, SecurityWriteAccess,
 		    RenderErrBase + BadPicture);
     if (!pDst->pDrawable)
         return BadDrawable;
@@ -1275,7 +1275,7 @@ ProcRenderCompositeGlyphs (ClientPtr client)
 	pFormat = (PictFormatPtr) SecurityLookupIDByType (client,
 							  stuff->maskFormat,
 							  PictFormatType,
-							  DixReadAccess);
+							  SecurityReadAccess);
 	if (!pFormat)
 	{
 	    client->errorValue = stuff->maskFormat;
@@ -1288,7 +1288,7 @@ ProcRenderCompositeGlyphs (ClientPtr client)
     glyphSet = (GlyphSetPtr) SecurityLookupIDByType (client,
 						     stuff->glyphset,
 						     GlyphSetType,
-						     DixReadAccess);
+						     SecurityReadAccess);
     if (!glyphSet)
     {
 	client->errorValue = stuff->glyphset;
@@ -1350,7 +1350,7 @@ ProcRenderCompositeGlyphs (ClientPtr client)
 		glyphSet = (GlyphSetPtr) SecurityLookupIDByType (client,
 								 gs,
 								 GlyphSetType,
-								 DixReadAccess);
+								 SecurityReadAccess);
 		if (!glyphSet)
 		{
 		    client->errorValue = gs;
@@ -1431,7 +1431,7 @@ ProcRenderFillRectangles (ClientPtr client)
 	client->errorValue = stuff->op;
 	return BadValue;
     }
-    VERIFY_PICTURE (pDst, stuff->dst, client, DixWriteAccess, 
+    VERIFY_PICTURE (pDst, stuff->dst, client, SecurityWriteAccess, 
 		    RenderErrBase + BadPicture);
     if (!pDst->pDrawable)
         return BadDrawable;
@@ -1497,7 +1497,7 @@ ProcRenderCreateCursor (ClientPtr client)
     REQUEST_SIZE_MATCH (xRenderCreateCursorReq);
     LEGAL_NEW_RESOURCE(stuff->cid, client);
     
-    VERIFY_PICTURE (pSrc, stuff->src, client, DixReadAccess, 
+    VERIFY_PICTURE (pSrc, stuff->src, client, SecurityReadAccess, 
 		    RenderErrBase + BadPicture);
     if (!pSrc->pDrawable)
         return BadDrawable;
@@ -1679,7 +1679,7 @@ ProcRenderSetPictureTransform (ClientPtr client)
     int		result;
 
     REQUEST_SIZE_MATCH(xRenderSetPictureTransformReq);
-    VERIFY_PICTURE (pPicture, stuff->picture, client, DixWriteAccess,
+    VERIFY_PICTURE (pPicture, stuff->picture, client, SecurityWriteAccess,
 		    RenderErrBase + BadPicture);
     result = SetPictureTransform (pPicture, (PictTransform *) &stuff->transform);
     if (client->noClientException != Success)
@@ -1704,7 +1704,7 @@ ProcRenderQueryFilters (ClientPtr client)
 
     REQUEST_SIZE_MATCH(xRenderQueryFiltersReq);
     rc = dixLookupDrawable(&pDrawable, stuff->drawable, client, 0,
-			   DixReadAccess);
+			   SecurityReadAccess);
     if (rc != Success)
 	return rc;
     
@@ -1809,7 +1809,7 @@ ProcRenderSetPictureFilter (ClientPtr client)
     char	*name;
     
     REQUEST_AT_LEAST_SIZE (xRenderSetPictureFilterReq);
-    VERIFY_PICTURE (pPicture, stuff->picture, client, DixWriteAccess,
+    VERIFY_PICTURE (pPicture, stuff->picture, client, SecurityWriteAccess,
 		    RenderErrBase + BadPicture);
     name = (char *) (stuff + 1);
     params = (xFixed *) (name + ((stuff->nbytes + 3) & ~3));
@@ -1843,7 +1843,7 @@ ProcRenderCreateAnimCursor (ClientPtr client)
     for (i = 0; i < ncursor; i++)
     {
 	cursors[i] = (CursorPtr)SecurityLookupIDByType(client, elt->cursor,
-						       RT_CURSOR, DixReadAccess);
+						       RT_CURSOR, SecurityReadAccess);
 	if (!cursors[i])
 	{
 	    xfree (cursors);
@@ -1871,7 +1871,7 @@ ProcRenderAddTraps (ClientPtr client)
     REQUEST(xRenderAddTrapsReq);
 
     REQUEST_AT_LEAST_SIZE(xRenderAddTrapsReq);
-    VERIFY_PICTURE (pPicture, stuff->picture, client, DixWriteAccess, 
+    VERIFY_PICTURE (pPicture, stuff->picture, client, SecurityWriteAccess, 
 		    RenderErrBase + BadPicture);
     if (!pPicture->pDrawable)
         return BadDrawable;
@@ -2628,7 +2628,7 @@ PanoramiXRenderCreatePicture (ClientPtr client)
 
     REQUEST_AT_LEAST_SIZE(xRenderCreatePictureReq);
     if(!(refDraw = (PanoramiXRes *)SecurityLookupIDByClass(
-		client, stuff->drawable, XRC_DRAWABLE, DixWriteAccess)))
+		client, stuff->drawable, XRC_DRAWABLE, SecurityWriteAccess)))
 	return BadDrawable;
     if(!(newPict = (PanoramiXRes *) xalloc(sizeof(PanoramiXRes))))
 	return BadAlloc;
@@ -2670,7 +2670,7 @@ PanoramiXRenderChangePicture (ClientPtr client)
 
     REQUEST_AT_LEAST_SIZE(xChangeWindowAttributesReq);
     
-    VERIFY_XIN_PICTURE(pict, stuff->picture, client, DixWriteAccess,
+    VERIFY_XIN_PICTURE(pict, stuff->picture, client, SecurityWriteAccess,
 		       RenderErrBase + BadPicture);
     
     FOR_NSCREENS_BACKWARD(j) {
@@ -2691,7 +2691,7 @@ PanoramiXRenderSetPictureClipRectangles (ClientPtr client)
 
     REQUEST_AT_LEAST_SIZE(xRenderSetPictureClipRectanglesReq);
     
-    VERIFY_XIN_PICTURE(pict, stuff->picture, client, DixWriteAccess,
+    VERIFY_XIN_PICTURE(pict, stuff->picture, client, SecurityWriteAccess,
 		       RenderErrBase + BadPicture);
     
     FOR_NSCREENS_BACKWARD(j) {
@@ -2712,7 +2712,7 @@ PanoramiXRenderSetPictureTransform (ClientPtr client)
 
     REQUEST_AT_LEAST_SIZE(xRenderSetPictureTransformReq);
     
-    VERIFY_XIN_PICTURE(pict, stuff->picture, client, DixWriteAccess,
+    VERIFY_XIN_PICTURE(pict, stuff->picture, client, SecurityWriteAccess,
 		       RenderErrBase + BadPicture);
     
     FOR_NSCREENS_BACKWARD(j) {
@@ -2733,7 +2733,7 @@ PanoramiXRenderSetPictureFilter (ClientPtr client)
 
     REQUEST_AT_LEAST_SIZE(xRenderSetPictureFilterReq);
     
-    VERIFY_XIN_PICTURE(pict, stuff->picture, client, DixWriteAccess,
+    VERIFY_XIN_PICTURE(pict, stuff->picture, client, SecurityWriteAccess,
 		       RenderErrBase + BadPicture);
     
     FOR_NSCREENS_BACKWARD(j) {
@@ -2756,7 +2756,7 @@ PanoramiXRenderFreePicture (ClientPtr client)
 
     client->errorValue = stuff->picture;
 
-    VERIFY_XIN_PICTURE(pict, stuff->picture, client, DixDestroyAccess,
+    VERIFY_XIN_PICTURE(pict, stuff->picture, client, SecurityDestroyAccess,
 		       RenderErrBase + BadPicture);
     
 
@@ -2782,11 +2782,11 @@ PanoramiXRenderComposite (ClientPtr client)
 
     REQUEST_SIZE_MATCH(xRenderCompositeReq);
     
-    VERIFY_XIN_PICTURE (src, stuff->src, client, DixReadAccess, 
+    VERIFY_XIN_PICTURE (src, stuff->src, client, SecurityReadAccess, 
 			RenderErrBase + BadPicture);
-    VERIFY_XIN_ALPHA (msk, stuff->mask, client, DixReadAccess, 
+    VERIFY_XIN_ALPHA (msk, stuff->mask, client, SecurityReadAccess, 
 		      RenderErrBase + BadPicture);
-    VERIFY_XIN_PICTURE (dst, stuff->dst, client, DixWriteAccess, 
+    VERIFY_XIN_PICTURE (dst, stuff->dst, client, SecurityWriteAccess, 
 			RenderErrBase + BadPicture);
     
     orig = *stuff;
@@ -2830,9 +2830,9 @@ PanoramiXRenderCompositeGlyphs (ClientPtr client)
     INT16	    xSrc, ySrc;
 
     REQUEST_AT_LEAST_SIZE(xRenderCompositeGlyphsReq);
-    VERIFY_XIN_PICTURE (src, stuff->src, client, DixReadAccess,
+    VERIFY_XIN_PICTURE (src, stuff->src, client, SecurityReadAccess,
 			RenderErrBase + BadPicture);
-    VERIFY_XIN_PICTURE (dst, stuff->dst, client, DixWriteAccess,
+    VERIFY_XIN_PICTURE (dst, stuff->dst, client, SecurityWriteAccess,
 			RenderErrBase + BadPicture);
 
     if (client->req_len << 2 >= (sizeof (xRenderCompositeGlyphsReq) +
@@ -2873,7 +2873,7 @@ PanoramiXRenderFillRectangles (ClientPtr client)
     int		    extra_len;
 
     REQUEST_AT_LEAST_SIZE (xRenderFillRectanglesReq);
-    VERIFY_XIN_PICTURE (dst, stuff->dst, client, DixWriteAccess, 
+    VERIFY_XIN_PICTURE (dst, stuff->dst, client, SecurityWriteAccess, 
 			RenderErrBase + BadPicture);
     extra_len = (client->req_len << 2) - sizeof (xRenderFillRectanglesReq);
     if (extra_len &&
@@ -2920,9 +2920,9 @@ PanoramiXRenderTrapezoids(ClientPtr client)
     
     REQUEST_AT_LEAST_SIZE (xRenderTrapezoidsReq);
     
-    VERIFY_XIN_PICTURE (src, stuff->src, client, DixReadAccess,
+    VERIFY_XIN_PICTURE (src, stuff->src, client, SecurityReadAccess,
 			RenderErrBase + BadPicture);
-    VERIFY_XIN_PICTURE (dst, stuff->dst, client, DixWriteAccess,
+    VERIFY_XIN_PICTURE (dst, stuff->dst, client, SecurityWriteAccess,
 			RenderErrBase + BadPicture);
 
     extra_len = (client->req_len << 2) - sizeof (xRenderTrapezoidsReq);
@@ -2982,9 +2982,9 @@ PanoramiXRenderTriangles(ClientPtr client)
     
     REQUEST_AT_LEAST_SIZE (xRenderTrianglesReq);
     
-    VERIFY_XIN_PICTURE (src, stuff->src, client, DixReadAccess,
+    VERIFY_XIN_PICTURE (src, stuff->src, client, SecurityReadAccess,
 			RenderErrBase + BadPicture);
-    VERIFY_XIN_PICTURE (dst, stuff->dst, client, DixWriteAccess,
+    VERIFY_XIN_PICTURE (dst, stuff->dst, client, SecurityWriteAccess,
 			RenderErrBase + BadPicture);
 
     extra_len = (client->req_len << 2) - sizeof (xRenderTrianglesReq);
@@ -3040,9 +3040,9 @@ PanoramiXRenderTriStrip(ClientPtr client)
     
     REQUEST_AT_LEAST_SIZE (xRenderTriStripReq);
     
-    VERIFY_XIN_PICTURE (src, stuff->src, client, DixReadAccess,
+    VERIFY_XIN_PICTURE (src, stuff->src, client, SecurityReadAccess,
 			RenderErrBase + BadPicture);
-    VERIFY_XIN_PICTURE (dst, stuff->dst, client, DixWriteAccess,
+    VERIFY_XIN_PICTURE (dst, stuff->dst, client, SecurityWriteAccess,
 			RenderErrBase + BadPicture);
 
     extra_len = (client->req_len << 2) - sizeof (xRenderTriStripReq);
@@ -3094,9 +3094,9 @@ PanoramiXRenderTriFan(ClientPtr client)
     
     REQUEST_AT_LEAST_SIZE (xRenderTriFanReq);
     
-    VERIFY_XIN_PICTURE (src, stuff->src, client, DixReadAccess,
+    VERIFY_XIN_PICTURE (src, stuff->src, client, SecurityReadAccess,
 			RenderErrBase + BadPicture);
-    VERIFY_XIN_PICTURE (dst, stuff->dst, client, DixWriteAccess,
+    VERIFY_XIN_PICTURE (dst, stuff->dst, client, SecurityWriteAccess,
 			RenderErrBase + BadPicture);
 
     extra_len = (client->req_len << 2) - sizeof (xRenderTriFanReq);
@@ -3150,7 +3150,7 @@ PanoramiXRenderColorTrapezoids(ClientPtr client)
     
     REQUEST_AT_LEAST_SIZE (xRenderColorTrapezoidsReq);
     
-    VERIFY_XIN_PICTURE (dst, stuff->dst, client, DixWriteAccess,
+    VERIFY_XIN_PICTURE (dst, stuff->dst, client, SecurityWriteAccess,
 			RenderErrBase + BadPicture);
 
     extra_len = (client->req_len << 2) - sizeof (xRenderColorTrapezoidsReq);
@@ -3194,7 +3194,7 @@ PanoramiXRenderColorTriangles(ClientPtr client)
     
     REQUEST_AT_LEAST_SIZE (xRenderColorTrianglesReq);
     
-    VERIFY_XIN_PICTURE (dst, stuff->dst, client, DixWriteAccess,
+    VERIFY_XIN_PICTURE (dst, stuff->dst, client, SecurityWriteAccess,
 			RenderErrBase + BadPicture);
 
     extra_len = (client->req_len << 2) - sizeof (xRenderColorTrianglesReq);
@@ -3240,7 +3240,7 @@ PanoramiXRenderAddTraps (ClientPtr client)
     INT16    	    x_off, y_off;
 
     REQUEST_AT_LEAST_SIZE (xRenderAddTrapsReq);
-    VERIFY_XIN_PICTURE (picture, stuff->picture, client, DixWriteAccess, 
+    VERIFY_XIN_PICTURE (picture, stuff->picture, client, SecurityWriteAccess, 
 			RenderErrBase + BadPicture);
     extra_len = (client->req_len << 2) - sizeof (xRenderAddTrapsReq);
     if (extra_len &&

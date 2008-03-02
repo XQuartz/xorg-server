@@ -1014,7 +1014,7 @@ CALLBACK(SecurityCheckResourceIDAccess)
     }
     else /* server-owned resource - probably a default colormap or root window */
     {
-	if (RT_WINDOW == rtype || RC_DRAWABLE == rtype)
+	if (RC_DRAWABLE & rtype)
 	{
 	    switch (reqtype)
 	    {   /* the following operations are allowed on root windows */

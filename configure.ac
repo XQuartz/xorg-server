@@ -2113,7 +2113,6 @@ miext/damage/Makefile
 miext/shadow/Makefile
 miext/cw/Makefile
 miext/rootless/Makefile
-miext/rootless/safeAlpha/Makefile
 miext/rootless/accel/Makefile
 os/Makefile
 randr/Makefile

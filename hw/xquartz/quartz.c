@@ -274,7 +274,7 @@ static void QuartzUpdateScreens(void)
     
 #ifndef FAKE_RANDR
     if(!QuartzRandRInit(pScreen))
-      FatalError("Failed to init RandR extension.\n");
+        FatalError("Failed to init RandR extension.\n");
 #endif
 
     DarwinAdjustScreenOrigins(&screenInfo);
@@ -372,6 +372,14 @@ static void QuartzSetRootClip(
     }
 }
 
+/* 
+ * QuartzSpaceChanged
+ *  Unmap offscreen windows, map onscreen windows
+ */
+static void QuartzSpaceChanged(uint32_t space_id) {
+    /* Do something special here, so we don't depend on quartz-wm for spaces to work... */
+    DEBUG_LOG("Space Changed (%u) ... do something interesting...\n", space_id);
+}
 
 /*
  * QuartzMessageServerThread
@@ -502,6 +510,10 @@ void QuartzProcessEvent(xEvent *xe) {
             RootlessOrderAllWindows();
             break;
 
+        case kXDarwinSpaceChanged:
+            DEBUG_LOG("kXDarwinSpaceChanged\n");
+            QuartzSpaceChanged(xe->u.clientMessage.u.l.longs0);
+            break;
         default:
             ErrorF("Unknown application defined event type %d.\n", xe->u.u.type);
     }

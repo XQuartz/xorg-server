@@ -105,6 +105,7 @@ enum {
     kXDarwinBringAllToFront,  // bring all X windows to front
     kXDarwinToggleFullscreen, // Enable/Disable fullscreen mode
     kXDarwinSetRootless,      // Set rootless mode
+    kXDarwinSpaceChanged,     // Spaces changed
     /*
      * AppleWM events
      */
@@ -115,7 +116,7 @@ enum {
      */
     kXDarwinDisplayChanged,   // display configuration has changed
     kXDarwinWindowState,      // window visibility state has changed
-    kXDarwinWindowMoved       // window has moved on screen
+    kXDarwinWindowMoved,      // window has moved on screen
 };
 
 #define ENABLE_DEBUG_LOG 1

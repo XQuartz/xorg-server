@@ -229,7 +229,7 @@ static void DarwinUpdateModifiers(
 /*
  * DarwinReleaseModifiers
  * This hacky function releases all modifier keys.  It should be called when X11.app
- * is deactivated (kXDarwinDeactivate) to prevent modifiers from getting stuck if they
+ * is deactivated (kXquartzDeactivate) to prevent modifiers from getting stuck if they
  * are held down during a "context" switch -- otherwise, we would miss the KeyUp.
  */
 void DarwinReleaseModifiers(void) {
@@ -527,13 +527,12 @@ void ProcessInputEvents(void)
                                         xe.u.keyButtonPointer.time);
                 break;
 
-            case kXDarwinUpdateModifiers:
+            case kXquartzUpdateModifiers:
             {
                 // Update modifier state.
                 // Any amount of modifiers may have changed.
 	      unsigned int flags = xe.u.clientMessage.u.l.longs0 & ~NX_NONCOALSESCEDMASK; // ignore that one
-		DEBUG_LOG("kxDarwinUpdateModifiers(%x, %x, %s)\n", old_flags, flags, decode_event_flags(flags));
-		//		DEBUG_LOG("Ignoring these flags: %x %s\n", flags & ~KEYBOARD_MASK, decode_event_flags(flags & ~KEYBOARD_MASK));
+		DEBUG_LOG("kXquartzUpdateModifiers(%x, %x, %s)\n", old_flags, flags, decode_event_flags(flags));
 		flags &= KEYBOARD_MASK;
                 if (old_flags & ~flags) DarwinUpdateModifiers(&xe, KeyRelease,
 							      old_flags & ~flags);
@@ -543,7 +542,7 @@ void ProcessInputEvents(void)
                 break;
             }
 
-            case kXDarwinUpdateButtons:
+            case kXquartzUpdateButtons:
             {
                 long hwDelta = xe.u.clientMessage.u.l.longs0;
                 long hwButtons = xe.u.clientMessage.u.l.longs1;
@@ -572,8 +571,8 @@ void ProcessInputEvents(void)
                 break;
             }
 
-	    case kXDarwinDeactivate:
-	      DEBUG_LOG("kxDarwinDeactivate\n");
+	    case kXquartzDeactivate:
+	      DEBUG_LOG("kXquartzDeactivate\n");
 	      DarwinReleaseModifiers();
 	      old_flags=0;
 	      // fall through

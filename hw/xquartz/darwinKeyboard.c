@@ -372,10 +372,10 @@ Bool DarwinReadKeymapFile(NXKeyMapping *keyMap) {
     if (strncmp( inBuffer, "KYM1", 4 ) == 0) {
         // Magic number OK.
     } else if (strncmp( inBuffer, "KYMP", 4 ) == 0) {
-        ErrorF("Keymapping file '%s' is intended for use with the original NeXT keyboards and cannot be used by XDarwin.\n", darwinKeymapFile);
+        ErrorF("Keymapping file '%s' is intended for use with the original NeXT keyboards and cannot be used by Xquartz.\n", darwinKeymapFile);
         return FALSE;
     } else {
-        ErrorF("Keymapping file '%s' has a bad magic number and cannot be used by XDarwin.\n", darwinKeymapFile);
+        ErrorF("Keymapping file '%s' has a bad magic number and cannot be used by Xquartz.\n", darwinKeymapFile);
         return FALSE;
     }
 

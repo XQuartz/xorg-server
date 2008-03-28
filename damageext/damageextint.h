@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * Copyright © 2002 Keith Packard
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
@@ -44,13 +42,6 @@
 #include "damage.h" 
 #include "xfixes.h"
 
-extern unsigned char	DamageReqCode;
-extern int		DamageEventBase;
-extern int		DamageErrorBase;
-extern int		DamageClientPrivateIndex;
-extern RESTYPE		DamageExtType;
-extern RESTYPE		DamageExtWinType;
-
 typedef struct _DamageClient {
     CARD32	major_version;
     CARD32	minor_version;
@@ -67,9 +58,6 @@ typedef struct _DamageExt {
     XID			id;
 } DamageExtRec, *DamageExtPtr;
 
-extern int	(*ProcDamageVector[/*XDamageNumberRequests*/])(ClientPtr);
-extern int	(*SProcDamageVector[/*XDamageNumberRequests*/])(ClientPtr);
-
 #define VERIFY_DAMAGEEXT(pDamageExt, rid, client, mode) { \
     pDamageExt = SecurityLookupIDByType (client, rid, DamageExtType, mode); \
     if (!pDamageExt) { \
@@ -77,10 +65,6 @@ extern int	(*SProcDamageVector[/*XDamageNumberRequests*/])(ClientPtr);
 	return DamageErrorBase + BadDamage; \
     } \
 }
-
-void
-SDamageNotifyEvent (xDamageNotifyEvent *from,
-		    xDamageNotifyEvent *to);
 
 void
 DamageExtSetCritical (ClientPtr pClient, Bool critical);

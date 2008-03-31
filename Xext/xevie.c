@@ -63,11 +63,13 @@ extern Bool noXkbExtension;
 #endif
 extern int    xeviegrabState;
 
-static int		ProcDispatch (register ClientPtr client), SProcDispatch (register ClientPtr client);
-static void		ResetProc (ExtensionEntry *extEntry);
+static DISPATCH_PROC(ProcXevieDispatch);
+static DISPATCH_PROC(SProcXevieDispatch);
 
-static unsigned char	ReqCode = 0;
-static int		ErrorBase;
+static void		XevieResetProc (ExtensionEntry *extEntry);
+
+static unsigned char	XevieReqCode = 0;
+static int		XevieErrorBase;
 
 int			xevieFlag = 0;
 int	 		xevieClientIndex = 0;
@@ -77,7 +79,7 @@ Mask			xevieMask = 0;
 int       		xevieEventSent = 0;
 int			xevieKBEventSent = 0;
 static DevPrivateKey    xevieDevicePrivateKey = &xevieDevicePrivateKey;
-static Bool                     xevieModifiersOn = FALSE;
+static Bool             xevieModifiersOn = FALSE;
 
 #define XEVIEINFO(dev)  ((xevieDeviceInfoPtr) \
     dixLookupPrivate(&(dev)->devPrivates, xevieDevicePrivateKey))
@@ -108,11 +110,6 @@ typedef struct {
 static xevieKeycQueueRec keycq[KEYC_QUEUE_SIZE] = {{0, NULL}};
 static int keycqHead = 0, keycqTail = 0;
 
-static int              ProcDispatch (ClientPtr), SProcDispatch (ClientPtr);
-static void             ResetProc (ExtensionEntry*);
-
-static int              ErrorBase;
-
 static Bool XevieStart(void);
 static void XevieEnd(int clientIndex);
 static void XevieClientStateCallback(CallbackListPtr *pcbl, pointer nulldata,
@@ -140,25 +137,23 @@ XevieExtensionInit (void)
     if ((extEntry = AddExtension (XEVIENAME,
 				0,
 				XevieNumberErrors,
-				ProcDispatch,
-				SProcDispatch,
-				ResetProc,
+				ProcXevieDispatch,
+				SProcXevieDispatch,
+				XevieResetProc,
 				StandardMinorOpcode))) {
-	ReqCode = (unsigned char)extEntry->base;
-	ErrorBase = extEntry->errorBase;
+	XevieReqCode = (unsigned char)extEntry->base;
+	XevieErrorBase = extEntry->errorBase;
     }
-
-    /* PC servers initialize the desktop colors (citems) here! */
 }
 
 /*ARGSUSED*/
 static 
-void ResetProc (ExtensionEntry *extEntry)
+void XevieResetProc (ExtensionEntry *extEntry)
 {
 }
 
 static 
-int ProcQueryVersion (register ClientPtr client)
+int ProcXevieQueryVersion (register ClientPtr client)
 {
     xXevieQueryVersionReply rep;
 
@@ -173,7 +168,7 @@ int ProcQueryVersion (register ClientPtr client)
 }
 
 static
-int ProcStart (register ClientPtr client)
+int ProcXevieStart (register ClientPtr client)
 {
     xXevieStartReply rep;
 
@@ -214,10 +209,12 @@ int ProcStart (register ClientPtr client)
 }
 
 static
-int ProcEnd (register ClientPtr client)
+int ProcXevieEnd (register ClientPtr client)
 {
     xXevieEndReply rep;
 
+    REQUEST_SIZE_MATCH (xXevieEndReq);
+    
     if (xevieFlag) {
         if (client->index != xevieClientIndex)
             return BadAccess;
@@ -233,13 +230,15 @@ int ProcEnd (register ClientPtr client)
 }
 
 static
-int ProcSend (register ClientPtr client)
+int ProcXevieSend (register ClientPtr client)
 {
     REQUEST (xXevieSendReq);
     xXevieSendReply rep;
     xEvent *xE;
     static unsigned char lastDetail = 0, lastType = 0;
 
+    REQUEST_SIZE_MATCH (xXevieSendReq);
+    
     if (client->index != xevieClientIndex)
         return BadAccess;
 
@@ -279,15 +278,17 @@ int ProcSend (register ClientPtr client)
 }
 
 static
-int ProcSelectInput (register ClientPtr client)
+int ProcXevieSelectInput (register ClientPtr client)
 {
     REQUEST (xXevieSelectInputReq);
     xXevieSelectInputReply rep;
 
+    REQUEST_SIZE_MATCH (xXevieSelectInputReq);
+
     if (client->index != xevieClientIndex)
         return BadAccess;
 
-    xevieMask = (long)stuff->event_mask;
+    xevieMask = stuff->event_mask;
     rep.type = X_Reply;
     rep.sequence_number = client->sequence;
     WriteToClient (client, sizeof (xXevieSelectInputReply), (char *)&rep);
@@ -295,101 +296,114 @@ int ProcSelectInput (register ClientPtr client)
 }
 
 static 
-int ProcDispatch (register ClientPtr client)
+int ProcXevieDispatch (register ClientPtr client)
 {
     REQUEST (xReq);
     switch (stuff->data)
     {
     case X_XevieQueryVersion:
-	return ProcQueryVersion (client);
+	return ProcXevieQueryVersion (client);
     case X_XevieStart:
-	return ProcStart (client);
+	return ProcXevieStart (client);
     case X_XevieEnd:
-	return ProcEnd (client);
+	return ProcXevieEnd (client);
     case X_XevieSend:
-	return ProcSend (client);
+	return ProcXevieSend (client);
     case X_XevieSelectInput:
-	return ProcSelectInput(client);
+	return ProcXevieSelectInput(client);
     default:
 	return BadRequest;
     }
 }
 
 static 
-int SProcQueryVersion (register ClientPtr client)
+int SProcXevieQueryVersion (register ClientPtr client)
 {
     register int n;
 
     REQUEST(xXevieQueryVersionReq);
-    swaps(&stuff->length, n);
-    return ProcQueryVersion(client);
+    swaps (&stuff->length, n);
+    REQUEST_SIZE_MATCH (xXevieQueryVersionReq);
+    swaps (&stuff->client_major_version, n);
+    swaps (&stuff->client_minor_version, n);
+    return ProcXevieQueryVersion(client);
 }
 
 static 
-int SProcStart (ClientPtr client)
+int SProcXevieStart (ClientPtr client)
 {
     register int n;
 
     REQUEST (xXevieStartReq);
     swaps (&stuff->length, n);
+    REQUEST_SIZE_MATCH (xXevieStartReq);
     swapl (&stuff->screen, n);
-    REQUEST_AT_LEAST_SIZE (xXevieStartReq);
-    return ProcStart (client);
+    return ProcXevieStart (client);
 }
 
 static 
-int SProcEnd (ClientPtr client)
+int SProcXevieEnd (ClientPtr client)
 {
     register int n;
 
     REQUEST (xXevieEndReq);
     swaps (&stuff->length, n);
-    REQUEST_AT_LEAST_SIZE (xXevieEndReq);
-    swapl(&stuff->cmap, n);
-    return ProcEnd (client);
+    REQUEST_SIZE_MATCH (xXevieEndReq);
+    swapl (&stuff->cmap, n);
+    return ProcXevieEnd (client);
 }
 
 static
-int SProcSend (ClientPtr client)
+int SProcXevieSend (ClientPtr client)
 {
     register int n;
+    xEvent eventT;
+    EventSwapPtr proc;
 
     REQUEST (xXevieSendReq);
     swaps (&stuff->length, n);
-    REQUEST_AT_LEAST_SIZE (xXevieSendReq);
-    swapl(&stuff->event, n);
-    return ProcSend (client);
+    REQUEST_SIZE_MATCH (xXevieSendReq);
+    swapl (&stuff->dataType, n);
+
+    /* Swap event */
+    proc = EventSwapVector[stuff->event.u.u.type & 0177];
+    if (!proc ||  proc == NotImplemented) /* no swapping proc; invalid event type? */
+	return (BadValue);
+    (*proc)(&stuff->event, &eventT);
+    stuff->event = eventT;
+    
+    return ProcXevieSend (client);
 }
 
 static
-int SProcSelectInput (ClientPtr client)
+int SProcXevieSelectInput (ClientPtr client)
 {
     register int n;
 
     REQUEST (xXevieSelectInputReq);
     swaps (&stuff->length, n);
-    REQUEST_AT_LEAST_SIZE (xXevieSelectInputReq);
-    swapl(&stuff->event_mask, n);
-    return ProcSelectInput (client);
+    REQUEST_SIZE_MATCH (xXevieSelectInputReq);
+    swapl (&stuff->event_mask, n);
+    return ProcXevieSelectInput (client);
 }
 
 
 static 
-int SProcDispatch (register ClientPtr client)
+int SProcXevieDispatch (register ClientPtr client)
 {
     REQUEST(xReq);
     switch (stuff->data)
     {
     case X_XevieQueryVersion:
-	return SProcQueryVersion (client);
+	return SProcXevieQueryVersion (client);
     case X_XevieStart:
-	return SProcStart (client);
+	return SProcXevieStart (client);
     case X_XevieEnd:
-	return SProcEnd (client);
+	return SProcXevieEnd (client);
     case X_XevieSend:
-	return SProcSend (client);
+	return SProcXevieSend (client);
     case X_XevieSelectInput:
-	return SProcSelectInput(client);
+	return SProcXevieSelectInput(client);
     default:
 	return BadRequest;
     }

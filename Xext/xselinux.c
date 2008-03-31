@@ -37,6 +37,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <libaudit.h>
 
 #include <X11/Xatom.h>
+#include "globals.h"
 #include "resource.h"
 #include "privates.h"
 #include "registry.h"
@@ -151,6 +152,12 @@ static struct security_class_mapping map[] = {
     { "x_resource", { "read", "write", "write", "write", "read", "write", "read", "read", "write", "read", "write", "read", "write", "write", "write", "read", "read", "write", "write", "write", "write", "write", "write", "read", "read", "write", "read", "write", NULL }},
     { NULL }
 };
+
+/* x_resource "read" bits from the list above */
+#define SELinuxReadMask (DixReadAccess|DixGetAttrAccess|DixListPropAccess| \
+			 DixGetPropAccess|DixGetFocusAccess|DixListAccess| \
+			 DixShowAccess|DixBlendAccess|DixReceiveAccess| \
+			 DixUseAccess|DixDebugAccess)
 
 /* forward declarations */
 static void SELinuxScreen(CallbackListPtr *, pointer, pointer);
@@ -853,6 +860,7 @@ SELinuxSelection(CallbackListPtr *pcbl, pointer unused, pointer calldata)
     SELinuxObjectRec *obj, *data;
     Selection *pSel = *rec->ppSel;
     Atom name = pSel->selection;
+    Mask access_mode = rec->access_mode;
     SELinuxAuditRec auditdata = { .client = rec->client, .selection = name };
     security_id_t tsid;
     int rc;
@@ -861,11 +869,12 @@ SELinuxSelection(CallbackListPtr *pcbl, pointer unused, pointer calldata)
     obj = dixLookupPrivate(&pSel->devPrivates, objectKey);
 
     /* If this is a new object that needs labeling, do it now */
-    if (rec->access_mode & DixCreateAccess) {
+    if (access_mode & DixCreateAccess) {
 	sidput(obj->sid);
 	rc = SELinuxSelectionToSID(name, subj, &obj->sid, &obj->poly);
 	if (rc != Success)
 	    obj->sid = unlabeled_sid;
+	access_mode = DixSetAttrAccess;
     }
     /* If this is a polyinstantiated object, find the right instance */
     else if (obj->poly) {
@@ -890,13 +899,13 @@ SELinuxSelection(CallbackListPtr *pcbl, pointer unused, pointer calldata)
     }
 
     /* Perform the security check */
-    rc = SELinuxDoCheck(subj, obj, SECCLASS_X_SELECTION, rec->access_mode,
+    rc = SELinuxDoCheck(subj, obj, SECCLASS_X_SELECTION, access_mode,
 			&auditdata);
     if (rc != Success)
 	rec->status = rc;
 
     /* Label the content (advisory only) */
-    if (rec->access_mode & DixSetAttrAccess) {
+    if (access_mode & DixSetAttrAccess) {
 	data = dixLookupPrivate(&pSel->devPrivates, dataKey);
 	sidput(data->sid);
 	if (subj->sel_create_sid)
@@ -976,6 +985,7 @@ SELinuxResource(CallbackListPtr *pcbl, pointer unused, pointer calldata)
     SELinuxSubjectRec *subj;
     SELinuxObjectRec *obj;
     SELinuxAuditRec auditdata = { .client = rec->client };
+    Mask access_mode = rec->access_mode;
     PrivateRec **privatePtr;
     security_class_t class;
     int rc, offset;
@@ -997,7 +1007,7 @@ SELinuxResource(CallbackListPtr *pcbl, pointer unused, pointer calldata)
     }
 
     /* If this is a new object that needs labeling, do it now */
-    if (rec->access_mode & DixCreateAccess && offset >= 0) {
+    if (access_mode & DixCreateAccess && offset >= 0) {
 	rc = SELinuxLabelResource(rec, subj, obj, class);
 	if (rc != Success) {
 	    rec->status = rc;
@@ -1005,12 +1015,25 @@ SELinuxResource(CallbackListPtr *pcbl, pointer unused, pointer calldata)
 	}
     }
 
+    /* Collapse generic resource permissions down to read/write */
+    if (class == SECCLASS_X_RESOURCE) {
+	access_mode = !!(rec->access_mode & SELinuxReadMask); /* rd */
+	access_mode |= !!(rec->access_mode & ~SELinuxReadMask) << 1; /* wr */
+    }
+
     /* Perform the security check */
     auditdata.restype = rec->rtype;
     auditdata.id = rec->id;
-    rc = SELinuxDoCheck(subj, obj, class, rec->access_mode, &auditdata);
+    rc = SELinuxDoCheck(subj, obj, class, access_mode, &auditdata);
     if (rc != Success)
 	rec->status = rc;
+
+    /* Perform the background none check on windows */
+    if (access_mode & DixCreateAccess && rec->rtype == RT_WINDOW) {
+	rc = SELinuxDoCheck(subj, obj, class, DixBlendAccess, &auditdata);
+	if (rc != Success)
+	    ((WindowPtr)rec->res)->forcedBG = TRUE;
+    }
 }
 
 static void
@@ -1450,6 +1473,24 @@ ProcSELinuxGetSelectionContext(ClientPtr client, pointer privKey)
 }
 
 static int
+ProcSELinuxGetClientContext(ClientPtr client)
+{
+    ClientPtr target;
+    SELinuxSubjectRec *subj;
+    int rc;
+
+    REQUEST(SELinuxGetContextReq);
+    REQUEST_SIZE_MATCH(SELinuxGetContextReq);
+
+    rc = dixLookupClient(&target, stuff->id, client, DixGetAttrAccess);
+    if (rc != Success)
+	return rc;
+
+    subj = dixLookupPrivate(&target->devPrivates, subjectKey);
+    return SELinuxSendContextReply(client, subj->sid);
+}
+
+static int
 SELinuxPopulateItem(SELinuxListItemRec *i, PrivateRec **privPtr, CARD32 id,
 		    int *size)
 {
@@ -1663,6 +1704,8 @@ ProcSELinuxDispatch(ClientPtr client)
 	return ProcSELinuxGetSelectionContext(client, dataKey);
     case X_SELinuxListSelections:
 	return ProcSELinuxListSelections(client);
+    case X_SELinuxGetClientContext:
+	return ProcSELinuxGetClientContext(client);
     default:
 	return BadRequest;
     }
@@ -1760,6 +1803,17 @@ SProcSELinuxListProperties(ClientPtr client)
 }
 
 static int
+SProcSELinuxGetClientContext(ClientPtr client)
+{
+    REQUEST(SELinuxGetContextReq);
+    int n;
+
+    REQUEST_SIZE_MATCH(SELinuxGetContextReq);
+    swapl(&stuff->id, n);
+    return ProcSELinuxGetClientContext(client);
+}
+
+static int
 SProcSELinuxDispatch(ClientPtr client)
 {
     REQUEST(xReq);
@@ -1812,6 +1866,8 @@ SProcSELinuxDispatch(ClientPtr client)
 	return SProcSELinuxGetSelectionContext(client, dataKey);
     case X_SELinuxListSelections:
 	return ProcSELinuxListSelections(client);
+    case X_SELinuxGetClientContext:
+	return SProcSELinuxGetClientContext(client);
     default:
 	return BadRequest;
     }
@@ -1869,16 +1925,36 @@ void
 SELinuxExtensionInit(INITARGS)
 {
     ExtensionEntry *extEntry;
-    struct selinux_opt options[] = { { SELABEL_OPT_VALIDATE, (char *)1 } };
+    struct selinux_opt selabel_option = { SELABEL_OPT_VALIDATE, (char *)1 };
+    struct selinux_opt avc_option = { AVC_OPT_SETENFORCE, (char *)0 };
     security_context_t con;
     int ret = TRUE;
 
-    /* Setup SELinux stuff */
+    /* Check SELinux mode on system */
     if (!is_selinux_enabled()) {
-	ErrorF("SELinux: SELinux not enabled, disabling SELinux support.\n");
+	ErrorF("SELinux: Disabled on system, not enabling in X server\n");
 	return;
     }
 
+    /* Check SELinux mode in configuration file */
+    switch(selinuxEnforcingState) {
+    case SELINUX_MODE_DISABLED:
+	LogMessage(X_INFO, "SELinux: Disabled in configuration file\n");
+	return;
+    case SELINUX_MODE_ENFORCING:
+	LogMessage(X_INFO, "SELinux: Configured in enforcing mode\n");
+	avc_option.value = (char *)1;
+	break;
+    case SELINUX_MODE_PERMISSIVE:
+	LogMessage(X_INFO, "SELinux: Configured in permissive mode\n");
+	avc_option.value = (char *)0;
+	break;
+    default:
+	avc_option.type = AVC_OPT_UNUSED;
+	break;
+    }
+
+    /* Set up SELinux stuff */
     selinux_set_callback(SELINUX_CB_LOG, (union selinux_callback)SELinuxLog);
     selinux_set_callback(SELINUX_CB_AUDIT, (union selinux_callback)SELinuxAudit);
 
@@ -1890,11 +1966,11 @@ SELinuxExtensionInit(INITARGS)
 	FatalError("SELinux: Failed to set up security class mapping\n");
     }
 
-    if (avc_open(NULL, 0) < 0)
+    if (avc_open(&avc_option, 1) < 0)
 	FatalError("SELinux: Couldn't initialize SELinux userspace AVC\n");
     avc_active = 1;
 
-    label_hnd = selabel_open(SELABEL_CTX_X, options, 1);
+    label_hnd = selabel_open(SELABEL_CTX_X, &selabel_option, 1);
     if (!label_hnd)
 	FatalError("SELinux: Failed to open x_contexts mapping in policy\n");
 

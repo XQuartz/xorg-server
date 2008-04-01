@@ -540,8 +540,8 @@ static miPointerScreenFuncRec quartzScreenFuncsRec = {
     QuartzCursorOffScreen,
     QuartzCrossScreen,
     QuartzWarpCursor,
-    DarwinEQPointerPost,
-    DarwinEQSwitchScreen
+    NULL,
+    NULL 
 };
 
 

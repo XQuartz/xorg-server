@@ -51,7 +51,6 @@
 #include "windowstr.h"
 #include "colormapst.h"
 #include "globals.h"
-#include "rootlessWindow.h"
 
 // System headers
 #include <sys/types.h>
@@ -60,6 +59,11 @@
 #include <IOKit/pwr_mgt/IOPMLib.h>
 
 #define FAKE_RANDR 1
+
+/* FIXME: Abstract this away into xpr */
+#include <Xplugin.h>
+#include "rootlessWindow.h"
+WindowPtr xprGetXWindow(xp_window_id wid);
 
 // Shared global variables for Quartz modes
 int                     quartzEventWriteFD = -1;
@@ -459,7 +463,7 @@ void QuartzProcessEvent(xEvent *xe) {
 
         case kXquartzWindowState:
             DEBUG_LOG("kXquartzWindowState\n");
-            RootlessNativeWindowStateChanged(xe->u.clientMessage.u.l.longs0,
+            RootlessNativeWindowStateChanged(xprGetXWindow(xe->u.clientMessage.u.l.longs0),
 		  			     xe->u.clientMessage.u.l.longs1);
 	    break;
 	  

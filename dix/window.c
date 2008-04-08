@@ -305,6 +305,9 @@ SetWindowToDefaults(register WindowPtr pWin)
 #ifdef COMPOSITE
     pWin->redirectDraw = 0;
 #endif
+#ifdef ROOTLESS
+    pWin->rootlessUnhittable = FALSE;
+#endif
 }
 
 static void

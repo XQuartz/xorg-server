@@ -159,6 +159,9 @@ typedef struct _Window {
 #ifdef COMPOSITE
     unsigned		redirectDraw:2;	/* rendering is redirected from here */
 #endif
+#ifdef ROOTLESS
+    unsigned		rootlessUnhittable:1;	/* doesn't hit-test */
+#endif
     DevUnion		*devPrivates;
 } WindowRec;
 

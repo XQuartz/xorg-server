@@ -108,13 +108,6 @@ static Bool quirk_prefer_large_75 (int scrnIndex, xf86MonPtr DDC)
 
 static Bool quirk_detailed_h_in_cm (int scrnIndex, xf86MonPtr DDC)
 {
-    /* Bug #10304: "LGPhilipsLCD LP154W01-A5" */
-    /* Bug #12784: "LGPhilipsLCD LP154W01-TLA2" */
-    /* Red Hat #435216 "LGPhilipsLCD LP154W01-TLAE" */
-    if (memcmp (DDC->vendor.name, "LPL", 4) == 0 &&
-	(DDC->vendor.prod_id == 0 || DDC->vendor.prod_id == 0x2a00))
-	return TRUE;
-
     /* Bug #11603: Funai Electronics PM36B */
     if (memcmp (DDC->vendor.name, "FCM", 4) == 0 &&
 	DDC->vendor.prod_id == 13600)
@@ -137,7 +130,7 @@ static Bool quirk_detailed_use_maximum_size (int scrnIndex, xf86MonPtr DDC)
 {
     /* Bug #10304: LGPhilipsLCD LP154W01-A5 */
     if (memcmp (DDC->vendor.name, "LPL", 4) == 0 &&
-	DDC->vendor.prod_id == 0)
+	(DDC->vendor.prod_id == 0 || DDC->vendor.prod_id == 0x2a00))
 	return TRUE;
 
     return FALSE;
@@ -158,6 +151,16 @@ static Bool quirk_first_detailed_preferred (int scrnIndex, xf86MonPtr DDC)
     /* Philips 107p5 CRT. Reported on xorg@ with pastebin. */
     if (memcmp (DDC->vendor.name, "PHL", 4) == 0 &&
 	DDC->vendor.prod_id == 57364)
+	return TRUE;
+
+    /* Proview AY765C 17" LCD. See bug #15160*/
+    if (memcmp (DDC->vendor.name, "PTS", 4) == 0 &&
+	DDC->vendor.prod_id == 765)
+	return TRUE;
+
+    /* ACR of some sort RH #284231 */
+    if (memcmp (DDC->vendor.name, "ACR", 4) == 0 &&
+	DDC->vendor.prod_id == 2423)
 	return TRUE;
 
     return FALSE;

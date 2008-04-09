@@ -313,6 +313,7 @@ case $host_cpu in
 	case $host_os in
 		*linux*)	DEFAULT_INT10=vm86 ;;
 		*freebsd*)	AC_DEFINE(USE_DEV_IO) ;;
+		*dragonfly*)	AC_DEFINE(USE_DEV_IO) ;;
 		*netbsd*)	AC_DEFINE(USE_I386_IOPL)
 				SYS_LIBS=-li386
 				;;
@@ -337,6 +338,7 @@ case $host_cpu in
 	I386_VIDEO=yes
 	case $host_os in
 		*freebsd*)	AC_DEFINE(USE_DEV_IO, 1, [BSD /dev/io]) ;;
+		*dragonfly*)	AC_DEFINE(USE_DEV_IO, 1, [BSD /dev/io]) ;;
 		*netbsd*)	AC_DEFINE(USE_I386_IOPL, 1, [BSD i386 iopl])
 				SYS_LIBS=-lx86_64
 				;;
@@ -367,7 +369,7 @@ DRI2=no
 KDRIVE_HW=no
 dnl it would be nice to autodetect these *CONS_SUPPORTs
 case $host_os in
-  *freebsd*)
+  *freebsd* | *dragonfly*)
 	case $host_os in
 		kfreebsd*-gnu) ;;
 		*) AC_DEFINE(CSRG_BASED, 1, [System is BSD-like]) ;;
@@ -705,6 +707,15 @@ if test "x$NEED_DBUS" = xyes; then
 fi
 CONFIG_LIB='$(top_builddir)/config/libconfig.a'
 
+AC_MSG_CHECKING([for glibc...])
+AC_PREPROC_IFELSE([
+#include <features.h>
+#ifndef __GLIBC__
+#error
+#endif
+], glibc=yes, glibc=no)
+AC_MSG_RESULT([$glibc])
+
 AC_CHECK_FUNCS([clock_gettime], [have_clock_gettime=yes],
                [AC_CHECK_LIB([rt], [clock_gettime], [have_clock_gettime=-lrt],
                              [have_clock_gettime=no])])
@@ -720,9 +731,13 @@ if ! test "x$have_clock_gettime" = xno; then
 
     LIBS_SAVE="$LIBS"
     LIBS="$CLOCK_LIBS"
+    CPPFLAGS_SAVE="$CPPFLAGS"
+
+    if test x"$glibc" = xyes; then
+        CPPFLAGS="$CPPFLAGS -D_POSIX_C_SOURCE=199309L"
+    fi
 
     AC_RUN_IFELSE([
-#define _POSIX_C_SOURCE 199309L
 #include <time.h>
 
 int main(int argc, char *argv[[]]) {
@@ -737,6 +752,7 @@ int main(int argc, char *argv[[]]) {
        [MONOTONIC_CLOCK="cross compiling"])
 
     LIBS="$LIBS_SAVE"
+    CPPFLAGS="$CPPFLAGS_SAVE"
 else
     MONOTONIC_CLOCK=no
 fi
@@ -1344,7 +1360,7 @@ if test "x$XORG" = xyes -o "x$XGL" = xyes; then
 			;;
 		esac
 		;;
-	  freebsd* | kfreebsd*-gnu)
+	  freebsd* | kfreebsd*-gnu | dragonfly*)
 	  	XORG_OS="freebsd"
 		XORG_OS_SUBDIR="bsd"
 		xorg_bus_bsdpci="yes"

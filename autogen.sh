@@ -1,5 +1,8 @@
 #! /bin/sh
 
+export PKGCONFIG_PATH=/usr/X11/lib/pkgconfig:$PKGCONFIG_PATH
+export ACLOCAL="aclocal -I /usr/X11/share/aclocal"
+
 srcdir=`dirname $0`
 test -z "$srcdir" && srcdir=.
 

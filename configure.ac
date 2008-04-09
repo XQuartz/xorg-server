@@ -295,6 +295,7 @@ case $host_cpu in
 	        darwin*)	use_x86_asm="no" ;;
 		*linux*)	DEFAULT_INT10=vm86 ;;
 		*freebsd*)	AC_DEFINE(USE_DEV_IO) ;;
+		*dragonfly*)	AC_DEFINE(USE_DEV_IO) ;;
 		*netbsd*)	AC_DEFINE(USE_I386_IOPL)
 				SYS_LIBS=-li386
 				;;
@@ -320,6 +321,7 @@ case $host_cpu in
 	case $host_os in
 	        darwin*)	use_x86_asm="no" ;;
 		*freebsd*)	AC_DEFINE(USE_DEV_IO, 1, [BSD /dev/io]) ;;
+		*dragonfly*)	AC_DEFINE(USE_DEV_IO, 1, [BSD /dev/io]) ;;
 		*netbsd*)	AC_DEFINE(USE_I386_IOPL, 1, [BSD i386 iopl])
 				SYS_LIBS=-lx86_64
 				;;
@@ -341,7 +343,7 @@ DRI=no
 KDRIVE_HW=no
 dnl it would be nice to autodetect these *CONS_SUPPORTs
 case $host_os in
-  *freebsd*)
+  *freebsd* | *dragonfly*)
 	case $host_os in
 		kfreebsd*-gnu) ;;
 		*) AC_DEFINE(CSRG_BASED, 1, [System is BSD-like]) ;;
@@ -1321,7 +1323,7 @@ dnl has it in libc), or if libdl is needed to get it.
 			;;
 		esac
 		;;
-	  freebsd* | kfreebsd*-gnu)
+	  freebsd* | kfreebsd*-gnu | dragonfly*)
 	  	XORG_OS="freebsd"
 		XORG_OS_SUBDIR="bsd"
 		case $host_cpu in

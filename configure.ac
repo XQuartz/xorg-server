@@ -1964,7 +1964,9 @@ DIX_CFLAGS="-DHAVE_DIX_CONFIG_H $XSERVER_CFLAGS"
 
 AC_SUBST([DIX_CFLAGS])
 
-AC_SUBST([libdir exec_prefix prefix])
+AC_SUBST([libdir])
+AC_SUBST([exec_prefix])
+AC_SUBST([prefix])
 
 # Man page sections - used in config utils & generating man pages
 XORG_MANPAGE_SECTIONS

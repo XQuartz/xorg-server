@@ -34,7 +34,7 @@
 #include <unistd.h>
 #include "xpr.h"
 #include "rootlessCommon.h"
-#include "Xplugin.h"
+#include <Xplugin.h>
 #include "x-hash.h"
 #include "x-list.h"
 #include "applewmExt.h"

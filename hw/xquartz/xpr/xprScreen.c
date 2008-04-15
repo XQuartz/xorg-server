@@ -39,7 +39,7 @@
 #include "rootless.h"
 #include "dri.h"
 #include "globals.h"
-#include "Xplugin.h"
+#include <Xplugin.h>
 #include "applewmExt.h"
 #include "micmap.h"
 

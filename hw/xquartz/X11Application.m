@@ -51,10 +51,6 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include "rootlessCommon.h"
-
-WindowPtr xprGetXWindowFromAppKit(int windowNumber); // xpr/xprFrame.c
-
 #define DEFAULTS_FILE "/usr/X11/lib/X11/xserver/Xquartz.plist"
 
 /* Fake button press/release for scroll wheel move. */
@@ -220,8 +216,6 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
       if (_x_active) [self activateX:NO];
     } else if ([self modalWindow] == nil) {
       /* Must be an X window. Tell appkit it doesn't have focus. */
-      WindowPtr pWin = xprGetXWindowFromAppKit([e windowNumber]);
-      if (pWin) RootlessReorderWindow(pWin);
       for_appkit = NO;
       
       if ([self isActive]) {

@@ -495,7 +495,7 @@ AC_ARG_ENABLE(glx-tls,        AS_HELP_STRING([--enable-glx-tls], [Build GLX with
                                 [GLX_USE_TLS=no])
 
 dnl Extensions.
-AC_ARG_ENABLE(composite,      AS_HELP_STRING([--disable-composite], [Build Composite extension (default: enabled)]), [COMPOSITE=$enableval], [COMPOSITE=yes])
+AC_ARG_ENABLE(composite,      AS_HELP_STRING([--disable-composite], [Build Composite extension (default: enabled)]), [COMPOSITE=$enableval], [COMPOSITE=auto])
 AC_ARG_ENABLE(mitshm,         AS_HELP_STRING([--disable-shm], [Build SHM extension (default: enabled)]), [MITSHM=$enableval], [MITSHM=yes])
 AC_ARG_ENABLE(xres,           AS_HELP_STRING([--disable-xres], [Build XRes extension (default: enabled)]), [RES=$enableval], [RES=yes])
 AC_ARG_ENABLE(xtrap,          AS_HELP_STRING([--disable-xtrap], [Build XTrap extension (default: enabled)]), [XTRAP=$enableval], [XTRAP=yes])
@@ -694,6 +694,14 @@ if test "x$XVMC" = xyes; then
 	AC_DEFINE(XvMCExtension, 1, [Build XvMC extension])
 fi
 
+dnl XQuartz DDX Detection... Yes, it's ugly to have it here... but we need to disable COMPOSITE for 
+if test "x$COMPOSITE" = xauto; then
+	case $host_os in
+		darwin*)
+			[ "x$XQUARTZ" = xyes -o "x$XQUARTZ" = xauto ] && COMPOSITE=no
+			;;
+	esac
+fi
 
 AM_CONDITIONAL(COMPOSITE, [test "x$COMPOSITE" = xyes])
 if test "x$COMPOSITE" = xyes; then

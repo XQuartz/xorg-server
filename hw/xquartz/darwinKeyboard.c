@@ -801,6 +801,7 @@ void DarwinKeyboardInit(DeviceIntPtr pDev) {
     assert( InitKeyboardDeviceStruct( (DevicePtr)pDev, &keySyms,
                                       keyInfo.modMap, QuartzBell,
                                       DarwinChangeKeyboardControl ));
+    SwitchCoreKeyboard(pDev);
 }
 
 

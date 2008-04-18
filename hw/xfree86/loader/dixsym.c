@@ -368,9 +368,6 @@ _X_HIDDEN void *dixLookupTab[] = {
 #ifdef MITSHM
     SYMVAR(noMITShmExtension)
 #endif
-#ifdef MITMISC
-    SYMVAR(noMITMiscExtension)
-#endif
 #ifdef MULTIBUFFER
     SYMVAR(noMultibufferExtension)
 #endif

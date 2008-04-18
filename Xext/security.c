@@ -38,9 +38,6 @@ in this Software without prior written authorization from The Open Group.
 #include "xacestr.h"
 #include "securitysrv.h"
 #include <X11/extensions/securstr.h>
-#ifdef XAPPGROUP
-#include "appgroup.h"
-#endif
 #include "modinit.h"
 
 /* Extension stuff */
@@ -836,11 +833,6 @@ SecurityResource(CallbackListPtr *pcbl, pointer unused, pointer calldata)
 
     if (SecurityDoCheck(subj, obj, requested, allowed) == Success)
 	return;
-
-#ifdef XAPPGROUP
-    if (rec->id == XagDefaultColormap(rec->client))
-	return;
-#endif
 
     SecurityAudit("Security: denied client %d access %x to resource 0x%x "
 		  "of client %d on request %s\n", rec->client->index,

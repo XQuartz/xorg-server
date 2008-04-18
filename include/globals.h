@@ -122,10 +122,6 @@ extern Bool noXcupExtension;
 extern Bool noResExtension;
 #endif
 
-#ifdef XAPPGROUP
-extern Bool noXagExtension;
-#endif
-
 #ifdef XCMISC
 extern Bool noXCMiscExtension;
 #endif

@@ -102,9 +102,6 @@ extern Bool noDbeExtension;
 #ifdef DPMSExtension
 extern Bool noDPMSExtension;
 #endif
-#ifdef EVI
-extern Bool noEVIExtension;
-#endif
 #ifdef FONTCACHE
 extern Bool noFontCacheExtension;
 #endif
@@ -227,9 +224,6 @@ typedef void (*InitExtension)(INITARGS);
 #endif
 
 /* FIXME: this whole block of externs should be from the appropriate headers */
-#ifdef EVI
-extern void EVIExtensionInit(INITARGS);
-#endif
 #ifdef MITSHM
 extern void ShmExtensionInit(INITARGS);
 #endif
@@ -369,9 +363,6 @@ static ExtensionToggle ExtensionToggleList[] =
 #ifdef DPMSExtension
     { "DPMS", &noDPMSExtension },
 #endif
-#ifdef EVI
-    { "Extended-Visual-Information", &noEVIExtension },
-#endif
 #ifdef FONTCACHE
     { "FontCache", &noFontCacheExtension },
 #endif
@@ -500,9 +491,6 @@ InitExtensions(argc, argv)
 #endif
 #ifdef MITSHM
     if (!noMITShmExtension) ShmExtensionInit();
-#endif
-#ifdef EVI
-    if (!noEVIExtension) EVIExtensionInit();
 #endif
 #ifdef MULTIBUFFER
     if (!noMultibufferExtension) MultibufferExtensionInit();

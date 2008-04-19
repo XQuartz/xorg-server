@@ -798,6 +798,7 @@ environment?", @"Startup xinitrc dialog");
 
 void X11ApplicationMain (int argc, const char **argv, void (*server_thread) (void *), void *server_arg) {
     NSAutoreleasePool *pool;
+    pthread_t tid;
 
 #ifdef DEBUG
     while (access ("/tmp/x11-block", F_OK) == 0) sleep (1);
@@ -823,10 +824,11 @@ void X11ApplicationMain (int argc, const char **argv, void (*server_thread) (voi
     aquaMenuBarHeight = NSHeight([[NSScreen mainScreen] frame]) -
     NSMaxY([[NSScreen mainScreen] visibleFrame]);
   
-    APPKIT_THREAD = pthread_self();
-    SERVER_THREAD = create_thread (server_thread, server_arg);
+    threadSafetyAssign(APPKIT_THREAD_ID, pthread_self());
+    tid = create_thread(server_thread, server_arg);
+    threadSafetyAssign(SERVER_THREAD_ID, tid);
 
-    if (!SERVER_THREAD) {
+    if (!tid) {
         ErrorF("can't create secondary thread\n");
         exit (1);
     }

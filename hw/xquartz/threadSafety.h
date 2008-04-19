@@ -31,22 +31,28 @@
 
 #include <pthread.h>
 
-extern pthread_t SERVER_THREAD;
-extern pthread_t APPKIT_THREAD;
+#define APPKIT_THREAD_ID 0
+#define SERVER_THREAD_ID 1
 
-#define threadSafetyID(tid) (pthread_equal((tid), SERVER_THREAD) ? "X Server Thread" : "Appkit Thread")
+/* Set tid to be assigned to the passed threadSafety id
+ * id < 8
+ */
+void threadSafetyAssign(unsigned id, pthread_t tid);
 
 /* Dump the call stack */
 void spewCallStack(void);
 
 /* Print message to ErrorF if we're in the wrong thread */
-void _threadAssert(pthread_t tid, const char *file, const char *fun, int line);
+void _threadSafetyAssert(unsigned id, const char *file, const char *fun, int line);
 
-#define threadAssert(tid) _threadAssert(tid, __FILE__, __FUNCTION__, __LINE__)
+/* Get a string that identifies our thread nicely */
+const char *threadSafetyID(pthread_t tid);
+
+#define threadSafetyAssert(id) _threadSafetyAssert(id, __FILE__, __FUNCTION__, __LINE__)
 
 #ifdef DEBUG_THREADS
-#define TA_SERVER() threadAssert(SERVER_THREAD)
-#define TA_APPKIT() threadAssert(APPKIT_THREAD)
+#define TA_APPKIT() threadSafetyAssert(APPKIT_THREAD_ID)
+#define TA_SERVER() threadSafetyAssert(SERVER_THREAD_ID)
 #else
 #define TA_SERVER() 
 #define TA_APPKIT() 

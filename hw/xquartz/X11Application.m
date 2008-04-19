@@ -37,7 +37,6 @@
 #include "quartzForeground.h"
 
 #import "X11Application.h"
-#include <Carbon/Carbon.h>
 
 # include "darwin.h"
 # include "darwinEvents.h"
@@ -45,7 +44,6 @@
 # define _APPLEWM_SERVER_
 # include "X11/extensions/applewm.h"
 # include "micmap.h"
-#undef BOOL
 
 #include <mach/mach.h>
 #include <unistd.h>
@@ -159,7 +157,7 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
     [self orderFrontStandardAboutPanelWithOptions: dict];
 }
 
-- (void) activateX:(BOOL)state {
+- (void) activateX:(OSX_BOOL)state {
     /* Create a TSM document that supports full Unicode input, and
 	 have it activated while X is active (unless using the old
 	 keymapping files) */
@@ -193,7 +191,7 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
 
 - (void) sendEvent:(NSEvent *)e {
  	NSEventType type;
-	BOOL for_appkit, for_x;
+	OSX_BOOL for_appkit, for_x;
 
 	type = [e type];
 
@@ -655,7 +653,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
 			     AppleWMCopyToPasteboard);
 }
 
-- (BOOL) x_active {
+- (OSX_BOOL) x_active {
     return _x_active;
 }
 

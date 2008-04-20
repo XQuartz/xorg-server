@@ -630,7 +630,7 @@ dnl XQuartz DDX Detection... Yes, it's ugly to have it here... but we need to di
 if test "x$COMPOSITE" = xauto; then
 	case $host_os in
 		darwin*)
-			[ "x$XQUARTZ" = xyes -o "x$XQUARTZ" = xauto ] && COMPOSITE=no
+			test "x$XQUARTZ" = xyes -o "x$XQUARTZ" = xauto && COMPOSITE=no
 			;;
 	esac
 fi

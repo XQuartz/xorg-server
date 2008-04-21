@@ -56,13 +56,6 @@
     } else \
 	bits = (src < srcEnd ? READ(src++) : 0); \
 }
-
-#define CHECK_BOUNDS(pointer, limit) \
-  if (dst > dstEnd) { \
-    ErrorF("WARNING: fbbltone tried to write over end of buffer (dst=%p dstEnd=%p)\n", \
-	   dst, dstEnd); \
-    return; \
-  }
     
 #ifndef FBNOPIXADDR
     
@@ -155,7 +148,7 @@ fbBltOne (FbStip    *src,
 	  FbBits    bgxor)
 {
     const FbBits    *fbBits;
-    FbBits	    *srcEnd, *dstEnd;
+    FbBits	    *srcEnd;
     int		    pixelsPerDst;		/* dst pixels per FbBits */
     int		    unitsPerSrc;		/* src patterns per FbStip */
     int		    leftShift, rightShift;	/* align source with dest */
@@ -188,10 +181,9 @@ fbBltOne (FbStip    *src,
 #endif
 
     /*
-     * Do not read or write past the end of the buffer!
+     * Do not read past the end of the buffer!
      */
     srcEnd = src + height * srcStride;
-    dstEnd = dst + dstX + height * dstStride;
 
     /*
      * Number of destination units in FbBits == number of stipple pixels
@@ -304,7 +296,6 @@ fbBltOne (FbStip    *src,
 	     */
 	    if (startmask)
 	    {
-	      CHECK_BOUNDS(dst, dstEnd);
 #if FB_UNIT > 32
 		if (pixelsPerDst == 16)
 		    mask = FbStipple16Bits(FbLeftStipBits(bits,16));
@@ -345,7 +336,6 @@ fbBltOne (FbStip    *src,
 			else
 #endif
 			    mask = fbBits[FbLeftStipBits(bits,pixelsPerDst)];
-			CHECK_BOUNDS(dst, dstEnd);
 			WRITE(dst, FbOpaqueStipple (mask, fgxor, bgxor));
 			dst++;
 			bits = FbStipLeft(bits, pixelsPerDst);
@@ -356,7 +346,6 @@ fbBltOne (FbStip    *src,
 #ifndef FBNOPIXADDR
 		    if (fbLane)
 		    {
-		      CHECK_BOUNDS(dst, dstEnd);
 			while (bits && n)
 			{
 			    switch (fbLane[FbLeftStipBits(bits,pixelsPerDst)]) {
@@ -377,7 +366,6 @@ fbBltOne (FbStip    *src,
 			    if (left || !transparent)
 			    {
 				mask = fbBits[left];
-				CHECK_BOUNDS(dst, dstEnd);
 				WRITE(dst, FbStippleRRop (READ(dst), mask,
 						          fgand, fgxor, bgand, bgxor));
 			    }
@@ -598,7 +586,7 @@ fbBltOne24 (FbStip	*srcLine,
 	    FbBits	bgand,
 	    FbBits	bgxor)
 {
-    FbStip	*src, *srcEnd, *dstEnd;
+    FbStip	*src, *srcEnd;
     FbBits	leftMask, rightMask, mask;
     int		nlMiddle, nl;
     FbStip	stip, bits;
@@ -609,10 +597,9 @@ fbBltOne24 (FbStip	*srcLine,
     int		nDst;
     
     /*
-     * Do not read or write past the end of the buffer!
+     * Do not read past the end of the buffer!
      */
     srcEnd = srcLine + height * srcStride;
-    dstEnd = dst + dstX + height * dstStride;
 
     srcLine += srcX >> FB_STIP_SHIFT;
     dst += dstX >> FB_SHIFT;
@@ -642,7 +629,6 @@ fbBltOne24 (FbStip	*srcLine,
 	    if (leftMask)
 	    {
 		mask = fbStipple24Bits[rot >> 3][stip];
-		CHECK_BOUNDS(dst, dstEnd);
 		WRITE(dst, (READ(dst) & ~leftMask) |
 			    (FbOpaqueStipple (mask,
 					      FbRot24(fgxor, rot),
@@ -655,7 +641,6 @@ fbBltOne24 (FbStip	*srcLine,
 	    while (nl--)
 	    {
 		mask = fbStipple24Bits[rot>>3][stip];
-		CHECK_BOUNDS(dst, dstEnd);
 		WRITE(dst, FbOpaqueStipple (mask,
 					    FbRot24(fgxor, rot),
 					    FbRot24(bgxor, rot)));
@@ -665,7 +650,6 @@ fbBltOne24 (FbStip	*srcLine,
 	    if (rightMask)
 	    {
 		mask = fbStipple24Bits[rot >> 3][stip];
-		CHECK_BOUNDS(dst, dstEnd);
 		WRITE(dst, (READ(dst) & ~rightMask) |
 			    (FbOpaqueStipple (mask,
 					      FbRot24(fgxor, rot),
@@ -690,7 +674,6 @@ fbBltOne24 (FbStip	*srcLine,
 		if (stip)
 		{
 		    mask = fbStipple24Bits[rot >> 3][stip] & leftMask;
-		    CHECK_BOUNDS(dst, dstEnd);
 		    WRITE(dst, (READ(dst) & ~mask) | (FbRot24(fgxor, rot) & mask));
 		}
 		dst++;
@@ -702,7 +685,6 @@ fbBltOne24 (FbStip	*srcLine,
 		if (stip)
 		{
 		    mask = fbStipple24Bits[rot>>3][stip];
-		    CHECK_BOUNDS(dst, dstEnd);
 		    WRITE(dst, (READ(dst) & ~mask) | (FbRot24(fgxor,rot) & mask));
 		}
 		dst++;
@@ -713,7 +695,6 @@ fbBltOne24 (FbStip	*srcLine,
 		if (stip)
 		{
 		    mask = fbStipple24Bits[rot >> 3][stip] & rightMask;
-		    CHECK_BOUNDS(dst, dstEnd);
 		    WRITE(dst, (READ(dst) & ~mask) | (FbRot24(fgxor, rot) & mask));
 		}
 	    }
@@ -731,7 +712,6 @@ fbBltOne24 (FbStip	*srcLine,
 	    if (leftMask)
 	    {
 		mask = fbStipple24Bits[rot >> 3][stip];
-		CHECK_BOUNDS(dst, dstEnd);
 		WRITE(dst, FbStippleRRopMask (READ(dst), mask,
 					      FbRot24(fgand, rot),
 					      FbRot24(fgxor, rot),
@@ -745,7 +725,6 @@ fbBltOne24 (FbStip	*srcLine,
 	    while (nl--)
 	    {
 		mask = fbStipple24Bits[rot >> 3][stip];
-		CHECK_BOUNDS(dst, dstEnd);
 		WRITE(dst, FbStippleRRop (READ(dst), mask,
 					  FbRot24(fgand, rot),
 					  FbRot24(fgxor, rot),
@@ -757,7 +736,6 @@ fbBltOne24 (FbStip	*srcLine,
 	    if (rightMask)
 	    {
 		mask = fbStipple24Bits[rot >> 3][stip];
-		CHECK_BOUNDS(dst, dstEnd);
 		WRITE(dst, FbStippleRRopMask (READ(dst), mask,
 					      FbRot24(fgand, rot),
 					      FbRot24(fgxor, rot),

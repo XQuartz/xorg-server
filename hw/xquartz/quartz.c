@@ -165,7 +165,7 @@ void QuartzInitOutput(
         generation = serverGeneration;
     }
 
-    if (serverGeneration == 0) {
+    if (serverGeneration == 1) {
         QuartzAudioInit();
     }
 
@@ -253,7 +253,7 @@ static void QuartzUpdateScreens(void)
     int x, y, width, height, sx, sy;
     xEvent e;
 
-    DEBUG_LOG("QuartzUpdateScreens()\n");
+    DEBUG_LOG("QuartzUpdateScreens(): noPseudoramiXExtension=%d, screenInfo.numScreens=%d\n", noPseudoramiXExtension, screenInfo.numScreens);
     if (noPseudoramiXExtension || screenInfo.numScreens != 1)
     {
         /* FIXME: if not using Xinerama, we have multiple screens, and

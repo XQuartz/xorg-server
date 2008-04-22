@@ -267,7 +267,9 @@ dixLookupClient(ClientPtr *pClient, XID rid, ClientPtr client, Mask access)
     pointer pRes = (pointer)SecurityLookupIDByClass(client, rid, RC_ANY,
 						    access);
     int clientIndex = CLIENT_ID(rid);
-    client->errorValue = rid;
+    
+    if(client)
+        client->errorValue = rid;
 
     if (clientIndex && pRes && clients[clientIndex] && !(rid & SERVER_BIT)) {
 	*pClient = clients[clientIndex];

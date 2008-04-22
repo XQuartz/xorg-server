@@ -756,12 +756,6 @@ objectValueForTableColumn:(NSTableColumn *)tableColumn row:(int)row
     return YES;
 }
 
-- (BOOL) applicationShouldHandleReopen:(NSApplication *)app
-                     hasVisibleWindows:(BOOL)hasVis {
-    QuartzMessageServerThread (kXquartzBringAllToFront, 0);
-    return YES;
-}
-
 @end
 
 void X11ControllerMain(int argc, const char **argv, void (*server_thread) (void *), void *server_arg) {

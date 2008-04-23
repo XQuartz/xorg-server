@@ -1,4 +1,4 @@
-SUBDIRS = glx mesa apple
+SUBDIRS = glx mesa
 
 WINDOWS_EXTRAS = \
 	windows/ChangeLog \

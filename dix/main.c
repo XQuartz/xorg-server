@@ -241,12 +241,11 @@ static int indexForScanlinePad[ 65 ] = {
 #define MIN(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
-#ifdef __APPLE__
-void DarwinHandleGUI(int argc, char **argv, char **envp);
+#ifdef XQUARTZ
+int dix_main(int argc, char *argv[], char *envp[])
+#else
+int main(int argc, char *argv[], char *envp[])
 #endif
-
-int
-main(int argc, char *argv[], char *envp[])
 {
     int		i, j, k, error;
     char	*xauthfile;
@@ -258,13 +257,6 @@ main(int argc, char *argv[], char *envp[])
     InitRegions();
 #ifdef XPRINT
     PrinterInitGlobals();
-#endif
-
-#ifdef XQUARTZ
-    /* Quartz support on Mac OS X requires that the Cocoa event loop be in
-     * the main thread. This allows the X server main to be called again
-     * from another thread. */
-    DarwinHandleGUI(argc, argv, envp);
 #endif
 
     /* Notice if we're restarted.  Probably this is because we jumped through

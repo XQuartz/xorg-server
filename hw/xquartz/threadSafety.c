@@ -33,8 +33,8 @@
 
 #include <execinfo.h>
 
-#define TH_MAX 8
-static pthread_t threadSavetyThreads[TH_MAX];
+pthread_t APPKIT_THREAD_ID;
+pthread_t SERVER_THREAD_ID;
 
 void spewCallStack(void) {
     void* callstack[128];
@@ -48,19 +48,7 @@ void spewCallStack(void) {
     free(strs);
 }
 
-void threadSafetyAssign(unsigned id, pthread_t tid) {
-    if(id >= TH_MAX) {
-        return;
-    }
-    threadSavetyThreads[id] = tid;
-}
-
-void _threadSafetyAssert(unsigned id, const char *file, const char *fun, int line) {
-    if(id >= TH_MAX) {
-        return;
-    }
-    pthread_t tid = threadSavetyThreads[id];
-
+void _threadSafetyAssert(pthread_t tid, const char *file, const char *fun, int line) {
     if(pthread_equal(pthread_self(), tid))
         return;
     
@@ -72,20 +60,11 @@ void _threadSafetyAssert(unsigned id, const char *file, const char *fun, int lin
 }
 
 const char *threadSafetyID(pthread_t tid) {
-    size_t i;
-    for(i=0; i < TH_MAX && !pthread_equal(threadSavetyThreads[i], tid); i++);
-    
-    if(i == TH_MAX) {
-        return "Invalid Thread";
-    }
-    switch(i) {
-        case APPKIT_THREAD_ID:
-            return "Appkit Thread";
-        case  SERVER_THREAD_ID:
-            return "Xserver Thread";
-        case 3:
-            return "Xplugin xp_async_thread";
-        default:
-            return "Unknown Thread";
+    if(pthread_equal(tid, APPKIT_THREAD_ID)) {
+        return "Appkit Thread";
+    } else if(pthread_equal(tid, SERVER_THREAD_ID)) {
+        return "Xserver Thread";
+    } else {        
+        return "Unknown Thread";
     }
 }

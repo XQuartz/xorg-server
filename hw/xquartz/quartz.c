@@ -39,7 +39,6 @@
 #include "quartz.h"
 #include "darwin.h"
 #include "darwinEvents.h"
-#include "quartzAudio.h"
 #include "pseudoramiX.h"
 #define _APPLEWM_SERVER_
 #include "applewmExt.h"
@@ -162,10 +161,6 @@ void QuartzInitOutput(
     if (generation != serverGeneration) {
         quartzScreenIndex = AllocateScreenPrivateIndex();
         generation = serverGeneration;
-    }
-
-    if (serverGeneration == 1) {
-        QuartzAudioInit();
     }
 
     if (!RegisterBlockAndWakeupHandlers(QuartzBlockHandler,

@@ -495,12 +495,13 @@ AC_ARG_ENABLE(glx-tls,        AS_HELP_STRING([--enable-glx-tls], [Build GLX with
                                 [GLX_USE_TLS=no])
 
 dnl Extensions.
-AC_ARG_ENABLE(composite,      AS_HELP_STRING([--disable-composite], [Build Composite extension (default: enabled)]), [COMPOSITE=$enableval], [COMPOSITE=auto])
+AC_ARG_ENABLE(composite,      AS_HELP_STRING([--disable-composite], [Build Composite extension (default: enabled)]), [COMPOSITE=$enableval], [COMPOSITE=yes])
 AC_ARG_ENABLE(mitshm,         AS_HELP_STRING([--disable-shm], [Build SHM extension (default: enabled)]), [MITSHM=$enableval], [MITSHM=yes])
 AC_ARG_ENABLE(xres,           AS_HELP_STRING([--disable-xres], [Build XRes extension (default: enabled)]), [RES=$enableval], [RES=yes])
 AC_ARG_ENABLE(xtrap,          AS_HELP_STRING([--disable-xtrap], [Build XTrap extension (default: enabled)]), [XTRAP=$enableval], [XTRAP=yes])
-AC_ARG_ENABLE(record,         AS_HELP_STRING([--disable-record], [Build Record extension (default: enabled)]), [RECORD=$enableval], [RECORD=no])
+AC_ARG_ENABLE(record,         AS_HELP_STRING([--enable-record], [Build Record extension (default: disabled)]), [RECORD=$enableval], [RECORD=no])
 AC_ARG_ENABLE(xv,             AS_HELP_STRING([--disable-xv], [Build Xv extension (default: enabled)]), [XV=$enableval], [XV=yes])
+AC_ARG_ENABLE(quartz,         AS_HELP_STRING([--enable-quartz], [Build with darwin quartz support (default: auto)]), [XQUARTZ=$enableval], [XQUARTZ=auto])
 AC_ARG_ENABLE(xvmc,           AS_HELP_STRING([--disable-xvmc], [Build XvMC extension (default: enabled)]), [XVMC=$enableval], [XVMC=yes])
 AC_ARG_ENABLE(dga,            AS_HELP_STRING([--disable-dga], [Build DGA extension (default: auto)]), [DGA=$enableval], [DGA=auto])
 AC_ARG_ENABLE(screensaver,    AS_HELP_STRING([--disable-screensaver], [Build ScreenSaver extension (default: enabled)]), [SCREENSAVER=$enableval], [SCREENSAVER=yes])
@@ -522,7 +523,7 @@ AC_ARG_ENABLE(evi,            AS_HELP_STRING([--disable-evi], [Build Extended-Vi
 AC_ARG_ENABLE(multibuffer,    AS_HELP_STRING([--enable-multibuffer], [Build Multibuffer extension (default: disabled)]), [MULTIBUFFER=$enableval], [MULTIBUFFER=no])
 AC_ARG_ENABLE(fontcache,      AS_HELP_STRING([--enable-fontcache], [Build FontCache extension (default: disabled)]), [FONTCACHE=$enableval], [FONTCACHE=no])
 AC_ARG_ENABLE(dbe,            AS_HELP_STRING([--disable-dbe], [Build DBE extension (default: enabled)]), [DBE=$enableval], [DBE=yes])
-AC_ARG_ENABLE(xf86bigfont,    AS_HELP_STRING([--enable-xf86bigfont], [Build XF86 Big Font extension (default: disabled)]), [XF86BIGFONT=$enableval], [XF86BIGFONT=no])
+AC_ARG_ENABLE(xf86bigfont,    AS_HELP_STRING([--disable-xf86bigfont], [Build XF86 Big Font extension (default: enabled)]), [XF86BIGFONT=$enableval], [XF86BIGFONT=yes])
 AC_ARG_ENABLE(dpms,           AS_HELP_STRING([--disable-dpms], [Build DPMS extension (default: enabled)]), [DPMSExtension=$enableval], [DPMSExtension=yes])
 AC_ARG_ENABLE(config-dbus,    AS_HELP_STRING([--enable-config-dbus], [Build D-BUS API support (default: no)]), [CONFIG_DBUS_API=$enableval], [CONFIG_DBUS_API=no])
 AC_ARG_ENABLE(config-hal,     AS_HELP_STRING([--disable-config-hal], [Build HAL support (default: auto)]), [CONFIG_HAL=$enableval], [CONFIG_HAL=auto])
@@ -531,8 +532,8 @@ AC_ARG_ENABLE(xfree86-utils,     AS_HELP_STRING([--enable-xfree86-utils], [Build
 dnl DDXes.
 AC_ARG_ENABLE(xorg,    	      AS_HELP_STRING([--enable-xorg], [Build Xorg server (default: auto)]), [XORG=$enableval], [XORG=auto])
 AC_ARG_ENABLE(dmx,    	      AS_HELP_STRING([--enable-dmx], [Build DMX server (default: no)]), [DMX=$enableval], [DMX=no])
-AC_ARG_ENABLE(xvfb,    	      AS_HELP_STRING([--enable-xvfb], [Build Xvfb server (default: no)]), [XVFB=$enableval], [XVFB=no])
-AC_ARG_ENABLE(xnest,   	      AS_HELP_STRING([--enable-xnest], [Build Xnest server (default: no)]), [XNEST=$enableval], [XNEST=no])
+AC_ARG_ENABLE(xvfb,    	      AS_HELP_STRING([--enable-xvfb], [Build Xvfb server (default: yes)]), [XVFB=$enableval], [XVFB=yes])
+AC_ARG_ENABLE(xnest,   	      AS_HELP_STRING([--enable-xnest], [Build Xnest server (default: auto)]), [XNEST=$enableval], [XNEST=auto])
 AC_ARG_ENABLE(xquartz,        AS_HELP_STRING([--enable-xquartz], [Build Xquartz server for OS-X (default: auto)]), [XQUARTZ=$enableval], [XQUARTZ=auto])
 AC_ARG_ENABLE(x11app,         AS_HELP_STRING([--enable-x11app], [Build Apple's X11.app for Xquartz (default: auto)]), [X11APP=$enableval], [X11APP=auto])
 AC_ARG_WITH(x11app-archs,     AS_HELP_STRING([--with-x11app-archs=ARCHS], [Architectures to build X11.app for, space delimeted (default: "ppc i386")]), [X11APP_ARCHS=$enableval], [X11APP_ARCHS="ppc i386"])
@@ -617,6 +618,40 @@ XORG_CHECK_LINUXDOC
 dnl Handle installing libxf86config
 AM_CONDITIONAL(INSTALL_LIBXF86CONFIG, [test "x$INSTALL_LIBXF86CONFIG" = xyes])
 
+dnl XQuartz DDX Detection... Yes, it's ugly to have it here... but we need to handle this early on
+case $host_os in
+	darwin*)
+		if test x$XQUARTZ = xauto; then
+			AC_CACHE_CHECK([whether to build Xquartz],xorg_cv_Carbon_framework,[
+		 		save_LDFLAGS=$LDFLAGS
+				LDFLAGS="$LDFLAGS -framework Carbon"
+				AC_LINK_IFELSE([char FSFindFolder(); int main() { FSFindFolder(); return 0;}],
+				[xorg_cv_Carbon_framework=yes],
+				[xorg_cv_Carbon_framework=no])
+			LDFLAGS=$save_LDFLAGS])
+                
+			if test "X$xorg_cv_Carbon_framework" = Xyes; then
+				XQUARTZ=yes
+			else
+				XQUARTZ=no
+			fi
+		fi
+
+		if test "x$XQUARTZ" = xyes ; then
+			XQUARTZ=yes
+			XVFB=no
+			XNEST=no
+
+			COMPOSITE=no
+			DGA=no
+			DPMSExtension=no
+			XF86BIGFONT=no
+			XF86MISC=no
+			XF86VIDMODE=no
+		fi
+		;;
+esac
+
 dnl ---------------------------------------------------------------------------
 dnl Extension section
 dnl ---------------------------------------------------------------------------
@@ -692,15 +727,6 @@ fi
 AM_CONDITIONAL(XVMC, [test "x$XVMC" = xyes])
 if test "x$XVMC" = xyes; then
 	AC_DEFINE(XvMCExtension, 1, [Build XvMC extension])
-fi
-
-dnl XQuartz DDX Detection... Yes, it's ugly to have it here... but we need to disable COMPOSITE for 
-if test "x$COMPOSITE" = xauto; then
-	case $host_os in
-		darwin*)
-			test "x$XQUARTZ" = xyes -o "x$XQUARTZ" = xauto && COMPOSITE=no
-			;;
-	esac
 fi
 
 AM_CONDITIONAL(COMPOSITE, [test "x$COMPOSITE" = xyes])
@@ -1723,22 +1749,6 @@ AM_CONDITIONAL(XWIN_RANDR, [test "x$XWIN" = xyes])
 AM_CONDITIONAL(XWIN_XV, [test "x$XWIN" = xyes && test "x$XV" = xyes])
 
 dnl Darwin / OS X DDX
-if test "X$XQUARTZ" = Xauto; then
-	AC_CACHE_CHECK([whether to build Xquartz],xorg_cv_Carbon_framework,[
-	 	save_LDFLAGS=$LDFLAGS
-		LDFLAGS="$LDFLAGS -framework Carbon"
-		AC_LINK_IFELSE([char FSFindFolder(); int main() { FSFindFolder(); return 0;}],
-			[xorg_cv_Carbon_framework=yes],
-			[xorg_cv_Carbon_framework=no])
-		LDFLAGS=$save_LDFLAGS])
-                
-	if test "X$xorg_cv_Carbon_framework" = Xyes; then
-		XQUARTZ=yes
-	else
-		XQUARTZ=no
-	fi
-fi
-
 if test "x$XQUARTZ" = xyes; then
 	AC_DEFINE(XQUARTZ,1,[Have Quartz])
 	AC_DEFINE(ROOTLESS,1,[Build Rootless code])
@@ -1750,23 +1760,6 @@ if test "x$XQUARTZ" = xyes; then
 	AC_CHECK_LIB([Xplugin],[xp_init],[:])
 
 	CFLAGS="${CFLAGS} -DROOTLESS_WORKAROUND -DNO_ALLOCA"
-
-	if test "x$XF86MISC" = xyes || test "x$XF86MISC" = xauto; then
-		AC_MSG_NOTICE([Disabling XF86Misc extension])
-		XF86MISC=no
-	fi
-	if test "x$XF86VIDMODE" = xyes || test "x$XF86VIDMODE" = xauto; then
-		AC_MSG_NOTICE([Disabling XF86VidMode extension])
-		XF86VIDMODE=no
-	fi
-	if test "x$XF86BIGFONT" = xyes || test "x$XF86BIGFONT" = xauto; then
-		AC_MSG_NOTICE([Disabling XF86BigFont extension])
-		XF86BIGFONT=no
-	fi
-	if test "x$DGA" = xyes || test "x$DGA" = xauto; then
-		AC_MSG_NOTICE([Disabling DGA extension])
-		DGA=no
-	fi
 fi
 
 # Support for objc in autotools is minimal and not documented.

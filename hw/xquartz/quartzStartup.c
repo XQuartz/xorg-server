@@ -70,6 +70,12 @@ void DarwinHandleGUI(int argc, char **argv, char **envp) {
     int         i;
     int         fd[2];
 
+    /* Unset CFProcessPath, so our children don't inherit this kludge we need
+     * to load our nib.  If an xterm gets this set, then it fails to
+     * 'open hi.txt' properly.
+     */
+    unsetenv("CFProcessPath");
+    
     if (been_here) {
         return;
     }

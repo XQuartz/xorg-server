@@ -402,8 +402,8 @@ GetKeyboardValuatorEvents(xEvent *events, DeviceIntPtr pDev, int type,
                           int num_valuators, int *valuators) {
     int numEvents = 0;
     CARD32 ms = 0;
-    KeySym *map = pDev->key->curKeySyms.map;
-    KeySym sym = map[key_code * pDev->key->curKeySyms.mapWidth];
+    KeySym *map;
+    KeySym sym;
     deviceKeyButtonPointer *kbp = NULL;
 
     if (!events)
@@ -414,11 +414,14 @@ GetKeyboardValuatorEvents(xEvent *events, DeviceIntPtr pDev, int type,
         return 0;
 
     if (!pDev->key || !pDev->focus || !pDev->kbdfeed ||
-        (pDev->coreEvents && !inputInfo.keyboard->key))
+        (pDev->coreEvents && !(inputInfo.keyboard && inputInfo.keyboard->key)))
         return 0;
 
     if (key_code < 8 || key_code > 255)
         return 0;
+    
+    map = pDev->key->curKeySyms.map;
+    sym = map[key_code * pDev->key->curKeySyms.mapWidth];
 
     if (pDev->coreEvents)
         numEvents = 2;
@@ -535,6 +538,9 @@ GetPointerEvents(xEvent *events, DeviceIntPtr pDev, int type, int buttons,
         return 0;
 
     if ((type == ButtonPress || type == ButtonRelease) && !pDev->button)
+        return 0;
+    
+    if(pDev->coreEvents && !cp)
         return 0;
 
     /* FIXME: I guess it should, in theory, be possible to post button events

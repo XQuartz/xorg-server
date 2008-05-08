@@ -306,10 +306,13 @@ clipAxis(DeviceIntPtr pDev, int axisNum, int *val)
 {
     AxisInfoPtr axes = pDev->valuator->axes + axisNum;
 
-    if (*val < axes->min_value)
-        *val = axes->min_value;
-    if (axes->max_value >= 0 && *val > axes->max_value)
-        *val = axes->max_value;
+    /* No clipping if the value-range <= 0 */
+    if(axes->min_value < axes->min_value) {
+        if (*val < axes->min_value)
+            *val = axes->min_value;
+        if (*val > axes->max_value)
+            *val = axes->max_value;
+    }
 }
 
 /**
@@ -526,12 +529,10 @@ GetPointerEvents(xEvent *events, DeviceIntPtr pDev, int type, int buttons,
     int num_events = 0, final_valuator = 0;
     CARD32 ms = 0;
     deviceKeyButtonPointer *kbp = NULL;
-    /* Thanks to a broken lib, we _always_ have to chase DeviceMotionNotifies
-     * with DeviceValuators. */
-    Bool sendValuators = (type == MotionNotify || flags & POINTER_ABSOLUTE);
     DeviceIntPtr cp = inputInfo.pointer;
     int x = 0, y = 0;
     Bool coreOnly = (pDev == inputInfo.pointer);
+    ScreenPtr scr = miPointerGetScreen(pDev);
 
     /* Sanity checks. */
     if (type != MotionNotify && type != ButtonPress && type != ButtonRelease)
@@ -557,7 +558,7 @@ GetPointerEvents(xEvent *events, DeviceIntPtr pDev, int type, int buttons,
         return 0;
 
     /* Do we need to send a DeviceValuator event? */
-    if (!coreOnly && sendValuators) {
+    if (!coreOnly && num_valuators) {
         if ((((num_valuators - 1) / 6) + 1) > MAX_VALUATOR_EVENTS)
             num_valuators = MAX_VALUATOR_EVENTS * 6;
         num_events += ((num_valuators - 1) / 6) + 1;
@@ -578,21 +579,44 @@ GetPointerEvents(xEvent *events, DeviceIntPtr pDev, int type, int buttons,
             x = valuators[0];
         }
         else {
-            if (pDev->coreEvents)
-                x = cp->valuator->lastx;
-            else
-                x = pDev->valuator->lastx;
+            /* If we're sending core events but didn't provide a value,
+             * translate the core value (but use the device coord if
+             * it translates to the same coord to preserve sub-pixel
+             * coord information). If we're not sending core events use
+             * whatever value we have */
+            x = pDev->valuator->lastx;
+            if(pDev->coreEvents) {
+                int min = pDev->valuator->axes[0].min_value;
+                int max = pDev->valuator->axes[0].max_value;
+                if(min < max) {
+                    if((int)((float)(x-min)*scr->width/(max-min+1)) != cp->valuator->lastx)
+                        x = (int)((float)(cp->valuator->lastx)*(max-min+1)/scr->width)+min;
+                }
+                else
+                    x = cp->valuator->lastx;
+            }
         }
 
         if (first_valuator <= 1 && num_valuators >= (2 - first_valuator)) {
             y = valuators[1 - first_valuator];
         }
         else {
-            if (pDev->coreEvents)
-                y = cp->valuator->lasty;
-            else
-                y = pDev->valuator->lasty;
+            y = pDev->valuator->lasty;
+            if(pDev->coreEvents) {
+                int min = pDev->valuator->axes[1].min_value;
+                int max = pDev->valuator->axes[1].max_value;
+                if(min < max) {
+                    if((int)((float)(y-min)*scr->height/(max-min+1)) != cp->valuator->lasty)
+                        y = (int)((float)(cp->valuator->lasty)*(max-min+1)/scr->height)+min;
+                }
+                else
+                    y = cp->valuator->lasty;
+            }
         }
+
+        /* Clip both x and y to the defined limits (usually co-ord space limit). */
+        clipAxis(pDev, 0, &x);
+        clipAxis(pDev, 1, &y);
     }
     else {
         if (flags & POINTER_ACCELERATE)
@@ -600,53 +624,106 @@ GetPointerEvents(xEvent *events, DeviceIntPtr pDev, int type, int buttons,
                               valuators);
 
         if (pDev->coreEvents) {
-            if (first_valuator == 0 && num_valuators >= 1)
-                x = cp->valuator->lastx + valuators[0];
+            /* Get and convert the core pointer coordinate space into
+             * device coordinates. Use the device coords if it translates
+             * into the same position as the core to preserve relative sub-
+             * pixel movements from the device. */
+            int min = pDev->valuator->axes[0].min_value;
+            int max = pDev->valuator->axes[0].max_value;
+            if(min < max) {
+                x = pDev->valuator->lastx;
+                if((int)((float)(x-min)*scr->width/(max-min+1)) != cp->valuator->lastx)
+                    x = (int)((float)(cp->valuator->lastx)*(max-min+1)/scr->width)+min;
+            }
             else
                 x = cp->valuator->lastx;
 
-            if (first_valuator <= 1 && num_valuators >= (2 - first_valuator))
-                y = cp->valuator->lasty + valuators[1 - first_valuator];
+            min = pDev->valuator->axes[1].min_value;
+            max = pDev->valuator->axes[1].max_value;
+            if(min < max) {
+                y = pDev->valuator->lasty;
+                if((int)((float)(y-min)*scr->height/(max-min+1)) != cp->valuator->lasty)
+                    y = (int)((float)(cp->valuator->lasty)*(max-min+1)/scr->height)+min;
+            }
             else
                 y = cp->valuator->lasty;
+
+            /* Add relative movement */
+            if (first_valuator == 0 && num_valuators >= 1)
+                x += valuators[0];
+            if (first_valuator <= 1 && num_valuators >= (2 - first_valuator))
+                y += valuators[1 - first_valuator];
         }
         else {
+            x = pDev->valuator->lastx;
+            y = pDev->valuator->lasty;
             if (first_valuator == 0 && num_valuators >= 1)
-                x = pDev->valuator->lastx + valuators[0];
-            else
-                x = pDev->valuator->lastx;
-
+                x += valuators[0];
             if (first_valuator <= 1 && num_valuators >= (2 - first_valuator))
-                y = pDev->valuator->lasty + valuators[1 - first_valuator];
-            else
-                y = pDev->valuator->lasty;
+                y += valuators[1 - first_valuator];
+
+            if(!coreOnly) {
+                /* Since we're not sending core-events we must clip both x and y
+                 * to the defined limits so we don't run outside the box. */
+                clipAxis(pDev, 0, &x);
+                clipAxis(pDev, 1, &y);
+            }
         }
     }
 
-    /* Clip both x and y to the defined limits (usually co-ord space limit). */
-    clipAxis(pDev, 0, &x);
-    clipAxis(pDev, 1, &y);
+    pDev->valuator->lastx = x;
+    pDev->valuator->lasty = y;
+    /* Convert the dev coord back to screen coord if we're
+     * sending core events */
+    if (pDev->coreEvents) {
+        int min = pDev->valuator->axes[0].min_value;
+        int max = pDev->valuator->axes[0].max_value;
+        if(min < max)
+            x = (int)((float)(x-min)*scr->width/(max-min+1));
+        cp->valuator->lastx = x;
+        min = pDev->valuator->axes[1].min_value;
+        max = pDev->valuator->axes[1].max_value;
+        if(min < max)
+            y = (int)((float)(y-min)*scr->height/(max-min+1));
+        cp->valuator->lasty = y;
+    }
 
     /* This takes care of crossing screens for us, as well as clipping
      * to the current screen.  Right now, we only have one history buffer,
      * so we don't set this for both the device and core.*/
     miPointerSetPosition(pDev, &x, &y, ms);
 
-    /* Drop x and y back into the valuators list, if they were originally
-     * present. */
-    if (first_valuator == 0 && num_valuators >= 1)
-        valuators[0] = x;
-    if (first_valuator <= 1 && num_valuators >= (2 - first_valuator))
-        valuators[1 - first_valuator] = y;
-
-    updateMotionHistory(pDev, ms, first_valuator, num_valuators, valuators);
-
     if (pDev->coreEvents) {
+        /* miPointerSetPosition may have changed screen */
+        scr = miPointerGetScreen(pDev);
+        if(x != cp->valuator->lastx) {
+            int min = pDev->valuator->axes[0].min_value;
+            int max = pDev->valuator->axes[0].max_value;
+            cp->valuator->lastx = pDev->valuator->lastx = x;
+            if(min < max)
+                pDev->valuator->lastx = (int)((float)(x)*(max-min+1)/scr->width)+min;
+        }
+        if(y != cp->valuator->lasty) {
+            int min = pDev->valuator->axes[1].min_value;
+            int max = pDev->valuator->axes[1].max_value;
+            cp->valuator->lasty = pDev->valuator->lasty = y;
+            if(min < max)
+                pDev->valuator->lasty = (int)((float)(y)*(max-min+1)/scr->height)+min;
+        }
+    }
+    else if (coreOnly) {
         cp->valuator->lastx = x;
         cp->valuator->lasty = y;
     }
-    pDev->valuator->lastx = x;
-    pDev->valuator->lasty = y;
+
+    /* Drop x and y back into the valuators list, if they were originally
+     * present. */
+    if (first_valuator == 0 && num_valuators >= 1)
+        valuators[0] = pDev->valuator->lastx;
+    if (first_valuator <= 1 && num_valuators >= (2 - first_valuator))
+        valuators[1 - first_valuator] = pDev->valuator->lasty;
+
+    updateMotionHistory(pDev, ms, first_valuator, num_valuators, valuators);
 
     /* for some reason inputInfo.pointer does not have coreEvents set */
     if (coreOnly || pDev->coreEvents) {
@@ -684,11 +761,11 @@ GetPointerEvents(xEvent *events, DeviceIntPtr pDev, int type, int buttons,
             kbp->detail = pDev->button->map[buttons];
         }
 
-        kbp->root_x = x;
-        kbp->root_y = y;
+        kbp->root_x = pDev->valuator->lastx;
+        kbp->root_y = pDev->valuator->lasty;
 
         events++;
-        if (sendValuators) {
+        if (num_valuators) {
             kbp->deviceid |= MORE_EVENTS;
             clipValuators(pDev, first_valuator, num_valuators, valuators);
             events = getValuatorEvents(events, pDev, first_valuator,

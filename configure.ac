@@ -66,18 +66,25 @@ AC_SYS_LARGEFILE
 XORG_PROG_RAWCPP
 
 dnl Check for dtrace program (needed to build Xserver dtrace probes)
+dnl Also checks for <sys/sdt.h>, since some Linux distros have an 
+dnl ISDN trace program named dtrace
 AC_ARG_WITH(dtrace, AS_HELP_STRING([--with-dtrace=PATH],
 	     [Enable dtrace probes (default: enabled if dtrace found)]),
 	     [WDTRACE=$withval], [WDTRACE=auto])
 if test "x$WDTRACE" = "xyes" -o "x$WDTRACE" = "xauto" ; then
 	case $host_os in
-	        darwin*) WDTRACE="no" ;;
-		*) AC_PATH_PROG(DTRACE, [dtrace], [not_found], [$PATH:/usr/sbin])
-		   if test "x$DTRACE" = "xnot_found" ; then
+	darwin*) WDTRACE="no" ;;
+	*)	AC_PATH_PROG(DTRACE, [dtrace], [not_found], [$PATH:/usr/sbin])
+		if test "x$DTRACE" = "xnot_found" ; then
 			if test "x$WDTRACE" = "xyes" ; then
 				AC_MSG_FAILURE([dtrace requested but not found])
 			fi
-		   	WDTRACE="no"
+			WDTRACE="no"
+		else
+			AC_CHECK_HEADER(sys/sdt.h, [HAS_SDT_H="yes"], [HAS_SDT_H="no"])
+			if test "x$WDTRACE" = "xauto" -a "x$HAS_SDT_H" = "xno" ; then
+				WDTRACE="no"
+			fi
 		fi ;;
 	esac
 fi

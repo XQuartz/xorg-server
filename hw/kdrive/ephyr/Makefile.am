@@ -28,6 +28,7 @@ Xephyr_LDADD = 						\
 	libxephyr-hostx.a			        \
 	../../../exa/libexa.la				\
 	@KDRIVE_LIBS@					\
+	@XSERVER_LIBS@					\
         @XEPHYR_LIBS@
 
 Xephyr_DEPENDENCIES =	\

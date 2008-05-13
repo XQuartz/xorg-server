@@ -525,7 +525,7 @@ XkbRF_RulesPtr	rules;
 
     file = fopen(buf, "r");
     if (!file) {
-        LogMessage(X_ERROR, "XKB: Couldn't open rules file %s\n", file);
+        LogMessage(X_ERROR, "XKB: Couldn't open rules file %s\n", buf);
 	return False;
     }
 

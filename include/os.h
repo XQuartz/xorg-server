@@ -167,6 +167,10 @@ extern void MakeClientGrabImpervious(ClientPtr /*client*/);
 
 extern void MakeClientGrabPervious(ClientPtr /*client*/);
 
+#ifdef XQUARTZ
+extern void ListenOnOpenFD(int /* fd */);
+#endif
+
 extern void AvailableClientInput(ClientPtr /* client */);
 
 extern CARD32 GetTimeInMillis(void);

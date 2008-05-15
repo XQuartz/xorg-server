@@ -37,12 +37,15 @@
 
 #import "X11Application.h"
 
-# include "darwin.h"
-# include "darwinEvents.h"
-# include "quartz.h"
-# define _APPLEWM_SERVER_
-# include "X11/extensions/applewm.h"
-# include "micmap.h"
+#include "darwin.h"
+#include "darwinEvents.h"
+#include "quartz.h"
+#define _APPLEWM_SERVER_
+#include "X11/extensions/applewm.h"
+#include "micmap.h"
+
+#include "os.h"
+#include "mach-startup/launchd_fd.h"
 
 #include <mach/mach.h>
 #include <unistd.h>
@@ -786,6 +789,7 @@ environment?", @"Startup xinitrc dialog");
 
 void X11ApplicationMain (int argc, char **argv, char **envp) {
     NSAutoreleasePool *pool;
+    int launchd_fd;
 
 #ifdef DEBUG
     while (access ("/tmp/x11-block", F_OK) == 0) sleep (1);
@@ -813,6 +817,14 @@ void X11ApplicationMain (int argc, char **argv, char **envp) {
 
     /* Tell the server thread that it can proceed */
     QuartzInitServer(argc, argv, envp);
+    
+#ifndef NEW_LAUNCH_METHOD
+    /* Start listening on the launchd fd */
+    launchd_fd = launchd_display_fd();
+    if(launchd_fd != -1) {
+        DarwinSendDDXEvent(kXquartzListenOnOpenFD, 1, launchd_fd);
+    }
+#endif
 
     [NSApp run];
     /* not reached */

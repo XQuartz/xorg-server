@@ -233,7 +233,7 @@ _X_EXPORT Bool noXInputExtension = FALSE;
 _X_EXPORT Bool noXIdleExtension = FALSE;
 #endif
 #ifdef XSELINUX
-_X_EXPORT Bool noSELinuxExtension = FALSE;
+_X_EXPORT Bool noSELinuxExtension = TRUE;
 _X_EXPORT int selinuxEnforcingState = SELINUX_MODE_DEFAULT;
 #endif
 #ifdef XV

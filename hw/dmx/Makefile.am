@@ -87,6 +87,7 @@ Xdmx_LDADD = $(XORG_CORE_LIBS) \
              $(GLX_LIBS) \
              input/libdmxinput.a \
              config/libdmxconfig.a \
+             @XSERVER_LIBS@ \
              @DMXMODULES_LIBS@
 
 # Man page

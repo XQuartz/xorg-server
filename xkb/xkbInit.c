@@ -291,6 +291,9 @@ XkbDeleteRulesDflts()
     XkbVariantDflt = NULL;
     _XkbFree(XkbOptionsDflt);
     XkbOptionsDflt = NULL;
+
+    XkbFreeKeyboard(xkb_cached_map, XkbAllComponentsMask, True);
+    xkb_cached_map = NULL;
 }
 
 /***====================================================================***/

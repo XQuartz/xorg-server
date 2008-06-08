@@ -1504,6 +1504,8 @@ ProcRenderCreateCursor (ClientPtr client)
     pScreen = pSrc->pDrawable->pScreen;
     width = pSrc->pDrawable->width;
     height = pSrc->pDrawable->height;
+    if (height && width > UINT32_MAX/(height*sizeof(CARD32)))
+	return BadAlloc;
     if ( stuff->x > width 
       || stuff->y > height )
 	return (BadMatch);

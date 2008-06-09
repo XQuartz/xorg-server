@@ -838,6 +838,7 @@ if test "x$GLX" = xyes && ! test "x$MESA_SOURCE" = x; then
 	if test $? -ne 0; then
 		AC_MSG_ERROR([Failed to link Mesa source tree.  Please specify a proper path to Mesa sources, or disable GLX.])
 	fi
+	GLX_SYS_LIBS="$GLX_SYS_LIBS $DLOPEN_LIBS"
 else
         GLX=no
 fi

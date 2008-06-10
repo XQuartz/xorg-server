@@ -1917,6 +1917,8 @@ static int ProcRenderCreateLinearGradient (ClientPtr client)
     LEGAL_NEW_RESOURCE(stuff->pid, client);
 
     len = (client->req_len << 2) - sizeof(xRenderCreateLinearGradientReq);
+    if (stuff->nStops > UINT32_MAX/(sizeof(xFixed) + sizeof(xRenderColor)))
+	return BadLength;
     if (len != stuff->nStops*(sizeof(xFixed) + sizeof(xRenderColor)))
         return BadLength;
 
@@ -2488,18 +2490,18 @@ SProcRenderCreateSolidFill(ClientPtr client)
     return (*ProcRenderVector[stuff->renderReqType]) (client);
 }
 
-static void swapStops(void *stuff, int n)
+static void swapStops(void *stuff, int num)
 {
-    int i;
+    int i, n;
     CARD32 *stops;
     CARD16 *colors;
     stops = (CARD32 *)(stuff);
-    for (i = 0; i < n; ++i) {
+    for (i = 0; i < num; ++i) {
         swapl(stops, n);
         ++stops;
     }
     colors = (CARD16 *)(stops);
-    for (i = 0; i < 4*n; ++i) {
+    for (i = 0; i < 4*num; ++i) {
         swaps(stops, n);
         ++stops;
     }
@@ -2522,6 +2524,8 @@ SProcRenderCreateLinearGradient (ClientPtr client)
     swapl(&stuff->nStops, n);
 
     len = (client->req_len << 2) - sizeof(xRenderCreateLinearGradientReq);
+    if (stuff->nStops > UINT32_MAX/(sizeof(xFixed) + sizeof(xRenderColor)))
+	return BadLength;
     if (len != stuff->nStops*(sizeof(xFixed) + sizeof(xRenderColor)))
         return BadLength;
 
@@ -2549,6 +2553,8 @@ SProcRenderCreateRadialGradient (ClientPtr client)
     swapl(&stuff->nStops, n);
 
     len = (client->req_len << 2) - sizeof(xRenderCreateRadialGradientReq);
+    if (stuff->nStops > UINT32_MAX/(sizeof(xFixed) + sizeof(xRenderColor)))
+	return BadLength;
     if (len != stuff->nStops*(sizeof(xFixed) + sizeof(xRenderColor)))
         return BadLength;
 
@@ -2573,6 +2579,8 @@ SProcRenderCreateConicalGradient (ClientPtr client)
     swapl(&stuff->nStops, n);
 
     len = (client->req_len << 2) - sizeof(xRenderCreateConicalGradientReq);
+    if (stuff->nStops > UINT32_MAX/(sizeof(xFixed) + sizeof(xRenderColor)))
+	return BadLength;
     if (len != stuff->nStops*(sizeof(xFixed) + sizeof(xRenderColor)))
         return BadLength;
 

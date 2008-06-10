@@ -127,7 +127,6 @@ int server_main(int argc, char **argv, char **envp) {
     /* Create the audio mutex */
     QuartzAudioInit();
 
-    QuartzMoveToForeground();
     X11ControllerMain(argc, argv, envp);
     exit(0);
 }

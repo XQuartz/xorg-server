@@ -248,6 +248,19 @@ exaSetAccelBlock(ExaScreenPrivPtr pExaScr, ExaPixmapPrivPtr pExaPixmap,
         pExaPixmap->accel_blocked |= EXA_RANGE_HEIGHT;
 }
 
+static void
+exaSetFbPitch(ExaScreenPrivPtr pExaScr, ExaPixmapPrivPtr pExaPixmap,
+              int w, int h, int bpp)
+{
+    if (pExaScr->info->flags & EXA_OFFSCREEN_ALIGN_POT && w != 1)
+        pExaPixmap->fb_pitch = (1 << (exaLog2(w - 1) + 1)) * bpp / 8;
+    else
+        pExaPixmap->fb_pitch = w * bpp / 8;
+
+    pExaPixmap->fb_pitch = EXA_ALIGN(pExaPixmap->fb_pitch,
+                                     pExaScr->info->pixmapPitchAlign);
+}
+
 /**
  * exaCreatePixmap() creates a new pixmap.
  *
@@ -292,12 +305,8 @@ exaCreatePixmap(ScreenPtr pScreen, int w, int h, int depth,
         if (paddedWidth / 4 > 32767 || h > 32767)
             return NullPixmap;
 
-        if (pExaScr->info->flags & EXA_OFFSCREEN_ALIGN_POT && w != 1)
-            pExaPixmap->fb_pitch = (1 << (exaLog2(w - 1) + 1)) * bpp / 8;
-        else
-            pExaPixmap->fb_pitch = w * bpp / 8;
-        pExaPixmap->fb_pitch = EXA_ALIGN(pExaPixmap->fb_pitch,
-                                         pExaScr->info->pixmapPitchAlign);
+        exaSetFbPitch(pExaScr, pExaPixmap, w, h, bpp);
+
         if (paddedWidth < pExaPixmap->fb_pitch)
             paddedWidth = pExaPixmap->fb_pitch;
 
@@ -331,12 +340,7 @@ exaCreatePixmap(ScreenPtr pScreen, int w, int h, int depth,
         pExaPixmap->offscreen = FALSE;
 
         pExaPixmap->fb_ptr = NULL;
-        if (pExaScr->info->flags & EXA_OFFSCREEN_ALIGN_POT && w != 1)
-            pExaPixmap->fb_pitch = (1 << (exaLog2(w - 1) + 1)) * bpp / 8;
-        else
-            pExaPixmap->fb_pitch = w * bpp / 8;
-        pExaPixmap->fb_pitch = EXA_ALIGN(pExaPixmap->fb_pitch,
-				         pExaScr->info->pixmapPitchAlign);
+        exaSetFbPitch(pExaScr, pExaPixmap, w, h, bpp);
         pExaPixmap->fb_size = pExaPixmap->fb_pitch * h;
 
         if (pExaPixmap->fb_pitch > 131071) {
@@ -384,10 +388,19 @@ exaModifyPixmapHeader(PixmapPtr pPixmap, int width, int height, int depth,
     pExaPixmap = ExaGetPixmapPriv(pPixmap);
 
     if (pExaPixmap) {
-	pExaPixmap->sys_ptr = pPixData;
+        if (pPixData)
+            pExaPixmap->sys_ptr = pPixData;
 
-        exaSetAccelBlock(pExaScr, pExaPixmap,
-                         width, height, bitsPerPixel);
+        if (devKind > 0)
+            pExaPixmap->sys_pitch = devKind;
+
+        if (width > 0 && height > 0 && bitsPerPixel > 0) {
+            exaSetFbPitch(pExaScr, pExaPixmap,
+                          width, height, bitsPerPixel);
+
+            exaSetAccelBlock(pExaScr, pExaPixmap,
+                             width, height, bitsPerPixel);
+        }
     }
 
 
@@ -686,6 +699,34 @@ exaBitmapToRegion(PixmapPtr pPix)
   return ret;
 }
 
+static Bool
+exaCreateScreenResources(ScreenPtr pScreen)
+{
+    ExaScreenPriv(pScreen);
+    PixmapPtr pScreenPixmap;
+    Bool b;
+
+    pScreen->CreateScreenResources = pExaScr->SavedCreateScreenResources;
+    b = pScreen->CreateScreenResources(pScreen);
+    pScreen->CreateScreenResources = exaCreateScreenResources;
+
+    if (!b)
+        return FALSE;
+
+    pScreenPixmap = pScreen->GetScreenPixmap(pScreen);
+
+    if (pScreenPixmap) {
+        ExaPixmapPriv(pScreenPixmap);
+
+        exaSetAccelBlock(pExaScr, pExaPixmap,
+                         pScreenPixmap->drawable.width,
+                         pScreenPixmap->drawable.height,
+                         pScreenPixmap->drawable.bitsPerPixel);
+    }
+
+    return TRUE;
+}
+
 /**
  * exaCloseScreen() unwraps its wrapped screen functions and tears down EXA's
  * screen private, before calling down to the next CloseSccreen.
@@ -707,6 +748,7 @@ exaCloseScreen(int i, ScreenPtr pScreen)
     pScreen->CopyWindow = pExaScr->SavedCopyWindow;
     pScreen->ChangeWindowAttributes = pExaScr->SavedChangeWindowAttributes;
     pScreen->BitmapToRegion = pExaScr->SavedBitmapToRegion;
+    pScreen->CreateScreenResources = pExaScr->SavedCreateScreenResources;
 #ifdef RENDER
     if (ps) {
 	ps->Composite = pExaScr->SavedComposite;
@@ -863,6 +905,9 @@ exaDriverInit (ScreenPtr		pScreen,
 
     pExaScr->SavedBitmapToRegion = pScreen->BitmapToRegion;
     pScreen->BitmapToRegion = exaBitmapToRegion;
+
+    pExaScr->SavedCreateScreenResources = pScreen->CreateScreenResources;
+    pScreen->CreateScreenResources = exaCreateScreenResources;
 
 #ifdef RENDER
     if (ps) {

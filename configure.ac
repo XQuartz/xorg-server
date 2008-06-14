@@ -584,7 +584,7 @@ AC_ARG_ENABLE(xfake,          AS_HELP_STRING([--enable-xfake], [Build the kdrive
 AC_ARG_ENABLE(xfbdev,         AS_HELP_STRING([--enable-xfbdev], [Build the kdrive framebuffer device server (default: auto)]), [XFBDEV=$enableval], [XFBDEV=auto])
 AC_ARG_ENABLE(kdrive-vesa,    AS_HELP_STRING([--enable-kdrive-vesa], [Build the kdrive VESA-based servers (default: auto)]), [KDRIVEVESA=$enableval], [KDRIVEVESA=auto])
 dnl xprint
-AC_ARG_ENABLE(freetype,       AS_HELP_STRING([ --enable-freetype], [Build Xprint FreeType backend (default: yes)]), [XP_USE_FREETYPE=$enableval],[XP_USE_FREETYPE=no])
+AC_ARG_ENABLE(freetype,       AS_HELP_STRING([ --enable-freetype], [Build Xprint FreeType backend (default: no)]), [XP_USE_FREETYPE=$enableval],[XP_USE_FREETYPE=no])
 AC_ARG_WITH(freetype-config,  AS_HELP_STRING([ --with-freetype-config=PROG], [Use FreeType configuration program PROG (default: auto)]), freetype_config=$withval, freetype_config=auto)
 
 

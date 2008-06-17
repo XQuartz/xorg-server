@@ -490,9 +490,11 @@ nooverride:
 
 	    data = xalloc(pitch * pixmap->drawable.height);
 
+	    __glXenterServer(GL_FALSE);
 	    pScreen->GetImage(&pixmap->drawable, 0 /*pixmap->drawable.x*/,
 			      0 /*pixmap->drawable.y*/, pixmap->drawable.width,
 			      pixmap->drawable.height, ZPixmap, ~0, data);
+	    __glXleaveServer(GL_FALSE);
 
 	    if (pixmap->drawable.depth == 24)
 		glxFillAlphaChannel(data,
@@ -534,9 +536,11 @@ nooverride:
 					   pixmap->drawable.depth);
 	    void *data = xalloc(pitch * (p[i].y2 - p[i].y1));
 
+	    __glXenterServer(GL_FALSE);
 	    pScreen->GetImage(&pixmap->drawable, /*pixmap->drawable.x +*/ p[i].x1,
 			      /*pixmap->drawable.y*/ + p[i].y1, p[i].x2 - p[i].x1,
 			      p[i].y2 - p[i].y1, ZPixmap, ~0, data);
+	    __glXleaveServer(GL_FALSE);
 
 	    if (pixmap->drawable.depth == 24)
 		glxFillAlphaChannel(data,

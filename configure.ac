@@ -190,7 +190,7 @@ dnl Checks for library functions.
 AC_FUNC_VPRINTF
 AC_CHECK_FUNCS([geteuid getuid link memmove memset mkstemp strchr strrchr \
 		strtol getopt getopt_long vsnprintf walkcontext backtrace \
-		getisax getzoneid shmctl64])
+		getisax getzoneid shmctl64 strcasestr])
 AC_FUNC_ALLOCA
 dnl Old HAS_* names used in os/*.c.
 AC_CHECK_FUNC([getdtablesize],
@@ -583,7 +583,7 @@ AC_ARG_ENABLE(xfake,          AS_HELP_STRING([--enable-xfake], [Build the kdrive
 AC_ARG_ENABLE(xfbdev,         AS_HELP_STRING([--enable-xfbdev], [Build the kdrive framebuffer device server (default: auto)]), [XFBDEV=$enableval], [XFBDEV=auto])
 AC_ARG_ENABLE(kdrive-vesa,    AS_HELP_STRING([--enable-kdrive-vesa], [Build the kdrive VESA-based servers (default: auto)]), [KDRIVEVESA=$enableval], [KDRIVEVESA=auto])
 dnl xprint
-AC_ARG_ENABLE(freetype,       AS_HELP_STRING([ --enable-freetype], [Build Xprint FreeType backend (default: yes)]), [XP_USE_FREETYPE=$enableval],[XP_USE_FREETYPE=no])
+AC_ARG_ENABLE(freetype,       AS_HELP_STRING([ --enable-freetype], [Build Xprint FreeType backend (default: no)]), [XP_USE_FREETYPE=$enableval],[XP_USE_FREETYPE=no])
 AC_ARG_WITH(freetype-config,  AS_HELP_STRING([ --with-freetype-config=PROG], [Use FreeType configuration program PROG (default: auto)]), freetype_config=$withval, freetype_config=auto)
 
 
@@ -1058,6 +1058,8 @@ XKB_STUB_LIB='$(top_builddir)/xkb/libxkbstubs.la'
 
 AC_CHECK_FUNC(strcasecmp, [], AC_DEFINE([NEED_STRCASECMP], 1,
                                         [Do not have 'strcasecmp'.]))
+AC_CHECK_FUNC(strncasecmp, [], AC_DEFINE([NEED_STRNCASECMP], 1,
+                                        [Do not have 'strncasecmp'.]))
 
 if test "x$NULL_ROOT_CURSOR" = xyes; then
         AC_DEFINE(NULL_ROOT_CURSOR, 1, [Use an empty root cursor])
@@ -1386,8 +1388,6 @@ if test "x$XORG" = xyes -o "x$XGL" = xyes; then
 			;;
 		  alpha*)
 		  	linux_alpha=yes
-			XORG_OS_PCI="axp"
-			xorg_bus_linuxpci="no"
 			;;
 		  i*86|amd64*|x86_64*)
 			linux_acpi="yes"

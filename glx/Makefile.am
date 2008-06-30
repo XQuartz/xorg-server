@@ -40,12 +40,15 @@ glapi_sources =					\
 	glapitemp.h				\
 	glapi.c					\
 	glapi.h					\
+	glapioffsets.h				\
 	glthread.c				\
-	glthread.h
+	glthread.h				\
+	glprocs.h
 
 libglxdri_la_SOURCES = \
         glxdri.c \
         glxdri2.c \
+	glxdricommon.h \
         extension_string.c \
         extension_string.h
 

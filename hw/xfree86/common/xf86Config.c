@@ -123,7 +123,9 @@ static ModuleDefault ModuleDefaults[] = {
     {.name = "record",   .toLoad = TRUE,    .load_opt=NULL},
 #endif
     {.name = "dri",      .toLoad = TRUE,    .load_opt=NULL},
+#ifdef DRI2
     {.name = "dri2",     .toLoad = TRUE,    .load_opt=NULL},
+#endif
     {.name = NULL,       .toLoad = FALSE,   .load_opt=NULL}
 };
 
@@ -1086,9 +1088,9 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
     }
 #endif
 
-    xf86Info.allowEmptyInput = FALSE;
-    if (xf86GetOptValBool(FlagOptions, FLAG_ALLOW_EMPTY_INPUT, &value))
-        xf86Info.allowEmptyInput = TRUE;
+    /* AllowEmptyInput is automatically true if we're hotplugging */
+    xf86Info.allowEmptyInput = (xf86Info.autoAddDevices && xf86Info.autoEnableDevices);
+    xf86GetOptValBool(FlagOptions, FLAG_ALLOW_EMPTY_INPUT, &xf86Info.allowEmptyInput);
 
     xf86Info.useDefaultFontPath = TRUE;
     xf86Info.useDefaultFontPathFrom = X_DEFAULT;
@@ -1855,8 +1857,6 @@ configImpliedLayout(serverLayoutPtr servlayoutp, XF86ConfScreenPtr conf_screen)
     indp = xnfalloc(sizeof(IDevPtr));
     *indp = NULL;
     servlayoutp->inputs = indp;
-    if (!xf86Info.allowEmptyInput && !checkCoreInputDevices(servlayoutp, TRUE))
-	return FALSE;
     
     return TRUE;
 }

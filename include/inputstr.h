@@ -160,7 +160,7 @@ typedef struct _ValuatorClassRec {
     int			  *axisVal;
     int                   lastx, lasty; /* last event recorded, not posted to
                                          * client; see dix/devices.c */
-    int                   dxremaind, dyremaind; /* for acceleration */
+    float                 dxremaind, dyremaind; /* for acceleration */
     CARD8	 	  mode;
 } ValuatorClassRec, *ValuatorClassPtr;
 

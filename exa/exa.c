@@ -299,7 +299,6 @@ exaCreatePixmap(ScreenPtr pScreen, int w, int h, int depth,
 
     if (driver_alloc) {
         size_t paddedWidth, datasize;
-        void *driver_priv;
 
 	paddedWidth = ((w * bpp + FB_MASK) >> FB_SHIFT) * sizeof(FbBits);
         if (paddedWidth / 4 > 32767 || h > 32767)
@@ -312,22 +311,21 @@ exaCreatePixmap(ScreenPtr pScreen, int w, int h, int depth,
 
         datasize = h * paddedWidth;
 
-        driver_priv = pExaScr->info->CreatePixmap(pScreen, datasize, 0);
-        if (!driver_priv) {
+        pExaPixmap->driverPriv = pExaScr->info->CreatePixmap(pScreen, datasize, 0);
+        if (!pExaPixmap->driverPriv) {
              fbDestroyPixmap(pPixmap);
              return NULL;
         }
 
         (*pScreen->ModifyPixmapHeader)(pPixmap, w, h, 0, 0,
                                        paddedWidth, NULL);
-        pExaPixmap->driverPriv = driver_priv;
         pExaPixmap->score = EXA_PIXMAP_SCORE_PINNED;
         pExaPixmap->fb_ptr = NULL;
     } else {
-         pExaPixmap->driverPriv = NULL;
-         /* Scratch pixmaps may have w/h equal to zero, and may not be
-	  * migrated.
-	  */
+        pExaPixmap->driverPriv = NULL;
+        /* Scratch pixmaps may have w/h equal to zero, and may not be
+	 * migrated.
+	 */
         if (!w || !h)
 	    pExaPixmap->score = EXA_PIXMAP_SCORE_PINNED;
         else
@@ -753,6 +751,7 @@ exaCloseScreen(int i, ScreenPtr pScreen)
     if (ps) {
 	ps->Composite = pExaScr->SavedComposite;
 	ps->Trapezoids = pExaScr->SavedTrapezoids;
+	ps->AddTraps = pExaScr->SavedAddTraps;
     }
 #endif
 
@@ -919,6 +918,9 @@ exaDriverInit (ScreenPtr		pScreen,
 
 	pExaScr->SavedTrapezoids = ps->Trapezoids;
 	ps->Trapezoids = exaTrapezoids;
+
+	pExaScr->SavedAddTraps = ps->AddTraps;
+	ps->AddTraps = ExaCheckAddTraps;
     }
 #endif
 

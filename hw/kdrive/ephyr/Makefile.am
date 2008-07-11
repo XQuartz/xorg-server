@@ -85,5 +85,7 @@ Xephyr_DEPENDENCIES =	\
 	$(LIBXEPHYR_HOSTDRI)				\
 	@KDRIVE_LOCAL_LIBS@
 
+Xephyr_LDFLAGS = $(LD_EXPORT_SYMBOLS_FLAG)
+
 relink:
 	rm -f $(bin_PROGRAMS) && make $(bin_PROGRAMS)

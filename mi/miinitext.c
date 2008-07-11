@@ -346,7 +346,7 @@ extern void XFree86DGAExtensionInit(INITARGS);
 #endif
 #ifdef GLXEXT
 typedef struct __GLXprovider __GLXprovider;
-extern __GLXprovider __glXMesaProvider;
+extern __GLXprovider __glXDRISWRastProvider;
 extern void GlxPushProvider(__GLXprovider *impl);
 extern void GlxExtensionInit(INITARGS);
 #endif
@@ -661,7 +661,7 @@ InitExtensions(argc, argv)
 #endif
 
 #ifdef GLXEXT
-    GlxPushProvider(&__glXMesaProvider);
+    GlxPushProvider(&__glXDRISWRastProvider);
     if (!noGlxExtension) GlxExtensionInit();
 #endif
 }

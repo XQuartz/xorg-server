@@ -40,7 +40,8 @@ libdix_la_SOURCES = 	\
 	swapreq.c	\
 	tables.c	\
 	window.c	\
-	strcasecmp.c
+	strcasecmp.c	\
+	strcasestr.c
 
 libxpstubs_la_SOURCES =	\
 	xpstubs.c

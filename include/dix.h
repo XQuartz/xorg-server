@@ -564,6 +564,11 @@ extern int xstrcasecmp(const char *s1, const char *s2);
 extern int xstrncasecmp(const char *s1, const char *s2, size_t n);
 #endif
 
+#if NEED_STRCASESTR
+#define strcasestr xstrcasestr
+extern int xstrcasestr(const char *s, const char *find);
+#endif
+
 /*
  * These are deprecated compatibility functions and will be removed soon!
  * Please use the noted replacements instead.

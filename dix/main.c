@@ -321,7 +321,6 @@ int main(int argc, char *argv[], char *envp[])
 	SetInputCheck(&alwaysCheckForInput[0], &alwaysCheckForInput[1]);
 	screenInfo.arraySize = MAXSCREENS;
 	screenInfo.numScreens = 0;
-	screenInfo.numVideoScreens = -1;
 	WindowTable = (WindowPtr *)xalloc(MAXSCREENS * sizeof(WindowPtr));
 	if (!WindowTable)
 	    FatalError("couldn't create root window table");
@@ -351,8 +350,6 @@ int main(int argc, char *argv[], char *envp[])
 
 	if (screenInfo.numScreens < 1)
 	    FatalError("no screens found");
-	if (screenInfo.numVideoScreens < 0)
-	    screenInfo.numVideoScreens = screenInfo.numScreens;
 	InitExtensions(argc, argv);
 	for (i = 0; i < screenInfo.numScreens; i++)
 	{

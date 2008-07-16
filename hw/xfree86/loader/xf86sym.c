@@ -706,7 +706,6 @@ _X_HIDDEN void *xfree86LookupTab[] = {
     SYMFUNC(LoaderErrorMsg)
     SYMFUNC(LoaderCheckUnresolved)
     SYMFUNC(LoadExtension)
-    SYMFUNC(LoadFont)
     SYMFUNC(LoaderReqSymbols)
     SYMFUNC(LoaderReqSymLists)
     SYMFUNC(LoaderRefSymbols)

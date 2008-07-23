@@ -49,10 +49,14 @@
 #include <assert.h>
 #endif
 
+#include "launchd_fd.h"
+int xquartz_launchd_fd = -1;
+
 char **envpGlobal;      // argcGlobal and argvGlobal
                         // are from dix/globals.c
 
 static void server_thread (void *arg) {
+  xquartz_launchd_fd = launchd_display_fd();
   extern int main(int argc, char **argv, char **envp);
   exit (main (argcGlobal, argvGlobal, envpGlobal));
 }

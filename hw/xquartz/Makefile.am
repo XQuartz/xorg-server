@@ -26,6 +26,7 @@ libXquartz_la_SOURCES = \
 	darwinKeyboard.c \
 	darwinXinput.c \
 	keysym2ucs.c \
+	launchd_fd.c \
 	pseudoramiX.c \
 	quartz.c \
 	quartzAudio.c \
@@ -44,6 +45,7 @@ EXTRA_DIST = \
 	darwinEvents.h \
 	darwinKeyboard.h \
 	keysym2ucs.h \
+	launchd_fd.h \
 	pseudoramiX.h \
 	quartz.h \
 	quartzAudio.h \

@@ -895,10 +895,6 @@ extern	void	XkbSetRulesDflts(
 	char *			/* options */
 );
 
-extern	void	XkbDeleteRulesDflts(
-	void
-);
-
 extern	void	XkbInitDevice(
 	DeviceIntPtr 	/* pXDev */
 );

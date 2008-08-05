@@ -2078,7 +2078,7 @@ KdEnqueuePointerEvent(KdPointerInfo *pi, unsigned long flags, int rx, int ry,
     int           (*matrix)[3] = kdPointerMatrix.matrix;
     unsigned long button;
     int           n;
-    int           dixflags;
+    int           dixflags = 0;
 
     if (!pi)
 	return;
@@ -2109,11 +2109,15 @@ KdEnqueuePointerEvent(KdPointerInfo *pi, unsigned long flags, int rx, int ry,
     z = rz;
 
     if (flags & KD_MOUSE_DELTA)
-        dixflags = POINTER_RELATIVE & POINTER_ACCELERATE;
-    else
-        dixflags = POINTER_ABSOLUTE;
+    {
+        if (x || y || z)
+            dixflags = POINTER_RELATIVE | POINTER_ACCELERATE;
+    } else if ((pi->dixdev->valuator) && (x != pi->dixdev->valuator->lastx ||
+                                          y != pi->dixdev->valuator->lasty))
+            dixflags = POINTER_ABSOLUTE;
 
-    _KdEnqueuePointerEvent(pi, MotionNotify, x, y, z, 0, dixflags, FALSE);
+    if (dixflags)
+        _KdEnqueuePointerEvent(pi, MotionNotify, x, y, z, 0, dixflags, FALSE);
 
     buttons = flags;
 

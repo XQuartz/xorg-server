@@ -123,14 +123,9 @@ ProcessOtherEvent(xEventPtr xE, DeviceIntPtr other, int count)
     deviceValuator *xV = (deviceValuator *) xE;
 
     if (xE->u.u.type != DeviceValuator) {
-        /* Other types already have root{X,Y} filled in. */
-        if (xE->u.u.type == DeviceKeyPress ||
-            xE->u.u.type == DeviceKeyRelease) {
-	    GetSpritePosition(&rootX, &rootY);
-	    xE->u.keyButtonPointer.rootX = rootX;
-	    xE->u.keyButtonPointer.rootY = rootY;
-        }
-
+	GetSpritePosition(&rootX, &rootY);
+	xE->u.keyButtonPointer.rootX = rootX;
+	xE->u.keyButtonPointer.rootY = rootY;
 	key = xE->u.u.detail;
 	NoticeEventTime(xE);
 	xE->u.keyButtonPointer.state = inputInfo.keyboard->key->state |
@@ -1284,6 +1279,8 @@ SendEventToAllWindows(DeviceIntPtr dev, Mask mask, xEvent * ev, int count)
 
     for (i = 0; i < screenInfo.numScreens; i++) {
         pWin = WindowTable[i];
+        if (!pWin)
+            continue;
         (void)DeliverEventsToWindow(pWin, ev, count, mask, NullGrab, dev->id);
         p1 = pWin->firstChild;
         FindInterestedChildren(dev, p1, mask, ev, count);

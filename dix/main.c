@@ -450,7 +450,10 @@ int main(int argc, char *argv[], char *envp[])
 #endif
 
         config_fini();
+
+        memset(WindowTable, 0, MAXSCREENS * sizeof(WindowPtr));
 	CloseDownDevices();
+
 	for (i = screenInfo.numScreens - 1; i >= 0; i--)
 	{
 	    FreeScratchPixmapsForScreen(i);

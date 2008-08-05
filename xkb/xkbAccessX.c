@@ -352,7 +352,9 @@ XkbControlsPtr	ctrls;
 	XkbSendAccessXNotify(keybd,&ev);
 	if (XkbAX_NeedFeedback(ctrls,XkbAX_SKAcceptFBMask))
 	    XkbDDXAccessXBeep(keybd,_BEEP_SLOW_ACCEPT,XkbSlowKeysMask);
-	AccessXKeyboardEvent(keybd,KeyPress,xkbi->slowKey,False);
+	AccessXKeyboardEvent(keybd,
+                (keybd == inputInfo.keyboard) ?  KeyPress : DeviceKeyPress,
+                xkbi->slowKey,False);
 	/* check for magic sequences */
 	if ((ctrls->enabled_ctrls&XkbAccessXKeysMask) &&
 	    ((sym[0]==XK_Shift_R)||(sym[0]==XK_Shift_L)))

@@ -2418,14 +2418,14 @@ configInput(IDevPtr inputp, XF86ConfInputPtr conf_input, MessageType from)
 }
 
 static Bool
-modeIsPresent(char * modename,MonPtr monitorp)
+modeIsPresent(DisplayModePtr mode, MonPtr monitorp)
 {
     DisplayModePtr knownmodes = monitorp->Modes;
 
     /* all I can think of is a linear search... */
     while(knownmodes != NULL)
     {
-	if(!strcmp(modename,knownmodes->name) &&
+	if(!strcmp(mode->name, knownmodes->name) &&
 	   !(knownmodes->type & M_T_DEFAULT))
 	    return TRUE;
 	knownmodes = knownmodes->next;
@@ -2460,6 +2460,23 @@ static void
 checkInput(serverLayoutPtr layout) {
     if (!xf86Info.allowEmptyInput)
         checkCoreInputDevices(layout, FALSE);
+    else
+    {
+        xf86Msg(X_INFO, "AllowEmptyInput is on.\n"
+                "\tThe server relies on HAL to provide the list of input "
+                "devices.\n\tIf no devices become available, reconfigure "
+                "HAL.\n");
+        if (!layout->inputs || !*layout->inputs)
+        {
+            /* No input device specified in ServerLayout. */
+            if (xf86configptr->conf_input_lst &&
+                    xf86configptr->conf_input_lst->inp_identifier)
+                xf86Msg(X_WARNING, "Input devices specified in xorg.conf, but"
+                        " not referenced in ServerLayout.\n\tThese devices"
+                        " will NOT be available.\n");
+        }
+
+    }
 }
 
 /*

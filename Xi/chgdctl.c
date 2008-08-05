@@ -261,7 +261,7 @@ out:
     if (ret == Success) {
         dpn.type = DevicePresenceNotify;
         dpn.time = currentTime.milliseconds;
-        dpn.devchange = 1;
+        dpn.devchange = 5; /* DeviceControlChanged */
         dpn.deviceid = dev->id;
         dpn.control = stuff->control;
         SendEventToAllWindows(dev, DevicePresenceNotifyMask,

@@ -74,9 +74,7 @@ SOFTWARE.
 #define TRANS_SERVER
 #define TRANS_REOPEN
 #include <X11/Xtrans/Xtrans.h>
-#ifdef HAVE_LAUNCHD
 #include <X11/Xtrans/Xtransint.h>
-#endif
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
@@ -696,15 +694,10 @@ ClientAuthorized(ClientPtr client,
     XID	 		auth_id;
     char	 	*reason = NULL;
     XtransConnInfo	trans_conn;
-#ifdef HAVE_LAUNCHD
-    struct sockaddr     *saddr;
-#endif
 
     priv = (OsCommPtr)client->osPrivate;
     trans_conn = priv->trans_conn;
 
-#ifdef HAVE_LAUNCHD
-    saddr = (struct sockaddr *) (trans_conn->addr);
     /* Allow any client to connect without authorization on a launchd socket,
        because it is securely created -- this prevents a race condition on launch */
     if(trans_conn->flags & TRANS_NOXAUTH) {

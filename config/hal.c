@@ -1,5 +1,6 @@
 /*
  * Copyright © 2007 Daniel Stone
+ * Copyright © 2007 Red Hat, Inc.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -54,6 +55,7 @@ struct xkb_options {
     char* model;
     char* rules;
     char* variant;
+    char* options;
 };
 
 
@@ -130,9 +132,6 @@ get_prop_string(LibHalContext *hal_ctx, const char *udi, const char *name)
     return ret;
 }
 
-/* this function is no longer used... keep it here in case its needed in
- * the future. */
-#if 0
 static char *
 get_prop_string_array(LibHalContext *hal_ctx, const char *udi, const char *prop)
 {
@@ -166,7 +165,6 @@ get_prop_string_array(LibHalContext *hal_ctx, const char *udi, const char *prop)
 
     return ret;
 }
-#endif
 
 static void
 device_added(LibHalContext *hal_ctx, const char *udi)
@@ -248,12 +246,12 @@ device_added(LibHalContext *hal_ctx, const char *udi)
 
             /* normal options first (input.x11_options.<propname>) */
             if (!strncasecmp(psi_key, LIBHAL_PROP_KEY, sizeof(LIBHAL_PROP_KEY)-1)){
+                char* tmp;
 
                 /* only support strings for all values */
                 tmp_val = get_prop_string(hal_ctx, udi, psi_key);
 
                 if (tmp_val){
-                    char* tmp;
 
                     /* xkb needs special handling. HAL specs include
                      * input.xkb.xyz options, but the x11-input.fdi specifies
@@ -262,17 +260,7 @@ device_added(LibHalContext *hal_ctx, const char *udi)
                      * Since we can't predict the order in which the keys
                      * arrive, we need to store them.
                      */
-#ifndef HAVE_STRCASESTR
-                    int psi_key_len = strlen(psi_key);
-                    char *lower_psi_key = xalloc(psi_key_len + 1);
-
-                    CopyISOLatin1Lowered((unsigned char *) lower_psi_key,
-                                         (unsigned char *) psi_key,
-                                         psi_key_len);
-                    if ((tmp = strstr(lower_psi_key, "xkb")))
-#else
-                    if ((tmp = strcasestr(psi_key, "xkb")))
-#endif
+                    if ((tmp = strcasestr(psi_key, "xkb")) && strlen(tmp) >= 4)
                     {
                         if (!strcasecmp(&tmp[3], "layout"))
                         {
@@ -294,6 +282,11 @@ device_added(LibHalContext *hal_ctx, const char *udi)
                             if (xkb_opts.variant)
                                 xfree(xkb_opts.variant);
                             xkb_opts.variant = strdup(tmp_val);
+                        } else if (!strcasecmp(&tmp[3], "options"))
+                        {
+                            if (xkb_opts.options)
+                                xfree(xkb_opts.options);
+                            xkb_opts.options = strdup(tmp_val);
                         }
                     } else
                     {
@@ -301,17 +294,26 @@ device_added(LibHalContext *hal_ctx, const char *udi)
                         add_option(&options, psi_key + sizeof(LIBHAL_PROP_KEY)-1, tmp_val);
                         xfree(tmp_val);
                     }
-#ifndef HAVE_STRCASESTR
-                    xfree(lower_psi_key);
-#endif
+                } else
+                {
+                    /* server 1.4 had xkb_options as strlist. */
+                    if ((tmp = strcasestr(psi_key, "xkb")) &&
+                        (strlen(tmp) >= 4) &&
+                        (!strcasecmp(&tmp[3], "options")) &&
+                        (tmp_val = get_prop_string_array(hal_ctx, udi, psi_key)))
+                    {
+                        if (xkb_opts.options)
+                            xfree(xkb_opts.options);
+                        xkb_opts.options = strdup(tmp_val);
+                    }
                 }
             } else if (!strncasecmp(psi_key, LIBHAL_XKB_PROP_KEY, sizeof(LIBHAL_XKB_PROP_KEY)-1)){
+                char* tmp;
 
                 /* only support strings for all values */
                 tmp_val = get_prop_string(hal_ctx, udi, psi_key);
 
-                if (tmp_val){
-                    char* tmp;
+                if (tmp_val && strlen(psi_key) >= sizeof(LIBHAL_XKB_PROP_KEY)) {
 
                     tmp = &psi_key[sizeof(LIBHAL_XKB_PROP_KEY) - 1];
 
@@ -331,8 +333,22 @@ device_added(LibHalContext *hal_ctx, const char *udi)
                     {
                         if (!xkb_opts.model)
                             xkb_opts.model = strdup(tmp_val);
+                    } else if (!strcasecmp(tmp, "options"))
+                    {
+                        if (!xkb_opts.options)
+                            xkb_opts.options = strdup(tmp_val);
                     }
                     xfree(tmp_val);
+                } else
+                {
+                    /* server 1.4 had xkb options as strlist */
+                    tmp_val = get_prop_string_array(hal_ctx, udi, psi_key);
+                    if (tmp_val && strlen(psi_key) >= sizeof(LIBHAL_XKB_PROP_KEY))
+                    {
+                        tmp = &psi_key[sizeof(LIBHAL_XKB_PROP_KEY) - 1];
+                        if (!strcasecmp(tmp, ".options") && (!xkb_opts.options))
+                            xkb_opts.options = strdup(tmp_val);
+                    }
                 }
             }
         }
@@ -351,6 +367,8 @@ device_added(LibHalContext *hal_ctx, const char *udi)
         add_option(&options, "xkb_variant", xkb_opts.variant);
     if (xkb_opts.model)
         add_option(&options, "xkb_model", xkb_opts.model);
+    if (xkb_opts.options)
+        add_option(&options, "xkb_options", xkb_opts.options);
 
     /* this isn't an error, but how else do you output something that the user can see? */
     LogMessage(X_INFO, "config/hal: Adding input device %s\n", name);
@@ -392,6 +410,8 @@ unwind:
         xfree(xkb_opts.model);
     if (xkb_opts.variant)
         xfree(xkb_opts.variant);
+    if (xkb_opts.options)
+        xfree(xkb_opts.options);
 
     dbus_error_free(&error);
 

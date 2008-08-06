@@ -1324,7 +1324,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
     }
 
     /* 3. First core pointer device. */
-    if (!foundPointer) {
+    if (!foundPointer && (!xf86Info.allowEmptyInput || implicitLayout)) {
 	XF86ConfInputPtr p;
 
 	for (p = xf86configptr->conf_input_lst; p; p = p->list.next) {
@@ -1340,7 +1340,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
     }
 
     /* 4. First pointer with 'mouse' as the driver. */
-    if (!foundPointer) {
+    if (!foundPointer && (!xf86Info.allowEmptyInput || implicitLayout)) {
 	confInput = xf86findInput(CONF_IMPLICIT_POINTER,
 				  xf86configptr->conf_input_lst);
 	if (!confInput) {
@@ -1355,7 +1355,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
     }
 
     /* 5. Built-in default. */
-    if (!foundPointer) {
+    if (!foundPointer && !xf86Info.allowEmptyInput) {
 	bzero(&defPtr, sizeof(defPtr));
 	defPtr.inp_identifier = strdup("<default pointer>");
 	defPtr.inp_driver = strdup("mouse");
@@ -1382,9 +1382,13 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
     }
 
     if (!foundPointer) {
-	/* This shouldn't happen. */
-	xf86Msg(X_ERROR, "Cannot locate a core pointer device.\n");
-	return FALSE;
+	if (!xf86Info.allowEmptyInput) {
+	    /* This shouldn't happen. */
+	    xf86Msg(X_ERROR, "Cannot locate a core pointer device.\n");
+	    return FALSE;
+	} else {
+	    xf86Msg(X_INFO, "Cannot locate a core pointer device.\n");
+	}
     }
 
     /*
@@ -1401,7 +1405,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
 	    found = 1; break;
 	}
     }
-    if (!found) {
+    if (!found && !xf86Info.allowEmptyInput) {
 	xf86Msg(X_INFO, "No default mouse found, adding one\n");
 	bzero(&defPtr, sizeof(defPtr));
 	defPtr.inp_identifier = strdup("<default pointer>");
@@ -1460,7 +1464,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
     }
 
     /* 3. First core keyboard device. */
-    if (!foundKeyboard) {
+    if (!foundKeyboard && (!xf86Info.allowEmptyInput || implicitLayout)) {
 	XF86ConfInputPtr p;
 
 	for (p = xf86configptr->conf_input_lst; p; p = p->list.next) {
@@ -1476,7 +1480,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
     }
 
     /* 4. First keyboard with 'keyboard' or 'kbd' as the driver. */
-    if (!foundKeyboard) {
+    if (!foundKeyboard && (!xf86Info.allowEmptyInput || implicitLayout)) {
 	confInput = xf86findInput(CONF_IMPLICIT_KEYBOARD,
 				  xf86configptr->conf_input_lst);
 	if (!confInput) {
@@ -1491,7 +1495,7 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
     }
 
     /* 5. Built-in default. */
-    if (!foundKeyboard) {
+    if (!foundKeyboard && !xf86Info.allowEmptyInput) {
 	bzero(&defKbd, sizeof(defKbd));
 	defKbd.inp_identifier = strdup("<default keyboard>");
 	defKbd.inp_driver = strdup("kbd");
@@ -1518,21 +1522,39 @@ checkCoreInputDevices(serverLayoutPtr servlayoutp, Bool implicitLayout)
     }
 
     if (!foundKeyboard) {
-	/* This shouldn't happen. */
-	xf86Msg(X_ERROR, "Cannot locate a core keyboard device.\n");
-	return FALSE;
+	if (!xf86Info.allowEmptyInput) {
+		/* This shouldn't happen. */
+		xf86Msg(X_ERROR, "Cannot locate a core keyboard device.\n");
+		return FALSE;
+	} else {
+		xf86Msg(X_INFO, "Cannot locate a core keyboard device.\n");
+	}
     }
 
     if (pointerMsg) {
-	xf86Msg(X_DEFAULT, "The core pointer device wasn't specified "
-		"explicitly in the layout.\n"
-		"\tUsing the %s.\n", pointerMsg);
+	if (implicitLayout)
+	    xf86Msg(X_DEFAULT, "No Layout section. Using the %s.\n",
+	            pointerMsg);
+	else
+	    xf86Msg(X_DEFAULT, "The core pointer device wasn't specified "
+	            "explicitly in the layout.\n"
+	            "\tUsing the %s.\n", pointerMsg);
     }
 
     if (keyboardMsg) {
-	xf86Msg(X_DEFAULT, "The core keyboard device wasn't specified "
-		"explicitly in the layout.\n"
-		"\tUsing the %s.\n", keyboardMsg);
+	if (implicitLayout)
+	    xf86Msg(X_DEFAULT, "No Layout section. Using the %s.\n",
+	            keyboardMsg);
+	else
+	    xf86Msg(X_DEFAULT, "The core keyboard device wasn't specified "
+	            "explicitly in the layout.\n"
+	            "\tUsing the %s.\n", keyboardMsg);
+    }
+
+    if (xf86Info.allowEmptyInput && !(foundPointer && foundKeyboard)) {
+	xf86Msg(X_INFO, "The server relies on HAL to provide the list of "
+	                "input devices.\n\tIf no devices become available, "
+	                "reconfigure HAL or disable AllowEmptyInput.\n");
     }
 
     return TRUE;
@@ -2457,26 +2479,8 @@ addDefaultModes(MonPtr monitorp)
 }
 
 static void
-checkInput(serverLayoutPtr layout) {
-    if (!xf86Info.allowEmptyInput)
-        checkCoreInputDevices(layout, FALSE);
-    else
-    {
-        xf86Msg(X_INFO, "AllowEmptyInput is on.\n"
-                "\tThe server relies on HAL to provide the list of input "
-                "devices.\n\tIf no devices become available, reconfigure "
-                "HAL.\n");
-        if (!layout->inputs || !*layout->inputs)
-        {
-            /* No input device specified in ServerLayout. */
-            if (xf86configptr->conf_input_lst &&
-                    xf86configptr->conf_input_lst->inp_identifier)
-                xf86Msg(X_WARNING, "Input devices specified in xorg.conf, but"
-                        " not referenced in ServerLayout.\n\tThese devices"
-                        " will NOT be available.\n");
-        }
-
-    }
+checkInput(serverLayoutPtr layout, Bool implicit_layout) {
+    checkCoreInputDevices(layout, implicit_layout);
 }
 
 /*
@@ -2490,6 +2494,7 @@ xf86HandleConfigFile(Bool autoconfig)
     MessageType from = X_DEFAULT;
     char *scanptr;
     Bool singlecard = 0;
+    Bool implicit_layout = FALSE;
 
     if (!autoconfig) {
 	if (getuid() == 0)
@@ -2542,6 +2547,7 @@ xf86HandleConfigFile(Bool autoconfig)
             xf86Msg(X_ERROR, "Unable to determine the screen layout\n");
 	    return CONFIG_PARSE_ERROR;
 	}
+	implicit_layout = TRUE;
     } else {
 	if (xf86configptr->conf_flags != NULL) {
 	  char *dfltlayout = NULL;
@@ -2599,7 +2605,7 @@ xf86HandleConfigFile(Bool autoconfig)
     configDRI(xf86configptr->conf_dri);
 #endif
 
-    checkInput(&xf86ConfigLayout);
+    checkInput(&xf86ConfigLayout, implicit_layout);
 
     /*
      * Handle some command line options that can override some of the

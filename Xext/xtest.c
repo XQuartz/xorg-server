@@ -124,8 +124,8 @@ ProcXTestCompareCursor(client)
     else if (stuff->cursor == XTestCurrentCursor)
         pCursor = GetSpriteCursor(ptr);
     else {
-        rc = dixLookupResource((pointer *)&pCursor, stuff->cursor, RT_CURSOR,
-                client, DixReadAccess);
+        rc = dixLookupResourceByType((pointer *)&pCursor, stuff->cursor, RT_CURSOR,
+				     client, DixReadAccess);
         if (rc != Success)
         {
             client->errorValue = stuff->cursor;
@@ -158,7 +158,7 @@ ProcXTestFakeInput(client)
     int numValuators = 0;
     int firstValuator = 0;
     EventListPtr events;
-    int nevents;
+    int nevents = 0;
     int i;
     int base = 0;
     int flags = 0;

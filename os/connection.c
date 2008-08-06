@@ -707,7 +707,7 @@ ClientAuthorized(ClientPtr client,
     saddr = (struct sockaddr *) (trans_conn->addr);
     /* Allow any client to connect without authorization on a launchd socket,
        because it is securely created -- this prevents a race condition on launch */
-    if(trans_conn->flags | TRANS_NOXAUTH) {
+    if(trans_conn->flags & TRANS_NOXAUTH) {
         auth_id = (XID) 0L;
     } else {
         auth_id = CheckAuthorization (proto_n, auth_proto, string_n, auth_string, client, &reason);

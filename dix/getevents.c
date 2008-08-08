@@ -540,6 +540,8 @@ GetPointerEvents(xEvent *events, DeviceIntPtr pDev, int type, int buttons,
     ScreenPtr scr = miPointerGetScreen(pDev);
 
     /* Sanity checks. */
+    if (!scr) /* can happen during server shutdown */
+        return 0;
     if (type != MotionNotify && type != ButtonPress && type != ButtonRelease)
         return 0;
 

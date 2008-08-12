@@ -2056,7 +2056,7 @@ AM_CONDITIONAL(USE_CURSES, [test x$CURSES = xyes])
 
 AC_ARG_ENABLE(kbd_mode, AS_HELP_STRING([--enable-kbd_mode],
 	[Build kbd_mode utility (default: auto)]),
-	[BUILD_KBD_MODE=$enable_val], [BUILD_KBD_MODE="auto"])
+	[BUILD_KBD_MODE=$enableval], [BUILD_KBD_MODE="auto"])
 if test x$BUILD_KBD_MODE != xno ; then
 	case $host_os in
 	  *bsd*)

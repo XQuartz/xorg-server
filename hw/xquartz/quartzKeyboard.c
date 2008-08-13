@@ -1168,12 +1168,13 @@ Bool QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
     int is_uchr = 1, i, j;
     OSStatus err;
     KeySym *k;
+    CFDataRef currentKeyLayoutDataRef = NULL;
 
     TISInputSourceRef currentKeyLayoutRef = TISCopyCurrentKeyboardLayoutInputSource();
     keyboard_type = LMGetKbdType();
 
     if (currentKeyLayoutRef) {
-      CFDataRef currentKeyLayoutDataRef = (CFDataRef )TISGetInputSourceProperty(currentKeyLayoutRef, kTISPropertyUnicodeKeyLayoutData);
+      currentKeyLayoutDataRef = (CFDataRef )TISGetInputSourceProperty(currentKeyLayoutRef, kTISPropertyUnicodeKeyLayoutData);
       if (currentKeyLayoutDataRef)
           chr_data = CFDataGetBytePtr(currentKeyLayoutDataRef);
     }
@@ -1181,7 +1182,8 @@ Bool QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
 #if __MAC_OS_X_VERSION_MIN_REQUIRED < 1060
     if (chr_data == NULL) {
         ErrorF("X11.app: Error detected in determining keyboard layout.  Please report this error at http://xquartz.macosforge.org\n");
-        ErrorF("X11.app: Debug Info: currentKeyLayoutRef=%p, chr_data=%p\n", currentKeyLayoutRef, chr_data);
+        ErrorF("X11.app: Debug Info: keyboard_type=%u, currentKeyLayoutRef=%p, currentKeyLayoutDataRef=%p, chr_data=%p\n",
+               keyboard_type, currentKeyLayoutRef, currentKeyLayoutDataRef, chr_data);
 
         KLGetCurrentKeyboardLayout (&key_layout);
         KLGetKeyboardLayoutProperty (key_layout, kKLuchrData, &chr_data);

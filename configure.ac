@@ -1051,6 +1051,8 @@ AC_CHECK_FUNC(strcasecmp, [], AC_DEFINE([NEED_STRCASECMP], 1,
                                         [Do not have 'strcasecmp'.]))
 AC_CHECK_FUNC(strncasecmp, [], AC_DEFINE([NEED_STRNCASECMP], 1,
                                         [Do not have 'strncasecmp'.]))
+AC_CHECK_FUNC(strcasestr, [], AC_DEFINE([NEED_STRCASESTR], 1,
+                                       [Do not have 'strcasestr'.]))
 
 if test "x$NULL_ROOT_CURSOR" = xyes; then
         AC_DEFINE(NULL_ROOT_CURSOR, 1, [Use an empty root cursor])
@@ -2028,7 +2030,7 @@ AM_CONDITIONAL(USE_CURSES, [test x$CURSES = xyes])
 
 AC_ARG_ENABLE(kbd_mode, AS_HELP_STRING([--enable-kbd_mode],
 	[Build kbd_mode utility (default: auto)]),
-	[BUILD_KBD_MODE=$enable_val], [BUILD_KBD_MODE="auto"])
+	[BUILD_KBD_MODE=$enableval], [BUILD_KBD_MODE="auto"])
 if test x$BUILD_KBD_MODE != xno ; then
 	case $host_os in
 	  *bsd*)

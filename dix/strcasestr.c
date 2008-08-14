@@ -1,6 +1,9 @@
-/*
- * Copyright (c) 1987, 1993
+/*-
+ * Copyright (c) 1990, 1993
  *      The Regents of the University of California.  All rights reserved.
+ *
+ * This code is derived from software contributed to Berkeley by
+ * Chris Torek.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,39 +35,30 @@
 #endif
 
 #include <ctype.h>
+#include <string.h>
 #include "dix.h"
 
-#ifdef NEED_STRCASECMP
-int
-xstrcasecmp(const char *str1, const char *str2)
+/*
+ * Find the first occurrence of find in s, ignore case.
+ */
+#ifdef NEED_STRCASESTR
+char *
+xstrcasestr(const char *s, const char *find)
 {
-    const u_char *us1 = (const u_char *)str1, *us2 = (const u_char *)str2;
+        char c, sc;
+        size_t len;
 
-    while (tolower(*us1) == tolower(*us2)) {
-        if (*us1++ == '\0')
-            return (0);
-        us2++;
-    }
-
-    return (tolower(*us1) - tolower(*us2));
-}
-#endif
-
-#ifdef NEED_STRNCASECMP
-int
-xstrncasecmp(const char *s1, const char *s2, size_t n)
-{
-    if (n != 0) {
-        const u_char *us1 = (const u_char *)s1, *us2 = (const u_char *)s2;
-
-        do {
-            if (tolower(*us1) != tolower(*us2++))
-                return (tolower(*us1) - tolower(*--us2));
-            if (*us1++ == '\0')
-                break;
-        } while (--n != 0);
-    }
-
-    return 0;
+        if ((c = *find++) != 0) {
+                c = tolower((unsigned char)c);
+                len = strlen(find);
+                do {
+                        do {
+                                if ((sc = *s++) == 0)
+                                        return (NULL);
+                        } while ((char)tolower((unsigned char)sc) != c);
+                } while (strncasecmp(s, find, len) != 0);
+                s--;
+        }
+        return ((char *)s);
 }
 #endif

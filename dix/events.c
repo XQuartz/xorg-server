@@ -2378,6 +2378,8 @@ NewCurrentScreen(ScreenPtr newScreen, int x, int y)
 {
     sprite.hotPhys.x = x;
     sprite.hotPhys.y = y;
+    ErrorF("noPanoramiXExtension=%d newScreen=%p\n", noPanoramiXExtension, newScreen);
+    ErrorF("newScreen->myNum=%d\n", newScreen->myNum);
 #ifdef PANORAMIX
     if(!noPanoramiXExtension) {
 	sprite.hotPhys.x += panoramiXdataPtr[newScreen->myNum].x - 

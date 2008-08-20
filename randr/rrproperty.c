@@ -398,12 +398,13 @@ ProcRRListOutputProperties (ClientPtr client)
 	int n;
 	swaps (&rep.sequenceNumber, n);
 	swapl (&rep.length, n);
+	swaps (&rep.nAtoms, n);
     }
     temppAtoms = pAtoms;
     for (prop = output->properties; prop; prop = prop->next)
 	*temppAtoms++ = prop->propertyName;
 
-    WriteReplyToClient(client, sizeof(xRRListOutputPropertiesReply), &rep);
+    WriteToClient(client, sizeof(xRRListOutputPropertiesReply), (char*)&rep);
     if (numProps)
     {
         client->pSwapReplyFunc = (ReplySwapPtr)Swap32Write;
@@ -420,6 +421,7 @@ ProcRRQueryOutputProperty (ClientPtr client)
     xRRQueryOutputPropertyReply	    rep;
     RROutputPtr			    output;
     RRPropertyPtr		    prop;
+    char *extra;
     
     REQUEST_SIZE_MATCH(xRRQueryOutputPropertyReq);
 
@@ -432,6 +434,11 @@ ProcRRQueryOutputProperty (ClientPtr client)
     if (!prop)
 	return BadName;
     
+    if (prop->num_valid) {
+	extra = xalloc(prop->num_valid * sizeof(INT32));
+	if (!extra)
+	    return BadAlloc;
+    }
     rep.type = X_Reply;
     rep.length = prop->num_valid;
     rep.sequenceNumber = client->sequence;
@@ -444,12 +451,14 @@ ProcRRQueryOutputProperty (ClientPtr client)
 	swaps (&rep.sequenceNumber, n);
 	swapl (&rep.length, n);
     }
-    WriteReplyToClient (client, sizeof (xRRQueryOutputPropertyReply), &rep);
+    WriteToClient (client, sizeof (xRRQueryOutputPropertyReply), (char*)&rep);
     if (prop->num_valid)
     {
+        memcpy(extra, prop->valid_values, prop->num_valid * sizeof(INT32));
         client->pSwapReplyFunc = (ReplySwapPtr)Swap32Write;
         WriteSwappedDataToClient(client, prop->num_valid * sizeof(INT32),
-				 prop->valid_values);
+				 extra);
+        xfree(extra);
     }
     return(client->noClientException);
 }
@@ -564,6 +573,7 @@ ProcRRGetOutputProperty (ClientPtr client)
     unsigned long		n, len, ind;
     RROutputPtr			output;
     xRRGetOutputPropertyReply	reply;
+    char			*extra;
 
     REQUEST_SIZE_MATCH(xRRGetOutputPropertyReq);
     if (stuff->delete)
@@ -603,7 +613,16 @@ ProcRRGetOutputProperty (ClientPtr client)
 	reply.bytesAfter = 0;
 	reply.propertyType = None;
 	reply.format = 0;
-	WriteReplyToClient(client, sizeof(xRRGetOutputPropertyReply), &reply);
+	if (client->swapped) {
+	    int n;
+
+	    swaps(&reply.sequenceNumber, n);
+	    swapl(&reply.length, n);
+	    swapl(&reply.propertyType, n);
+	    swapl(&reply.bytesAfter, n);
+	    swapl(&reply.nItems, n);
+	}
+	WriteToClient(client, sizeof(xRRGetOutputPropertyReply), &reply);
 	return(client->noClientException);
     }
 
@@ -627,7 +646,16 @@ ProcRRGetOutputProperty (ClientPtr client)
 	reply.length = 0;
 	reply.nItems = 0;
 	reply.propertyType = prop_value->type;
-	WriteReplyToClient(client, sizeof(xRRGetOutputPropertyReply), &reply);
+	if (client->swapped) {
+	    int n;
+
+	    swaps(&reply.sequenceNumber, n);
+	    swapl(&reply.length, n);
+	    swapl(&reply.propertyType, n);
+	    swapl(&reply.bytesAfter, n);
+	    swapl(&reply.nItems, n);
+	}
+	WriteToClient(client, sizeof(xRRGetOutputPropertyReply), &reply);
 	return(client->noClientException);
     }
 
@@ -648,6 +676,11 @@ ProcRRGetOutputProperty (ClientPtr client)
 
     len = min(n - ind, 4 * stuff->longLength);
 
+    if (len) {
+	extra = xalloc(len);
+	if (!extra)
+	    return BadAlloc;
+    }
     reply.bytesAfter = n - (ind + len);
     reply.format = prop_value->format;
     reply.length = (len + 3) >> 2;
@@ -670,16 +703,27 @@ ProcRRGetOutputProperty (ClientPtr client)
 	RRDeliverEvent (output->pScreen, (xEvent *) &event, RROutputPropertyNotifyMask);
     }
 
-    WriteReplyToClient(client, sizeof(xGenericReply), &reply);
+    if (client->swapped) {
+	int n;
+
+	swaps(&reply.sequenceNumber, n);
+	swapl(&reply.length, n);
+	swapl(&reply.propertyType, n);
+	swapl(&reply.bytesAfter, n);
+	swapl(&reply.nItems, n);
+    }
+    WriteToClient(client, sizeof(xGenericReply), &reply);
     if (len)
     {
+	memcpy(extra, (char *)prop_value->data + ind, len);
 	switch (reply.format) {
 	case 32: client->pSwapReplyFunc = (ReplySwapPtr)CopySwap32Write; break;
 	case 16: client->pSwapReplyFunc = (ReplySwapPtr)CopySwap16Write; break;
 	default: client->pSwapReplyFunc = (ReplySwapPtr)WriteToClient; break;
 	}
 	WriteSwappedDataToClient(client, len,
-				 (char *)prop_value->data + ind);
+				 extra);
+	xfree(extra);
     }
 
     if (stuff->delete && (reply.bytesAfter == 0))

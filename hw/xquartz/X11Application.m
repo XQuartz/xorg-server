@@ -894,6 +894,7 @@ extern int darwin_modifier_flags; // darwinEvents.c
 			// fall through to get tablet data
 
 		case NSTabletPoint:
+            ev_type  = MotionNotify;
             pressure = [e pressure];
 			tilt_x   = [e tilt].x;
 			tilt_y   = [e tilt].y; 

@@ -54,6 +54,7 @@
 void DarwinListenOnOpenFD(int fd);
 
 extern int noPanoramiXExtension;
+extern Bool noGlxExtension;
 
 #define DEFAULT_CLIENT "/usr/X11/bin/xterm"
 #define DEFAULT_STARTX "/usr/X11/bin/startx"
@@ -401,6 +402,7 @@ int main(int argc, char **argv, char **envp) {
 
     // The server must not run the PanoramiX operations.
     noPanoramiXExtension = TRUE;
+    noGlxExtension = TRUE;
 
     /* Setup the initial crasherporter info */
     strlcpy(__crashreporter_info__, __crashreporter_info__base, __crashreporter_info__len);

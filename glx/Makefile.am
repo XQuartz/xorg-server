@@ -53,7 +53,6 @@ libglxdri_la_SOURCES = \
         extension_string.h
 
 libglx_la_SOURCES = \
-	$(XQUARTZ_libglx_la_SOURCES) \
 	$(indirect_sources) \
 	$(glapi_sources) \
 	indirect_util.c \

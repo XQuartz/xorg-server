@@ -2441,11 +2441,25 @@ WindowHasNewCursor(WindowPtr pWin)
     PostNewCursor();
 }
 
+#ifdef XQUARTZ
+#include <string.h>
+extern char *__crashreporter_info__;
+extern const char *__crashreporter_info__base;
+extern int __crashreporter_info__len;
+#endif
+
 _X_EXPORT void
 NewCurrentScreen(ScreenPtr newScreen, int x, int y)
 {
     sprite.hotPhys.x = x;
     sprite.hotPhys.y = y;
+#ifdef XQUARTZ
+    /* We're seeing a crash here, but I'm not sure what's causing it... so putting in some debugging */
+    snprintf(__crashreporter_info__, __crashreporter_info__len, "%s\n\nNewCurrentScreen debug data\nnoPanoramiXExtension=%d\nnewScreen=%p\nnewScreen->myNum=%d\n",
+             __crashreporter_info__base, noPanoramiXExtension, newScreen,newScreen->myNum);
+    ErrorF("NewCurrentScreen debug data\nnoPanoramiXExtension=%d\nnewScreen=%p\nnewScreen->myNum=%d\n",
+           noPanoramiXExtension, newScreen, newScreen->myNum);
+#endif
 #ifdef PANORAMIX
     if(!noPanoramiXExtension) {
 	sprite.hotPhys.x += panoramiXdataPtr[newScreen->myNum].x - 

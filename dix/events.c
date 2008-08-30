@@ -2388,9 +2388,9 @@ NewCurrentScreen(ScreenPtr newScreen, int x, int y)
 #ifdef XQUARTZ
     /* We're seeing a crash here, but I'm not sure what's causing it... so putting in some debugging */
     snprintf(__crashreporter_info__, __crashreporter_info__len, "%s\n\nNewCurrentScreen debug data\nnoPanoramiXExtension=%d\nnewScreen=%p\nnewScreen->myNum=%d\n",
-             __crashreporter_info__base, noPanoramiXExtension, newScreen,newScreen->myNum);
+             __crashreporter_info__base, noPanoramiXExtension, newScreen, newScreen ? newScreen->myNum : 0);
     ErrorF("NewCurrentScreen debug data\nnoPanoramiXExtension=%d\nnewScreen=%p\nnewScreen->myNum=%d\n",
-           noPanoramiXExtension, newScreen, newScreen->myNum);
+           noPanoramiXExtension, newScreen, newScreen ? newScreen->myNum : 0);
 #endif
 #ifdef PANORAMIX
     if(!noPanoramiXExtension) {

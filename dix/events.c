@@ -2623,7 +2623,12 @@ ProcWarpPointer(ClientPtr client)
     }
     else if (!PointerConfinedToScreen())
     {
-	NewCurrentScreen(newScreen, x, y);
+#ifdef XQUARTZ
+        /* XQuartz is sometimes crashing in NewCurrentScreen with pScreen==NULL, putting some debugging here to maybe catch the culprit */
+        if(newScreen == NULL)
+            ErrorF("ProcWarpPointer: newScreen=%p dest=%p\n", newScreen, dest);
+#endif
+        NewCurrentScreen(newScreen, x, y);
     }
     return Success;
 }

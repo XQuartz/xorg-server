@@ -256,6 +256,14 @@ fbFillRegionSolid (DrawablePtr	pDrawable,
 #include "panoramiXsrv.h"
 #endif
 
+#ifdef ROOTLESS_SAFEALPHA
+/* Bit mask for alpha channel with a particular number of bits per
+ * pixel. Note that we only care for 32bpp data. Mac OS X uses planar
+ * alpha for 16bpp.
+ */
+#define RootlessAlphaMask(bpp) ((bpp) == 32 ? 0xFF000000 : 0)
+#endif
+
 void
 fbFillRegionTiled (DrawablePtr	pDrawable,
 		   RegionPtr	pRegion,
@@ -274,6 +282,11 @@ fbFillRegionTiled (DrawablePtr	pDrawable,
     BoxPtr	pbox = REGION_RECTS(pRegion);
     int		xRot = pDrawable->x;
     int		yRot = pDrawable->y;
+#ifdef ROOTLESS_SAFEALPHA
+    FbBits planeMask = FB_ALLONES & ~RootlessAlphaMask(dstBpp);
+#else
+    FbBits planeMask = FB_ALLONES;
+#endif
     
 #ifdef PANORAMIX
     if(!noPanoramiXExtension) 
@@ -305,7 +318,7 @@ fbFillRegionTiled (DrawablePtr	pDrawable,
 		tileWidth * dstBpp,
 		tileHeight,
 		GXcopy,
-		FB_ALLONES,
+		planeMask,
 		dstBpp,
 		xRot * dstBpp,
 		yRot - (pbox->y1 + dstYoff));
@@ -342,8 +355,13 @@ fbPaintWindow(WindowPtr pWin, RegionPtr pRegion, int what)
 	    fbFillRegionSolid (&pWin->drawable,
 			       pRegion,
 			       0,
-			       fbReplicatePixel (pWin->background.pixel,
-						 pWin->drawable.bitsPerPixel));
+			       fbReplicatePixel (
+#ifdef ROOTLESS_SAFEALPHA
+                                     pWin->background.pixel | RootlessAlphaMask(pWin->drawable.bitsPerPixel),
+#else
+                                     pWin->background.pixel,
+#endif
+                                     pWin->drawable.bitsPerPixel));
 	    break;
     	}
     	break;
@@ -353,8 +371,13 @@ fbPaintWindow(WindowPtr pWin, RegionPtr pRegion, int what)
 	    fbFillRegionSolid (&pWin->drawable,
 			       pRegion,
 			       0,
-			       fbReplicatePixel (pWin->border.pixel,
-						 pWin->drawable.bitsPerPixel));
+			       fbReplicatePixel (
+#ifdef ROOTLESS_SAFEALPHA
+                           pWin->border.pixel | RootlessAlphaMask(pWin->drawable.bitsPerPixel),
+#else
+                           pWin->border.pixel,
+#endif
+                           pWin->drawable.bitsPerPixel));
 	}
 	else
 	{

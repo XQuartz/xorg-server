@@ -1737,7 +1737,7 @@ xf86SetScrnInfoModes (ScrnInfoPtr scrn)
     xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR(scrn);
     xf86OutputPtr	output;
     xf86CrtcPtr		crtc;
-    DisplayModePtr	last, mode;
+    DisplayModePtr	last, mode = NULL;
 
     output = SetCompatOutput(config);
 

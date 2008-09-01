@@ -202,6 +202,7 @@ int ProcXevieStart (register ClientPtr client)
     
     xevieModifiersOn = FALSE;
 
+    rep.length = 0;
     rep.type = X_Reply;
     rep.sequence_number = client->sequence;
     WriteToClient (client, sizeof (xXevieStartReply), (char *)&rep);
@@ -223,6 +224,7 @@ int ProcXevieEnd (register ClientPtr client)
         XevieEnd(xevieClientIndex);
     }
 
+    rep.length = 0;
     rep.type = X_Reply;
     rep.sequence_number = client->sequence;
     WriteToClient (client, sizeof (xXevieEndReply), (char *)&rep);
@@ -243,6 +245,7 @@ int ProcXevieSend (register ClientPtr client)
         return BadAccess;
 
     xE = (xEvent *)&stuff->event;
+    rep.length = 0;
     rep.type = X_Reply;
     rep.sequence_number = client->sequence;
     WriteToClient (client, sizeof (xXevieSendReply), (char *)&rep);
@@ -289,6 +292,7 @@ int ProcXevieSelectInput (register ClientPtr client)
         return BadAccess;
 
     xevieMask = stuff->event_mask;
+    rep.length = 0;
     rep.type = X_Reply;
     rep.sequence_number = client->sequence;
     WriteToClient (client, sizeof (xXevieSelectInputReply), (char *)&rep);

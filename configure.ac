@@ -536,7 +536,7 @@ AC_ARG_ENABLE(xdmcp,          AS_HELP_STRING([--disable-xdmcp], [Build XDMCP ext
 AC_ARG_ENABLE(xdm-auth-1,     AS_HELP_STRING([--disable-xdm-auth-1], [Build XDM-Auth-1 extension (default: auto)]), [XDMAUTH=$enableval], [XDMAUTH=auto])
 AC_ARG_ENABLE(glx,            AS_HELP_STRING([--disable-glx], [Build GLX extension (default: enabled)]), [GLX=$enableval], [GLX=yes])
 AC_ARG_ENABLE(dri,            AS_HELP_STRING([--enable-dri], [Build DRI extension (default: auto)]), [DRI=$enableval])
-AC_ARG_ENABLE(dri2,           AS_HELP_STRING([--enable-dri2], [Build DRI2 extension (default: auto)]), [DRI2=$enableval])
+AC_ARG_ENABLE(dri2,           AS_HELP_STRING([--enable-dri2], [Build DRI2 extension (default: no)]), [DRI2=$enableval], [DRI2=no])
 AC_ARG_ENABLE(xinerama,	      AS_HELP_STRING([--disable-xinerama], [Build Xinerama extension (default: enabled)]), [XINERAMA=$enableval], [XINERAMA=yes])
 AC_ARG_ENABLE(xf86vidmode,    AS_HELP_STRING([--disable-xf86vidmode], [Build XF86VidMode extension (default: auto)]), [XF86VIDMODE=$enableval], [XF86VIDMODE=auto])
 AC_ARG_ENABLE(xf86misc,       AS_HELP_STRING([--disable-xf86misc], [Build XF86Misc extension (default: auto)]), [XF86MISC=$enableval], [XF86MISC=auto])

@@ -2385,13 +2385,6 @@ NewCurrentScreen(ScreenPtr newScreen, int x, int y)
 {
     sprite.hotPhys.x = x;
     sprite.hotPhys.y = y;
-#ifdef XQUARTZ
-    /* We're seeing a crash here, but I'm not sure what's causing it... so putting in some debugging */
-    snprintf(__crashreporter_info__, __crashreporter_info__len, "%s\n\nNewCurrentScreen debug data\nnoPanoramiXExtension=%d\nnewScreen=%p\nnewScreen->myNum=%d\n",
-             __crashreporter_info__base, noPanoramiXExtension, newScreen, newScreen ? newScreen->myNum : 0);
-    ErrorF("NewCurrentScreen debug data\nnoPanoramiXExtension=%d\nnewScreen=%p\nnewScreen->myNum=%d\n",
-           noPanoramiXExtension, newScreen, newScreen ? newScreen->myNum : 0);
-#endif
 #ifdef PANORAMIX
     if(!noPanoramiXExtension) {
 	sprite.hotPhys.x += panoramiXdataPtr[newScreen->myNum].x - 
@@ -2623,11 +2616,6 @@ ProcWarpPointer(ClientPtr client)
     }
     else if (!PointerConfinedToScreen())
     {
-#ifdef XQUARTZ
-        /* XQuartz is sometimes crashing in NewCurrentScreen with pScreen==NULL, putting some debugging here to maybe catch the culprit */
-        if(newScreen == NULL)
-            ErrorF("ProcWarpPointer: newScreen=%p dest=%p\n", newScreen, dest);
-#endif
         NewCurrentScreen(newScreen, x, y);
     }
     return Success;

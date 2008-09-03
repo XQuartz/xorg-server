@@ -378,11 +378,6 @@ miPointerSetScreen(DeviceIntPtr pDev, int screen_no, int x, int y)
 	pScreen = screenInfo.screens[screen_no];
 	pScreenPriv = GetScreenPrivate (pScreen);
 	(*pScreenPriv->screenFuncs->NewEventScreen) (pScreen, FALSE);
-#ifdef XQUARTZ
-    /* XQuartz is sometimes crashing in NewCurrentScreen with pScreen==NULL, putting some debugging here to maybe catch the culprit */
-    if(pScreen == NULL)
-        ErrorF("miPointerSetScreen: NewCurrentScreen(%p, %d, %d)\n", pScreen, x, y);
-#endif
 	NewCurrentScreen (pScreen, x, y);
    	miPointer.limits.x2 = pScreen->width;
    	miPointer.limits.y2 = pScreen->height;

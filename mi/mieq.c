@@ -214,12 +214,6 @@ mieqProcessInputEvents(void)
         e = &miEventQueue.events[miEventQueue.head];
         miEventQueue.head = (miEventQueue.head + 1) % QUEUE_SIZE;
 
-#ifdef XQUARTZ
-        /* XQuartz is sometimes crashing in NewCurrentScreen with pScreen==NULL, putting some debugging here to maybe catch the culprit */
-        if(miEventQueue.pDequeueScreen==NULL || e->pScreen == NULL)
-            ErrorF("miPointerSetScreen: miEventQueue.pDequeueScreen=%p, e->pScreen=%p, event type=%d\n", miEventQueue.pDequeueScreen, e->pScreen, e->event->u.u.type);
-#endif
-
         /* Assumption - screen switching can only occur on motion events. */
         if (e->pScreen != miEventQueue.pDequeueScreen) {
             miEventQueue.pDequeueScreen = e->pScreen;

@@ -213,25 +213,24 @@ mieqProcessInputEvents(void)
 #endif
 
         e = &miEventQueue.events[miEventQueue.head];
-        /* Assumption - screen switching can only occur on motion events. */
         miEventQueue.head = (miEventQueue.head + 1) % QUEUE_SIZE;
 
-        if (e->pScreen != miEventQueue.pDequeueScreen) {
+        if (miEventQueue.handlers[e->event->u.u.type]) {
+            /* If someone's registered a custom event handler, let them
+             * steal it. */
+            miEventQueue.handlers[e->event->u.u.type](miEventQueue.pDequeueScreen->myNum,
+                                                      e->event, dev,
+                                                      e->nevents);
+            return;
+        }
+        else if (e->pScreen != miEventQueue.pDequeueScreen) {
+            /* Assumption - screen switching can only occur on motion events. */
             miEventQueue.pDequeueScreen = e->pScreen;
             x = e->event[0].u.keyButtonPointer.rootX;
             y = e->event[0].u.keyButtonPointer.rootY;
             NewCurrentScreen (miEventQueue.pDequeueScreen, x, y);
         }
         else {
-            /* If someone's registered a custom event handler, let them
-             * steal it. */
-            if (miEventQueue.handlers[e->event->u.u.type]) {
-                miEventQueue.handlers[e->event->u.u.type](miEventQueue.pDequeueScreen->myNum,
-                                                          e->event, dev,
-                                                          e->nevents);
-                return;
-            }
-
             /* If this is a core event, make sure our keymap, et al, is
              * changed to suit. */
             if (e->event[0].u.u.type == KeyPress ||

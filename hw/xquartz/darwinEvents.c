@@ -107,7 +107,7 @@ static pthread_t create_thread(void *func, void *arg) {
     return tid;
 }
 
-static inline void darwinEvents_lock(void) {
+void darwinEvents_lock(void) {
     int err;
     if((err = pthread_mutex_lock(&mieq_lock))) {
         ErrorF("%s:%s:%d: Failed to lock mieq_lock: %d\n",
@@ -119,7 +119,7 @@ static inline void darwinEvents_lock(void) {
     }
 }
 
-static inline void darwinEvents_unlock(void) {
+void darwinEvents_unlock(void) {
     int err;
     if((err = pthread_mutex_unlock(&mieq_lock))) {
         ErrorF("%s:%s:%d: Failed to unlock mieq_lock: %d\n",

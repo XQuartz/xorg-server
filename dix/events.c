@@ -2338,7 +2338,9 @@ DefineInitialRootWindow(WindowPtr win)
 	pScreen, sprite.current, &sprite.hotLimits, &sprite.physLimits);
     sprite.confined = FALSE;
     (*pScreen->ConstrainCursor) (pScreen, &sprite.physLimits);
+#ifndef ROOTLESS
     (*pScreen->SetCursorPosition) (pScreen, sprite.hot.x, sprite.hot.y, FALSE);
+#endif
     (*pScreen->DisplayCursor) (pScreen, sprite.current);
 
 #ifdef PANORAMIX

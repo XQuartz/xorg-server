@@ -36,6 +36,11 @@ in this Software without prior written authorization from The Open Group.
 #include <dix-config.h>
 #endif
 
+#ifdef XQUARTZ
+#include  <pthread.h>
+static pthread_mutex_t miEventQueueMutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
 # define NEED_EVENTS
 # include   <X11/X.h>
 # include   <X11/Xmd.h>
@@ -105,6 +110,9 @@ mieqInit(void)
 void
 mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
 {
+#ifdef XQUARTZ
+    pthread_mutex_lock(&miEventQueueMutex);
+#endif
     unsigned int           oldtail = miEventQueue.tail, newtail;
     int                    isMotion = 0;
     deviceValuator         *v = (deviceValuator *) e;
@@ -123,6 +131,9 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
     if (e->u.u.type == DeviceValuator) {
         if (laste->nevents > 6) {
             ErrorF("[mi] mieqEnqueue: more than six valuator events; dropping.\n");
+#ifdef XQUARTZ
+            pthread_mutex_unlock(&miEventQueueMutex);
+#endif
             return;
         }
         if (oldtail == miEventQueue.head ||
@@ -134,9 +145,15 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
             ((lastkbp->deviceid & DEVICE_BITS) !=
              (v->deviceid & DEVICE_BITS))) {
             ErrorF("[mi] mieqEnequeue: out-of-order valuator event; dropping.\n");
+#ifdef XQUARTZ
+            pthread_mutex_unlock(&miEventQueueMutex);
+#endif
             return;
         }
         memcpy(&(laste->event[laste->nevents++]), e, sizeof(xEvent));
+#ifdef XQUARTZ
+        pthread_mutex_unlock(&miEventQueueMutex);
+#endif
         return;
     }
 
@@ -152,6 +169,9 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
 	if (newtail == miEventQueue.head) {
             ErrorF("[mi] EQ overflowing. The server is probably stuck "
                    "in an infinite loop.\n");
+#ifdef XQUARTZ
+            pthread_mutex_unlock(&miEventQueueMutex);
+#endif
 	    return;
         }
 	miEventQueue.tail = newtail;
@@ -173,24 +193,39 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
     miEventQueue.events[oldtail].pDev = pDev;
 
     miEventQueue.lastMotion = isMotion;
+#ifdef XQUARTZ
+    pthread_mutex_unlock(&miEventQueueMutex);
+#endif
 }
 
 void
 mieqSwitchScreen(ScreenPtr pScreen, Bool fromDIX)
 {
+#ifdef XQUARTZ
+    pthread_mutex_lock(&miEventQueueMutex);
+#endif
     miEventQueue.pEnqueueScreen = pScreen;
     if (fromDIX)
 	miEventQueue.pDequeueScreen = pScreen;
+#ifdef XQUARTZ
+    pthread_mutex_unlock(&miEventQueueMutex);
+#endif
 }
 
 void
 mieqSetHandler(int event, mieqHandler handler)
 {
+#ifdef XQUARTZ
+    pthread_mutex_lock(&miEventQueueMutex);
+#endif
     if (handler && miEventQueue.handlers[event])
         ErrorF("mieq: warning: overriding existing handler %p with %p for "
                "event %d\n", miEventQueue.handlers[event], handler, event);
 
     miEventQueue.handlers[event] = handler;
+#ifdef XQUARTZ
+    pthread_mutex_unlock(&miEventQueueMutex);
+#endif
 }
 
 /* Call this from ProcessInputEvents(). */
@@ -200,6 +235,10 @@ mieqProcessInputEvents(void)
     EventRec *e = NULL;
     int x = 0, y = 0;
     DeviceIntPtr dev = NULL;
+
+#ifdef XQUARTZ
+    pthread_mutex_lock(&miEventQueueMutex);
+#endif
 
     while (miEventQueue.head != miEventQueue.tail) {
         if (screenIsSaved == SCREEN_SAVER_ON)
@@ -221,7 +260,6 @@ mieqProcessInputEvents(void)
             miEventQueue.handlers[e->event->u.u.type](miEventQueue.pDequeueScreen->myNum,
                                                       e->event, dev,
                                                       e->nevents);
-            return;
         }
         else if (e->pScreen != miEventQueue.pDequeueScreen) {
             /* Assumption - screen switching can only occur on motion events. */
@@ -251,4 +289,7 @@ mieqProcessInputEvents(void)
             dev->public.processInputProc(e->event, dev, e->nevents);
         }
     }
+#ifdef XQUARTZ
+    pthread_mutex_unlock(&miEventQueueMutex);
+#endif
 }

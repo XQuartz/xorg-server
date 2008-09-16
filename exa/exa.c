@@ -43,6 +43,10 @@
 DevPrivateKey exaScreenPrivateKey = &exaScreenPrivateKey;
 DevPrivateKey exaPixmapPrivateKey = &exaPixmapPrivateKey;
 
+#ifdef MITSHM
+static ShmFuncs exaShmFuncs = { NULL, NULL };
+#endif
+
 static _X_INLINE void*
 ExaGetPixmapAddress(PixmapPtr p)
 {
@@ -924,6 +928,12 @@ exaDriverInit (ScreenPtr		pScreen,
     }
 #endif
 
+#ifdef MITSHM
+    /*
+     * Don't allow shared pixmaps.
+     */
+    ShmRegisterFuncs(pScreen, &exaShmFuncs);
+#endif
     /*
      * Hookup offscreen pixmaps
      */

@@ -45,9 +45,13 @@ glapi_sources =					\
 	glthread.h				\
 	glprocs.h
 
+if DRI2
+GLXDRI_SOURCE = glxdri2.c
+endif
+
 libglxdri_la_SOURCES = \
         glxdri.c \
-        glxdri2.c \
+	$(GLXDRI2_SOURCE) \
 	glxdricommon.h \
         extension_string.c \
         extension_string.h

@@ -21,6 +21,10 @@ X11_LDADD = \
 	$(top_builddir)/miext/rootless/librootless.la \
 	$(DARWIN_LIBS) $(XSERVER_LIBS) $(XSERVER_SYS_LIBS) -lXplugin -lX11
 
+if INTEGRATED_XPBPROXY
+X11_LDADD += $(top_builddir)/hw/xquartz/pbproxy/libxpbproxy.la
+endif
+
 X11_LDFLAGS =  \
 	-XCClinker -Objc \
 	-Wl,-u,_miDCInitialize \
@@ -59,4 +63,3 @@ EXTRA_DIST = \
 	launchd_fd.h \
 	mach_startup.defs \
 	mach_startup_types.h
-

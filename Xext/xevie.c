@@ -156,6 +156,7 @@ static
 int ProcXevieQueryVersion (register ClientPtr client)
 {
     xXevieQueryVersionReply rep;
+    int n;
 
     REQUEST_SIZE_MATCH (xXevieQueryVersionReq);
     rep.type = X_Reply;
@@ -163,6 +164,12 @@ int ProcXevieQueryVersion (register ClientPtr client)
     rep.sequence_number = client->sequence;
     rep.server_major_version = XEVIE_MAJOR_VERSION;
     rep.server_minor_version = XEVIE_MINOR_VERSION;
+    if (client->swapped) {
+	swaps(&rep.sequence_number, n);
+	swapl(&rep.length, n);
+	swaps(&rep.server_major_version, n);
+	swaps(&rep.server_minor_version, n);
+    }
     WriteToClient (client, sizeof (xXevieQueryVersionReply), (char *)&rep);
     return client->noClientException;
 }
@@ -171,6 +178,7 @@ static
 int ProcXevieStart (register ClientPtr client)
 {
     xXevieStartReply rep;
+    int n;
 
     REQUEST_SIZE_MATCH (xXevieStartReq);
     rep.pad1 = 0;
@@ -202,8 +210,13 @@ int ProcXevieStart (register ClientPtr client)
     
     xevieModifiersOn = FALSE;
 
+    rep.length = 0;
     rep.type = X_Reply;
     rep.sequence_number = client->sequence;
+    if (client->swapped) {
+	swaps(&rep.sequence_number, n);
+	swapl(&rep.length, n);
+    }
     WriteToClient (client, sizeof (xXevieStartReply), (char *)&rep);
     return client->noClientException;
 }
@@ -212,6 +225,7 @@ static
 int ProcXevieEnd (register ClientPtr client)
 {
     xXevieEndReply rep;
+    int n;
 
     REQUEST_SIZE_MATCH (xXevieEndReq);
     
@@ -223,8 +237,13 @@ int ProcXevieEnd (register ClientPtr client)
         XevieEnd(xevieClientIndex);
     }
 
+    rep.length = 0;
     rep.type = X_Reply;
     rep.sequence_number = client->sequence;
+    if (client->swapped) {
+	swaps(&rep.sequence_number, n);
+	swapl(&rep.length, n);
+    }
     WriteToClient (client, sizeof (xXevieEndReply), (char *)&rep);
     return client->noClientException;
 }
@@ -236,6 +255,7 @@ int ProcXevieSend (register ClientPtr client)
     xXevieSendReply rep;
     xEvent *xE;
     static unsigned char lastDetail = 0, lastType = 0;
+    int n;
 
     REQUEST_SIZE_MATCH (xXevieSendReq);
     
@@ -243,8 +263,13 @@ int ProcXevieSend (register ClientPtr client)
         return BadAccess;
 
     xE = (xEvent *)&stuff->event;
+    rep.length = 0;
     rep.type = X_Reply;
     rep.sequence_number = client->sequence;
+    if (client->swapped) {
+	swaps(&rep.sequence_number, n);
+	swapl(&rep.length, n);
+    }
     WriteToClient (client, sizeof (xXevieSendReply), (char *)&rep);
 
     switch(xE->u.u.type) {
@@ -282,6 +307,7 @@ int ProcXevieSelectInput (register ClientPtr client)
 {
     REQUEST (xXevieSelectInputReq);
     xXevieSelectInputReply rep;
+    int n;
 
     REQUEST_SIZE_MATCH (xXevieSelectInputReq);
 
@@ -289,8 +315,13 @@ int ProcXevieSelectInput (register ClientPtr client)
         return BadAccess;
 
     xevieMask = stuff->event_mask;
+    rep.length = 0;
     rep.type = X_Reply;
     rep.sequence_number = client->sequence;
+    if (client->swapped) {
+	swaps(&rep.sequence_number, n);
+	swapl(&rep.length, n);
+    }
     WriteToClient (client, sizeof (xXevieSelectInputReply), (char *)&rep);
     return client->noClientException;
 }

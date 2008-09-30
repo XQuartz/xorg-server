@@ -907,14 +907,7 @@ extern int darwin_modifier_flags; // darwinEvents.c
             
         handle_mouse:
             pDev = darwinPointer;
-			if ([e type] == NSTabletPoint || [e subtype] == NSTabletPointEventSubtype) {
-                pressure = [e pressure];
-                tilt_x   = [e tilt].x;
-                tilt_y   = [e tilt].y;
-                
-                pDev = darwinTabletCurrent;
-            }
-            
+
             if([e subtype] == NSTabletProximityEventSubtype) {
                 switch([e pointingDeviceType]) {
                     case NSEraserPointingDevice:
@@ -930,8 +923,25 @@ extern int darwin_modifier_flags; // darwinEvents.c
                         break;
                 }
                 
+                /* NSTabletProximityEventSubtype doesn't encode pressure ant tilt
+                 * So we just pretend the motion was caused by the mouse.  Hopefully
+                 * we'll have a better solution for this in the future (like maybe
+                 * NSTabletProximityEventSubtype will come from NSTabletPoint
+                 * rather than NSMouseMoved.
+                pressure = [e pressure];
+                tilt_x   = [e tilt].x;
+                tilt_y   = [e tilt].y;
+                pDev = darwinTabletCurrent;                
+                 */
+
                 DarwinSendProximityEvents([e isEnteringProximity]?ProximityIn:ProximityOut,
                                           pointer_x, pointer_y);
+            }
+
+			if ([e type] == NSTabletPoint || [e subtype] == NSTabletPointEventSubtype) {
+                pressure = [e pressure];
+                tilt_x   = [e tilt].x;
+                tilt_y   = [e tilt].y;
                 
                 pDev = darwinTabletCurrent;
             }

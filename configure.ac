@@ -1757,6 +1757,8 @@ if test "x$XQUARTZ" = xyes; then
 	AC_CHECK_LIB([Xplugin],[xp_init],[:])
 
 	CFLAGS="${CFLAGS} -DROOTLESS_WORKAROUND -DNO_ALLOCA"
+
+	PKG_CHECK_MODULES(APPLEWM, [applewmproto >= 1.1.0])
 fi
 
 # Support for objc in autotools is minimal and not documented.

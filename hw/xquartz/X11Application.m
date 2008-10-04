@@ -673,7 +673,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
                           default:darwinDesiredDepth];
 	
     enable_stereo = [self prefs_get_boolean:@PREFS_ENABLE_STEREO
-                     default:false];
+                     default:enable_stereo];
 }
 
 /* This will end up at the end of the responder chain. */

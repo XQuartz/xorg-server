@@ -173,7 +173,6 @@ mfbSetWindowPixmap(pWin, pPix)
 
 void mfbFillInScreen(ScreenPtr pScreen)
 {
-    pScreen->ChangeWindowAttributes = mfbChangeWindowAttributes;
     pScreen->RealizeWindow = mfbMapWindow;
     pScreen->UnrealizeWindow = mfbUnmapWindow;
     pScreen->DestroyPixmap = mfbDestroyPixmap;

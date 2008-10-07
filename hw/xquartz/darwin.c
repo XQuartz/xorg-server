@@ -229,8 +229,6 @@ static Bool DarwinAddScreen(int index, ScreenPtr pScreen, int argc, char **argv)
 
     miSetPixmapDepths();
 
-    setVisualConfigs();
-
     // machine independent screen init
     // setup _Screen structure in pScreen
     if (monitorResolution)
@@ -601,6 +599,10 @@ void InitOutput( ScreenInfo *pScreenInfo, int argc, char **argv )
         darwinScreenIndex = AllocateScreenPrivateIndex();
         generation = serverGeneration;
     }
+
+#ifdef GLXEXT
+    setVisualConfigs();    
+#endif
 
     // Discover screens and do mode specific initialization
     QuartzInitOutput(argc, argv);

@@ -1546,10 +1546,12 @@ void
 RootlessPaintWindowBackground(WindowPtr pWin, RegionPtr pRegion, int what)
 {
     ScreenPtr pScreen = pWin->drawable.pScreen;
- 
-    if (IsRoot(pWin))
-        return;
 
+    if(pWin->drawable.type == UNDRAWABLE_WINDOW)
+        return;
+    
+    SCREEN_UNWRAP(pScreen, PaintWindowBackground);
+    
     RL_DEBUG_MSG("paintwindowbackground start (win 0x%x, framed %i) ",
                  pWin, IsFramedWindow(pWin));
 
@@ -1562,10 +1564,10 @@ RootlessPaintWindowBackground(WindowPtr pWin, RegionPtr pRegion, int what)
         if (pWin->backgroundState == ParentRelative) {
             SetPixmapOfAncestors(pWin);
         }
+
+        pScreen->PaintWindowBackground(pWin, pRegion, what);
     }
 
-    SCREEN_UNWRAP(pScreen, PaintWindowBackground);
-    pScreen->PaintWindowBackground(pWin, pRegion, what);
     SCREEN_WRAP(pScreen, PaintWindowBackground);
 
     RL_DEBUG_MSG("paintwindowbackground end\n");

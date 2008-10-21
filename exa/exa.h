@@ -783,6 +783,10 @@ exaGetPixmapSize(PixmapPtr pPix);
 void
 exaEnableDisableFBAccess (int index, Bool enable);
 
+Bool
+exaDrawableIsOffscreen (DrawablePtr pDrawable);
+
+/* in exa_migration.c */
 void
 exaMoveInPixmap (PixmapPtr pPixmap);
 

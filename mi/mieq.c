@@ -236,10 +236,6 @@ mieqProcessInputEvents(void)
     int x = 0, y = 0;
     DeviceIntPtr dev = NULL;
 
-#ifdef XQUARTZ
-    pthread_mutex_lock(&miEventQueueMutex);
-#endif
-
     while (miEventQueue.head != miEventQueue.tail) {
         if (screenIsSaved == SCREEN_SAVER_ON)
             dixSaveScreens (serverClient, SCREEN_SAVER_OFF, ScreenSaverReset);
@@ -253,10 +249,6 @@ mieqProcessInputEvents(void)
 
         memcpy(&e, &miEventQueue.events[miEventQueue.head], sizeof(EventRec));
         miEventQueue.head = (miEventQueue.head + 1) % QUEUE_SIZE;
-
-#ifdef XQUARTZ
-        pthread_mutex_unlock(&miEventQueueMutex);
-#endif
 
         if (miEventQueue.handlers[e.event[0].u.u.type]) {
             /* If someone's registered a custom event handler, let them

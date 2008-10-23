@@ -257,12 +257,12 @@ mieqProcessInputEvents(void)
         pthread_mutex_unlock(&miEventQueueMutex);
 #endif
 
-        if (miEventQueue.handlers[e.event->u.u.type]) {
+        if (miEventQueue.handlers[e.event[0].u.u.type]) {
             /* If someone's registered a custom event handler, let them
              * steal it. */
-            miEventQueue.handlers[e.event->u.u.type](e.pScreen->myNum,
-                                                      e.event, e.pDev,
-                                                      e.nevents);
+            miEventQueue.handlers[e.event[0].u.u.type](e.pScreen->myNum,
+                                                       e.event, e.pDev,
+                                                       e.nevents);
         }
         else if (e.pScreen != miEventQueue.pDequeueScreen) {
             /* Assumption - screen switching can only occur on motion events. */

@@ -231,7 +231,7 @@ mieqSetHandler(int event, mieqHandler handler)
 void
 mieqProcessInputEvents(void)
 {
-    EventRec *e = NULL;
+    EventRec e;
     int x = 0, y = 0;
     DeviceIntPtr dev = NULL;
 
@@ -250,45 +250,46 @@ mieqProcessInputEvents(void)
             DPMSSet(DPMSModeOn);
 #endif
 
-        e = &miEventQueue.events[miEventQueue.head];
+        memcpy(&e, &miEventQueue.events[miEventQueue.head], sizeof(EventRec));
         miEventQueue.head = (miEventQueue.head + 1) % QUEUE_SIZE;
 
-        if (miEventQueue.handlers[e->event->u.u.type]) {
+#ifdef XQUARTZ
+        pthread_mutex_unlock(&miEventQueueMutex);
+#endif
+
+        if (miEventQueue.handlers[e.event->u.u.type]) {
             /* If someone's registered a custom event handler, let them
              * steal it. */
-            miEventQueue.handlers[e->event->u.u.type](miEventQueue.pDequeueScreen->myNum,
-                                                      e->event, dev,
-                                                      e->nevents);
+            miEventQueue.handlers[e.event->u.u.type](e.pScreen->myNum,
+                                                      e.event, e.pDev,
+                                                      e.nevents);
         }
-        else if (e->pScreen != miEventQueue.pDequeueScreen) {
+        else if (e.pScreen != miEventQueue.pDequeueScreen) {
             /* Assumption - screen switching can only occur on motion events. */
-            miEventQueue.pDequeueScreen = e->pScreen;
-            x = e->event[0].u.keyButtonPointer.rootX;
-            y = e->event[0].u.keyButtonPointer.rootY;
-            NewCurrentScreen (miEventQueue.pDequeueScreen, x, y);
+            miEventQueue.pDequeueScreen = e.pScreen;
+            x = e.event[0].u.keyButtonPointer.rootX;
+            y = e.event[0].u.keyButtonPointer.rootY;
+            NewCurrentScreen(e.pScreen, x, y);
         }
         else {
             /* If this is a core event, make sure our keymap, et al, is
              * changed to suit. */
-            if (e->event[0].u.u.type == KeyPress ||
-                e->event[0].u.u.type == KeyRelease) {
-                SwitchCoreKeyboard(e->pDev);
+            if (e.event[0].u.u.type == KeyPress ||
+                e.event[0].u.u.type == KeyRelease) {
+                SwitchCoreKeyboard(e.pDev);
                 dev = inputInfo.keyboard;
             }
-            else if (e->event[0].u.u.type == MotionNotify ||
-                     e->event[0].u.u.type == ButtonPress ||
-                     e->event[0].u.u.type == ButtonRelease) {
-                SwitchCorePointer(e->pDev);
+            else if (e.event[0].u.u.type == MotionNotify ||
+                     e.event[0].u.u.type == ButtonPress ||
+                     e.event[0].u.u.type == ButtonRelease) {
+                SwitchCorePointer(e.pDev);
                 dev = inputInfo.pointer;
             }
             else {
-                dev = e->pDev;
+                dev = e.pDev;
             }
 
-            dev->public.processInputProc(e->event, dev, e->nevents);
+            dev->public.processInputProc(e.event, dev, e.nevents);
         }
     }
-#ifdef XQUARTZ
-    pthread_mutex_unlock(&miEventQueueMutex);
-#endif
 }

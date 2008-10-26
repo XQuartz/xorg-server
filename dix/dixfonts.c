@@ -97,8 +97,7 @@ static FontPathElementPtr *slept_fpes = (FontPathElementPtr *) 0;
 static FontPatternCachePtr patternCache;
 
 static int
-FontToXError(err)
-    int         err;
+FontToXError(int err)
 {
     switch (err) {
     case Successful:

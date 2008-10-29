@@ -162,6 +162,7 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
 	oldtail = (oldtail - 1) % QUEUE_SIZE;
     }
     else {
+	static int stuck = 0;
 	newtail = (oldtail + 1) % QUEUE_SIZE;
 	/* Toss events which come in late.  Usually this means your server's
          * stuck in an infinite loop somewhere, but SIGIO is still getting
@@ -169,11 +170,16 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
 	if (newtail == miEventQueue.head) {
             ErrorF("[mi] EQ overflowing. The server is probably stuck "
                    "in an infinite loop.\n");
+	    if (!stuck) {
+		xorg_backtrace();
+		stuck = 1;
+	    }
 #ifdef XQUARTZ
             pthread_mutex_unlock(&miEventQueueMutex);
 #endif
 	    return;
         }
+	stuck = 0;
 	miEventQueue.tail = newtail;
     }
 

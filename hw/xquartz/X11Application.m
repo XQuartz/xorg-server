@@ -948,6 +948,7 @@ extern int darwin_modifier_flags; // darwinEvents.c
                 pDev = darwinTabletCurrent;
             }
 
+#if 0 // XPlugin isn't thread safe ... sigh
             if(!quartzServerVisible) {
                 xp_window_id wid;
                 
@@ -963,6 +964,7 @@ extern int darwin_modifier_flags; // darwinEvents.c
                 if (wid == 0)
                     return;        
             }
+#endif
             
             DarwinSendPointerEvents(pDev, ev_type, ev_button, pointer_x, pointer_y,
                                     pressure, tilt_x, tilt_y);

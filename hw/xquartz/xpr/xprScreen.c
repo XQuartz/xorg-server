@@ -144,7 +144,7 @@ displayAtIndex(int index)
  *  Return the bounds of a particular display.
  */
 static CGRect
-displayScreenBounds(CGDirectDisplayID id, Bool remove_menubar)
+displayScreenBounds(CGDirectDisplayID id)
 {
     CGRect frame;
 
@@ -155,7 +155,7 @@ displayScreenBounds(CGDirectDisplayID id, Bool remove_menubar)
               (int)frame.origin.x, (int)frame.origin.y);
     
     /* Remove menubar to help standard X11 window managers. */
-    if (remove_menubar && !quartzHasRoot && 
+    if (quartzEnableRootless && 
         frame.origin.x == 0 && frame.origin.y == 0) {
         frame.origin.y += aquaMenuBarHeight;
         frame.size.height -= aquaMenuBarHeight;
@@ -188,7 +188,7 @@ xprAddPseudoramiXScreens(int *x, int *y, int *width, int *height)
     /* Get the union of all screens */
     for (i = 0; i < displayCount; i++) {
         CGDirectDisplayID dpy = displayList[i];
-        frame = displayScreenBounds(dpy, TRUE);
+        frame = displayScreenBounds(dpy);
         unionRect = CGRectUnion(unionRect, frame);
     }
 
@@ -206,7 +206,7 @@ xprAddPseudoramiXScreens(int *x, int *y, int *width, int *height)
     {
         CGDirectDisplayID dpy = displayList[i];
 
-        frame = displayScreenBounds(dpy, TRUE);
+        frame = displayScreenBounds(dpy);
         frame.origin.x -= unionRect.origin.x;
         frame.origin.y -= unionRect.origin.y;
 
@@ -332,7 +332,7 @@ xprAddScreen(int index, ScreenPtr pScreen)
 
         dpy = displayAtIndex(index);
 
-        frame = displayScreenBounds(dpy, TRUE);
+        frame = displayScreenBounds(dpy);
 
         dfb->x = frame.origin.x;
         dfb->y = frame.origin.y;

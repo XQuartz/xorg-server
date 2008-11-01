@@ -701,7 +701,7 @@ SProcXFixesChangeCursor (ClientPtr client)
 static Bool
 TestForCursorName (CursorPtr pCursor, pointer closure)
 {
-    return (pCursor->name == (Atom) closure);
+    return ((size_t) pCursor->name == (size_t) closure);
 }
 
 int
@@ -717,7 +717,7 @@ ProcXFixesChangeCursorByName (ClientPtr client)
     tchar = (char *) &stuff[1];
     name = MakeAtom (tchar, stuff->nbytes, FALSE);
     if (name)
-	ReplaceCursor (pSource, TestForCursorName, (pointer) name);
+	ReplaceCursor (pSource, TestForCursorName, (pointer) (size_t)name);
     return (client->noClientException);
 }
 

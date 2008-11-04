@@ -1088,7 +1088,7 @@ __glXCreateARGBConfig(__GLXscreen *screen)
 }
 
 
-#define __GLX_TOTAL_FBCONFIG_ATTRIBS (28)
+#define __GLX_TOTAL_FBCONFIG_ATTRIBS (30)
 #define __GLX_FBCONFIG_ATTRIBS_LENGTH (__GLX_TOTAL_FBCONFIG_ATTRIBS * 2)
 /**
  * Send the set of GLXFBConfigs to the client.  There is not currently
@@ -1184,6 +1184,9 @@ int DoGetFBConfigs(__GLXclientState *cl, unsigned screen, GLboolean do_swap)
 	WRITE_PAIR( GLX_TRANSPARENT_ALPHA_VALUE, modes->transparentAlpha );
 	WRITE_PAIR( GLX_TRANSPARENT_INDEX_VALUE, modes->transparentIndex );
 	WRITE_PAIR( GLX_SWAP_METHOD_OML, modes->swapMethod );
+
+	WRITE_PAIR( GLX_SAMPLE_BUFFERS_SGIS, modes->sampleBuffers );
+	WRITE_PAIR( GLX_SAMPLES_SGIS, modes->samples );
 
 	if ( do_swap ) {
 	    __GLX_SWAP_INT_ARRAY(buf, __GLX_FBCONFIG_ATTRIBS_LENGTH);

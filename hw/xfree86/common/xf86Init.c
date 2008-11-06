@@ -131,6 +131,207 @@ static int numFormats = 6;
 #endif
 static Bool formatsDone = FALSE;
 
+#ifndef OSNAME
+#define OSNAME " unknown"
+#endif
+#ifndef OSVENDOR
+#define OSVENDOR ""
+#endif
+#ifndef PRE_RELEASE
+#define PRE_RELEASE XORG_VERSION_SNAP
+#endif
+
+static void
+xf86PrintBanner()
+{
+#if PRE_RELEASE
+  ErrorF("\n"
+    "This is a pre-release version of the X server from " XVENDORNAME ".\n"
+    "It is not supported in any way.\n"
+    "Bugs may be filed in the bugzilla at http://bugs.freedesktop.org/.\n"
+    "Select the \"xorg\" product for bugs you find in this release.\n"
+    "Before reporting bugs in pre-release versions please check the\n"
+    "latest version in the X.Org Foundation git repository.\n"
+    "See http://wiki.x.org/wiki/GitPage for git access instructions.\n");
+#endif
+  ErrorF("\nX.Org X Server %d.%d.%d",
+	 XORG_VERSION_MAJOR,
+	 XORG_VERSION_MINOR,
+	 XORG_VERSION_PATCH);
+#if XORG_VERSION_SNAP > 0
+  ErrorF(".%d", XORG_VERSION_SNAP);
+#endif
+
+#if XORG_VERSION_SNAP >= 900
+  /* When the minor number is 99, that signifies that the we are making
+   * a release candidate for a major version.  (X.0.0)
+   * When the patch number is 99, that signifies that the we are making
+   * a release candidate for a minor version.  (X.Y.0)
+   * When the patch number is < 99, then we are making a release
+   * candidate for the next point release.  (X.Y.Z)
+   */
+#if XORG_VERSION_MINOR >= 99
+  ErrorF(" (%d.0.0 RC %d)", XORG_VERSION_MAJOR+1, XORG_VERSION_SNAP - 900);
+#elif XORG_VERSION_PATCH == 99
+  ErrorF(" (%d.%d.0 RC %d)", XORG_VERSION_MAJOR, XORG_VERSION_MINOR + 1,
+				XORG_VERSION_SNAP - 900);
+#else
+  ErrorF(" (%d.%d.%d RC %d)", XORG_VERSION_MAJOR, XORG_VERSION_MINOR,
+ 			 XORG_VERSION_PATCH + 1, XORG_VERSION_SNAP - 900);
+#endif
+#endif
+
+#ifdef XORG_CUSTOM_VERSION
+  ErrorF(" (%s)", XORG_CUSTOM_VERSION);
+#endif
+#ifndef XORG_DATE
+#define XORG_DATE XF86_DATE
+#endif
+  ErrorF("\nRelease Date: %s\n", XORG_DATE);
+  ErrorF("X Protocol Version %d, Revision %d\n",
+         X_PROTOCOL, X_PROTOCOL_REVISION);
+  ErrorF("Build Operating System: %s %s\n", OSNAME, OSVENDOR);
+#ifdef HAS_UTSNAME
+  {
+    struct utsname name;
+
+    /* Linux & BSD state that 0 is success, SysV (including Solaris, HP-UX,
+       and Irix) and Single Unix Spec 3 just say that non-negative is success.
+       All agree that failure is represented by a negative number.
+     */
+    if (uname(&name) >= 0) {
+      ErrorF("Current Operating System: %s %s %s %s %s\n",
+	name.sysname, name.nodename, name.release, name.version, name.machine);
+    }
+  }
+#endif
+#if defined(BUILD_DATE) && (BUILD_DATE > 19000000)
+  {
+    struct tm t;
+    char buf[100];
+
+    bzero(&t, sizeof(t));
+    bzero(buf, sizeof(buf));
+    t.tm_mday = BUILD_DATE % 100;
+    t.tm_mon = (BUILD_DATE / 100) % 100 - 1;
+    t.tm_year = BUILD_DATE / 10000 - 1900;
+#if defined(BUILD_TIME)
+    t.tm_sec = BUILD_TIME % 100;
+    t.tm_min = (BUILD_TIME / 100) % 100;
+    t.tm_hour = (BUILD_TIME / 10000) % 100;
+    if (strftime(buf, sizeof(buf), "%d %B %Y  %I:%M:%S%p", &t))
+       ErrorF("Build Date: %s\n", buf);
+#else
+    if (strftime(buf, sizeof(buf), "%d %B %Y", &t))
+       ErrorF("Build Date: %s\n", buf);
+#endif
+  }
+#endif
+#if defined(CLOG_DATE) && (CLOG_DATE > 19000000)
+  {
+    struct tm t;
+    char buf[100];
+
+    bzero(&t, sizeof(t));
+    bzero(buf, sizeof(buf));
+    t.tm_mday = CLOG_DATE % 100;
+    t.tm_mon = (CLOG_DATE / 100) % 100 - 1;
+    t.tm_year = CLOG_DATE / 10000 - 1900;
+    if (strftime(buf, sizeof(buf), "%d %B %Y", &t))
+       ErrorF("Changelog Date: %s\n", buf);
+  }
+#endif
+#if defined(BUILDERSTRING)
+  ErrorF("%s \n",BUILDERSTRING);
+#endif
+  ErrorF("\tBefore reporting problems, check "__VENDORDWEBSUPPORT__"\n"
+	 "\tto make sure that you have the latest version.\n");
+}
+
+static void
+xf86PrintMarkers()
+{
+  LogPrintMarkers();
+}
+
+static void
+DoModalias()
+{
+    int i = -1;
+    char **vlist;
+
+    /* Get all the drivers */
+    vlist = xf86DriverlistFromCompile();
+    if (!vlist) {
+	ErrorF("Missing output drivers.  PCI Access dump failed.\n");
+	goto bail;
+    }
+
+    /* Load all the drivers that were found. */
+    xf86LoadModules(vlist, NULL);
+
+    xfree(vlist);
+
+    /* Iterate through each driver */
+    for (i = 0; i < xf86NumDrivers; i++) {
+        struct pci_id_match *match;
+
+        /* Iterate through each pci id match data, dumping it to the screen */
+        for (match = (struct pci_id_match *) xf86DriverList[i]->supported_devices ;
+                 match && !(!match->vendor_id && !match->device_id) ; match++) {
+             /* Prefix */
+             ErrorF("alias pci:");
+
+             /* Vendor */
+             if (match->vendor_id == ~0)
+                 ErrorF("v*");
+             else
+                 ErrorF("v%08X", match->vendor_id);
+
+             /* Device */
+             if (match->device_id == ~0)
+                 ErrorF("d*");
+             else
+                 ErrorF("d%08X", match->device_id);
+
+             /* Subvendor */
+             if (match->subvendor_id == ~0)
+                 ErrorF("sv*");
+             else
+                 ErrorF("sv%08X", match->subvendor_id);
+
+             /* Subdevice */
+             if (match->subdevice_id == ~0)
+                 ErrorF("sd*");
+             else
+                 ErrorF("sd%08X", match->subdevice_id);
+
+             /* Class */
+             if ((match->device_class_mask >> 16 & 0xFF) == 0xFF)
+                 ErrorF("bc%02X", match->device_class >> 16 & 0xFF);
+             else
+                 ErrorF("bc*");
+             if ((match->device_class_mask >> 8 & 0xFF) == 0xFF)
+                 ErrorF("sc%02X", match->device_class >> 8 & 0xFF);
+             else
+                 ErrorF("sc*");
+             if ((match->device_class_mask & 0xFF) == 0xFF)
+                 ErrorF("i%02X*", match->device_class & 0xFF);
+             else
+                 ErrorF("i*");
+
+             /* Suffix (driver) */
+             ErrorF(" %s\n", xf86DriverList[i]->driverName);
+        }
+    }
+
+bail:
+    OsCleanup(TRUE);
+    AbortDDX();
+    fflush(stderr);
+    exit(0);
+}
+
 static Bool
 xf86CreateRootWindow(WindowPtr pWin)
 {
@@ -488,19 +689,21 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
     else
       xf86ServerName = argv[0];
 
-    xf86PrintBanner();
-    xf86PrintMarkers();
-    if (xf86LogFile)  {
-	time_t t;
-	const char *ct;
-	t = time(NULL);
-	ct = ctime(&t);
-	xf86MsgVerb(xf86LogFileFrom, 0, "Log file: \"%s\", Time: %s",
-		    xf86LogFile, ct);
+    if (!xf86DoModalias) {
+	xf86PrintBanner();
+	xf86PrintMarkers();
+	if (xf86LogFile)  {
+	    time_t t;
+	    const char *ct;
+	    t = time(NULL);
+	    ct = ctime(&t);
+	    xf86MsgVerb(xf86LogFileFrom, 0, "Log file: \"%s\", Time: %s",
+			xf86LogFile, ct);
+	}
     }
 
     /* Read and parse the config file */
-    if (!xf86DoProbe && !xf86DoConfigure) {
+    if (!xf86DoProbe && !xf86DoConfigure && !xf86DoModalias) {
       switch (xf86HandleConfigFile(FALSE)) {
       case CONFIG_OK:
 	break;
@@ -536,6 +739,10 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
 
     if (xf86DoConfigure)
 	DoConfigure();
+
+    /* Do the PCI Access dump */
+    if (xf86DoModalias)
+        DoModalias();
 
     if (autoconfig) {
 	if (!xf86AutoConfig()) {
@@ -1678,6 +1885,12 @@ ddxProcessArgument(int argc, char **argv, int i)
     xf86AllowMouseOpenFail = TRUE;
     return 1;
   }
+  if (!strcmp(argv[i], "-modalias"))
+  {
+    xf86DoModalias = TRUE;
+    xf86AllowMouseOpenFail = TRUE;
+    return 1;
+  }
   if (!strcmp(argv[i], "-isolateDevice"))
   {
     int bus, device, func;
@@ -1722,6 +1935,7 @@ ddxUseMsg()
     ErrorF("-logfile file          specify a log file name\n");
     ErrorF("-configure             probe for devices and write an "__XCONFIGFILE__"\n");
   }
+  ErrorF("-modalias              output a modalias-style filter for each driver installed\n");
   ErrorF("-config file           specify a configuration file, relative to the\n");
   ErrorF("                       "__XCONFIGFILE__" search path, only root can use absolute\n");
   ErrorF("-probeonly             probe for devices, then exit\n");
@@ -1762,131 +1976,6 @@ ddxUseMsg()
   /* OS-specific usage */
   xf86UseMsg();
   ErrorF("\n");
-}
-
-
-#ifndef OSNAME
-#define OSNAME " unknown"
-#endif
-#ifndef OSVENDOR
-#define OSVENDOR ""
-#endif
-#ifndef PRE_RELEASE
-#define PRE_RELEASE XORG_VERSION_SNAP
-#endif
-
-static void
-xf86PrintBanner()
-{
-#if PRE_RELEASE
-  ErrorF("\n"
-    "This is a pre-release version of the X server from " XVENDORNAME ".\n"
-    "It is not supported in any way.\n"
-    "Bugs may be filed in the bugzilla at http://bugs.freedesktop.org/.\n"
-    "Select the \"xorg\" product for bugs you find in this release.\n"
-    "Before reporting bugs in pre-release versions please check the\n"
-    "latest version in the X.Org Foundation git repository.\n"
-    "See http://wiki.x.org/wiki/GitPage for git access instructions.\n");
-#endif
-  ErrorF("\nX.Org X Server %d.%d.%d",
-	 XORG_VERSION_MAJOR,
-	 XORG_VERSION_MINOR,
-	 XORG_VERSION_PATCH);
-#if XORG_VERSION_SNAP > 0
-  ErrorF(".%d", XORG_VERSION_SNAP);
-#endif
-
-#if XORG_VERSION_SNAP >= 900
-  /* When the minor number is 99, that signifies that the we are making
-   * a release candidate for a major version.  (X.0.0)
-   * When the patch number is 99, that signifies that the we are making
-   * a release candidate for a minor version.  (X.Y.0)
-   * When the patch number is < 99, then we are making a release
-   * candidate for the next point release.  (X.Y.Z)
-   */
-#if XORG_VERSION_MINOR >= 99
-  ErrorF(" (%d.0.0 RC %d)", XORG_VERSION_MAJOR+1, XORG_VERSION_SNAP - 900);
-#elif XORG_VERSION_PATCH == 99
-  ErrorF(" (%d.%d.0 RC %d)", XORG_VERSION_MAJOR, XORG_VERSION_MINOR + 1,
-				XORG_VERSION_SNAP - 900);
-#else
-  ErrorF(" (%d.%d.%d RC %d)", XORG_VERSION_MAJOR, XORG_VERSION_MINOR,
- 			 XORG_VERSION_PATCH + 1, XORG_VERSION_SNAP - 900);
-#endif
-#endif
-
-#ifdef XORG_CUSTOM_VERSION
-  ErrorF(" (%s)", XORG_CUSTOM_VERSION);
-#endif
-#ifndef XORG_DATE
-#define XORG_DATE XF86_DATE
-#endif
-  ErrorF("\nRelease Date: %s\n", XORG_DATE);
-  ErrorF("X Protocol Version %d, Revision %d\n",
-         X_PROTOCOL, X_PROTOCOL_REVISION);
-  ErrorF("Build Operating System: %s %s\n", OSNAME, OSVENDOR);
-#ifdef HAS_UTSNAME
-  {
-    struct utsname name;
-
-    /* Linux & BSD state that 0 is success, SysV (including Solaris, HP-UX,
-       and Irix) and Single Unix Spec 3 just say that non-negative is success.
-       All agree that failure is represented by a negative number.
-     */
-    if (uname(&name) >= 0) {
-      ErrorF("Current Operating System: %s %s %s %s %s\n",
-	name.sysname, name.nodename, name.release, name.version, name.machine);
-    }
-  }
-#endif
-#if defined(BUILD_DATE) && (BUILD_DATE > 19000000)
-  {
-    struct tm t;
-    char buf[100];
-
-    bzero(&t, sizeof(t));
-    bzero(buf, sizeof(buf));
-    t.tm_mday = BUILD_DATE % 100;
-    t.tm_mon = (BUILD_DATE / 100) % 100 - 1;
-    t.tm_year = BUILD_DATE / 10000 - 1900;
-#if defined(BUILD_TIME)
-    t.tm_sec = BUILD_TIME % 100;
-    t.tm_min = (BUILD_TIME / 100) % 100;
-    t.tm_hour = (BUILD_TIME / 10000) % 100;
-    if (strftime(buf, sizeof(buf), "%d %B %Y  %I:%M:%S%p", &t))
-       ErrorF("Build Date: %s\n", buf);
-#else
-    if (strftime(buf, sizeof(buf), "%d %B %Y", &t))
-       ErrorF("Build Date: %s\n", buf);
-#endif
-  }
-#endif
-#if defined(CLOG_DATE) && (CLOG_DATE > 19000000)
-  {
-    struct tm t;
-    char buf[100];
-
-    bzero(&t, sizeof(t));
-    bzero(buf, sizeof(buf));
-    t.tm_mday = CLOG_DATE % 100;
-    t.tm_mon = (CLOG_DATE / 100) % 100 - 1;
-    t.tm_year = CLOG_DATE / 10000 - 1900;
-    if (strftime(buf, sizeof(buf), "%d %B %Y", &t))
-       ErrorF("Changelog Date: %s\n", buf);
-  }
-#endif
-#if defined(BUILDERSTRING)
-  ErrorF("%s \n",BUILDERSTRING);
-#endif
-  ErrorF("\tBefore reporting problems, check "__VENDORDWEBSUPPORT__"\n"
-	 "\tto make sure that you have the latest version.\n");
-  ErrorF("Module Loader present\n");
-}
-
-static void
-xf86PrintMarkers()
-{
-  LogPrintMarkers();
 }
 
 static void

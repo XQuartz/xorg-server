@@ -67,6 +67,13 @@ static void ErrorF(char*, ...);
 #include "os.h"
 #endif
 
+#ifndef IF_MASK
+#define IF_MASK X86_EFLAGS_IF
+#endif
+#ifndef IOPL_MASK
+#define IOPL_MASK X86_EFLAGS_IOPL
+#endif
+
 typedef unsigned char	U8;
 typedef unsigned short	U16;
 typedef unsigned int	U32;

@@ -113,7 +113,7 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
 #ifdef XQUARTZ
     pthread_mutex_lock(&miEventQueueMutex);
 #endif
-    unsigned int           oldtail = miEventQueue.tail, newtail;
+    unsigned int           oldtail = miEventQueue.tail;
     int                    isMotion = 0;
     deviceValuator         *v = (deviceValuator *) e;
     EventPtr               laste = &miEventQueue.events[(oldtail - 1) %
@@ -159,30 +159,29 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
 
     if (isMotion && isMotion == miEventQueue.lastMotion &&
         oldtail != miEventQueue.head) {
-	oldtail = (oldtail - 1) % QUEUE_SIZE;
+        oldtail = (oldtail - 1) % QUEUE_SIZE;
     }
     else {
-	static int stuck = 0;
-	newtail = (oldtail + 1) % QUEUE_SIZE;
-	/* Toss events which come in late.  Usually this means your server's
+        static int stuck = 0;
+        newtail = (oldtail + 1) % QUEUE_SIZE;
+        /* Toss events which come in late.  Usually this means your server's
          * stuck in an infinite loop somewhere, but SIGIO is still getting
          * handled. */
-	if (newtail == miEventQueue.head) {
+        if ((oldtail + 1) % QUEUE_SIZE == miEventQueue.head) {
             ErrorF("[mi] EQ overflowing. The server is probably stuck "
                    "in an infinite loop.\n");
-	    if (!stuck) {
-		xorg_backtrace();
-		stuck = 1;
-	    }
+            if (!stuck) {
+                xorg_backtrace();
+                stuck = 1;
+            }
 #ifdef XQUARTZ
             pthread_mutex_unlock(&miEventQueueMutex);
 #endif
-	    return;
+            return;
         }
-	stuck = 0;
-	miEventQueue.tail = newtail;
+        stuck = 0;
     }
-
+    
     memcpy(&(miEventQueue.events[oldtail].event[0]), e, sizeof(xEvent));
     miEventQueue.events[oldtail].nevents = 1;
 
@@ -199,6 +198,7 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
     miEventQueue.events[oldtail].pDev = pDev;
 
     miEventQueue.lastMotion = isMotion;
+	miEventQueue.tail = (oldtail + 1) % QUEUE_SIZE;
 #ifdef XQUARTZ
     pthread_mutex_unlock(&miEventQueueMutex);
 #endif
@@ -238,10 +238,14 @@ mieqSetHandler(int event, mieqHandler handler)
 void
 mieqProcessInputEvents(void)
 {
+    mieqHandler handler;
     EventRec e;
     int x = 0, y = 0;
     DeviceIntPtr dev = NULL;
 
+#ifdef XQUARTZ
+    pthread_mutex_lock(&miEventQueueMutex);
+#endif
     while (miEventQueue.head != miEventQueue.tail) {
         if (screenIsSaved == SCREEN_SAVER_ON)
             dixSaveScreens (serverClient, SCREEN_SAVER_OFF, ScreenSaverReset);
@@ -254,14 +258,17 @@ mieqProcessInputEvents(void)
 #endif
 
         memcpy(&e, &miEventQueue.events[miEventQueue.head], sizeof(EventRec));
+        handler = miEventQueue.handlers[e.event[0].u.u.type];
         miEventQueue.head = (miEventQueue.head + 1) % QUEUE_SIZE;
 
-        if (miEventQueue.handlers[e.event[0].u.u.type]) {
+#ifdef XQUARTZ
+        pthread_mutex_unlock(&miEventQueueMutex);
+#endif
+        
+        if (handler) {
             /* If someone's registered a custom event handler, let them
              * steal it. */
-            miEventQueue.handlers[e.event[0].u.u.type](e.pScreen->myNum,
-                                                       e.event, e.pDev,
-                                                       e.nevents);
+            handler(e.pScreen->myNum, e.event, e.pDev, e.nevents);
         }
         else if (e.pScreen != miEventQueue.pDequeueScreen) {
             /* Assumption - screen switching can only occur on motion events. */
@@ -290,5 +297,12 @@ mieqProcessInputEvents(void)
 
             dev->public.processInputProc(e.event, dev, e.nevents);
         }
+
+#ifdef XQUARTZ
+        pthread_mutex_lock(&miEventQueueMutex);
+#endif
     }
+#ifdef XQUARTZ
+    pthread_mutex_unlock(&miEventQueueMutex);
+#endif
 }

@@ -959,7 +959,7 @@ int __glXDisp_GetVisualConfigs(__GLXclientState *cl, GLbyte *pc)
     return Success;
 }
 
-#define __GLX_TOTAL_FBCONFIG_ATTRIBS (36)
+#define __GLX_TOTAL_FBCONFIG_ATTRIBS (38)
 #define __GLX_FBCONFIG_ATTRIBS_LENGTH (__GLX_TOTAL_FBCONFIG_ATTRIBS * 2)
 /**
  * Send the set of GLXFBConfigs to the client.  There is not currently
@@ -1047,6 +1047,9 @@ DoGetFBConfigs(__GLXclientState *cl, unsigned screen)
 	WRITE_PAIR( GLX_BIND_TO_TEXTURE_RGBA_EXT, modes->bindToTextureRgba );
 	WRITE_PAIR( GLX_BIND_TO_MIPMAP_TEXTURE_EXT, modes->bindToMipmapTexture );
 	WRITE_PAIR( GLX_BIND_TO_TEXTURE_TARGETS_EXT, modes->bindToTextureTargets );
+
+	WRITE_PAIR( GLX_SAMPLE_BUFFERS_SGIS, modes->sampleBuffers );
+	WRITE_PAIR( GLX_SAMPLES_SGIS, modes->samples );
 
 	if (client->swapped) {
 	    __GLX_SWAP_INT_ARRAY(buf, __GLX_FBCONFIG_ATTRIBS_LENGTH);

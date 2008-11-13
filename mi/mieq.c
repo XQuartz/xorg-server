@@ -163,7 +163,6 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
     }
     else {
         static int stuck = 0;
-        newtail = (oldtail + 1) % QUEUE_SIZE;
         /* Toss events which come in late.  Usually this means your server's
          * stuck in an infinite loop somewhere, but SIGIO is still getting
          * handled. */

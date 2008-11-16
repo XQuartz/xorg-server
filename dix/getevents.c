@@ -407,7 +407,7 @@ GetKeyboardValuatorEvents(xEvent *events, DeviceIntPtr pDev, int type,
                           int num_valuators, int *valuators) {
     int numEvents = 0;
     CARD32 ms = 0;
-    KeySym *map = pDev->key->curKeySyms.map;
+    KeySym *map;
     KeySym sym;
     deviceKeyButtonPointer *kbp = NULL;
 
@@ -426,8 +426,6 @@ GetKeyboardValuatorEvents(xEvent *events, DeviceIntPtr pDev, int type,
         return 0;
     
     map = pDev->key->curKeySyms.map;
-    sym = map[key_code * pDev->key->curKeySyms.mapWidth];
-
     sym = map[(key_code - pDev->key->curKeySyms.minKeyCode)
               * pDev->key->curKeySyms.mapWidth];
 

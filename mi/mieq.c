@@ -246,6 +246,14 @@ mieqProcessInputEvents(void)
     pthread_mutex_lock(&miEventQueueMutex);
 #endif
     while (miEventQueue.head != miEventQueue.tail) {
+        memcpy(&e, &miEventQueue.events[miEventQueue.head], sizeof(EventRec));
+        handler = miEventQueue.handlers[e.event[0].u.u.type];
+        miEventQueue.head = (miEventQueue.head + 1) % QUEUE_SIZE;
+
+#ifdef XQUARTZ
+        pthread_mutex_unlock(&miEventQueueMutex);
+#endif
+        
         if (screenIsSaved == SCREEN_SAVER_ON)
             dixSaveScreens (serverClient, SCREEN_SAVER_OFF, ScreenSaverReset);
 #ifdef DPMSExtension
@@ -256,14 +264,6 @@ mieqProcessInputEvents(void)
             DPMSSet(serverClient, DPMSModeOn);
 #endif
 
-        memcpy(&e, &miEventQueue.events[miEventQueue.head], sizeof(EventRec));
-        handler = miEventQueue.handlers[e.event[0].u.u.type];
-        miEventQueue.head = (miEventQueue.head + 1) % QUEUE_SIZE;
-
-#ifdef XQUARTZ
-        pthread_mutex_unlock(&miEventQueueMutex);
-#endif
-        
         if (handler) {
             /* If someone's registered a custom event handler, let them
              * steal it. */

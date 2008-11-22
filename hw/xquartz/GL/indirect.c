@@ -102,12 +102,13 @@ void warn_func(void * p1, char *format, ...);
 
 // some prototypes
 static __GLXscreen * __glXAquaScreenProbe(ScreenPtr pScreen);
-static __GLXdrawable * __glXAquaScreenCreateDrawable(__GLXscreen *screen, DrawablePtr pDraw, XID drawId, __GLcontextModes *modes);
+static __GLXdrawable * __glXAquaScreenCreateDrawable(__GLXscreen *screen, DrawablePtr pDraw, int type, XID drawId, __GLXconfig *conf);
 
 static Bool glAquaInitVisuals(VisualPtr *visualp, DepthPtr *depthp,
                               int *nvisualp, int *ndepthp,
                               int *rootDepthp, VisualID *defaultVisp,
                               unsigned long sizes, int bitsPerRGB);
+
 static void glAquaSetVisualConfigs(int nconfigs, __GLXvisualConfig *configs,
                                    void **privates);
 
@@ -118,7 +119,7 @@ static int __glXAquaContextLoseCurrent(__GLXcontext *baseContext);
 static int __glXAquaContextForceCurrent(__GLXcontext *baseContext);
 static int __glXAquaContextCopy(__GLXcontext *baseDst, __GLXcontext *baseSrc, unsigned long mask);
 
-static CGLPixelFormatObj makeFormat(__GLcontextModes *mode);
+static CGLPixelFormatObj makeFormat(__GLXconfig *conf);
 
 __GLXprovider __glXDRISWRastProvider = {
   __glXAquaScreenProbe,
@@ -162,7 +163,7 @@ struct __GLXAquaDrawable {
 
 static __GLXcontext *
 __glXAquaScreenCreateContext(__GLXscreen *screen,
-			     __GLcontextModes *modes,
+			     __GLXconfig *conf,
 			     __GLXcontext *baseShareContext)
 {
   __GLXAquaContext *context;
@@ -177,16 +178,15 @@ __glXAquaScreenCreateContext(__GLXscreen *screen,
   memset(context, 0, sizeof *context);
 
   context->base.pGlxScreen = screen;
-  context->base.modes      = modes;
 
   context->base.destroy        = __glXAquaContextDestroy;
   context->base.makeCurrent    = __glXAquaContextMakeCurrent;
   context->base.loseCurrent    = __glXAquaContextLoseCurrent;
   context->base.copy           = __glXAquaContextCopy;
   context->base.forceCurrent   = __glXAquaContextForceCurrent;
-  //  context->base.createDrawable = __glXAquaContextCreateDrawable;
+  /*FIXME verify that the context->base is fully initialized. */
 
-  context->pixelFormat = makeFormat(modes);
+  context->pixelFormat = makeFormat(conf);
   if (!context->pixelFormat) {
         free(context);
         return NULL;
@@ -202,9 +202,11 @@ __glXAquaScreenCreateContext(__GLXscreen *screen,
       CGLDestroyPixelFormat(context->pixelFormat);
       free(context);
       return NULL;
-    }
-	setup_dispatch_table();
-    GLAQUA_DEBUG_MSG("glAquaCreateContext done\n");
+  }
+
+  setup_dispatch_table();
+  GLAQUA_DEBUG_MSG("glAquaCreateContext done\n");
+    
   return &context->base;
 }
 
@@ -437,6 +439,51 @@ static GLboolean __glXAquaDrawableSwapBuffers(__GLXdrawable *base) {
     return GL_TRUE;
 }
 
+
+static CGLPixelFormatObj makeFormat(__GLXconfig *conf) {
+    CGLPixelFormatAttribute attr[64];
+    CGLPixelFormatObj fobj;
+    GLint formats;
+    CGLError error;
+    int i = 0;
+    
+    if(conf->doubleBufferMode)
+	attr[i++] = kCGLPFADoubleBuffer;
+
+    if(conf->stereoMode)
+	attr[i++] = kCGLPFAStereo;
+
+    attr[i++] = kCGLPFAColorSize;
+    attr[i++] = conf->redBits + conf->greenBits + conf->blueBits;
+    attr[i++] = kCGLPFAAlphaSize;
+    attr[i++] = conf->alphaBits;
+
+    /*TODO add accum, depth, and stencil. */
+    
+    if(conf->numAuxBuffers > 0) {
+	attr[i++] = kCGLPFAAuxBuffers;
+	attr[i++] = conf->numAuxBuffers;
+    }
+
+    if(conf->sampleBuffers > 0) {
+       attr[i++] = kCGLPFASampleBuffers;
+       attr[i++] = conf->sampleBuffers;
+       attr[i++] = kCGLPFASamples;
+       attr[i++] = conf->samples;
+    }
+     
+    attr[i++] = 0;
+
+    error = CGLChoosePixelFormat(attr, &fobj, &formats);
+    if(error) {
+	ErrorF("error: creating pixel format %s\n", CGLErrorString(error));
+	return NULL;
+    }
+
+    return fobj;
+}
+
+#if 0
 static CGLPixelFormatObj makeFormat(__GLcontextModes *mode) {
     int i;
     CGLPixelFormatAttribute attr[64]; // currently uses max of 30
@@ -508,6 +555,7 @@ static CGLPixelFormatObj makeFormat(__GLcontextModes *mode) {
 
     return result;
 }
+#endif
 
 // Originally copied from Mesa
 
@@ -662,6 +710,7 @@ static Bool init_visuals(int *nvisualp, VisualPtr *visualp,
                          int ndepth, DepthPtr pdepth,
                          int rootDepth)
 {
+#if 0
     int numRGBconfigs;
     int numCIconfigs;
     int numVisuals = *nvisualp;
@@ -919,6 +968,8 @@ static Bool init_visuals(int *nvisualp, VisualPtr *visualp,
     visualPrivates = NULL;
 
     return TRUE;
+#endif
+    return FALSE;
 }
 
 Bool enable_stereo = FALSE;
@@ -928,6 +979,7 @@ Bool enable_stereo = FALSE;
 static void
 glAquaInitVisualConfigs(void)
 {
+#if 0
     int                 lclNumConfigs     = 0;
     __GLXvisualConfig  *lclVisualConfigs  = NULL;
     void              **lclVisualPrivates = NULL;
@@ -1010,18 +1062,22 @@ glAquaInitVisualConfigs(void)
         GLAQUA_DEBUG_MSG("glAquaInitVisualConfigs failed to alloc visual configs");
 
     GlxSetVisualConfigs(lclNumConfigs, lclVisualConfigs, lclVisualPrivates);
+#endif
 }
 
 
 static void glAquaSetVisualConfigs(int nconfigs, __GLXvisualConfig *configs,
                                    void **privates)
 {
+#if 0
     GLAQUA_DEBUG_MSG("glAquaSetVisualConfigs\n");
 
     numConfigs = nconfigs;
     visualConfigs = configs;
     visualPrivates = privates;
+#endif
 }
+
 
 static Bool glAquaInitVisuals(VisualPtr *visualp, DepthPtr *depthp,
                               int *nvisualp, int *ndepthp,
@@ -1076,15 +1132,15 @@ static void fixup_visuals(int screen)
 #endif
 static void __glXAquaScreenDestroy(__GLXscreen *screen) {
 
-	GLAQUA_DEBUG_MSG("glXAquaScreenDestroy(%p)\n", screen);
-  __glXScreenDestroy(screen);
+    GLAQUA_DEBUG_MSG("glXAquaScreenDestroy(%p)\n", screen);
+    __glXScreenDestroy(screen);
 
-  free(screen);
+    free(screen);
 }
 
 static void init_screen_visuals(__GLXAquaScreen *screen) {
+#if 0
   ScreenPtr pScreen = screen->base.pScreen;
-  
   __GLcontextModes *modes;
   int *used;
   int i, j;
@@ -1139,35 +1195,44 @@ static void init_screen_visuals(__GLXAquaScreen *screen) {
     }
 
     free(used);
+#endif
 }
 
 /* This is called by __glXInitScreens(). */
 static __GLXscreen * __glXAquaScreenProbe(ScreenPtr pScreen) {
-  __GLXAquaScreen *screen;
-  GLAQUA_DEBUG_MSG("glXAquaScreenProbe\n");
-  if (pScreen == NULL) return NULL;
+    __GLXAquaScreen *screen;
+    GLAQUA_DEBUG_MSG("glXAquaScreenProbe\n");
 
-  screen = malloc(sizeof *screen);
+    if (pScreen == NULL) 
+	return NULL;
 
-  __glXScreenInit(&screen->base, pScreen);
+    screen = malloc(sizeof *screen);
 
-  screen->base.destroy        = __glXAquaScreenDestroy;
-  screen->base.createContext  = __glXAquaScreenCreateContext;
-  screen->base.createDrawable = __glXAquaScreenCreateDrawable;
-  screen->base.pScreen       = pScreen;
-
-  /* 
-   * These are both commented out, because they cause problems with
-   * the other visual config code, and visuals.
-   * This probe function is called normally on startup in direct
-   * mode too.
-   * They don't seem to be needed now that we have better visual
-   * setup.
-   */
-  //init_screen_visuals(screen);
-  //glAquaInitVisualConfigs();
-
-  return &screen->base;
+    __glXScreenInit(&screen->base, pScreen);
+    
+    screen->base.destroy        = __glXAquaScreenDestroy;
+    screen->base.createContext  = __glXAquaScreenCreateContext;
+    screen->base.createDrawable = __glXAquaScreenCreateDrawable;
+    screen->base.swapInterval = /*FIXME*/ NULL;
+    screen->base.hyperpipeFuncs = NULL;
+    screen->base.swapBarrierFuncs = NULL;
+    screen->base.pScreen       = pScreen;
+    
+    screen->base.fbconfigs = NULL;
+    screen->base.numFBConfigs = 0; /*FIXME*/
+    
+    /* 
+     * These are both commented out, because they cause problems with
+     * the other visual config code, and visuals.
+     * This probe function is called normally on startup in direct
+     * mode too.
+     * They don't seem to be needed now that we have better visual
+     * setup.
+     */
+    //init_screen_visuals(screen);
+    //glAquaInitVisualConfigs();
+    
+    return &screen->base;
 }
 
 static void __glXAquaDrawableDestroy(__GLXdrawable *base) {
@@ -1183,8 +1248,9 @@ static void __glXAquaDrawableDestroy(__GLXdrawable *base) {
 static __GLXdrawable *
 __glXAquaScreenCreateDrawable(__GLXscreen *screen,
 			      DrawablePtr pDraw,
+			      int type,
 			      XID drawId,
-			      __GLcontextModes *modes) {
+			      __GLXconfig *conf) {
   __GLXAquaDrawable *glxPriv;
 
   GLAQUA_DEBUG_MSG("glAquaScreenCreateDrawable(%p,%p,%d,%p)\n", context, pDraw, drawId, modes);
@@ -1194,7 +1260,7 @@ __glXAquaScreenCreateDrawable(__GLXscreen *screen,
 
   memset(glxPriv, 0, sizeof *glxPriv);
 
-  if (!__glXDrawableInit(&glxPriv->base, screen, pDraw, drawId, modes)) {
+  if (!__glXDrawableInit(&glxPriv->base, screen, pDraw, type, drawId, conf)) {
     xfree(glxPriv);
     return NULL;
   }

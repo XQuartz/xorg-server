@@ -121,16 +121,15 @@ static int __glXAquaContextCopy(__GLXcontext *baseDst, __GLXcontext *baseSrc, un
 static CGLPixelFormatObj makeFormat(__GLcontextModes *mode);
 
 __GLXprovider __glXMesaProvider = {
-  __glXAquaScreenProbe,
-  "Core OpenGL",
+    __glXAquaScreenProbe,
+    "Core OpenGL",
     NULL
 };
 
 __GLXprovider *
-GlxGetMesaProvider (void)
-{
-  GLAQUA_DEBUG_MSG("GlxGetMesaProvider\n");
-  return &__glXMesaProvider;
+GlxGetMesaProvider (void) {
+    GLAQUA_DEBUG_MSG("GlxGetMesaProvider\n");
+    return &__glXMesaProvider;
 }
 
 typedef struct __GLXAquaScreen   __GLXAquaScreen;
@@ -138,8 +137,8 @@ typedef struct __GLXAquaContext  __GLXAquaContext;
 typedef struct __GLXAquaDrawable __GLXAquaDrawable;
 
 struct __GLXAquaScreen {
-  __GLXscreen   base;
-  int           index;
+    __GLXscreen base;
+    int index;
     int num_vis;
     __GLcontextModes *modes;
 };
@@ -147,15 +146,15 @@ struct __GLXAquaScreen {
 static __GLXAquaScreen glAquaScreens[MAXSCREENS];
 
 struct __GLXAquaContext {
-  __GLXcontext base;
-  CGLContextObj ctx;
-  CGLPixelFormatObj pixelFormat;
-  xp_surface_id sid;
-  unsigned isAttached :1;
+    __GLXcontext base;
+    CGLContextObj ctx;
+    CGLPixelFormatObj pixelFormat;
+    xp_surface_id sid;
+    unsigned isAttached :1;
 };
 
 struct __GLXAquaDrawable {
-  __GLXdrawable base;
+    __GLXdrawable base;
     DrawablePtr pDraw;
     xp_surface_id sid;
 };
@@ -165,47 +164,50 @@ __glXAquaScreenCreateContext(__GLXscreen *screen,
 			     __GLcontextModes *modes,
 			     __GLXcontext *baseShareContext)
 {
-  __GLXAquaContext *context;
-  __GLXAquaContext *shareContext = (__GLXAquaContext *) baseShareContext;
-  CGLError gl_err;
+    __GLXAquaContext *context;
+    __GLXAquaContext *shareContext = (__GLXAquaContext *) baseShareContext;
+    CGLError gl_err;
   
-  GLAQUA_DEBUG_MSG("glXAquaScreenCreateContext\n");
+    GLAQUA_DEBUG_MSG("glXAquaScreenCreateContext\n");
+  
+    context = malloc (sizeof (__GLXAquaContext));
+    if (context == NULL) return NULL;
 
-  context = malloc (sizeof (__GLXAquaContext));
-  if (context == NULL) return NULL;
+    memset(context, 0, sizeof *context);
+    
+    context->base.pGlxScreen = screen;
+    context->base.modes      = modes;
+    
+    context->base.destroy        = __glXAquaContextDestroy;
+    context->base.makeCurrent    = __glXAquaContextMakeCurrent;
+    context->base.loseCurrent    = __glXAquaContextLoseCurrent;
+    context->base.copy           = __glXAquaContextCopy;
+    context->base.forceCurrent   = __glXAquaContextForceCurrent;
+    
+    context->pixelFormat = makeFormat(modes);
 
-  memset(context, 0, sizeof *context);
-
-  context->base.pGlxScreen = screen;
-  context->base.modes      = modes;
-
-  context->base.destroy        = __glXAquaContextDestroy;
-  context->base.makeCurrent    = __glXAquaContextMakeCurrent;
-  context->base.loseCurrent    = __glXAquaContextLoseCurrent;
-  context->base.copy           = __glXAquaContextCopy;
-  context->base.forceCurrent   = __glXAquaContextForceCurrent;
-  //  context->base.createDrawable = __glXAquaContextCreateDrawable;
-
-  context->pixelFormat = makeFormat(modes);
-  if (!context->pixelFormat) {
-        free(context);
-        return NULL;
-  }
-
-  context->ctx = NULL;
-  gl_err = CGLCreateContext(context->pixelFormat,
-                            shareContext ? shareContext->ctx : NULL,
-                            &context->ctx);
-
-  if (gl_err != 0) {
-      ErrorF("CGLCreateContext error: %s\n", CGLErrorString(gl_err));
-      CGLDestroyPixelFormat(context->pixelFormat);
-      free(context);
-      return NULL;
+    if (!context->pixelFormat) {
+	free(context);
+	return NULL;
     }
-	setup_dispatch_table();
+    
+    context->ctx = NULL;
+    gl_err = CGLCreateContext(context->pixelFormat,
+			      shareContext ? shareContext->ctx : NULL,
+			      &context->ctx);
+    
+    if (gl_err != 0) {
+	ErrorF("CGLCreateContext error: %s\n", CGLErrorString(gl_err));
+	CGLDestroyPixelFormat(context->pixelFormat);
+	free(context);
+	return NULL;
+    }
+    
+    setup_dispatch_table();
+
     GLAQUA_DEBUG_MSG("glAquaCreateContext done\n");
-  return &context->base;
+    
+    return &context->base;
 }
 
 static __GLXextensionInfo __glDDXExtensionInfo = {
@@ -216,7 +218,7 @@ static __GLXextensionInfo __glDDXExtensionInfo = {
 };
 
 void *__glXglDDXExtensionInfo(void) {
-  GLAQUA_DEBUG_MSG("glXAglDDXExtensionInfo\n");
+    GLAQUA_DEBUG_MSG("glXAglDDXExtensionInfo\n");
     return &__glDDXExtensionInfo;
 }
 
@@ -266,10 +268,11 @@ static void surface_notify(void *_arg, void *data) {
     __GLXAquaDrawable *draw = (__GLXAquaDrawable *)data;
     __GLXAquaContext *context;
     x_list *lst;
-	if(_arg == NULL || data == NULL) {
-		ErrorF("surface_notify called with bad params");
-		return;
-	}
+
+    if(_arg == NULL || data == NULL) {
+	ErrorF("surface_notify called with bad params");
+	return;
+    }
 	
     GLAQUA_DEBUG_MSG("surface_notify(%p, %p)\n", _arg, data);
     switch (arg->kind) {
@@ -291,39 +294,49 @@ static void surface_notify(void *_arg, void *data) {
         }
         break;
 	default:
-		ErrorF("surface_notify: unknown kind %d\n", arg->kind);
-		break;
+	    ErrorF("surface_notify: unknown kind %d\n", arg->kind);
+	    break;
     }
 }
 
-static void attach(__GLXAquaContext *context, __GLXAquaDrawable *draw) {
+/* Return TRUE If an error occured. */
+static BOOL attach(__GLXAquaContext *context, __GLXAquaDrawable *draw) {
     DrawablePtr pDraw;
-	GLAQUA_DEBUG_MSG("attach(%p, %p)\n", context, draw);
+	
+    GLAQUA_DEBUG_MSG("attach(%p, %p)\n", context, draw);
+
+    if(NULL == context || NULL == draw)
+	return TRUE;
+
     pDraw = draw->base.pDraw;
 
-    if (draw->sid == 0) {
-//        if (!quartzProcs->CreateSurface(pDraw->pScreen, pDraw->id, pDraw,
-        if (!DRICreateSurface(pDraw->pScreen, pDraw->id, pDraw,
-                                        0, &draw->sid, NULL,
-                                        surface_notify, draw))
-            return;
+    if(NULL == pDraw) {
+	ErrorF("%s:attach() pDraw is NULL!\n", __FILE__);
+	return TRUE;
+    }
+
+    if(draw->sid == 0) {
+	if (!DRICreateSurface(pDraw->pScreen, pDraw->id, pDraw,
+			      0, &draw->sid, NULL,
+			      surface_notify, draw))
+            return TRUE;
+
         draw->pDraw = pDraw;
-	} 
+    } 
 
     if (!context->isAttached || context->sid != draw->sid) {
         x_list *lst;
 
         if (xp_attach_gl_context(context->ctx, draw->sid) != Success) {
-//            quartzProcs->DestroySurface(pDraw->pScreen, pDraw->id, pDraw,
             DRIDestroySurface(pDraw->pScreen, pDraw->id, pDraw,
-								surface_notify, draw);
+			      surface_notify, draw);
             if (surface_hash != NULL)
                 x_hash_table_remove(surface_hash, x_cvt_uint_to_vptr(draw->sid));
-
+	    
             draw->sid = 0;
-            return;
+            return TRUE;
         }
-
+	
         context->isAttached = TRUE;
         context->sid = draw->sid;
 
@@ -339,6 +352,8 @@ static void attach(__GLXAquaContext *context, __GLXAquaDrawable *draw) {
         GLAQUA_DEBUG_MSG("attached 0x%x to 0x%x\n", (unsigned int) pDraw->id,
                          (unsigned int) draw->sid);
     } 
+
+    return FALSE;
 }
 
 #if 0     // unused
@@ -365,14 +380,16 @@ static void unattach(__GLXAquaContext *context) {
 }
 #endif
 
+/* This returns 0 if an error occured. */
 static int __glXAquaContextMakeCurrent(__GLXcontext *baseContext) {
     CGLError gl_err;
     __GLXAquaContext *context = (__GLXAquaContext *) baseContext;
-	__GLXAquaDrawable *drawPriv = (__GLXAquaDrawable *) context->base.drawPriv;
+    __GLXAquaDrawable *drawPriv = (__GLXAquaDrawable *) context->base.drawPriv;
 
     GLAQUA_DEBUG_MSG("glAquaMakeCurrent (ctx 0x%p)\n", baseContext);
     
-    attach(context, drawPriv);
+    if(attach(context, drawPriv))
+	return 0;
 
     gl_err = CGLSetCurrentContext(context->ctx);
     if (gl_err != 0)
@@ -419,21 +436,22 @@ static GLboolean __glXAquaDrawableResize(__GLXdrawable *base)  {
 
 static GLboolean __glXAquaDrawableSwapBuffers(__GLXdrawable *base) {
     CGLError gl_err;
-	__GLXAquaContext * drawableCtx;
-//    GLAQUA_DEBUG_MSG("glAquaDrawableSwapBuffers(%p)\n",base);
-	
-	if(!base) {
-		ErrorF("glXAquaDrawbleSwapBuffers passed NULL\n");
-	    return GL_FALSE;
-	}
+    __GLXAquaContext * drawableCtx;
+    //    GLAQUA_DEBUG_MSG("glAquaDrawableSwapBuffers(%p)\n",base);
+    
+    if(!base) {
+	ErrorF("glXAquaDrawbleSwapBuffers passed NULL\n");
+	return GL_FALSE;
+    }
 
     drawableCtx = (__GLXAquaContext *)base->drawGlxc;
-
+    
     if (drawableCtx != NULL && drawableCtx->ctx != NULL) {
         gl_err = CGLFlushDrawable(drawableCtx->ctx);
         if (gl_err != 0)
             ErrorF("CGLFlushDrawable error: %s\n", CGLErrorString(gl_err));
     }
+
     return GL_TRUE;
 }
 

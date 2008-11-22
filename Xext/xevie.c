@@ -126,6 +126,8 @@ static void XeviePointerProcessInputProc(xEvent *xE, DeviceIntPtr dev,
                                          int count);
 static void XevieKbdProcessInputProc(xEvent *xE, DeviceIntPtr dev, int count);
 
+/* Shutup gcc about no previous prototype */
+void XevieExtensionInit(void);
 void
 XevieExtensionInit (void)
 {

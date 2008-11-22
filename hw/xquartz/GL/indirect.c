@@ -1135,7 +1135,7 @@ static void __glXAquaScreenDestroy(__GLXscreen *screen) {
     GLAQUA_DEBUG_MSG("glXAquaScreenDestroy(%p)\n", screen);
     __glXScreenDestroy(screen);
 
-    free(screen);
+    xfree(screen);
 }
 
 static void init_screen_visuals(__GLXAquaScreen *screen) {
@@ -1198,17 +1198,104 @@ static void init_screen_visuals(__GLXAquaScreen *screen) {
 #endif
 }
 
+/* This will eventually need to use the capabilities.c code. */
+static __GLXconfig *createConfigs(void) {
+    __GLXconfig *conf;
+
+    conf = xalloc(sizeof *conf);
+    
+    if(NULL == conf)
+	return NULL;
+
+    conf->next = NULL;
+    conf->doubleBufferMode = GL_TRUE;
+    conf->stereoMode = GL_FALSE;
+    conf->redBits = 8;
+    conf->greenBits = 8;
+    conf->blueBits = 8;
+    conf->alphaBits = 0;
+
+    conf->redMask = -1;
+    conf->greenMask = -1;
+    conf->blueMask = -1;
+    conf->alphaMask = -1;
+
+    conf->rgbBits = conf->redBits + conf->greenBits + conf->blueBits + conf->alphaBits;
+    conf->indexBits = 0;
+
+    conf->accumRedBits = 0;
+    conf->accumGreenBits = 0;
+    conf->accumBlueBits = 0;
+    conf->accumAlphaBits = 0;
+    
+    conf->depthBits = 24;
+
+    conf->stencilBits = 0;
+    
+    conf->numAuxBuffers = 0;
+    
+    conf->level = 0;
+
+    conf->pixmapMode = 0;
+    
+    conf->visualID = -1;
+    conf->visualType = GLX_TRUE_COLOR;
+    conf->visualRating = 0;
+
+    conf->transparentPixel = 0;
+    conf->transparentRed = 0;
+    conf->transparentGreen = 0;
+    conf->transparentAlpha = 0;
+    conf->transparentIndex = 0;
+    
+    conf->sampleBuffers = 0;
+    conf->samples = 0;
+
+    /* SGIX_fbconfig / GLX 1.3 */
+    conf->drawableType = GLX_WINDOW_BIT | GLX_PIXMAP_BIT;
+    conf->renderType = GL_TRUE;
+    conf->xRenderable = GL_TRUE;
+    conf->fbconfigID = -1;
+
+    /*TODO add querying code to capabilities.c for the Pbuffer maximums. */
+    /* SGIX_pbuffer / GLX 1.3 */
+    conf->maxPbufferWidth = 0;
+    conf->maxPbufferHeight = 0;
+    conf->maxPbufferPixels = 0;
+    conf->optimalPbufferWidth = 0;
+    conf->optimalPbufferHeight = 0;
+
+    conf->visualSelectGroup = 0;
+
+    conf->swapMethod = GLX_SWAP_UNDEFINED_OML;
+
+    /* FIXME */
+    conf->screen = 0;
+
+    /* EXT_texture_from_pixmap */
+    conf->bindToTextureRgb = 0;
+    conf->bindToTextureRgba = 0;
+    conf->bindToMipmapTexture = 0;
+    conf->bindToTextureTargets = 0;
+    conf->yInverted = 0;
+
+    return conf;
+}
+
+
 /* This is called by __glXInitScreens(). */
 static __GLXscreen * __glXAquaScreenProbe(ScreenPtr pScreen) {
     __GLXAquaScreen *screen;
+    __GLXconfig *configs;
+
     GLAQUA_DEBUG_MSG("glXAquaScreenProbe\n");
 
     if (pScreen == NULL) 
 	return NULL;
 
-    screen = malloc(sizeof *screen);
-
-    __glXScreenInit(&screen->base, pScreen);
+    screen = xalloc(sizeof *screen);
+    if(NULL == screen)
+	return NULL;
     
     screen->base.destroy        = __glXAquaScreenDestroy;
     screen->base.createContext  = __glXAquaScreenCreateContext;
@@ -1218,8 +1305,23 @@ static __GLXscreen * __glXAquaScreenProbe(ScreenPtr pScreen) {
     screen->base.swapBarrierFuncs = NULL;
     screen->base.pScreen       = pScreen;
     
-    screen->base.fbconfigs = NULL;
-    screen->base.numFBConfigs = 0; /*FIXME*/
+    configs = createConfigs();
+
+    screen->base.fbconfigs = configs;
+    screen->base.numFBConfigs = 1; 
+
+    screen->base.visuals = configs;
+    screen->base.numVisuals = 1;
+
+    GlxSetVisualConfig(GLX_ALL_VISUALS);
+
+    __glXScreenInit(&screen->base, pScreen);
+
+    /* __glXScreenInit initializes these, so the order here is important, if we need these... */
+    screen->base.GLextensions = "";
+    screen->base.GLXvendor = "Apple";
+    screen->base.GLXversion = "1.4";
+    screen->base.GLXextensions = "";
     
     /* 
      * These are both commented out, because they cause problems with

@@ -122,6 +122,7 @@ Equipment Corporation.
 #endif
 #include "dixevents.h"
 #include "globals.h"
+#include "mi.h"
 
 #ifdef XAPPGROUP
 #include "appgroup.h"

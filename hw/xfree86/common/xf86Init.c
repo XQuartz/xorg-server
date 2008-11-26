@@ -1324,7 +1324,9 @@ InitInput(argc, argv)
             strcpy((*pDev)->driver, "kbd");
         }
 
-        xf86NewInputDevice(*pDev, &dev, TRUE);
+        /* If one fails, the others will too */
+        if (xf86NewInputDevice(*pDev, &dev, TRUE) == BadAlloc)
+            break;
     }
 }
 

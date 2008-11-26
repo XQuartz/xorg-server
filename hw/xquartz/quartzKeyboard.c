@@ -145,6 +145,7 @@ const static struct {
     KeySym normal, dead;
 } dead_keys[] = {
     {XK_grave, XK_dead_grave},
+    {XK_apostrophe, XK_dead_acute},         /* "=" on a Czech keyboard */
     {XK_acute, XK_dead_acute},
     {XK_asciicircum, XK_dead_circumflex},
     {UKEYSYM (0x2c6), XK_dead_circumflex},	/* MODIFIER LETTER CIRCUMFLEX ACCENT */
@@ -652,17 +653,11 @@ Bool QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
                 UniCharCount len;
                 UInt32 dead_key_state = 0, extra_dead = 0;
 
-                if(((i+MIN_KEYCODE)==32 && j==0) || ((i+MIN_KEYCODE)==22 && j==2))
-                    fprintf(stderr, "%s i=%d (mods[j] >> 8) = %ul\n", (i+MIN_KEYCODE) == 22 ? "US" : "Czech", i, mods[j] >> 8);
-                
                 err = UCKeyTranslate (chr_data, i, kUCKeyActionDown,
                                       mods[j] >> 8, keyboard_type, 0,
                                       &dead_key_state, 8, &len, s);
                 if (err != noErr) continue;
 
-                if(((i+MIN_KEYCODE)==32 && j==0) || ((i+MIN_KEYCODE)==22 && j==2))
-                    fprintf(stderr, "dead_key_state = %d, len=%d s=%d %d %d %d %d %d %d %d\n", dead_key_state, len, s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]);
-                
                 if (len == 0 && dead_key_state != 0) {
                     /* Found a dead key. Work out which one it is, but
                        remembering that it's dead. */
@@ -670,19 +665,12 @@ Bool QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
                                           mods[j] >> 8, keyboard_type,
                                           kUCKeyTranslateNoDeadKeysMask,
                                           &extra_dead, 8, &len, s);
-
-                    if(((i+MIN_KEYCODE)==32 && j==0) || ((i+MIN_KEYCODE)==22 && j==2))
-                        fprintf(stderr, "found a dead key... post: extra_dead = %d, len=%d s=%d %d %d %d %d %d %d %d\n", extra_dead, len, s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]);
-
                     if (err != noErr) continue;
                 }
 
                 if (len > 0 && s[0] != 0x0010) {
                     k[j] = ucs2keysym (s[0]);
                     if (dead_key_state != 0) k[j] = make_dead_key (k[j]);
-                    
-                    if(((i+MIN_KEYCODE)==32 && j==0) || ((i+MIN_KEYCODE)==22 && j==2))
-                        fprintf(stderr, "k[j] = %d\n", k[j]);
                 }
 #if !defined(__LP64__) || MAC_OS_X_VERSION_MIN_REQUIRED < 1050
             } else { // kchr

@@ -307,8 +307,8 @@ static int XIClientPrivateKeyIndex;
 DevPrivateKey XIClientPrivateKey = &XIClientPrivateKeyIndex;
 
 static XExtensionVersion thisversion = { XI_Present,
-    XI_2_Major,
-    XI_2_Minor
+    XI_Add_DeviceProperties_Major,
+    XI_Add_DeviceProperties_Minor
 };
 
 

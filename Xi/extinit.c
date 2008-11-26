@@ -76,19 +76,15 @@ SOFTWARE.
 
 /* modules local to Xi */
 #include "allowev.h"
-#include "chdevcur.h"
 #include "chgdctl.h"
-#include "chdevhier.h"
 #include "chgfctl.h"
 #include "chgkbd.h"
 #include "chgprop.h"
 #include "chgptr.h"
 #include "closedev.h"
-#include "extgrbdev.h"
 #include "devbell.h"
 #include "getbmap.h"
 #include "getbmap.h"
-#include "getcptr.h"
 #include "getdctl.h"
 #include "getfctl.h"
 #include "getfocus.h"
@@ -104,13 +100,11 @@ SOFTWARE.
 #include "gtmotion.h"
 #include "listdev.h"
 #include "opendev.h"
-#include "querydp.h"
 #include "queryst.h"
 #include "selectev.h"
 #include "sendexev.h"
 #include "chgkmap.h"
 #include "setbmap.h"
-#include "setcptr.h"
 #include "setdval.h"
 #include "setfocus.h"
 #include "setmmap.h"
@@ -118,8 +112,6 @@ SOFTWARE.
 #include "ungrdev.h"
 #include "ungrdevb.h"
 #include "ungrdevk.h"
-#include "warpdevp.h"
-#include "xiselev.h"
 #include "xiproperty.h"
 
 
@@ -134,8 +126,7 @@ Mask ExtExclusiveMasks[EMASKSIZE];
  * Evtype is index, mask is value at index.
  */
 static Mask xi_filters[4] = {
-    XI_DeviceHierarchyChangedMask,
-    XI_DeviceClassesChangedMask,
+    XI_DeviceClassesChangedMask
 };
 
 static struct dev_type
@@ -211,16 +202,7 @@ static int (*ProcIVector[])(ClientPtr) = {
         ProcXListDeviceProperties,              /* 36 */
         ProcXChangeDeviceProperty,              /* 37 */
         ProcXDeleteDeviceProperty,              /* 38 */
-        ProcXGetDeviceProperty,                 /* 39 */
-        /* XI 2 */
-        ProcXQueryDevicePointer,                /* 40 */
-        ProcXWarpDevicePointer,                 /* 41 */
-        ProcXChangeDeviceCursor,                /* 42 */
-        ProcXChangeDeviceHierarchy,             /* 43 */
-        ProcXSetClientPointer,                  /* 44 */
-        ProcXGetClientPointer,                  /* 45 */
-        ProcXiSelectEvent,                      /* 46 */
-        ProcXExtendedGrabDevice                 /* 47 */
+        ProcXGetDeviceProperty                  /* 39 */
 };
 
 /* For swapped clients */
@@ -264,15 +246,7 @@ static int (*SProcIVector[])(ClientPtr) = {
         SProcXListDeviceProperties,              /* 36 */
         SProcXChangeDeviceProperty,              /* 37 */
         SProcXDeleteDeviceProperty,              /* 38 */
-        SProcXGetDeviceProperty,                 /* 39 */
-        SProcXQueryDevicePointer,                /* 40 */
-        SProcXWarpDevicePointer,                 /* 41 */
-        SProcXChangeDeviceCursor,                /* 42 */
-        SProcXChangeDeviceHierarchy,             /* 43 */
-        SProcXSetClientPointer,                  /* 44 */
-        SProcXGetClientPointer,                  /* 45 */
-        SProcXiSelectEvent,                      /* 46 */
-        SProcXExtendedGrabDevice                 /* 47 */
+        SProcXGetDeviceProperty                  /* 39 */
 };
 
 /*****************************************************************
@@ -472,13 +446,6 @@ SReplyIDispatch(ClientPtr client, int len, xGrabDeviceReply * rep)
         SRepXListDeviceProperties(client, len, (xListDevicePropertiesReply*)rep);
     else if (rep->RepType == X_GetDeviceProperty)
 	SRepXGetDeviceProperty(client, len, (xGetDevicePropertyReply *) rep);
-    else if (rep->RepType == X_QueryDevicePointer)
-	SRepXQueryDevicePointer(client, len,
-				(xQueryDevicePointerReply *) rep);
-    else if (rep->RepType == X_GetClientPointer)
-        SRepXGetClientPointer(client, len, (xGetClientPointerReply*) rep);
-    else if (rep->RepType == X_ExtendedGrabDevice)
-        SRepXExtendedGrabDevice(client, len, (xExtendedGrabDeviceReply*) rep);
     else {
 	FatalError("XINPUT confused sending swapped reply");
     }

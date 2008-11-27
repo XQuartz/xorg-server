@@ -187,10 +187,6 @@ CopySwapDevice(ClientPtr client, DeviceIntPtr d, int num_classes,
         dev->use = IsXExtensionPointer;
     else
 	dev->use = IsXExtensionDevice;
-    if (!d->isMaster)
-        dev->attached = (d->u.master) ? d->u.master->id : IsFloating;
-    else
-        dev->attached = GetPairedDevice(d)->id;
 
     if (client->swapped) {
 	swapl(&dev->type, n);	/* macro - braces are required */
@@ -348,16 +344,6 @@ ProcXListInputDevices(ClientPtr client)
     AddOtherInputDevices();
 
     for (d = inputInfo.devices; d; d = d->next) {
-        if (pXIClient->major_version < XI_2_Major)
-        {
-            if (d->isMaster &&
-                d != inputInfo.pointer &&
-                d != inputInfo.keyboard)
-                continue; /* don't send master devices other than VCP/VCK */
-
-            if (!d->isMaster && d->u.master)
-                continue; /* don't send attached SDs */
-        }
         rc = XaceHook(XACE_DEVICE_ACCESS, client, d, DixGetAttrAccess);
         if (rc != Success)
             return rc;
@@ -366,11 +352,6 @@ ProcXListInputDevices(ClientPtr client)
     }
 
     for (d = inputInfo.off_devices; d; d = d->next) {
-        if (pXIClient->major_version < XI_2_Major &&
-            !d->isMaster &&
-            d->u.master) /* XXX can off_devices be attached? */
-                continue; /* don't send attached SDs */
-
         rc = XaceHook(XACE_DEVICE_ACCESS, client, d, DixGetAttrAccess);
         if (rc != Success)
             return rc;
@@ -387,26 +368,11 @@ ProcXListInputDevices(ClientPtr client)
     dev = (xDeviceInfoPtr) devbuf;
     for (d = inputInfo.devices; d; d = d->next)
     {
-        if (pXIClient->major_version < XI_2_Major)
-        {
-            if (d->isMaster &&
-                    d != inputInfo.pointer &&
-                    d != inputInfo.keyboard)
-                continue; /* don't count master devices other than VCP/VCK */
-
-            if (!d->isMaster && d->u.master)
-                continue; /* don't count attached SDs */
-        }
         ListDeviceInfo(client, d, dev++, &devbuf, &classbuf, &namebuf);
     }
 
     for (d = inputInfo.off_devices; d; d = d->next)
     {
-        if (pXIClient->major_version < XI_2_Major &&
-                !d->isMaster &&
-                d->u.master) /* XXX can off_devices be attached? */
-            continue; /* don't send attached SDs */
-
         ListDeviceInfo(client, d, dev++, &devbuf, &classbuf, &namebuf);
     }
     rep.ndevices = numdevs;

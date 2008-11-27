@@ -2568,26 +2568,6 @@ AttachDevice(ClientPtr client, DeviceIntPtr dev, DeviceIntPtr master)
         for (it = inputInfo.devices; it; it = it->next)
             if (!it->isMaster && it->u.master == oldmaster)
                 break;
-
-        if (!it)  /* no dev is paired with old master */
-        {
-            /* XXX: reset to defaults */
-            EventList event = { NULL, 0};
-            char* classbuf;
-
-            /* Send event to clients */
-            CreateClassesChangedEvent(&event, oldmaster, oldmaster);
-            deviceClassesChangedEvent *dcce =
-                (deviceClassesChangedEvent*)event.event;
-            dcce->deviceid = oldmaster->id;
-            dcce->num_classes = 0;
-            classbuf = (char*)&event.event[1];
-            CopySwapClasses(NullClient, oldmaster,
-                    &dcce->num_classes, &classbuf);
-            SendEventToAllWindows(oldmaster, XI_DeviceClassesChangedMask,
-                    event.event, 1);
-            xfree(event.event);
-        }
     }
 
     return Success;

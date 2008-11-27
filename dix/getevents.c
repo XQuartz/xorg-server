@@ -60,7 +60,6 @@
 #include "exevents.h"
 #include "exglobals.h"
 #include "extnsionst.h"
-#include "listdev.h" /* for sizing up DeviceClassesChangedEvent */
 
 /* Maximum number of valuators, divided by six, rounded up, to get number
  * of events. */
@@ -115,43 +114,6 @@ key_autorepeats(DeviceIntPtr pDev, int key_code)
 {
     return !!(pDev->kbdfeed->ctrl.autoRepeats[key_code >> 3] &
               (1 << (key_code & 7)));
-}
-
-void
-CreateClassesChangedEvent(EventList* event,
-                          DeviceIntPtr master,
-                          DeviceIntPtr slave)
-{
-    deviceClassesChangedEvent *dcce;
-    int len = sizeof(xEvent);
-    CARD32 ms = GetTimeInMillis();
-    int namelen = 0; /* dummy */
-
-    /* XXX: ok, this is a bit weird. We need to alloc enough size for the
-     * event so it can be filled in in POE lateron. Reason being that if
-     * we realloc the event in POE we can get SIGABRT when we try to free
-     * or realloc the original pointer.
-     * We can only do it here as we don't have the EventList in the event
-     * processing any more.
-     */
-    SizeDeviceInfo(slave, &namelen, &len);
-
-    if (event->evlen < len)
-    {
-        event->event = realloc(event->event, len);
-        if (!event->event)
-            FatalError("[dix] Cannot allocate memory for "
-                    "DeviceClassesChangedEvent.\n");
-        event->evlen = len;
-    }
-
-    dcce = (deviceClassesChangedEvent*)event->event;
-    dcce->type = GenericEvent;
-    dcce->extension = IReqCode;
-    dcce->evtype = XI_DeviceClassesChangedNotify;
-    dcce->time = ms;
-    dcce->new_slave = slave->id;
-    dcce->length = (len - sizeof(xEvent))/4;
 }
 
 /**
@@ -580,12 +542,9 @@ updateFromMaster(EventListPtr events, DeviceIntPtr dev, int *num_events)
     DeviceIntPtr master = dev->u.master;
     if (master && master->u.lastSlave != dev)
     {
-        CreateClassesChangedEvent(events, master, dev);
         updateSlaveDeviceCoords(master, dev);
         master->u.lastSlave = dev;
         master->last.numValuators = dev->last.numValuators;
-        (*num_events)++;
-        events++;
     }
     return events;
 }
@@ -1104,12 +1063,9 @@ GetProximityEvents(EventList *events, DeviceIntPtr pDev, int type,
     master = pDev->u.master;
     if (master && master->u.lastSlave != pDev)
     {
-        CreateClassesChangedEvent(events, master, pDev);
         updateSlaveDeviceCoords(master, pDev);
         master->u.lastSlave = pDev;
         master->last.numValuators = pDev->last.numValuators;
-        num_events++;
-        events++;
     }
 
     kbp = (deviceKeyButtonPointer *) events->event;

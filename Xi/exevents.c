@@ -738,41 +738,6 @@ DeepCopyDeviceClasses(DeviceIntPtr from, DeviceIntPtr to)
     }
 }
 
-/**
- * Change MD to look like SD by copying all classes over. An event is sent to
- * all interested clients.
- * @param device The slave device
- * @param dcce Pointer to the event struct.
- */
-static void
-ChangeMasterDeviceClasses(DeviceIntPtr device,
-                          deviceClassesChangedEvent *dcce)
-{
-    DeviceIntPtr master = device->u.master;
-    char* classbuff;
-
-    if (device->isMaster)
-        return;
-
-    if (!master) /* if device was set floating between SIGIO and now */
-        return;
-
-    dcce->deviceid     = master->id;
-    dcce->num_classes  = 0;
-
-    master->public.devicePrivate = device->public.devicePrivate;
-
-    DeepCopyDeviceClasses(device, master);
-
-    /* event is already correct size, see comment in GetPointerEvents */
-    classbuff = (char*)&dcce[1];
-
-    /* we don't actually swap if there's a NullClient, swapping is done
-     * later when event is delivered. */
-    CopySwapClasses(NullClient, master, &dcce->num_classes, &classbuff);
-    SendEventToAllWindows(master, XI_DeviceClassesChangedMask,
-                          (xEvent*)dcce, 1);
-}
 
 /**
  * Update the device state according to the data in the event.
@@ -799,16 +764,6 @@ UpdateDeviceState(DeviceIntPtr device, xEvent* xE, int count)
     BYTE *kptr          = NULL;
     CARD16 modifiers    = 0,
            mask         = 0;
-
-    /* This event is always the first we get, before the actual events with
-     * the data. However, the way how the DDX is set up, "device" will
-     * actually be the slave device that caused the event.
-     */
-    if (GEIsType(xE, IReqCode, XI_DeviceClassesChangedNotify))
-    {
-        ChangeMasterDeviceClasses(device, (deviceClassesChangedEvent*)xE);
-        return DONT_PROCESS; /* event has been sent already */
-    }
 
     /* currently no other generic event modifies the device */
     if (xE->u.u.type == GenericEvent)

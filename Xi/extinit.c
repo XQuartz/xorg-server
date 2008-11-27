@@ -126,7 +126,6 @@ Mask ExtExclusiveMasks[EMASKSIZE];
  * Evtype is index, mask is value at index.
  */
 static Mask xi_filters[4] = {
-    XI_DeviceClassesChangedMask
 };
 
 static struct dev_type
@@ -558,53 +557,6 @@ SDevicePropertyNotifyEvent (devicePropertyNotify *from, devicePropertyNotify *to
     swapl(&to->atom, n);
 }
 
-static void
-SDeviceClassesChangedEvent(deviceClassesChangedEvent* from,
-                           deviceClassesChangedEvent* to)
-{
-    char n;
-    int i, j;
-    xAnyClassPtr any;
-
-    *to = *from;
-    memcpy(&to[1], &from[1], from->length * 4);
-
-    swaps(&to->sequenceNumber, n);
-    swapl(&to->length, n);
-    swapl(&to->time, n);
-   
-    /* now swap the actual classes */
-    any = (xAnyClassPtr)&to[1];
-    for (i = 0; i < to->num_classes; i++)
-    {
-        switch(any->class)
-        {
-            case KeyClass:
-                swaps(&((xKeyInfoPtr)any)->num_keys, n);
-                break;
-            case ButtonClass:
-                swaps(&((xButtonInfoPtr)any)->num_buttons, n);
-                break;
-            case ValuatorClass:
-                {
-                    xValuatorInfoPtr v = (xValuatorInfoPtr)any;
-                    xAxisInfoPtr a = (xAxisInfoPtr)&v[1];
-
-                    swapl(&v->motion_buffer_size, n);
-                    for (j = 0; j < v->num_axes; j++)
-                    {
-                        swapl(&a->min_value, n);
-                        swapl(&a->max_value, n);
-                        swapl(&a->resolution, n);
-                        a++;
-                    }
-                }
-                break;
-        }
-        any = (xAnyClassPtr)((char*)any + any->length);
-    }
-}
-
 /**************************************************************************
  *
  * Allow the specified event to have its propagation suppressed.
@@ -1026,10 +978,6 @@ XIGEEventSwap(xGenericEvent* from, xGenericEvent* to)
     swaps(&from->sequenceNumber, n);
     switch(from->evtype)
     {
-        case XI_DeviceClassesChangedNotify:
-            SDeviceClassesChangedEvent((deviceClassesChangedEvent*)from,
-                                       (deviceClassesChangedEvent*)to);
-            break;
     }
 }
 

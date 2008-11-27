@@ -193,9 +193,6 @@ EnterNotifies(DeviceIntPtr dev,
     if (core)
         CoreEnterLeaveEvent(dev, EnterNotify, mode, detail, parent,
                             child->drawable.id);
-    else
-        DeviceEnterLeaveEvent(dev, DeviceEnterNotify, mode, detail, parent,
-                              child->drawable.id);
 }
 
 /**
@@ -219,9 +216,6 @@ LeaveNotifies(DeviceIntPtr dev,
         if (core)
             CoreEnterLeaveEvent(dev, LeaveNotify, mode, detail, win,
                             child->drawable.id);
-        else
-            DeviceEnterLeaveEvent(dev, DeviceLeaveNotify, mode, detail, win,
-                                  child->drawable.id);
         child = win;
     }
 }
@@ -489,35 +483,6 @@ CoreEnterLeaveEvents(DeviceIntPtr dev,
     EnterWindow(dev, to, mode);
 }
 
-static void
-DeviceEnterLeaveEvents(DeviceIntPtr dev,
-                       WindowPtr    from,
-                       WindowPtr    to,
-                       int          mode)
-{
-    if (IsParent(from, to))
-    {
-        DeviceEnterLeaveEvent(dev, DeviceLeaveNotify, mode, NotifyInferior, from, None);
-        EnterNotifies(dev, from, to, mode, NotifyVirtual, FALSE);
-        DeviceEnterLeaveEvent(dev, DeviceEnterNotify, mode, NotifyAncestor, to, None);
-    }
-    else if (IsParent(to, from))
-    {
-	DeviceEnterLeaveEvent(dev, DeviceLeaveNotify, mode, NotifyAncestor, from, None);
-	LeaveNotifies(dev, from, to, mode, NotifyVirtual, FALSE);
-	DeviceEnterLeaveEvent(dev, DeviceEnterNotify, mode, NotifyInferior, to, None);
-    }
-    else
-    { /* neither from nor to is descendent of the other */
-	WindowPtr common = CommonAncestor(to, from);
-	/* common == NullWindow ==> different screens */
-        DeviceEnterLeaveEvent(dev, DeviceLeaveNotify, mode, NotifyNonlinear, from, None);
-        LeaveNotifies(dev, from, common, mode, NotifyNonlinearVirtual, FALSE);
-	EnterNotifies(dev, common, to, mode, NotifyNonlinearVirtual, FALSE);
-        DeviceEnterLeaveEvent(dev, DeviceEnterNotify, mode, NotifyNonlinear, to, None);
-    }
-}
-
 /**
  * Figure out if enter/leave events are necessary and send them to the
  * appropriate windows.
@@ -538,5 +503,4 @@ DoEnterLeaveEvents(DeviceIntPtr pDev,
 	return;
 
     CoreEnterLeaveEvents(pDev, fromWin, toWin, mode);
-    DeviceEnterLeaveEvents(pDev, fromWin, toWin, mode);
 }

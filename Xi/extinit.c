@@ -274,8 +274,6 @@ Mask DeviceButtonGrabMask;
 Mask DeviceButtonMotionMask;
 Mask DevicePresenceNotifyMask;
 Mask DevicePropertyNotifyMask;
-Mask DeviceEnterWindowMask;
-Mask DeviceLeaveWindowMask;
 
 int DeviceValuator;
 int DeviceKeyPress;
@@ -294,8 +292,6 @@ int DeviceMappingNotify;
 int ChangeDeviceNotify;
 int DevicePresenceNotify;
 int DevicePropertyNotify;
-int DeviceEnterNotify;
-int DeviceLeaveNotify;
 
 int RT_INPUTCLIENT;
 
@@ -563,23 +559,6 @@ SDevicePropertyNotifyEvent (devicePropertyNotify *from, devicePropertyNotify *to
 }
 
 static void
-SDeviceLeaveNotifyEvent (deviceLeaveNotify *from, deviceLeaveNotify *to)
-{
-    char n;
-
-    *to = *from;
-    swaps(&to->sequenceNumber,n);
-    swapl(&to->time, n);
-    swapl(&to->root, n);
-    swapl(&to->event, n);
-    swapl(&to->child, n);
-    swaps(&to->rootX, n);
-    swaps(&to->rootY, n);
-    swaps(&to->eventX, n);
-    swaps(&to->eventY, n);
-}
-
-static void
 SDeviceClassesChangedEvent(deviceClassesChangedEvent* from,
                            deviceClassesChangedEvent* to)
 {
@@ -750,8 +729,6 @@ FixExtensionEvents(ExtensionEntry * extEntry)
     DeviceButtonStateNotify = DeviceKeyStateNotify + 1;
     DevicePresenceNotify = DeviceButtonStateNotify + 1;
     DevicePropertyNotify = DevicePresenceNotify + 1;
-    DeviceEnterNotify = DevicePropertyNotify + 1;
-    DeviceLeaveNotify = DeviceEnterNotify + 1;
 
     event_base[KeyClass] = DeviceKeyPress;
     event_base[ButtonClass] = DeviceButtonPress;
@@ -843,14 +820,6 @@ FixExtensionEvents(ExtensionEntry * extEntry)
     DevicePropertyNotifyMask = GetNextExtEventMask();
     SetMaskForExtEvent(DevicePropertyNotifyMask, DevicePropertyNotify);
 
-    DeviceEnterWindowMask = GetNextExtEventMask();
-    SetMaskForExtEvent(DeviceEnterWindowMask, DeviceEnterNotify);
-    AllowPropagateSuppress(DeviceEnterWindowMask);
-
-    DeviceLeaveWindowMask = GetNextExtEventMask();
-    SetMaskForExtEvent(DeviceLeaveWindowMask, DeviceLeaveNotify);
-    AllowPropagateSuppress(DeviceLeaveWindowMask);
-
     SetEventInfo(0, _noExtensionEvent);
 }
 
@@ -897,8 +866,6 @@ RestoreExtensionEvents(void)
     DeviceButtonStateNotify = 13;
     DevicePresenceNotify = 14;
     DevicePropertyNotify = 15;
-    DeviceEnterNotify = 16;
-    DeviceLeaveNotify = 17;
 
     BadDevice = 0;
     BadEvent = 1;
@@ -938,8 +905,6 @@ IResetProc(ExtensionEntry * unused)
     EventSwapVector[ChangeDeviceNotify] = NotImplemented;
     EventSwapVector[DevicePresenceNotify] = NotImplemented;
     EventSwapVector[DevicePropertyNotify] = NotImplemented;
-    EventSwapVector[DeviceEnterNotify] = NotImplemented;
-    EventSwapVector[DeviceLeaveNotify] = NotImplemented;
     RestoreExtensionEvents();
 }
 
@@ -1043,10 +1008,6 @@ SEventIDispatch(xEvent * from, xEvent * to)
 	DO_SWAP(SDevicePresenceNotifyEvent, devicePresenceNotify);
     else if (type == DevicePropertyNotify)
 	DO_SWAP(SDevicePropertyNotifyEvent, devicePropertyNotify);
-    else if (type == DeviceEnterNotify)
-        DO_SWAP(SDeviceLeaveNotifyEvent, deviceEnterNotify);
-    else if (type == DeviceLeaveNotify)
-        DO_SWAP(SDeviceLeaveNotifyEvent, deviceLeaveNotify);
     else {
 	FatalError("XInputExtension: Impossible event!\n");
     }
@@ -1133,8 +1094,6 @@ XInputExtensionInit(void)
 	EventSwapVector[DeviceMappingNotify] = SEventIDispatch;
 	EventSwapVector[ChangeDeviceNotify] = SEventIDispatch;
 	EventSwapVector[DevicePresenceNotify] = SEventIDispatch;
-	EventSwapVector[DeviceEnterNotify] = SEventIDispatch;
-	EventSwapVector[DeviceLeaveNotify] = SEventIDispatch;
 
         /* init GE events */
         GERegisterExtension(IReqCode, XIGEEventSwap, XIGEEventFill);

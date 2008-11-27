@@ -99,7 +99,6 @@ ProcXOpenDevice(ClientPtr client)
     int status = Success;
     xOpenDeviceReply rep;
     DeviceIntPtr dev;
-    XIClientPtr pXIClient;
 
     REQUEST(xOpenDeviceReq);
     REQUEST_SIZE_MATCH(xOpenDeviceReq);
@@ -115,14 +114,8 @@ ProcXOpenDevice(ClientPtr client)
     } else if (status != Success)
 	return status;
 
-    /* Don't let XI 1.x clients open devices other than floating SDs. */
-    pXIClient = dixLookupPrivate(&client->devPrivates, XIClientPrivateKey);
-    if (pXIClient->major_version < XI_2_Major)
-    {
-        if (dev->isMaster || (!dev->isMaster && dev->u.master))
-            return BadDevice;
-    }
-
+    if (dev->isMaster)
+        return BadDevice;
 
     OpenInputDevice(dev, client, &status);
     if (status != Success)

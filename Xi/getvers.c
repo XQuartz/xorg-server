@@ -105,19 +105,6 @@ ProcXGetExtensionVersion(ClientPtr client)
 
     pXIClient = dixLookupPrivate(&client->devPrivates, XIClientPrivateKey);
 
-    /* GetExtensionVersionReq before XI 2 didn't supply the client's
-     * major/minor. So we don't actually have a clue what they support.
-     * {major|minor}Version was added as part of XI, so if they are set, we
-     * know we can trust it. In this case the client must set nbytes to 0
-     * though, otherwise we have to assume that the version are padding
-     * garbage.
-     */
-    if (!stuff->nbytes) /* Client using XQueryInputVersion(). */
-    {
-        pXIClient->major_version = stuff->majorVersion;
-        pXIClient->minor_version = stuff->minorVersion;
-    } /* else version unknown, leave it at 0.0 */
-
     rep.repType = X_Reply;
     rep.RepType = X_GetExtensionVersion;
     rep.length = 0;

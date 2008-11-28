@@ -2404,31 +2404,29 @@ DeliverDeviceEvents(WindowPtr pWin, xEvent *xE, GrabPtr grab,
 
     while (pWin && type != GenericEvent)
     {
-        /* First try XI event delivery */
-        inputMasks = wOtherInputMasks(pWin);
-        if (inputMasks && (filter & inputMasks->deliverableEvents[mskidx]))
+        if (!dev->isMaster)
         {
-
-            if (inputMasks && (inputMasks->inputEvents[mskidx] & filter))
+            inputMasks = wOtherInputMasks(pWin);
+            if (inputMasks && (filter & inputMasks->deliverableEvents[mskidx]))
             {
-                FixUpEventFromWindow(dev, xE, pWin, child, FALSE);
-                deliveries = DeliverEventsToWindow(dev, pWin, xE, count,
-                                                   filter, grab, mskidx);
-                if (deliveries > 0)
-                    return deliveries;
+
+                if (inputMasks && (inputMasks->inputEvents[mskidx] & filter))
+                {
+                    FixUpEventFromWindow(dev, xE, pWin, child, FALSE);
+                    deliveries = DeliverEventsToWindow(dev, pWin, xE, count,
+                            filter, grab, mskidx);
+                    if (deliveries > 0)
+                        return deliveries;
+                }
+
+                if ((deliveries < 0) ||
+                        (pWin == stopAt) ||
+                        (inputMasks &&
+                         (filter & inputMasks->dontPropagateMask[mskidx])))
+                    return 0;
             }
-
-            if ((deliveries < 0) ||
-                    (pWin == stopAt) ||
-                    (inputMasks &&
-                     (filter & inputMasks->dontPropagateMask[mskidx])))
-                return 0;
-        }
-
-        if (dev->isMaster && dev->coreEvents)
+        } else
         {
-
-            /* no XI event delivered. Try core event */
             core = *xE;
             core.u.u.type = XItoCoreType(xE->u.u.type);
 
@@ -3621,28 +3619,10 @@ DeliverGrabbedEvent(xEvent *xE, DeviceIntPtr thisDev,
     }
     if (!deliveries)
     {
-        if (xE->u.u.type == GenericEvent)
-        {
-            /* find evmask for event's extension */
-            xGenericEvent* ge = ((xGenericEvent*)xE);
-            GenericMaskPtr    gemask = grab->genericMasks;
-
-            if (!gemask || !gemask->eventMask[GEEXTIDX(ge)])
-                return;
-
-            if (GEEventFill(xE))
-                GEEventFill(xE)(ge, thisDev, grab->window, grab);
-            deliveries = TryClientEvents(rClient(grab), thisDev, xE,
-                    count, gemask->eventMask[GEEXTIDX(ge)],
-                    generic_filters[GEEXTIDX(ge)][ge->evtype],
-                    grab);
-        } else
         {
             Mask mask = grab->eventMask;
 
-            sendCore = (thisDev->isMaster && thisDev->coreEvents);
-            /* try core event */
-            if (sendCore && grab->coreGrab)
+            if (thisDev->isMaster)
             {
                 core = *xE;
                 core.u.u.type = XItoCoreType(xE->u.u.type);
@@ -3663,9 +3643,7 @@ DeliverGrabbedEvent(xEvent *xE, DeviceIntPtr thisDev,
                                 grab);
                     }
                 }
-            }
-
-            if (!deliveries)
+            } else
             {
                 /* try XI event */
                 if (grabinfo->fromPassiveGrab  &&

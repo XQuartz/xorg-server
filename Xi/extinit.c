@@ -120,14 +120,6 @@ int ExtEventIndex;
 Mask ExtValidMasks[EMASKSIZE];
 Mask ExtExclusiveMasks[EMASKSIZE];
 
-
-/**
- * Filters for various generic events.
- * Evtype is index, mask is value at index.
- */
-static Mask xi_filters[4] = {
-};
-
 static struct dev_type
 {
     Atom type;
@@ -965,32 +957,6 @@ SEventIDispatch(xEvent * from, xEvent * to)
     }
 }
 
-/****************************************************************
- *
- * EventSwap for generic events coming from the GE extension.
- */
-
-static void
-XIGEEventSwap(xGenericEvent* from, xGenericEvent* to)
-{
-    int n;
-
-    swaps(&from->sequenceNumber, n);
-    switch(from->evtype)
-    {
-    }
-}
-
-/**
- * EventFill to fill various fields for events before they are delivered to
- * the client.
- */
-static void
-XIGEEventFill(xGenericEvent* ev, DeviceIntPtr pDev,
-              WindowPtr pWin, GrabPtr grab)
-{
-}
-
 /**********************************************************************
  *
  * IExtensionInit - initialize the input extension.
@@ -1043,9 +1009,6 @@ XInputExtensionInit(void)
 	EventSwapVector[ChangeDeviceNotify] = SEventIDispatch;
 	EventSwapVector[DevicePresenceNotify] = SEventIDispatch;
 
-        /* init GE events */
-        GERegisterExtension(IReqCode, XIGEEventSwap, XIGEEventFill);
-        SetGenericFilter(IReqCode, xi_filters);
     } else {
 	FatalError("IExtensionInit: AddExtensions failed\n");
     }

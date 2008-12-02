@@ -1766,8 +1766,7 @@ if test "x$XQUARTZ" = xyes; then
 
 	CFLAGS="${CFLAGS} -DROOTLESS_WORKAROUND -DROOTLESS_SAFEALPHA -DNO_ALLOCA"
 
-	PKG_CHECK_MODULES(APPLEWMPROTO, [applewmproto >= 1.1.1])
-	PKG_CHECK_MODULES(APPLEWM, [applewm >= 1.0.0])
+	PKG_CHECK_MODULES(XPBPROXY, [applewmproto >= 1.1.1] [applewm >= 1.0.0] xfixes fixesproto)
 
 	if test "x$STANDALONE_XPBPROXY" = xyes ; then
 		AC_DEFINE(STANDALONE_XPBPROXY,1,[Build a standalone xpbproxy])

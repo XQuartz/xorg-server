@@ -240,7 +240,7 @@ extern long XIRegisterPropertyHandler(
                                Atom property)
 );
 
-extern void XIUnRegisterPropertyHandler(
+extern _X_EXPORT void XIUnregisterPropertyHandler(
         DeviceIntPtr          dev,
         long                  id
 );

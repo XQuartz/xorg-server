@@ -349,10 +349,10 @@ static int DarwinMouseProc(DeviceIntPtr pPointer, int what) {
                                     GetMotionHistory,
                                     (PtrCtrlProcPtr)NoopDDA,
                                     GetMotionHistorySize(), 2);
-			InitAbsoluteClassDeviceStruct(pPointer);
             pPointer->valuator->mode = Absolute; // Relative
-            InitValuatorAxisStruct(pPointer, 0, 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1);
-            InitValuatorAxisStruct(pPointer, 1, 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1);
+            InitAbsoluteClassDeviceStruct(pPointer);
+//            InitValuatorAxisStruct(pPointer, 0, 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1);
+//            InitValuatorAxisStruct(pPointer, 1, 0, XQUARTZ_VALUATOR_LIMIT, 1, 0, 1);
             break;
         case DEVICE_ON:
             pPointer->public.on = TRUE;

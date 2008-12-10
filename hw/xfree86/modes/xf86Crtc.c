@@ -96,6 +96,7 @@ xf86CrtcCreate (ScrnInfoPtr		scrn,
     crtc = xcalloc (sizeof (xf86CrtcRec), 1);
     if (!crtc)
 	return NULL;
+    crtc->version = XF86_CRTC_VERSION;
     crtc->scrn = scrn;
     crtc->funcs = funcs;
 #ifdef RANDR_12_INTERFACE
@@ -112,6 +113,8 @@ xf86CrtcCreate (ScrnInfoPtr		scrn,
     crtc->filter_width = 0;
     crtc->filter_height = 0;
     crtc->transform_in_use = FALSE;
+    crtc->transformPresent = FALSE;
+    crtc->desiredTransformPresent = FALSE;
     memset (&crtc->bounds, '\0', sizeof (crtc->bounds));
 
     if (xf86_config->crtc)
@@ -241,6 +244,8 @@ xf86CrtcSetModeTransform (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotati
 			  RRTransformPtr transform, int x, int y)
 {
     ScrnInfoPtr		scrn = crtc->scrn;
+    /* During ScreenInit() scrn->pScreen is still NULL */
+    ScreenPtr		pScreen = screenInfo.screens[scrn->scrnIndex];
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     int			i;
     Bool		ret = FALSE;
@@ -254,9 +259,9 @@ xf86CrtcSetModeTransform (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotati
 
     if (crtc->funcs->set_mode_major)
 	return crtc->funcs->set_mode_major(crtc, mode, rotation, x, y);
-	
+
     crtc->enabled = xf86CrtcInUse (crtc);
-    
+
     if (!crtc->enabled)
     {
 	/* XXX disable crtc? */
@@ -290,6 +295,11 @@ xf86CrtcSetModeTransform (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotati
     } else
 	crtc->transformPresent = FALSE;
 
+    /* xf86CrtcFitsScreen() relies on these values being correct. */
+    /* This should ensure the values are always set at modeset time. */
+    pScreen->width = scrn->virtualX;
+    pScreen->height = scrn->virtualY;
+
     /* Shift offsets that move us out of virtual size */
     if (x + mode->HDisplay > xf86_config->maxWidth ||
 	y + mode->VDisplay > xf86_config->maxHeight)
@@ -314,8 +324,14 @@ xf86CrtcSetModeTransform (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotati
 		    crtc->x, crtc->y);
     }
 
-    /* XXX short-circuit changes to base location only */
-    
+    if (crtc->funcs->set_origin &&
+	memcmp (mode, &saved_mode, sizeof(saved_mode)) == 0 &&
+	saved_rotation == rotation) {
+	crtc->funcs->set_origin (crtc, crtc->x, crtc->y);
+	ret = TRUE;
+	goto done;
+    }
+
     /* Pass our mode to the outputs and the CRTC to give them a chance to
      * adjust it according to limitations or output properties, and also
      * a chance to reject the mode entirely.
@@ -402,6 +418,20 @@ xf86CrtcSetMode (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotation,
 		 int x, int y)
 {
     return xf86CrtcSetModeTransform (crtc, mode, rotation, NULL, x, y);
+}
+
+/**
+ * Pans the screen, does not change the mode
+ */
+_X_EXPORT void
+xf86CrtcSetOrigin (xf86CrtcPtr crtc, int x, int y)
+{
+    crtc->x = x;
+    crtc->y = y;
+    if (crtc->funcs->set_origin)
+	crtc->funcs->set_origin (crtc, x, y);
+    else
+	xf86CrtcSetMode (crtc, &crtc->mode, crtc->rotation, x, y);
 }
 
 /*

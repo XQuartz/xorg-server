@@ -978,6 +978,158 @@ sendReply:
 }
 
 int
+ProcRRGetPanning (ClientPtr client)
+{
+    REQUEST(xRRGetPanningReq);
+    xRRGetPanningReply	rep;
+    RRCrtcPtr		crtc;
+    ScreenPtr		pScreen;
+    rrScrPrivPtr	pScrPriv;
+    BoxRec		total;
+    BoxRec		tracking;
+    INT16		border[4];
+    int			n;
+    
+    REQUEST_SIZE_MATCH(xRRGetPanningReq);
+    crtc = LookupCrtc(client, stuff->crtc, DixReadAccess);
+
+    if (!crtc)
+	return RRErrorBase + BadRRCrtc;
+
+    /* All crtcs must be associated with screens before client
+     * requests are processed
+     */
+    pScreen = crtc->pScreen;
+    pScrPriv = rrGetScrPriv(pScreen);
+
+    if (!pScrPriv || !pScrPriv->rrGetPanning)
+	return RRErrorBase + BadRRCrtc;
+
+    rep.type = X_Reply;
+    rep.status = RRSetConfigSuccess;
+    rep.sequenceNumber = client->sequence;
+    rep.length = 1;
+    rep.timestamp = pScrPriv->lastSetTime.milliseconds;
+
+    if (! pScrPriv->rrGetPanning (pScreen, crtc, &total, &tracking, border))
+	return RRErrorBase + BadRRCrtc;
+
+    rep.left          = total.x1;
+    rep.top           = total.y1;
+    rep.width         = total.x2 - total.x1;
+    rep.height        = total.y2 - total.y1;
+    rep.track_left    = tracking.x1;
+    rep.track_top     = tracking.y1;
+    rep.track_width   = tracking.x2 - tracking.x1;
+    rep.track_height  = tracking.y2 - tracking.y1;
+    rep.border_left   = border[0];
+    rep.border_top    = border[1];
+    rep.border_right  = border[2];
+    rep.border_bottom = border[3];
+
+    if (client->swapped) {
+	swaps(&rep.sequenceNumber, n);
+	swapl(&rep.length, n);
+	swaps(&rep.timestamp, n);
+	swaps(&rep.left, n);
+	swaps(&rep.top, n);
+	swaps(&rep.width, n);
+	swaps(&rep.height, n);
+	swaps(&rep.track_left, n);
+	swaps(&rep.track_top, n);
+	swaps(&rep.track_width, n);
+	swaps(&rep.track_height, n);
+	swaps(&rep.border_left, n);
+	swaps(&rep.border_top, n);
+	swaps(&rep.border_right, n);
+	swaps(&rep.border_bottom, n);
+    }
+    WriteToClient(client, sizeof(xRRGetPanningReply), (char *)&rep);
+    return client->noClientException;
+}
+
+int
+ProcRRSetPanning (ClientPtr client)
+{
+    REQUEST(xRRSetPanningReq);
+    xRRSetPanningReply	rep;
+    RRCrtcPtr		crtc;
+    ScreenPtr		pScreen;
+    rrScrPrivPtr	pScrPriv;
+    TimeStamp		time;
+    BoxRec		total;
+    BoxRec		tracking;
+    INT16		border[4];
+    int			n;
+    
+    REQUEST_SIZE_MATCH(xRRSetPanningReq);
+    crtc = LookupCrtc(client, stuff->crtc, DixReadAccess);
+
+    if (!crtc)
+	return RRErrorBase + BadRRCrtc;
+
+
+    /* All crtcs must be associated with screens before client
+     * requests are processed
+     */
+    pScreen = crtc->pScreen;
+    pScrPriv = rrGetScrPriv(pScreen);
+
+    if (!pScrPriv) {
+	time = currentTime;
+	rep.status = RRSetConfigFailed;
+	goto sendReply;
+    }
+    
+    time = ClientTimeToServerTime(stuff->timestamp);
+    
+    /*
+     * Make sure the requested set-time is not older than
+     * the last set-time
+     */
+    if (CompareTimeStamps (time, pScrPriv->lastSetTime) < 0)
+    {
+	rep.status = RRSetConfigInvalidTime;
+	goto sendReply;
+    }
+
+    if (!pScrPriv->rrGetPanning)
+	return RRErrorBase + BadRRCrtc;
+
+    total.x1    = stuff->left;
+    total.y1    = stuff->top;
+    total.x2    = stuff->width - total.x1;
+    total.y2    = stuff->height - total.y1;
+    tracking.x1 = stuff->track_left;
+    tracking.y1 = stuff->track_top;
+    tracking.x2 = stuff->track_width - tracking.x1;
+    tracking.y2 = stuff->track_height - tracking.y1;
+    border[0]   = stuff->border_left;
+    border[1]   = stuff->border_top;
+    border[2]   = stuff->border_right;
+    border[3]   = stuff->border_bottom;
+
+    if (! pScrPriv->rrSetPanning (pScreen, crtc, &total, &tracking, border))
+	return BadMatch;
+
+    rep.status = RRSetConfigSuccess;
+
+sendReply:
+    rep.type = X_Reply;
+    rep.sequenceNumber = client->sequence;
+    rep.length = 0;
+    rep.newTimestamp = pScrPriv->lastSetTime.milliseconds;
+
+    if (client->swapped) {
+	swaps(&rep.sequenceNumber, n);
+	swapl(&rep.length, n);
+	swaps(&rep.newTimestamp, n);
+    }
+    WriteToClient(client, sizeof(xRRSetPanningReply), (char *)&rep);
+    return client->noClientException;
+}
+
+int
 ProcRRGetCrtcGammaSize (ClientPtr client)
 {
     REQUEST(xRRGetCrtcGammaSizeReq);
@@ -1150,8 +1302,7 @@ transform_filter_encode (ClientPtr client, char *output,
     if (client->swapped) {
 	swaps (nbytesFilter, n);
 	swaps (nparamsFilter, n);
-	SwapLongs ((CARD32 *) (output + nbytes),
-		   nparams * sizeof (xFixed));
+	SwapLongs ((CARD32 *) (output + nbytes), nparams);
     }
     nbytes += nparams * sizeof (xFixed);
     return nbytes;
@@ -1162,7 +1313,7 @@ transform_encode (ClientPtr client, xRenderTransform *wire, PictTransform *pict)
 {
     xRenderTransform_from_PictTransform (wire, pict);
     if (client->swapped)
-	SwapLongs ((CARD32 *) wire, sizeof (xRenderTransform));
+	SwapLongs ((CARD32 *) wire, sizeof (xRenderTransform) >> 2);
 }
 
 int
@@ -1214,5 +1365,6 @@ ProcRRGetCrtcTransform (ClientPtr client)
 	swapl (&reply->length, n);
     }
     WriteToClient (client, sizeof (xRRGetCrtcTransformReply) + nextra, (char *) reply);
+    xfree(reply);
     return client->noClientException;
 }

@@ -150,7 +150,7 @@ XIGetDevice(xEvent* xE)
         int rc;
         int id;
 
-        id = ((deviceKeyButtonPointer*)xE)->deviceid;
+        id = ((deviceKeyButtonPointer*)xE)->deviceid & ~MORE_EVENTS;
 
         rc = dixLookupDevice(&pDev, id, serverClient, DixUnknownAccess);
         if (rc != Success)

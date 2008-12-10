@@ -26,7 +26,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.57)
-AC_INIT([xorg-server], 1.5.99.2, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+AC_INIT([xorg-server], 1.5.99.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_INIT_AUTOMAKE([dist-bzip2 foreign])
 AM_MAINTAINER_MODE
@@ -312,7 +312,6 @@ case $host_cpu in
   i*86)
 	I386_VIDEO=yes
 	case $host_os in
-		*linux*)	DEFAULT_INT10=vm86 ;;
 		*freebsd*)	AC_DEFINE(USE_DEV_IO) ;;
 		*dragonfly*)	AC_DEFINE(USE_DEV_IO) ;;
 		*netbsd*)	AC_DEFINE(USE_I386_IOPL)
@@ -869,6 +868,28 @@ if test "x$DRI" = xyes || test "x$DRI2" = xyes; then
 	AC_SUBST(LIBDRM_CFLAGS)
 	AC_SUBST(LIBDRM_LIBS)
 fi
+
+if test "x$DRI2" = xyes; then
+	save_CFLAGS=$CFLAGS
+	CFLAGS="$GL_CFLAGS $LIBDRM_CFLAGS -Wall"
+	AC_COMPILE_IFELSE([AC_LANG_SOURCE([[#include <GL/gl.h>
+#include <GL/internal/dri_interface.h>
+#ifndef __DRI_DRI2
+#error DRI2 extension not available.
+#endif]])],
+			  [HAVE_DRI2EXTENSION=yes],
+			  [HAVE_DRI2EXTENSION=no])
+	CFLAGS=$save_CFLAGS
+	if test "x$HAVE_DRI2EXTENSION" = xyes; then
+		AC_DEFINE(DRI2_AIGLX, 1, [Build DRI2 AIGLX loader])
+		DRI2_AIGLX=yes
+	else
+		AC_MSG_NOTICE([DRI2 AIGLX disabled, __DRI_DRI2 not defined in dri_interface.h.])
+		DRI2_AIGLX=no
+	fi
+fi
+AM_CONDITIONAL(DRI2_AIGLX, test "x$DRI2_AIGLX" == xyes)
+
 
 AM_CONDITIONAL(XINERAMA, [test "x$XINERAMA" = xyes])
 if test "x$XINERAMA" = xyes; then

@@ -1516,7 +1516,7 @@ ProcRenderFillRectangles (ClientPtr client)
 }
 
 static void
-SetBit (unsigned char *line, int x, int bit)
+RenderSetBit (unsigned char *line, int x, int bit)
 {
     unsigned char   mask;
     
@@ -1689,8 +1689,8 @@ ProcRenderCreateCursor (ClientPtr client)
 	    {
 		CARD32	a = ((p >> 24));
 
-		SetBit (mskline, x, a != 0);
-		SetBit (srcline, x, a != 0 && p == twocolor[0]);
+		RenderSetBit (mskline, x, a != 0);
+		RenderSetBit (srcline, x, a != 0 && p == twocolor[0]);
 	    }
 	    else
 	    {
@@ -1698,9 +1698,9 @@ ProcRenderCreateCursor (ClientPtr client)
 		CARD32	i = ((CvtR8G8B8toY15(p) >> 7) * DITHER_SIZE + 127) / 255;
 		CARD32	d = orderedDither[y&(DITHER_DIM-1)][x&(DITHER_DIM-1)];
 		/* Set mask from dithered alpha value */
-		SetBit(mskline, x, a > d);
+		RenderSetBit(mskline, x, a > d);
 		/* Set src from dithered intensity value */
-		SetBit(srcline, x, a > d && i <= d);
+		RenderSetBit(srcline, x, a > d && i <= d);
 	    }
 	}
 	srcline += stride;

@@ -2684,6 +2684,7 @@ xf86DisableUnusedFunctions(ScrnInfoPtr pScrn)
 	{
 	    crtc->funcs->dpms(crtc, DPMSModeOff);
 	    memset(&crtc->mode, 0, sizeof(crtc->mode));
+	    xf86RotateDestroy(crtc);
 	}
     }
     if (pScrn->pScreen)

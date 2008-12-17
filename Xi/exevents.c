@@ -781,11 +781,13 @@ UpdateDeviceState(DeviceIntPtr device, xEvent* xE, int count)
     }
 
     /* Update device axis */
-    for (i = 1; i < count; i++) {
+    /* Don't update valuators for the VCP, it never sends XI events anyway */
+    for (i = 1; !device->isMaster && i < count; i++) {
 	if ((++xV)->type == DeviceValuator) {
 	    int *axisvals;
             int first = xV->first_valuator;
             BOOL change = FALSE;
+
 
 	    if (xV->num_valuators &&
                 (!v || (xV->num_valuators &&
@@ -802,8 +804,8 @@ UpdateDeviceState(DeviceIntPtr device, xEvent* xE, int count)
                  *      dev = event
                  *      event = delta
                  */
-		axisvals = v->axisVal;
                 int delta;
+                axisvals = v->axisVal;
                 if (v->mode == Relative) /* device reports relative */
                     change = TRUE;
 
@@ -1009,7 +1011,9 @@ ProcessOtherEvent(xEventPtr xE, DeviceIntPtr device, int count)
     }
 
     /* Valuator event handling */
-    for (i = 1; i < count; i++) {
+    /* Don't care about valuators for the VCP, it never sends XI events */
+
+    for (i = 1; !device->isMaster && i < count; i++) {
 	if ((++xV)->type == DeviceValuator) {
 	    int first = xV->first_valuator;
 	    if (xV->num_valuators

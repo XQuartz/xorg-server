@@ -244,8 +244,6 @@ xf86CrtcSetModeTransform (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotati
 			  RRTransformPtr transform, int x, int y)
 {
     ScrnInfoPtr		scrn = crtc->scrn;
-    /* During ScreenInit() scrn->pScreen is still NULL */
-    ScreenPtr		pScreen = screenInfo.screens[scrn->scrnIndex];
     xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     int			i;
     Bool		ret = FALSE;
@@ -294,11 +292,6 @@ xf86CrtcSetModeTransform (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotati
 	crtc->transformPresent = TRUE;
     } else
 	crtc->transformPresent = FALSE;
-
-    /* xf86CrtcFitsScreen() relies on these values being correct. */
-    /* This should ensure the values are always set at modeset time. */
-    pScreen->width = scrn->virtualX;
-    pScreen->height = scrn->virtualY;
 
     /* Shift offsets that move us out of virtual size */
     if (x + mode->HDisplay > xf86_config->maxWidth ||
@@ -983,7 +976,7 @@ xf86PickCrtcs (ScrnInfoPtr	scrn,
 	     * see if they can be cloned
 	     */
 	    if (xf86ModesEqual (modes[o], modes[n]) &&
-		config->output[0]->initial_rotation == config->output[n]->initial_rotation &&
+		config->output[o]->initial_rotation == config->output[n]->initial_rotation &&
 		config->output[o]->initial_x == config->output[n]->initial_x &&
 		config->output[o]->initial_y == config->output[n]->initial_y)
 	    {
@@ -2684,6 +2677,7 @@ xf86DisableUnusedFunctions(ScrnInfoPtr pScrn)
 	{
 	    crtc->funcs->dpms(crtc, DPMSModeOff);
 	    memset(&crtc->mode, 0, sizeof(crtc->mode));
+	    xf86RotateDestroy(crtc);
 	}
     }
     if (pScrn->pScreen)

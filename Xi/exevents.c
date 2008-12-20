@@ -1069,7 +1069,7 @@ ProcessOtherEvent(xEventPtr xE, DeviceIntPtr device, int count)
 	    xE->u.u.detail = key;
 	    return;
 	}
-        if (!b->state && device->deviceGrab.fromPassiveGrab)
+        if (!b->buttonsDown && device->deviceGrab.fromPassiveGrab)
             deactivateDeviceGrab = TRUE;
     }
 

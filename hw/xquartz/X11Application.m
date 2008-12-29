@@ -63,6 +63,13 @@ extern BOOL xpbproxy_init (void);
 #define ProximityIn    0
 #define ProximityOut   1
 
+/* workaround a bug in vnc for those hit by a bug in Remote Desktop on OSX */
+#define VNCMODIFIERBUGWORKAROUND 1 
+
+#ifdef VNCMODIFIERBUGWORKAROUND
+static NSEventType keyState[NUM_KEYCODES];
+#endif
+
 int X11EnableKeyEquivalents = TRUE, quartzFullscreenMenu = FALSE;
 int quartzHasRoot = FALSE, quartzEnableRootless = TRUE;
 
@@ -179,29 +186,40 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
 
 - (void) activateX:(OSX_BOOL)state {
     /* Create a TSM document that supports full Unicode input, and
-	 have it activated while X is active */
+     * have it activated while X is active
+     */
     static TSMDocumentID x11_document;
-	DEBUG_LOG("state=%d, _x_active=%d, \n", state, _x_active)
+#ifdef VNCMODIFIERBUGWORKAROUND
+    size_t i;
+#endif
+    DEBUG_LOG("state=%d, _x_active=%d, \n", state, _x_active)
     if (state) {
-		DarwinSendDDXEvent(kXquartzActivate, 0);
-
-		if (!_x_active) {
-			if (x11_document == 0) {
-				OSType types[1];
-				types[0] = kUnicodeDocument;
-				NewTSMDocument (1, types, &x11_document, 0);
-			}
-
-			if (x11_document != 0)	ActivateTSMDocument (x11_document);
-		}
+        DarwinSendDDXEvent(kXquartzActivate, 0);
+        
+        if (!_x_active) {
+            if (x11_document == 0) {
+                OSType types[1];
+                types[0] = kUnicodeDocument;
+                NewTSMDocument (1, types, &x11_document, 0);
+            }
+            
+            if (x11_document != 0)	ActivateTSMDocument (x11_document);
+        }
     } else {
-		DarwinSendDDXEvent(kXquartzDeactivate, 0);
-
-		if (_x_active && x11_document != 0)
-			DeactivateTSMDocument (x11_document);
-	}
-
-	_x_active = state;
+#ifdef VNCMODIFIERBUGWORKAROUND
+        DarwinUpdateModKeys(0);
+        for(i=0; i < NUM_KEYCODES; i++) {
+            if(keyState[i] == NSKeyDown)
+                DarwinSendKeyboardEvents(KeyRelease, i);
+        }
+#endif
+        DarwinSendDDXEvent(kXquartzDeactivate, 0);
+        
+        if (_x_active && x11_document != 0)
+            DeactivateTSMDocument (x11_document);
+    }
+    
+    _x_active = state;
 }
 
 - (void) became_key:(NSWindow *)win {
@@ -859,7 +877,10 @@ environment the next time you start X11?", @"Startup xinitrc dialog");
 
 void X11ApplicationMain (int argc, char **argv, char **envp) {
     NSAutoreleasePool *pool;
-
+#ifdef VNCMODIFIERBUGWORKAROUND
+    size_t i;
+#endif
+    
 #ifdef DEBUG
     while (access ("/tmp/x11-block", F_OK) == 0) sleep (1);
 #endif
@@ -875,6 +896,12 @@ void X11ApplicationMain (int argc, char **argv, char **envp) {
     [[NSNotificationCenter defaultCenter] addObserver:NSApp
 					selector:@selector (became_key:)
 					name:NSWindowDidBecomeKeyNotification object:nil];
+
+#ifdef VNCMODIFIERBUGWORKAROUND
+    for(i=0; i < NUM_KEYCODES; i++) {
+        keyState[i] = NSKeyUp;
+    }
+#endif
 
     /*
      * The xpr Quartz mode is statically linked into this server.
@@ -948,14 +975,16 @@ extern int darwin_modifier_flags; // darwinEvents.c
     pressure = 0;
     tilt_x = 0;
     tilt_y = 0;
-    
+
+#ifndef VNCMODIFIERBUGWORKAROUND
     /* We don't receive modifier key events while out of focus, and 3button
      * emulation mucks this up, so we need to check our modifier flag state
      * on every event... ugg
      */
     if(darwin_modifier_flags != [e modifierFlags])
         DarwinUpdateModKeys([e modifierFlags]);
-    
+#endif
+
 	switch ([e type]) {
 		case NSLeftMouseDown:     ev_button=1; ev_type=ButtonPress;   goto handle_mouse;
 		case NSOtherMouseDown:    ev_button=2; ev_type=ButtonPress;   goto handle_mouse;
@@ -1093,10 +1122,20 @@ extern int darwin_modifier_flags; // darwinEvents.c
                     DarwinSendDDXEvent(kXquartzReloadKeymap, 0);
                 }
             }
-            
+
+#ifdef VNCMODIFIERBUGWORKAROUND
+            keyState[[e keyCode]] == [e type];
+#endif
+
             DarwinSendKeyboardEvents(([e type] == NSKeyDown) ? KeyPress : KeyRelease, [e keyCode]);
             break;
-            
+
+#ifdef VNCMODIFIERBUGWORKAROUND
+        case NSFlagsChanged:
+            DarwinUpdateModKeys([e modifierFlags]);
+            break;
+#endif
+
         default: break; /* for gcc */
 	}	
 }

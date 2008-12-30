@@ -67,7 +67,6 @@ extern BOOL xpbproxy_init (void);
 #define VNCMODIFIERBUGWORKAROUND 1 
 
 #ifdef VNCMODIFIERBUGWORKAROUND
-static BOOL vncModifierBugWorkaround = YES;
 static NSEventType keyState[NUM_KEYCODES];
 #endif
 
@@ -208,12 +207,10 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
         }
     } else {
 #ifdef VNCMODIFIERBUGWORKAROUND
-        if(vncModifierBugWorkaround) {
-            DarwinUpdateModKeys(0);
-            for(i=0; i < NUM_KEYCODES; i++) {
-                if(keyState[i] == NSKeyDown)
-                    DarwinSendKeyboardEvents(KeyRelease, i);
-            }
+        DarwinUpdateModKeys(0);
+        for(i=0; i < NUM_KEYCODES; i++) {
+            if(keyState[i] == NSKeyDown)
+                DarwinSendKeyboardEvents(KeyRelease, i);
         }
 #endif
         DarwinSendDDXEvent(kXquartzDeactivate, 0);
@@ -697,11 +694,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
 {
     NSString *nsstr;
     const char *tem;
-
-#ifdef VNCMODIFIERBUGWORKAROUND
-    vncModifierBugWorkaround = [self prefs_get_boolean:@"vncModifierBugWorkaround" default:vncModifierBugWorkaround];
-#endif
-    
+	
     quartzUseSysBeep = [self prefs_get_boolean:@PREFS_SYSBEEP
                                        default:quartzUseSysBeep];
     quartzEnableRootless = [self prefs_get_boolean:@PREFS_ROOTLESS
@@ -905,10 +898,8 @@ void X11ApplicationMain (int argc, char **argv, char **envp) {
 					name:NSWindowDidBecomeKeyNotification object:nil];
 
 #ifdef VNCMODIFIERBUGWORKAROUND
-    if(vncModifierBugWorkaround) {
-        for(i=0; i < NUM_KEYCODES; i++) {
-            keyState[i] = NSKeyUp;
-        }
+    for(i=0; i < NUM_KEYCODES; i++) {
+        keyState[i] = NSKeyUp;
     }
 #endif
 
@@ -985,15 +976,14 @@ extern int darwin_modifier_flags; // darwinEvents.c
     tilt_x = 0;
     tilt_y = 0;
 
+#ifndef VNCMODIFIERBUGWORKAROUND
     /* We don't receive modifier key events while out of focus, and 3button
      * emulation mucks this up, so we need to check our modifier flag state
      * on every event... ugg
      */
-#ifdef VNCMODIFIERBUGWORKAROUND
-    if(!vncModifierBugWorkaround)
-#endif
     if(darwin_modifier_flags != [e modifierFlags])
         DarwinUpdateModKeys([e modifierFlags]);
+#endif
 
 	switch ([e type]) {
 		case NSLeftMouseDown:     ev_button=1; ev_type=ButtonPress;   goto handle_mouse;
@@ -1134,8 +1124,7 @@ extern int darwin_modifier_flags; // darwinEvents.c
             }
 
 #ifdef VNCMODIFIERBUGWORKAROUND
-            if(vncModifierBugWorkaround)
-                keyState[[e keyCode]] == [e type];
+            keyState[[e keyCode]] == [e type];
 #endif
 
             DarwinSendKeyboardEvents(([e type] == NSKeyDown) ? KeyPress : KeyRelease, [e keyCode]);
@@ -1143,8 +1132,7 @@ extern int darwin_modifier_flags; // darwinEvents.c
 
 #ifdef VNCMODIFIERBUGWORKAROUND
         case NSFlagsChanged:
-            if(vncModifierBugWorkaround)
-                DarwinUpdateModKeys([e modifierFlags]);
+            DarwinUpdateModKeys([e modifierFlags]);
             break;
 #endif
 

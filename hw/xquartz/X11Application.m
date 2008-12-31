@@ -69,6 +69,8 @@ static NSEventType keyState[NUM_KEYCODES];
 int X11EnableKeyEquivalents = TRUE, quartzFullscreenMenu = FALSE;
 int quartzHasRoot = FALSE, quartzEnableRootless = TRUE;
 
+static Bool appkitReady = FALSE;
+
 extern Bool noTestExtensions;
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
@@ -121,7 +123,15 @@ static void init_ports (void) {
 static void message_kit_thread (SEL selector, NSObject *arg) {
     message msg;
     kern_return_t r;
-	
+
+    if(!appkitReady) {
+#if 0
+        ErrorF("%s: mach_msg failed: Appkit thread not ready\n", __FUNCTION__);
+        spewCallStack();
+#endif
+        return;
+    }
+
     msg.hdr.msgh_bits = MACH_MSGH_BITS (MACH_MSG_TYPE_MAKE_SEND, 0);
     msg.hdr.msgh_size = sizeof (msg);
     msg.hdr.msgh_remote_port = _port;
@@ -926,7 +936,9 @@ void X11ApplicationMain (int argc, char **argv, char **envp) {
     
     if(!xpbproxy_init())
         fprintf(stderr, "Error initializing xpbproxy\n");
-           
+
+    appkitReady = TRUE;
+
     [NSApp run];
     /* not reached */
 }

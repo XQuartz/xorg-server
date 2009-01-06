@@ -26,7 +26,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.57)
-AC_INIT([xorg-server], 1.5.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+AC_INIT([xorg-server], 1.5.3-apple1, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
 RELEASE_DATE="5 November 2008"
 REMEMBER_REMEMBER="The Fifth of November"
 AC_CONFIG_SRCDIR([Makefile.am])

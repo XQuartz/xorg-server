@@ -175,6 +175,10 @@ extern void mieqProcessInputEvents(
 typedef void (*mieqHandler)(int, xEventPtr, DeviceIntPtr, int);
 void mieqSetHandler(int event, mieqHandler handler);
 
+void
+CopyGetMasterEvent(DeviceIntPtr mdev, DeviceIntPtr sdev, xEvent* original,
+                   EventListPtr master, int count);
+
 /* miexpose.c */
 
 extern RegionPtr miHandleExposures(

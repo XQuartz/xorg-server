@@ -61,10 +61,6 @@
 #include "exglobals.h"
 #include "extnsionst.h"
 
-/* Maximum number of valuators, divided by six, rounded up, to get number
- * of events. */
-#define MAX_VALUATOR_EVENTS 6
-
 /* Number of motion history events to store. */
 #define MOTION_HISTORY_SIZE 256
 

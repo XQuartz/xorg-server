@@ -363,8 +363,6 @@ void DarwinKeyboardInit(DeviceIntPtr pDev) {
         XkbSetRepeatKeys(pDev, -1, AutoRepeatModeOn);
     }
 
-    SwitchCoreKeyboard(pDev);   
-
     DarwinKeyboardSetDeviceKeyMap(&keySyms);
 }
 

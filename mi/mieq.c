@@ -36,6 +36,11 @@ in this Software without prior written authorization from The Open Group.
 #include <dix-config.h>
 #endif
 
+#ifdef XQUARTZ
+#include  <pthread.h>
+static pthread_mutex_t miEventQueueMutex = PTHREAD_MUTEX_INITIALIZER;
+#endif
+
 # define NEED_EVENTS
 # include   <X11/X.h>
 # include   <X11/Xmd.h>
@@ -139,6 +144,9 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
     int                    isMotion = 0;
     int                    evlen;
 
+#ifdef XQUARTZ
+    pthread_mutex_lock(&miEventQueueMutex);
+#endif
 
     /* avoid merging events from different devices */
     if (e->u.u.type == MotionNotify)
@@ -157,6 +165,10 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
         lastkbp = (deviceKeyButtonPointer *) laste->events->event;
 
         if (laste->nevents > 6) {
+#ifdef XQUARTZ
+            pthread_mutex_unlock(&miEventQueueMutex);
+#endif
+            
             ErrorF("[mi] mieqEnqueue: more than six valuator events; dropping.\n");
             return;
         }
@@ -168,11 +180,17 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
               lastkbp->type == ProximityOut) ||
             ((lastkbp->deviceid & DEVICE_BITS) !=
              (v->deviceid & DEVICE_BITS))) {
+#ifdef XQUARTZ
+            pthread_mutex_unlock(&miEventQueueMutex);
+#endif
             ErrorF("[mi] mieqEnequeue: out-of-order valuator event; dropping.\n");
             return;
         }
 
         memcpy((laste->events[laste->nevents++].event), e, sizeof(xEvent));
+#ifdef XQUARTZ
+        pthread_mutex_unlock(&miEventQueueMutex);
+#endif
         return;
     }
 
@@ -192,6 +210,9 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
 		xorg_backtrace();
 		stuck = 1;
 	    }
+#ifdef XQUARTZ
+	    pthread_mutex_unlock(&miEventQueueMutex);
+#endif
 	    return;
         }
 	stuck = 0;
@@ -209,6 +230,9 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
         if (!evt->event)
         {
             ErrorF("[mi] Running out of memory. Tossing event.\n");
+#ifdef XQUARTZ
+            pthread_mutex_unlock(&miEventQueueMutex);
+#endif
             return;
         }
     }
@@ -229,24 +253,39 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
 
     miEventQueue.lastMotion = isMotion;
     miEventQueue.tail = (oldtail + 1) % QUEUE_SIZE;
+#ifdef XQUARTZ
+    pthread_mutex_unlock(&miEventQueueMutex);
+#endif
 }
 
 void
 mieqSwitchScreen(DeviceIntPtr pDev, ScreenPtr pScreen, Bool fromDIX)
 {
+#ifdef XQUARTZ
+    pthread_mutex_lock(&miEventQueueMutex);
+#endif
     EnqueueScreen(pDev) = pScreen;
     if (fromDIX)
 	DequeueScreen(pDev) = pScreen;
+#ifdef XQUARTZ
+    pthread_mutex_unlock(&miEventQueueMutex);
+#endif
 }
 
 void
 mieqSetHandler(int event, mieqHandler handler)
 {
+#ifdef XQUARTZ
+    pthread_mutex_lock(&miEventQueueMutex);
+#endif
     if (handler && miEventQueue.handlers[event])
         ErrorF("[mi] mieq: warning: overriding existing handler %p with %p for "
                "event %d\n", miEventQueue.handlers[event], handler, event);
 
     miEventQueue.handlers[event] = handler;
+#ifdef XQUARTZ
+    pthread_mutex_unlock(&miEventQueueMutex);
+#endif
 }
 
 /**
@@ -313,6 +352,10 @@ mieqProcessInputEvents(void)
     DeviceIntPtr dev = NULL,
                  master = NULL;
 
+#ifdef XQUARTZ
+    pthread_mutex_lock(&miEventQueueMutex);
+#endif
+    
     while (miEventQueue.head != miEventQueue.tail) {
         e = &miEventQueue.events[miEventQueue.head];
 
@@ -336,6 +379,10 @@ mieqProcessInputEvents(void)
 
         miEventQueue.head = (miEventQueue.head + 1) % QUEUE_SIZE;
 
+#ifdef XQUARTZ
+        pthread_mutex_unlock(&miEventQueueMutex);
+#endif
+        
         type    = event->u.u.type;
         master  = (!dev->isMaster && dev->u.master) ? dev->u.master : NULL;
 
@@ -385,6 +432,13 @@ mieqProcessInputEvents(void)
         /* Update the sprite now. Next event may be from different device. */
         if (type == DeviceMotionNotify && dev->coreEvents)
             miPointerUpdateSprite(dev);
+
+#ifdef XQUARTZ
+        pthread_mutex_lock(&miEventQueueMutex);
+#endif
     }
+#ifdef XQUARTZ
+    pthread_mutex_unlock(&miEventQueueMutex);
+#endif
 }
 

@@ -36,6 +36,12 @@
 #include <windowstr.h>
 #include "glxutil.h"
 
+#undef Xmalloc
+#undef Xcalloc
+#undef Xrealloc
+#undef Xfree
+
+
 /************************************************************************/
 
 void __glXNop(void) {}

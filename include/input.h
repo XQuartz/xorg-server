@@ -509,8 +509,6 @@ extern int AllocMasterDevice(ClientPtr client,
 extern void DeepCopyDeviceClasses(DeviceIntPtr from,
                                   DeviceIntPtr to);
 
-extern int FocusSemaphoresIsset(WindowPtr win);
-
 /* Implemented by the DDX. */
 extern int NewInputDeviceRequest(
     InputOption *options,

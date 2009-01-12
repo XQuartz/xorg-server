@@ -855,6 +855,9 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
     Bool value;
     MessageType from;
     const char *s;
+#ifdef XKB
+    char *rules = "base";
+#endif
 
     /*
      * Merge the ServerLayout and ServerFlags options.  The former have
@@ -1031,6 +1034,15 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
     /* AllowEmptyInput is automatically true if we're hotplugging */
     xf86Info.allowEmptyInput = (xf86Info.autoAddDevices && xf86Info.autoEnableDevices);
     xf86GetOptValBool(FlagOptions, FLAG_ALLOW_EMPTY_INPUT, &xf86Info.allowEmptyInput);
+
+    /* AEI on? Then we're not using kbd, so use the evdev rules set. */
+#ifdef XKB
+#if defined(linux)
+    if (xf86Info.allowEmptyInput)
+        rules = "evdev";
+#endif
+    XkbSetRulesDflts(rules, "pc105", "us", NULL, NULL);
+#endif
 
     xf86Info.useDefaultFontPath = TRUE;
     xf86Info.useDefaultFontPathFrom = X_DEFAULT;

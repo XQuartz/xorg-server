@@ -298,6 +298,8 @@ CopyGetMasterEvent(DeviceIntPtr mdev, xEvent* original,
     while (count--)
         ChangeDeviceID(mdev, &master->event[count]);
 }
+extern void
+CopyKeyClass(DeviceIntPtr device, DeviceIntPtr master);
 
 /* Call this from ProcessInputEvents(). */
 void
@@ -360,8 +362,15 @@ mieqProcessInputEvents(void)
             NewCurrentScreen (dev, DequeueScreen(dev), x, y);
         }
         else {
-            if (master)
+            if (master) {
+                /* Force a copy of the key class into the VCK so that the layout
+                   is transferred. */
+                if (event->u.u.type == DeviceKeyPress ||
+                    event->u.u.type == DeviceKeyRelease)
+		    CopyKeyClass(dev, master);
+
                 CopyGetMasterEvent(master, event, masterEvents, nevents);
+            }
 
             /* If someone's registered a custom event handler, let them
              * steal it. */

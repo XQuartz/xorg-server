@@ -64,6 +64,12 @@
 #include <X11/extensions/dmxproto.h>  /* For DMX_BAD_* */
 #include "cursorstr.h"
 
+#undef Xmalloc
+#undef Xcalloc
+#undef Xrealloc
+#undef Xfree
+
+
 /* The default font is declared in dix/globals.c, but is not included in
  * _any_ header files. */
 extern FontPtr  defaultFont;

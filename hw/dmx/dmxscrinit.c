@@ -61,6 +61,12 @@
 #include "mipointer.h"
 #include "micmap.h"
 
+#undef Xmalloc
+#undef Xcalloc
+#undef Xrealloc
+#undef Xfree
+
+
 extern Bool dmxCloseScreen(int idx, ScreenPtr pScreen);
 static Bool dmxSaveScreen(ScreenPtr pScreen, int what);
 

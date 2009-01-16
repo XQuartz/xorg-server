@@ -242,6 +242,12 @@ static int indexForScanlinePad[ 65 ] = {
 #endif
 
 #ifdef XQUARTZ
+#include <pthread.h>
+
+BOOL serverInitComplete = FALSE;
+pthread_mutex_t serverInitCompleteMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t serverInitCompleteCond = PTHREAD_COND_INITIALIZER;
+
 int dix_main(int argc, char *argv[], char *envp[])
 #else
 int main(int argc, char *argv[], char *envp[])
@@ -444,6 +450,14 @@ int main(int argc, char *argv[], char *envp[])
 	    	FatalError("could not create connection block info");
 	    }
 	}
+
+#ifdef XQUARTZ
+    /* Let the other threads know the server is done with its init */
+    pthread_mutex_lock(&serverInitCompleteMutex);
+    serverInitComplete = TRUE;
+    pthread_cond_broadcast(&serverInitCompleteCond);
+    pthread_mutex_unlock(&serverInitCompleteMutex);
+#endif
 
 	Dispatch();
 

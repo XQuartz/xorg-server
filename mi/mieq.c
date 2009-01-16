@@ -36,11 +36,6 @@ in this Software without prior written authorization from The Open Group.
 #include <dix-config.h>
 #endif
 
-#ifdef XQUARTZ
-#include  <pthread.h>
-static pthread_mutex_t miEventQueueMutex = PTHREAD_MUTEX_INITIALIZER;
-#endif
-
 # define NEED_EVENTS
 # include   <X11/X.h>
 # include   <X11/Xmd.h>
@@ -86,6 +81,25 @@ typedef struct _EventQueue {
 
 static EventQueueRec miEventQueue;
 static EventListPtr masterEvents; /* for use in mieqProcessInputEvents */
+
+#ifdef XQUARTZ
+#include  <pthread.h>
+static pthread_mutex_t miEventQueueMutex = PTHREAD_MUTEX_INITIALIZER;
+
+extern BOOL serverInitComplete;
+extern pthread_mutex_t serverInitCompleteMutex;
+extern pthread_cond_t serverInitCompleteCond;
+
+static inline void wait_for_server_init(void) {
+    /* If the server hasn't finished initializing, wait for it... */
+    if(!serverInitComplete) {
+        pthread_mutex_lock(&serverInitCompleteMutex);
+        while(!serverInitComplete)
+            pthread_cond_wait(&serverInitCompleteCond, &serverInitCompleteMutex);
+        pthread_mutex_unlock(&serverInitCompleteMutex);
+    }
+}
+#endif
 
 Bool
 mieqInit(void)
@@ -145,6 +159,7 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
     int                    evlen;
 
 #ifdef XQUARTZ
+    wait_for_server_init();
     pthread_mutex_lock(&miEventQueueMutex);
 #endif
 

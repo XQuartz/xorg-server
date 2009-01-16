@@ -499,7 +499,8 @@
 #if defined(__LP64__) && !defined(_XSERVER64)
 #define _XSERVER64 1
 #elif !defined(__LP64__) && defined(_XSERVER64)
-#undef _XSERVER64
+/* configure mangles #undef, so we fix this in AC_CONFIG_HEADERS post process */
+/undef _XSERVER64
 #endif
 #endif
 

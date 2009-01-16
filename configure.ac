@@ -39,7 +39,9 @@ dnl drivers.
 AC_CONFIG_HEADERS(include/xorg-server.h)
 dnl dix-config.h covers most of the DIX (i.e. everything but the DDX, not just
 dnl dix/).
-AC_CONFIG_HEADERS(include/dix-config.h)
+AC_CONFIG_HEADERS(include/dix-config.h, [mv include/dix-config.h include/dix-config.h.tmp
+                                         sed 's|/undef|#undef|' < include/dix-config.h.tmp > include/dix-config.h
+                                         rm include/dix-config.h.tmp])
 dnl xgl-config.h covers the Xgl DDX.
 AC_CONFIG_HEADERS(include/xgl-config.h)
 dnl xorg-config.h covers the Xorg DDX.

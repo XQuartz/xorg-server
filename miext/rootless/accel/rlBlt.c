@@ -131,9 +131,9 @@ rlBlt (FbBits   *srcLine,
 	{
 	    SCREENREC(pDstScreen)->imp->CopyBytes(
                             nmiddle * sizeof(*dst), height,
-                            (char *) srcLine + (srcX >> 3),
+                            (CARD8 *) srcLine + (srcX >> 3),
                             srcStride * sizeof (*src),
-                            (char *) dstLine + (dstX >> 3),
+                            (CARD8 *) dstLine + (dstX >> 3),
                             dstStride * sizeof (*dst));
 	    return;
 	}
@@ -150,16 +150,16 @@ rlBlt (FbBits   *srcLine,
 	{
 	    /* need to copy XRGB to ARGB. */
 
-	    void *src[2], *dest[2];
+	    void *source[2], *dest[2];
 	    unsigned int src_rowbytes[2], dest_rowbytes[2];
             unsigned int fn;
 
-	    src[0] = (char *) srcLine + (srcX >> 3);
-	    src[1] = NULL;
+	    source[0] = (CARD8 *) srcLine + (srcX >> 3);
+	    source[1] = NULL;
 	    src_rowbytes[0] = srcStride * sizeof(*src);
 	    src_rowbytes[1] = 0;
 
-	    dest[0] = (char *) dstLine + (dstX >> 3);
+	    dest[0] = (CARD8 *) dstLine + (dstX >> 3);
 	    dest[1] = dest[0];
 	    dest_rowbytes[0] = dstStride * sizeof(*dst);
 	    dest_rowbytes[1] = dest_rowbytes[0];
@@ -169,7 +169,7 @@ rlBlt (FbBits   *srcLine,
 
             if (SCREENREC(pDstScreen)->imp->CompositePixels(
                                 nmiddle, height,
-                                fn, src, src_rowbytes,
+                                fn, source, src_rowbytes,
                                 NULL, 0, dest, dest_rowbytes) == Success)
             {
                 return;

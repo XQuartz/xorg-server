@@ -468,7 +468,7 @@ RRTellChanged (ScreenPtr pScreen);
  * Poll the driver for changed information
  */
 Bool
-RRGetInfo (ScreenPtr pScreen);
+RRGetInfo (ScreenPtr pScreen, Bool force_query);
 
 Bool RRInit (void);
 

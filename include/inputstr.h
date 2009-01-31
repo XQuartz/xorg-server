@@ -57,9 +57,6 @@ SOFTWARE.
 #include "privates.h"
 
 #define BitIsOn(ptr, bit) (((BYTE *) (ptr))[(bit)>>3] & (1 << ((bit) & 7)))
-/* If byte[i] in src is non-zero, set bit i in dst, otherwise set bit to 0 */
-#define SetBitIf(dst, src, i) \
-    (src[i]) ? (dst[i/8] |= (1 << (i % 8))) : (dst[i/8] &= ~(1 << (i % 8)));
 
 #define SameClient(obj,client) \
 	(CLIENT_BITS((obj)->resource) == (client)->clientAsMask)
@@ -188,7 +185,11 @@ typedef struct _ValuatorClassRec {
 
 typedef struct _ButtonClassRec {
     CARD8		numButtons;
-    CARD8		buttonsDown;	/* number of buttons currently down */
+    CARD8		buttonsDown;	/* number of buttons currently down
+                                           This counts logical buttons, not
+					   physical ones, i.e if some buttons
+					   are mapped to 0, they're not counted
+					   here */
     unsigned short	state;
     Mask		motionMask;
     CARD8		down[DOWN_LENGTH];

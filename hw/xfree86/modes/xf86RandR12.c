@@ -177,6 +177,8 @@ xf86RandR13Pan (xf86CrtcPtr crtc, int x, int y)
 {
     int newX, newY;
     int width, height;
+    struct pict_f_vector    c;
+    Bool panned = FALSE;
 
     if (crtc->version < 2)
 	return;
@@ -191,23 +193,185 @@ xf86RandR13Pan (xf86CrtcPtr crtc, int x, int y)
     width  = crtc->mode.HDisplay;
     height = crtc->mode.VDisplay;
 
+    c.v[0] = x;
+    c.v[1] = y;
+    c.v[2] = 1.0;
+    if (crtc->transform_in_use) {
+	pixman_f_transform_point(&crtc->f_framebuffer_to_crtc, &c);
+    } else {
+	c.v[0] -= crtc->x;
+	c.v[1] -= crtc->y;
+    }
+
     if ((crtc->panningTrackingArea.x2 <= crtc->panningTrackingArea.x1 ||
 	 (x >= crtc->panningTrackingArea.x1 && x < crtc->panningTrackingArea.x2)) &&
 	(crtc->panningTrackingArea.y2 <= crtc->panningTrackingArea.y1 ||
 	 (y >= crtc->panningTrackingArea.y1 && y < crtc->panningTrackingArea.y2))) {
 	if (crtc->panningTotalArea.x2 > crtc->panningTotalArea.x1) {
-	    if (x < crtc->x + crtc->panningBorder[0])
-		newX = x - crtc->panningBorder[0];
-	    if (x >= crtc->x + width - crtc->panningBorder[2])
-		newX = x - width + crtc->panningBorder[2] + 1;
+	    if (c.v[0] < crtc->panningBorder[0]) {
+		c.v[0] = crtc->panningBorder[0];
+		panned = TRUE;
+	    }
+	    if (c.v[0] >= width - crtc->panningBorder[2]) {
+		c.v[0] = width - crtc->panningBorder[2] - 1;
+		panned = TRUE;
+	    }
 	}
 	if (crtc->panningTotalArea.y2 > crtc->panningTotalArea.y1) {
-	    if (y < crtc->y + crtc->panningBorder[1])
-		newY = y - crtc->panningBorder[1];
-	    if (y >= crtc->y + height - crtc->panningBorder[3])
-		newY = y - height + crtc->panningBorder[3] + 1;
+	    if (c.v[1] < crtc->panningBorder[1]) {
+		c.v[1] = crtc->panningBorder[1];
+		panned = TRUE;
+	    }
+	    if (c.v[1] >= height - crtc->panningBorder[3]) {
+		c.v[1] = height - crtc->panningBorder[3] - 1;
+		panned = TRUE;
+	    }
 	}
     }
+    if (panned) {
+	if (crtc->transform_in_use) {
+	    /*
+	     * Under a transformation, we want to find a new crtc offset
+	     * which places the cursor in the desired position. That is,
+	     *
+	     * Given the current transform, M, the current cursor position
+	     * on the Screen, S, and the desired cursor position on the CRTC,
+	     * C, compute a translation, T, such that:
+	     *
+	     * M T S = C
+	     *
+	     * where T is of the form
+	     *
+	     * | 1 0 dx |
+	     * | 0 1 dy |
+	     * | 0 0 1  |
+	     *
+	     * M T S =
+	     *   | M00 Sx + M01 Sy + M00 dx + M01 dy + M02 |   | Cx F |
+	     *   | M10 Sx + M11 Sy + M10 dx + M11 dy + M12 | = | Cy F |
+	     *   | M20 Sx + M21 Sy + M20 dx + M21 dy + M22 |   |  F   |
+	     *
+	     * R = M S
+	     *
+	     *   Cx F = M00 dx + M01 dy + R0
+	     *   Cy F = M10 dx + M11 dy + R1
+	     *      F = M20 dx + M21 dy + R2
+	     *
+	     * Zero out dx, then dy
+	     *
+	     * F (Cx M10 - Cy M00) =
+	     *	    (M10 M01 - M00 M11) dy + M10 R0 - M00 R1
+	     * F (M10 - Cy M20) =
+	     *	    (M10 M21 - M20 M11) dy + M10 R2 - M20 R1
+	     *
+	     * F (Cx M11 - Cy M01) =
+	     *	    (M11 M00 - M01 M10) dx + M11 R0 - M01 R1
+	     * F (M11 - Cy M21) =
+	     *	    (M11 M20 - M21 M10) dx + M11 R2 - M21 R1
+	     *
+	     * Make some temporaries
+	     *
+	     * T = | Cx M10 - Cy M00 |
+	     *     | Cx M11 - Cy M01 |
+	     *
+	     * U = | M10 M01 - M00 M11 |
+	     *     | M11 M00 - M01 M10 |
+	     *
+	     * Q = | M10 R0 - M00 R1 |
+	     *     | M11 R0 - M01 R1 |
+	     *
+	     * P = | M10 - Cy M20 |
+	     *     | M11 - Cy M21 |
+	     *
+	     * W = | M10 M21 - M20 M11 |
+	     *     | M11 M20 - M21 M10 |
+	     *
+	     * V = | M10 R2 - M20 R1 |
+	     *	   | M11 R2 - M21 R1 |
+	     *
+	     * Rewrite:
+	     *
+	     * F T0 = U0 dy + Q0
+	     * F P0 = W0 dy + V0
+	     * F T1 = U1 dx + Q1
+	     * F P1 = W1 dx + V1
+	     *
+	     * Solve for F (two ways)
+	     *
+	     * F (W0 T0 - U0 P0)  = W0 Q0 - U0 V0
+	     *
+	     *     W0 Q0 - U0 V0
+	     * F = -------------
+	     *     W0 T0 - U0 P0
+	     *
+	     * F (W1 T1 - U1 P1) = W1 Q1 - U1 V1
+	     *
+	     *     W1 Q1 - U1 V1
+	     * F = -------------
+	     *     W1 T1 - U1 P1
+	     *
+	     * We'll use which ever solution works (denominator != 0)
+	     *
+	     * Finally, solve for dx and dy:
+	     *
+	     * dx = (F T1 - Q1) / U1
+	     * dx = (F P1 - V1) / W1
+	     *
+	     * dy = (F T0 - Q0) / U0
+	     * dy = (F P0 - V0) / W0
+	     */
+	    double	r[3];
+	    double	q[2], u[2], t[2], v[2], w[2], p[2];
+	    double	f;
+	    struct pict_f_vector    d;
+	    int	i;
+	    struct pixman_f_transform	*m = &crtc->f_framebuffer_to_crtc;
+
+	    /* Get the un-normalized crtc coordinates again */
+	    for (i = 0; i < 3; i++)
+		r[i] = m->m[i][0] * x + m->m[i][1] * y + m->m[i][2];
+
+	    /* Combine values into temporaries */
+	    for (i = 0; i < 2; i++) {
+		q[i] = m->m[1][i] * r[0] - m->m[0][i] * r[1];
+		u[i] = m->m[1][i] * m->m[0][1-i] - m->m[0][i] * m->m[1][1-i];
+		t[i] = m->m[1][i] * c.v[0] - m->m[0][i] * c.v[1];
+
+		v[i] = m->m[1][i] * r[2] - m->m[2][i] * r[1];
+		w[i] = m->m[1][i] * m->m[2][1-i] - m->m[2][i] * m->m[1][1-i];
+		p[i] = m->m[1][i] - m->m[2][i] * c.v[1];
+	    }
+
+	    /* Find a way to compute f */
+	    f = 0;
+	    for (i = 0; i < 2; i++) {
+		double a = w[i] * q[i] - u[i] * v[i];
+		double b = w[i] * t[i] - u[i] * p[i];
+		if (b != 0) {
+		    f = a/b;
+		    break;
+		}
+	    }
+
+	    /* Solve for the resulting transform vector */
+	    for (i = 0; i < 2; i++) {
+		if (u[i])
+		    d.v[1-i] = (t[i] * f - q[i]) / u[i];
+		else if (w[1])
+		    d.v[1-i] = (p[i] * f - v[i]) / w[i];
+		else
+		    d.v[1-i] = 0;
+	    }
+	    d.v[2] = 1;
+	    newX -= floor (d.v[0] + 0.5);
+	    newY -= floor (d.v[1] + 0.5);
+	} else {
+	    newX = x - c.v[0];
+	    newY = y - c.v[1];
+	}
+    }
+
+#if 0
     /* Validate against [xy]1 after [xy]2, to be sure that results are > 0 for [xy]1 > 0 */
     if (crtc->panningTotalArea.x2 > crtc->panningTotalArea.x1) {
 	if (newX > crtc->panningTotalArea.x2 - width)
@@ -221,6 +385,7 @@ xf86RandR13Pan (xf86CrtcPtr crtc, int x, int y)
 	if (newY <  crtc->panningTotalArea.y1)
 	    newY =  crtc->panningTotalArea.y1;
     }
+#endif
     if (newX != crtc->x || newY != crtc->y)
 	xf86CrtcSetOrigin (crtc, newX, newY);
 }

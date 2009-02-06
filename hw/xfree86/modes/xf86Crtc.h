@@ -337,6 +337,10 @@ struct _xf86Crtc {
     BoxRec          panningTotalArea;
     BoxRec          panningTrackingArea;
     INT16           panningBorder[4];
+    /**
+     * Clear the shadow
+     */
+    Bool	    shadowClear;
 };
 
 typedef struct _xf86OutputFuncs {

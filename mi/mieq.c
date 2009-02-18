@@ -451,7 +451,11 @@ mieqProcessInputEvents(void)
                    is transferred. */
                 if (event->u.u.type == DeviceKeyPress ||
                     event->u.u.type == DeviceKeyRelease)
+                {
+                    if (!master->key)
+                        master = GetPairedDevice(master);
 		    CopyKeyClass(dev, master);
+                }
 
                 CopyGetMasterEvent(master, dev, event, masterEvents, nevents);
             }

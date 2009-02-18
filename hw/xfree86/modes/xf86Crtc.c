@@ -293,33 +293,14 @@ xf86CrtcSetModeTransform (xf86CrtcPtr crtc, DisplayModePtr mode, Rotation rotati
     } else
 	crtc->transformPresent = FALSE;
 
-    /* Shift offsets that move us out of virtual size */
-    if (x + mode->HDisplay > xf86_config->maxWidth ||
-	y + mode->VDisplay > xf86_config->maxHeight)
-    {
-	if (x + mode->HDisplay > xf86_config->maxWidth)
-	    crtc->x = xf86_config->maxWidth - mode->HDisplay;
-	if (y + mode->VDisplay > xf86_config->maxHeight)
-	    crtc->y = xf86_config->maxHeight - mode->VDisplay;
-	if (crtc->x < 0 || crtc->y < 0)
-	{
-	    xf86DrvMsg (scrn->scrnIndex, X_ERROR,
-			"Mode %dx%d does not fit virtual size %dx%d - "
-			"internal error\n", mode->HDisplay, mode->VDisplay,
-			xf86_config->maxWidth, xf86_config->maxHeight);
-	    goto done;
-	}
-	xf86DrvMsg (scrn->scrnIndex, X_ERROR,
-		    "Mode %dx%d+%d+%d does not fit virtual size %dx%d - "
-		    "offset updated to +%d+%d\n",
-		    mode->HDisplay, mode->VDisplay, x, y,
-		    xf86_config->maxWidth, xf86_config->maxHeight,
-		    crtc->x, crtc->y);
-    }
-
     if (crtc->funcs->set_origin &&
 	memcmp (mode, &saved_mode, sizeof(saved_mode)) == 0 &&
-	saved_rotation == rotation) {
+	saved_rotation == rotation &&
+	saved_transform_present == crtc->transformPresent &&
+	(!crtc->transformPresent || RRTransformEqual(&saved_transform, &crtc->transform)))
+    {
+	if (!xf86CrtcRotate (crtc))
+		goto done;
 	crtc->funcs->set_origin (crtc, crtc->x, crtc->y);
 	ret = TRUE;
 	goto done;
@@ -421,8 +402,11 @@ xf86CrtcSetOrigin (xf86CrtcPtr crtc, int x, int y)
 {
     crtc->x = x;
     crtc->y = y;
-    if (crtc->funcs->set_origin)
+    if (crtc->funcs->set_origin) {
+	if (!xf86CrtcRotate (crtc))
+	    return;
 	crtc->funcs->set_origin (crtc, x, y);
+    }
     else
 	xf86CrtcSetMode (crtc, &crtc->mode, crtc->rotation, x, y);
 }
@@ -446,6 +430,7 @@ typedef enum {
     OPTION_MAX_CLOCK,
     OPTION_IGNORE,
     OPTION_ROTATE,
+    OPTION_PANNING,
 } OutputOpts;
 
 static OptionInfoRec xf86OutputOptions[] = {
@@ -461,6 +446,7 @@ static OptionInfoRec xf86OutputOptions[] = {
     {OPTION_MAX_CLOCK,	    "MaxClock",		OPTV_FREQ,    {0}, FALSE },
     {OPTION_IGNORE,	    "Ignore",		OPTV_BOOLEAN, {0}, FALSE },
     {OPTION_ROTATE,	    "Rotate",		OPTV_STRING,  {0}, FALSE },
+    {OPTION_PANNING,	    "Panning",		OPTV_STRING,  {0}, FALSE },
     {-1,		    NULL,		OPTV_NONE,    {0}, FALSE },
 };
 
@@ -1308,6 +1294,59 @@ xf86InitialOutputPositions (ScrnInfoPtr scrn, DisplayModePtr *modes)
 	output->initial_y -= min_y;
     }
     return TRUE;
+}
+
+static void
+xf86InitialPanning (ScrnInfoPtr scrn)
+{
+    xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR(scrn);
+    int			o;
+    
+    for (o = 0; o < config->num_output; o++)
+    {
+	xf86OutputPtr	output = config->output[o];
+	char	       *panning = xf86GetOptValString (output->options, OPTION_PANNING);
+	int		width, height, left, top;
+	int		track_width, track_height, track_left, track_top;
+	int		brdr[4];
+
+	memset (&output->initialTotalArea,    0, sizeof(BoxRec));
+	memset (&output->initialTrackingArea, 0, sizeof(BoxRec));
+	memset (output->initialBorder,        0, 4*sizeof(INT16));
+
+	if (! panning)
+	    continue;
+
+	switch (sscanf (panning, "%dx%d+%d+%d/%dx%d+%d+%d/%d/%d/%d/%d",
+			&width, &height, &left, &top,
+			&track_width, &track_height, &track_left, &track_top,
+			&brdr[0], &brdr[1], &brdr[2], &brdr[3])) {
+	case 12:
+	    output->initialBorder[0] = brdr[0];
+	    output->initialBorder[1] = brdr[1];
+	    output->initialBorder[2] = brdr[2];
+	    output->initialBorder[3] = brdr[3];
+	    /* fall through */
+	case 8:
+	    output->initialTrackingArea.x1 = track_left;
+	    output->initialTrackingArea.y1 = track_top;
+	    output->initialTrackingArea.x2 = track_left + track_width;
+	    output->initialTrackingArea.y2 = track_top  + track_height;
+	    /* fall through */
+	case 4:
+	    output->initialTotalArea.x1 = left;
+	    output->initialTotalArea.y1 = top;
+	    /* fall through */
+	case 2:
+	    output->initialTotalArea.x2 = output->initialTotalArea.x1 + width;
+	    output->initialTotalArea.y2 = output->initialTotalArea.y1 + height;
+	    break;
+	default:
+	    xf86DrvMsg (scrn->scrnIndex, X_ERROR,
+			"Broken panning specification '%s' for output %s in config file\n",
+			panning, output->name);
+	}
+    }
 }
 
 /*
@@ -2236,6 +2275,11 @@ xf86InitialConfiguration (ScrnInfoPtr scrn, Bool canGrow)
 	xfree (modes);
 	return FALSE;
     }
+
+    /*
+     * Set initial panning of each output
+     */
+    xf86InitialPanning (scrn);
 	
     /*
      * Assign CRTCs to fit output configuration
@@ -2279,6 +2323,9 @@ xf86InitialConfiguration (ScrnInfoPtr scrn, Bool canGrow)
 	    crtc->enabled = TRUE;
 	    crtc->x = output->initial_x;
 	    crtc->y = output->initial_y;
+	    memcpy (&crtc->panningTotalArea,    &output->initialTotalArea,    sizeof(BoxRec));
+	    memcpy (&crtc->panningTrackingArea, &output->initialTrackingArea, sizeof(BoxRec));
+	    memcpy (crtc->panningBorder,        output->initialBorder,        4*sizeof(INT16));
 	    output->crtc = crtc;
 	} else {
 	    output->crtc = NULL;
@@ -2940,22 +2987,29 @@ xf86_crtc_clip_video_helper(ScrnInfoPtr pScrn,
 xf86_crtc_notify_proc_ptr
 xf86_wrap_crtc_notify (ScreenPtr screen, xf86_crtc_notify_proc_ptr new)
 {
-    ScrnInfoPtr		scrn = xf86Screens[screen->myNum];
-    xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR(scrn);
-    xf86_crtc_notify_proc_ptr	old;
-    
-    old = config->xf86_crtc_notify;
-    config->xf86_crtc_notify = new;
-    return old;
+    if (xf86CrtcConfigPrivateIndex != -1)
+    {
+	ScrnInfoPtr		scrn = xf86Screens[screen->myNum];
+	xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR(scrn);
+	xf86_crtc_notify_proc_ptr	old;
+	
+	old = config->xf86_crtc_notify;
+	config->xf86_crtc_notify = new;
+	return old;
+    }
+    return NULL;
 }
 
 void
 xf86_unwrap_crtc_notify(ScreenPtr screen, xf86_crtc_notify_proc_ptr old)
 {
-    ScrnInfoPtr		scrn = xf86Screens[screen->myNum];
-    xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR(scrn);
-
-    config->xf86_crtc_notify = old;
+    if (xf86CrtcConfigPrivateIndex != -1)
+    {
+	ScrnInfoPtr		scrn = xf86Screens[screen->myNum];
+	xf86CrtcConfigPtr	config = XF86_CRTC_CONFIG_PTR(scrn);
+    
+	config->xf86_crtc_notify = old;
+    }
 }
 
 void

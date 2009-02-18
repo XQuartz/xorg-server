@@ -224,7 +224,7 @@ ProcRRGetScreenSizeRange (ClientPtr client)
     
     if (pScrPriv) 
     {
-	if (!RRGetInfo (pScreen))
+	if (!RRGetInfo (pScreen, FALSE))
 	    return BadAlloc;
 	rep.minWidth  = pScrPriv->minWidth;
 	rep.minHeight = pScrPriv->minHeight;
@@ -324,7 +324,7 @@ rrGetScreenResources(ClientPtr client, Bool query)
     rrScrPrivPtr		pScrPriv;
     CARD8			*extra;
     unsigned long		extraLen;
-    int				i, n, rc, has_primary;
+    int				i, n, rc, has_primary = 0;
     RRCrtc			*crtcs;
     RROutput			*outputs;
     xRRModeInfo			*modeinfos;
@@ -340,7 +340,7 @@ rrGetScreenResources(ClientPtr client, Bool query)
     rep.pad = 0;
     
     if (query && pScrPriv)
-	if (!RRGetInfo (pScreen))
+	if (!RRGetInfo (pScreen, query))
 	    return BadAlloc;
 
     if (!pScrPriv)
@@ -402,19 +402,22 @@ rrGetScreenResources(ClientPtr client, Bool query)
 	modeinfos = (xRRModeInfo *) (outputs + pScrPriv->numOutputs);
 	names = (CARD8 *) (modeinfos + num_modes);
 
-	has_primary = (pScrPriv->primaryOutput != NULL);
-	if (pScrPriv->primaryOutput)
+	if (pScrPriv->primaryOutput && pScrPriv->primaryOutput->crtc)
 	{
-	    crtcs[0] = pScrPriv->primaryOutput->id;
+	    has_primary = 1;
+	    crtcs[0] = pScrPriv->primaryOutput->crtc->id;
 	    if (client->swapped)
 		swapl (&crtcs[0], n);
 	}
 	
 	for (i = 0; i < pScrPriv->numCrtcs; i++)
 	{
-	    if (pScrPriv->primaryOutput &&
+	    if (has_primary &&
 		pScrPriv->primaryOutput->crtc == pScrPriv->crtcs[i])
+	    {
+		has_primary = 0;
 		continue;
+	    }
 	    crtcs[i + has_primary] = pScrPriv->crtcs[i]->id;
 	    if (client->swapped)
 		swapl (&crtcs[i + has_primary], n);
@@ -612,7 +615,7 @@ ProcRRGetScreenInfo (ClientPtr client)
     rep.pad = 0;
     
     if (pScrPriv)
-	if (!RRGetInfo (pScreen))
+	if (!RRGetInfo (pScreen, TRUE))
 	    return BadAlloc;
 
     output = RRFirstOutput (pScreen);
@@ -793,7 +796,7 @@ ProcRRSetScreenConfig (ClientPtr client)
 	rep.status = RRSetConfigFailed;
 	goto sendReply;
     }
-    if (!RRGetInfo (pScreen))
+    if (!RRGetInfo (pScreen, FALSE))
 	return BadAlloc;
     
     output = RRFirstOutput (pScreen);

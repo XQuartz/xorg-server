@@ -284,9 +284,7 @@ static void QuartzUpdateScreens(void) {
     pScreen->ResizeWindow(pRoot, x - sx, y - sy, width, height, NULL);
     //pScreen->PaintWindowBackground (pRoot, &pRoot->borderClip,  PW_BACKGROUND);
     miPaintWindow(pRoot, &pRoot->borderClip,  PW_BACKGROUND);
-
-//  TODO: This is a noop in 1.6 and nuked in master... we may need to do something else now to handle it
-//    DefineInitialRootWindow(pRoot);
+    DefineInitialRootWindow(pRoot);
 
     DEBUG_LOG("Root Window: %dx%d @ (%d, %d) darwinMainScreen (%d, %d) xy (%d, %d) dixScreenOrigins (%d, %d)\n", width, height, x - sx, y - sy, darwinMainScreenX, darwinMainScreenY, x, y, dixScreenOrigins[pScreen->myNum].x, dixScreenOrigins[pScreen->myNum].y);
 

@@ -138,16 +138,3 @@ cfbply1rctG.c:
 cfbglrop8.c:
 	echo "#define GLYPHROP" > $@
 	echo "#include \"$(top_srcdir)/cfb/cfbglblt8.c\"" >> $@
-
-
-if XPRINT
-
-PLATFORMDEFS = -DXFREE86
-
-cfb8bit.o:   compiler.h
-
-compiler.h:
-	echo "#include \"$(top_srcdir)/hw/xfree86/common/compiler.h\"" >> $@
-
-endif
-

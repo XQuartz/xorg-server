@@ -86,7 +86,7 @@ extern FontPtr defaultFont;
 
 static FontPathElementPtr *font_path_elements = (FontPathElementPtr *) 0;
 static int  num_fpes = 0;
-_X_EXPORT FPEFunctions *fpe_functions = (FPEFunctions *) 0;
+static FPEFunctions *fpe_functions = (FPEFunctions *) 0;
 static int  num_fpe_types = 0;
 
 static unsigned char *font_path_string;
@@ -96,7 +96,7 @@ static int  size_slept_fpes = 0;
 static FontPathElementPtr *slept_fpes = (FontPathElementPtr *) 0;
 static FontPatternCachePtr patternCache;
 
-_X_EXPORT int
+static int
 FontToXError(err)
     int         err;
 {
@@ -116,6 +116,16 @@ FontToXError(err)
     }
 }
 
+static int
+LoadGlyphs(ClientPtr client, FontPtr pfont, unsigned nchars, int item_size,
+	   unsigned char *data)
+{
+    if (fpe_functions[pfont->fpe->type].load_glyphs)
+	return (*fpe_functions[pfont->fpe->type].load_glyphs)
+	    (client, pfont, 0, nchars, item_size, data);
+    else
+	return Successful;
+}
 
 /*
  * adding RT_FONT prevents conflict with default cursor font
@@ -469,7 +479,7 @@ OpenFont(ClientPtr client, XID fid, Mask flags, unsigned lenfname, char *pfontna
  *
  *  \param value must conform to DeleteType
  */
-_X_EXPORT int
+int
 CloseFont(pointer value, XID fid)
 {
     int         nscr;
@@ -1863,16 +1873,6 @@ GetFontPath(int *count, int *length)
     return font_path_string;
 }
 
-_X_EXPORT int
-LoadGlyphs(ClientPtr client, FontPtr pfont, unsigned nchars, int item_size, unsigned char *data)
-{
-    if (fpe_functions[pfont->fpe->type].load_glyphs)
-	return (*fpe_functions[pfont->fpe->type].load_glyphs)
-	    (client, pfont, 0, nchars, item_size, data);
-    else
-	return Successful;
-}
-
 void
 DeleteClientFontStuff(ClientPtr client)
 {
@@ -1895,6 +1895,7 @@ InitFonts (void)
 #ifdef BUILTIN_FONTS
     BuiltinRegisterFpeFunctions();
 #else
+    FreeTypeRegisterFontFileFunctions();
     FontFileRegisterFpeFunctions();
     fs_register_fpe_functions();
 #endif

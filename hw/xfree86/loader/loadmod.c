@@ -199,7 +199,6 @@ LoaderSetPath(const char *path)
 /* Standard set of module subdirectories to search, in order of preference */
 static const char *stdSubdirs[] = {
     "",
-    "fonts/",
     "input/",
     "drivers/",
     "multimedia/",

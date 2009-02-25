@@ -552,7 +552,6 @@ AC_ARG_ENABLE(xnest,   	      AS_HELP_STRING([--enable-xnest], [Build Xnest serv
 AC_ARG_ENABLE(xquartz,        AS_HELP_STRING([--enable-xquartz], [Build Xquartz server for OS-X (default: auto)]), [XQUARTZ=$enableval], [XQUARTZ=auto])
 AC_ARG_ENABLE(standalone-xpbproxy, AS_HELP_STRING([--enable-standalone-xpbproxy], [Build a standalone xpbproxy (in addigion to the one integrated into Xquartz as a separate thread) (default: no)]), [STANDALONE_XPBPROXY=$enableval], [STANDALONE_XPBPROXY=no])
 AC_ARG_ENABLE(xwin,    	      AS_HELP_STRING([--enable-xwin], [Build XWin server (default: auto)]), [XWIN=$enableval], [XWIN=auto])
-AC_ARG_ENABLE(xprint,         AS_HELP_STRING([--enable-xprint], [Build Xprint extension and server (default: no)]), [XPRINT=$enableval], [XPRINT=no])
 AC_ARG_ENABLE(xgl,            AS_HELP_STRING([--enable-xgl], [Build Xgl server (default: no)]), [XGL=$enableval], [XGL=no])
 AC_ARG_ENABLE(xglx,           AS_HELP_STRING([--enable-xglx], [Build Xglx xgl module (default: no)]), [XGLX=$enableval], [XGLX=no])
 AC_ARG_ENABLE(xegl,           AS_HELP_STRING([--enable-xegl], [Build Xegl xgl module (default: no)]), [XEGL=$enableval], [XEGL=no])
@@ -903,15 +902,6 @@ fi
 AM_CONDITIONAL(DPMSExtension, [test "x$DPMSExtension" = xyes])
 if test "x$DPMSExtension" = xyes; then
 	AC_DEFINE(DPMSExtension, 1, [Support DPMS extension])
-fi
-
-if test "x$XPRINT" = xauto; then
-	PKG_CHECK_MODULES([XPRINTPROTO], [printproto], [XPRINT=yes], [XPRINT=no])
-fi
-AM_CONDITIONAL(XPRINT, [test "x$XPRINT" = xyes])
-if test "x$XPRINT" = xyes; then
-	AC_DEFINE(XPRINT, 1, [Build Print extension])
-	REQUIRED_MODULES="$REQUIRED_MODULES printproto"
 fi
 
 if test "x$BUILTIN_FONTS" = xyes; then
@@ -1627,59 +1617,6 @@ if test "x$MFB" = xyes -o "x$CFB" = xyes -o "x$AFB" = xyes; then
 	fi
 fi
 
-dnl Xprint DDX
-
-AC_MSG_CHECKING([whether to build Xprint DDX])
-AC_MSG_RESULT([$XPRINT])
-
-if test "x$XPRINT" = xyes; then
-	PKG_CHECK_MODULES([XPRINT], [printproto x11 xfont $XDMCP_MODULES xau $PIXMAN])
-	XPRINT_EXTENSIONS="$XEXT_LIB $CONFIG_LIB $DBE_LIB $XTRAP_LIB $RECORD_LIB $RENDER_LIB $COMPOSITE_LIB $RANDR_LIB $XI_LIB $FIXES_LIB $DAMAGE_LIB $XI_LIB $GLX_LIBS"
-	XPRINT_LIBS="$DIX_LIB $XKB_LIB $XKB_STUB_LIB $XPRINT_EXTENSIONS $MI_LIB $MIEXT_DAMAGE_LIB $CWRAP_LIB $OS_LIB $LIBS $XPRINT_LIBS"
-	AC_SUBST([XPRINT_CFLAGS])
-	AC_SUBST([XPRINT_LIBS])
-
-	xpconfigdir=$libdir/X11/xserver
-	AC_SUBST([xpconfigdir])
-
-	AC_PATH_PROG(MKFONTSCALE, mkfontscale)
-	AC_PATH_PROG(MKFONTDIR, mkfontdir)
-	
-        # freetype support code borrowed from lib/XFont
-        if test x$XP_USE_FREETYPE = xyes; then
-            AC_DEFINE(XP_USE_FREETYPE,1,[Support FreeType rasterizer in Xprint for nearly all font file formats])
-
-            if test "$freetype_config" = "auto" ; then
-                PKG_CHECK_MODULES(FREETYPE, freetype2,
-                        freetype_config=no, freetype_config=yes)
-            fi
-
-            if test "$freetype_config" = "yes"; then
-                AC_PATH_PROG(ft_config,freetype-config,no)
-                if test "$ft_config" = "no"; then
-                        AC_MSG_ERROR([You must have freetype installed; see http://www.freetype.org/])
-                fi
-            else
-                ft_config="$freetype_config"
-            fi
-
-            if test "$freetype_config" != "no"; then
-                FREETYPE_CFLAGS="`$ft_config --cflags`"
-                FREETYPE_LIBS="`$ft_config --libs`"
-            fi
-            FREETYPE_REQUIRES="freetype2"
-        else
-            FREETYPE_CFLAGS=""
-            FREETYPE_LIBS=""
-            FREETYPE_REQUIRES=""
-        fi
-        AC_SUBST(FREETYPE_LIBS)
-        AC_SUBST(FREETYPE_CFLAGS)
-        AC_SUBST(FREETYPE_REQUIRES)
-	# end freetype support
-fi
-AM_CONDITIONAL(XP_USE_FREETYPE, [test "x$XPRINT" = xyes && test "x$XP_USE_FREETYPE" = xyes])
-
 dnl XWin DDX
 
 AC_MSG_CHECKING([whether to build XWin DDX])
@@ -2151,41 +2088,5 @@ hw/kdrive/smi/Makefile
 hw/kdrive/src/Makefile
 hw/kdrive/vesa/Makefile
 hw/kdrive/via/Makefile
-hw/xprint/Makefile
-hw/xprint/doc/Makefile
-hw/xprint/pcl/Makefile
-hw/xprint/pcl-mono/Makefile
-hw/xprint/raster/Makefile
-hw/xprint/ps/Makefile
-hw/xprint/etc/Makefile
-hw/xprint/etc/Xsession.d/Makefile
-hw/xprint/etc/init.d/Makefile
-hw/xprint/etc/profile.d/Makefile
-hw/xprint/config/Makefile
-hw/xprint/config/C/print/attributes/Makefile
-hw/xprint/config/C/print/ddx-config/Makefile
-hw/xprint/config/C/print/ddx-config/raster/Makefile
-hw/xprint/config/C/print/models/CANONBJ10E-GS/Makefile
-hw/xprint/config/C/print/models/PSdefault/fonts/Makefile
-hw/xprint/config/C/print/models/PSdefault/Makefile
-hw/xprint/config/C/print/models/PSspooldir/Makefile
-hw/xprint/config/C/print/models/SPSPARC2/Makefile
-hw/xprint/config/C/print/models/SPSPARC2/fonts/Makefile
-hw/xprint/config/C/print/models/GSdefault/Makefile
-hw/xprint/config/C/print/models/HPLJ4050-PS/Makefile
-hw/xprint/config/C/print/models/HPLJ4050-PS/fonts/Makefile
-hw/xprint/config/C/print/models/Makefile
-hw/xprint/config/C/print/models/PS2PDFspooldir-GS/Makefile
-hw/xprint/config/C/print/models/CANONC3200-PS/Makefile
-hw/xprint/config/C/print/models/CANONC3200-PS/fonts/Makefile
-hw/xprint/config/C/print/models/HPLJ4family/fonts/Makefile
-hw/xprint/config/C/print/models/HPLJ4family/Makefile
-hw/xprint/config/C/print/models/HPDJ1600C/Makefile
-hw/xprint/config/C/print/models/HPDJ1600C/fonts/Makefile
-hw/xprint/config/C/print/Makefile
-hw/xprint/config/C/Makefile
-hw/xprint/config/en_US/print/attributes/Makefile
-hw/xprint/config/en_US/print/Makefile
-hw/xprint/config/en_US/Makefile
 xorg-server.pc
 ])

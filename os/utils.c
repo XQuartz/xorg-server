@@ -131,10 +131,6 @@ OR PERFORMANCE OF THIS SOFTWARE.
 #include "picture.h"
 #endif
 
-#ifdef XPRINT
-#include "DiPrint.h"
-#endif
-
 _X_EXPORT Bool noTestExtensions;
 #ifdef BIGREQS
 _X_EXPORT Bool noBigReqExtension = FALSE;
@@ -624,9 +620,6 @@ void UseMsg(void)
 #ifdef XCSECURITY
     ErrorF("-sp file               security policy file\n");
 #endif
-#ifdef XPRINT
-    PrinterUseMsg();
-#endif
     ErrorF("-su                    disable any save under support\n");
     ErrorF("-t #                   mouse threshold (pixels)\n");
     ErrorF("-terminate             terminate at server reset\n");
@@ -1037,12 +1030,6 @@ ProcessCommandLine(int argc, char *argv[])
 	}
 #ifdef XDMCP
 	else if ((skip = XdmcpOptions(argc, argv, i)) != i)
-	{
-	    i = skip - 1;
-	}
-#endif
-#ifdef XPRINT
-	else if ((skip = PrinterOptions(argc, argv, i)) != i)
 	{
 	    i = skip - 1;
 	}

@@ -88,34 +88,6 @@ SOFTWARE.
 #undef GLXEXT
 #endif
 
-/* Make sure Xprt only announces extensions it supports */
-#ifdef PRINT_ONLY_SERVER
-#undef MITSHM /* this is incompatible to the vector-based Xprint DDX */
-#undef XKB
-#undef PANORAMIX
-#undef RES
-#undef XINPUT
-#undef XV
-#undef SCREENSAVER
-#undef XIDLE
-#undef XRECORD
-#undef XF86VIDMODE
-#undef XF86MISC
-#undef XFreeXDGA
-#undef XF86DRI
-#undef DPMSExtension
-#undef FONTCACHE
-#undef COMPOSITE
-#undef DAMAGE
-#undef XFIXES
-#undef XEVIE
-#else
-#ifndef LOADABLEPRINTDDX
-#undef XPRINT
-#endif /* LOADABLEPRINTDDX */
-#endif /* PRINT_ONLY_SERVER */
-
-
 extern Bool noTestExtensions;
 
 #ifdef BIGREQS
@@ -237,9 +209,6 @@ typedef void (*InitExtension)(INITARGS);
 #ifdef XKB
 #include <X11/extensions/XKB.h>
 #endif
-#ifdef XPRINT
-#include <X11/extensions/Print.h>
-#endif
 #ifdef XAPPGROUP
 #define _XAG_SERVER_
 #include <X11/extensions/Xagstr.h>
@@ -326,9 +295,6 @@ extern void XaceExtensionInit(INITARGS);
 #ifdef XCSECURITY
 extern void SecurityExtensionSetup(INITARGS);
 extern void SecurityExtensionInit(INITARGS);
-#endif
-#ifdef XPRINT
-extern void XpExtensionInit(INITARGS);
 #endif
 #ifdef XF86BIGFONT
 extern void XFree86BigfontExtensionInit(INITARGS);
@@ -534,7 +500,7 @@ InitExtensions(argc, argv)
     SecurityExtensionSetup();
 #endif
 #ifdef PANORAMIX
-# if !defined(PRINT_ONLY_SERVER) && !defined(NO_PANORAMIX)
+# if !defined(NO_PANORAMIX)
   if (!noPanoramiXExtension) PanoramiXExtensionInit();
 # endif
 #endif
@@ -571,7 +537,7 @@ InitExtensions(argc, argv)
 #ifdef XTRAP
     if (!noTestExtensions) DEC_XTRAPInit();
 #endif
-#if defined(SCREENSAVER) && !defined(PRINT_ONLY_SERVER)
+#if defined(SCREENSAVER)
     if (!noScreenSaverExtension) ScreenSaverExtensionInit ();
 #endif
 #ifdef XV
@@ -583,7 +549,7 @@ InitExtensions(argc, argv)
 #ifdef XSYNC
     if (!noSyncExtension) SyncExtensionInit();
 #endif
-#if defined(XKB) && !defined(PRINT_ONLY_SERVER)
+#if defined(XKB)
     if (!noXkbExtension) XkbExtensionInit();
 #endif
 #ifdef XCMISC
@@ -604,9 +570,6 @@ InitExtensions(argc, argv)
 #ifdef XCSECURITY
     if (!noSecurityExtension) SecurityExtensionInit();
 #endif
-#ifdef XPRINT
-    XpExtensionInit(); /* server-specific extension, cannot be disabled */
-#endif
 #ifdef TOGCUP
     if (!noXcupExtension) XcupExtensionInit();
 #endif
@@ -619,7 +582,7 @@ InitExtensions(argc, argv)
 #ifdef XF86BIGFONT
     if (!noXFree86BigfontExtension) XFree86BigfontExtensionInit();
 #endif
-#if !defined(PRINT_ONLY_SERVER) && !defined(NO_HW_ONLY_EXTS)
+#if !defined(NO_HW_ONLY_EXTS)
 #if defined(XF86VIDMODE)
     if (!noXFree86VidModeExtension) XFree86VidModeExtensionInit();
 #endif
@@ -700,9 +663,6 @@ static ExtensionModule staticExtensions[] = {
 #endif
 #ifdef XCSECURITY
     { SecurityExtensionInit, SECURITY_EXTENSION_NAME, &noSecurityExtension, SecurityExtensionSetup, NULL },
-#endif
-#ifdef XPRINT
-    { XpExtensionInit, XP_PRINTNAME, NULL, NULL, NULL },
 #endif
 #ifdef PANORAMIX
     { PanoramiXExtensionInit, PANORAMIX_PROTOCOL_NAME, &noPanoramiXExtension, NULL, NULL },

@@ -1,4 +1,6 @@
-noinst_LTLIBRARIES = libdix.la libxpstubs.la
+standard_dix_libs = libdix.la libxpstubs.la
+
+noinst_LTLIBRARIES = $(standard_dix_libs)
 
 AM_CFLAGS = $(DIX_CFLAGS) \
 	-DVENDOR_NAME=\""@VENDOR_NAME@"\" \
@@ -35,8 +37,6 @@ libdix_la_SOURCES = 	\
 
 libxpstubs_la_SOURCES =	\
 	xpstubs.c
-
-INCLUDES = -I$(top_srcdir)/Xprint
 
 EXTRA_DIST = buildatoms BuiltInAtoms CHANGES Xserver.d Xserver-dtrace.h.in
 

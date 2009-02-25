@@ -1907,12 +1907,9 @@ InitFonts (void)
 {
     patternCache = MakeFontPatternCache();
 
-#ifdef BUILTIN_FONTS
     BuiltinRegisterFpeFunctions();
-#else
     FontFileRegisterFpeFunctions();
     fs_register_fpe_functions();
-#endif
 }
 
 int

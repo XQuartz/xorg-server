@@ -123,7 +123,6 @@ Equipment Corporation.
 #include "dixevents.h"
 #include "globals.h"
 
-#include "privates.h"
 #include "xace.h"
 
 /******

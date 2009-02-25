@@ -99,12 +99,6 @@ if XEVIE
 BUILTIN_SRCS += $(XEVIE_SRCS)
 endif
 
-# XPrint: Printing via X Protocol
-XPRINT_SRCS = xprint.c
-if XPRINT
-BUILTIN_SRCS += $(XPRINT_SRCS)
-endif
-
 # Colormap Utilization Protocol: Less flashing when switching between
 # PsuedoColor apps and better sharing of limited colormap slots
 CUP_SRCS = cup.c
@@ -163,7 +157,6 @@ EXTRA_DIST = \
 	$(XCALIBRATE_SRCS) \
 	$(XINERAMA_SRCS) \
 	$(XEVIE_SRCS) \
-	$(XPRINT_SRCS) \
 	$(CUP_SRCS) \
 	$(EVI_SRCS) \
 	$(MULTIBUFFER_SRCS) \

@@ -103,9 +103,6 @@ Equipment Corporation.
 #include "extnsionst.h"
 #include "privates.h"
 #include "registry.h"
-#ifdef XPRINT
-#include "DiPrint.h"
-#endif
 #ifdef PANORAMIX
 #include "panoramiXsrv.h"
 #else
@@ -257,9 +254,6 @@ int main(int argc, char *argv[], char *envp[])
 
     InitGlobals();
     InitRegions();
-#ifdef XPRINT
-    PrinterInitGlobals();
-#endif
 
     CheckUserParameters(argc, argv, envp);
 
@@ -354,9 +348,6 @@ int main(int argc, char *argv[], char *envp[])
 	InitCallbackManager();
 	InitVisualWrap();
 	InitOutput(&screenInfo, argc, argv);
-#ifdef XPRINT
-	PrinterInitOutput(&screenInfo, argc, argv);
-#endif
 
 	if (screenInfo.numScreens < 1)
 	    FatalError("no screens found");

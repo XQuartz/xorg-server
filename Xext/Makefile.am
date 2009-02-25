@@ -98,12 +98,6 @@ if XEVIE
 BUILTIN_SRCS += $(XEVIE_SRCS)
 endif
 
-# AppGroup
-APPGROUP_SRCS = appgroup.c appgroup.h
-if APPGROUP
-BUILTIN_SRCS += $(APPGROUP_SRCS)
-endif
-
 # Colormap Utilization Protocol: Less flashing when switching between
 # PsuedoColor apps and better sharing of limited colormap slots
 CUP_SRCS = cup.c
@@ -163,7 +157,6 @@ EXTRA_DIST = \
 	$(XCALIBRATE_SRCS) \
 	$(XINERAMA_SRCS) \
 	$(XEVIE_SRCS) \
-	$(APPGROUP_SRCS) \
 	$(CUP_SRCS) \
 	$(EVI_SRCS) \
 	$(MULTIBUFFER_SRCS) \

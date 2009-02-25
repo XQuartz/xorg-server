@@ -190,9 +190,6 @@ _X_EXPORT Bool noXcupExtension = FALSE;
 #ifdef RES
 _X_EXPORT Bool noResExtension = FALSE;
 #endif
-#ifdef XAPPGROUP
-_X_EXPORT Bool noXagExtension = FALSE;
-#endif
 #ifdef XCMISC
 _X_EXPORT Bool noXCMiscExtension = FALSE;
 #endif

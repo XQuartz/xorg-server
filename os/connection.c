@@ -137,9 +137,6 @@ SOFTWARE.
 #include <X11/Xpoll.h>
 #include "opaque.h"
 #include "dixstruct.h"
-#ifdef XAPPGROUP
-#include "appgroup.h"
-#endif
 #include "xace.h"
 #ifdef XCSECURITY
 #include "securitysrv.h"

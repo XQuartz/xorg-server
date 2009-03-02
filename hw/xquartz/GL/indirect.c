@@ -144,6 +144,15 @@ typedef struct __GLXAquaScreen   __GLXAquaScreen;
 typedef struct __GLXAquaContext  __GLXAquaContext;
 typedef struct __GLXAquaDrawable __GLXAquaDrawable;
 
+/*
+ * The following structs must keep the base as the first member.
+ * It's used to treat the start of the struct as a different struct
+ * in GLX.  
+ *
+ * Note: these structs should be initialized with xcalloc or memset 
+ * prior to usage, and some of them require initializing
+ * the base with function pointers.
+ */
 struct __GLXAquaScreen {
     __GLXscreen base;
     int index;
@@ -162,7 +171,7 @@ struct __GLXAquaContext {
 };
 
 struct __GLXAquaDrawable {
-    __GLXdrawable base;
+    __GLXdrawable base; 
     DrawablePtr pDraw;
     xp_surface_id sid;
 };
@@ -178,8 +187,9 @@ __glXAquaScreenCreateContext(__GLXscreen *screen,
   
     GLAQUA_DEBUG_MSG("glXAquaScreenCreateContext\n");
   
-    context = malloc (sizeof (__GLXAquaContext));
-    if (context == NULL) return NULL;
+    context = xalloc(sizeof *context);
+    if (context == NULL) 
+	return NULL;
 
     memset(context, 0, sizeof *context);
     
@@ -195,7 +205,7 @@ __glXAquaScreenCreateContext(__GLXscreen *screen,
     context->pixelFormat = makeFormat(modes);
 
     if (!context->pixelFormat) {
-	free(context);
+	xfree(context);
 	return NULL;
     }
     
@@ -207,7 +217,7 @@ __glXAquaScreenCreateContext(__GLXscreen *screen,
     if (gl_err != 0) {
 	ErrorF("CGLCreateContext error: %s\n", CGLErrorString(gl_err));
 	CGLDestroyPixelFormat(context->pixelFormat);
-	free(context);
+	xfree(context);
 	return NULL;
     }
     
@@ -238,8 +248,7 @@ static void __glXAquaContextDestroy(__GLXcontext *baseContext) {
 
     __GLXAquaContext *context = (__GLXAquaContext *) baseContext;
 
-    GLAQUA_DEBUG_MSG("glAquaContextDestroy (ctx 0x%x)\n",
-                     (unsigned int) baseContext);
+    GLAQUA_DEBUG_MSG("%s(ctx %p)\n", __func__, (void *)baseContext);
     if (context != NULL) {
       if (context->sid != 0 && surface_hash != NULL) {
 		lst = x_hash_table_lookup(surface_hash, x_cvt_uint_to_vptr(context->sid), NULL);
@@ -247,11 +256,13 @@ static void __glXAquaContextDestroy(__GLXcontext *baseContext) {
 		x_hash_table_insert(surface_hash, x_cvt_uint_to_vptr(context->sid), lst);
       }
 
-      if (context->ctx != NULL) CGLDestroyContext(context->ctx);
+      if (context->ctx != NULL)
+	  CGLDestroyContext(context->ctx);
 
-      if (context->pixelFormat != NULL)	CGLDestroyPixelFormat(context->pixelFormat);
+      if (context->pixelFormat != NULL)	
+	  CGLDestroyPixelFormat(context->pixelFormat);
       
-      free(context);
+      xfree(context);
     }
 }
 
@@ -264,7 +275,11 @@ static int __glXAquaContextLoseCurrent(__GLXcontext *baseContext) {
     if (gl_err != 0)
       ErrorF("CGLSetCurrentContext error: %s\n", CGLErrorString(gl_err));
 
-    __glXLastContext = NULL; // Mesa does this; why?
+    /* 
+     * There should be no need to set __glXLastContext to NULL here, because
+     * glxcmds.c does it as part of the context cache flush after calling 
+     * this.
+     */
 
     return GL_TRUE;
 }
@@ -282,7 +297,7 @@ static void surface_notify(void *_arg, void *data) {
 	return;
     }
 	
-    GLAQUA_DEBUG_MSG("surface_notify(%p, %p)\n", _arg, data);
+    GLAQUA_DEBUG_MSG("%s(%p, %p)\n", __func__, (void *)_arg, (void *)data);
     switch (arg->kind) {
     case AppleDRISurfaceNotifyDestroyed:
         if (surface_hash != NULL)
@@ -301,9 +316,10 @@ static void surface_notify(void *_arg, void *data) {
             }
         }
         break;
-	default:
-	    ErrorF("surface_notify: unknown kind %d\n", arg->kind);
-	    break;
+
+    default:
+	ErrorF("surface_notify: unknown kind %d\n", arg->kind);
+	break;
     }
 }
 
@@ -495,7 +511,7 @@ static CGLPixelFormatObj makeFormat(__GLcontextModes *mode) {
         attr[i++] = kCGLPFAColorSize;
         attr[i++] = mode->redBits + mode->greenBits + mode->blueBits;
         attr[i++] = kCGLPFAAlphaSize;
-        attr[i++] = 1; /* FIXME: ignoring mode->alphaBits which is always 0 */
+        attr[i++] = mode->alphaBits;
     }
 
     if (mode->haveAccumBuffer) {
@@ -1102,7 +1118,7 @@ static void fixup_visuals(int screen)
 #endif
 static void __glXAquaScreenDestroy(__GLXscreen *screen) {
 
-	GLAQUA_DEBUG_MSG("glXAquaScreenDestroy(%p)\n", screen);
+    GLAQUA_DEBUG_MSG("%s(%p)\n", __func__, screen);
   __glXScreenDestroy(screen);
 
   free(screen);
@@ -1171,9 +1187,16 @@ static void init_screen_visuals(__GLXAquaScreen *screen) {
 static __GLXscreen * __glXAquaScreenProbe(ScreenPtr pScreen) {
   __GLXAquaScreen *screen;
   GLAQUA_DEBUG_MSG("glXAquaScreenProbe\n");
-  if (pScreen == NULL) return NULL;
 
-  screen = malloc(sizeof *screen);
+  if (pScreen == NULL) 
+      return NULL;
+
+  screen = xalloc(sizeof *screen);
+  
+  if(NULL == screen)
+      return NULL;
+  
+  memset(screen, 0, sizeof *screen);
 
   __glXScreenInit(&screen->base, pScreen);
 
@@ -1203,7 +1226,7 @@ static void __glXAquaDrawableDestroy(__GLXdrawable *base) {
        already gone.. But dri.c notices the window destruction and
        frees the surface itself. */
 
-    free(base);
+    xfree(base);
 }
 
 static __GLXdrawable *
@@ -1213,10 +1236,13 @@ __glXAquaScreenCreateDrawable(__GLXscreen *screen,
 			      __GLcontextModes *modes) {
   __GLXAquaDrawable *glxPriv;
 
-  GLAQUA_DEBUG_MSG("glAquaScreenCreateDrawable(%p,%p,%d,%p)\n", context, pDraw, drawId, modes);
+  GLAQUA_DEBUG_MSG("%s(%p,%p,0x%lx,%p)\n", __func__, (void *)context, 
+		   (void *)pDraw, drawId, (void *)modes);
 
   glxPriv = xalloc(sizeof *glxPriv);
-  if (glxPriv == NULL) return NULL;
+
+  if (glxPriv == NULL) 
+      return NULL;
 
   memset(glxPriv, 0, sizeof *glxPriv);
 
@@ -1258,6 +1284,8 @@ void warn_func(void * p1, char *format, ...) {
   vfprintf(stderr, format, v);
   va_end(v);
 }
+
+
 
 static void setup_dispatch_table(void) {
   struct _glapi_table *disp=_glapi_get_dispatch();

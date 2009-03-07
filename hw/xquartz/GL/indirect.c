@@ -380,30 +380,6 @@ static BOOL attach(__GLXAquaContext *context, __GLXAquaDrawable *draw) {
     return FALSE;
 }
 
-#if 0     // unused
-static void unattach(__GLXAquaContext *context) {
-	x_list *lst;
-	GLAQUA_DEBUG_MSG("unattach\n");
-	if (context == NULL) {
-		ErrorF("Tried to unattach a null context\n");
-		return;
-	}
-    if (context->isAttached) {
-        GLAQUA_DEBUG_MSG("unattaching\n");
-
-        if (surface_hash != NULL) {
-            lst = x_hash_table_lookup(surface_hash, (void *) context->sid, NULL);
-            lst = x_list_remove(lst, context);
-            x_hash_table_insert(surface_hash, (void *) context->sid, lst);
-        }
-
-        CGLClearDrawable(context->ctx);
-        context->isAttached = FALSE;
-        context->sid = 0;
-    }
-}
-#endif
-
 /* This returns 0 if an error occured. */
 static int __glXAquaContextMakeCurrent(__GLXcontext *baseContext) {
     CGLError gl_err;
@@ -1082,40 +1058,6 @@ static Bool glAquaInitVisuals(VisualPtr *visualp, DepthPtr *depthp,
                         *ndepthp, *depthp, *rootDepthp);
 }
 
-#if 0
-static void fixup_visuals(int screen)
-{
-    ScreenPtr pScreen = screenInfo.screens[screen];
-    glAquaScreenRec *pScr = &glAquaScreens[screen];
-    int j;
-    __GLcontextModes *modes;
-
-    GLAQUA_DEBUG_MSG("fixup_visuals\n");
-
-    for ( modes = pScr->modes ; modes != NULL ; modes = modes->next ) {
-        const int vis_class = _gl_convert_to_x_visual_type( modes->visualType );
-        const int nplanes = (modes->rgbBits - modes->alphaBits);
-        const VisualPtr pVis = pScreen->visuals;
-
-        /* Find a visual that matches the GLX visual's class and size */
-        for (j = 0; j < pScreen->numVisuals; j++) {
-            if (pVis[j].class == vis_class &&
-            pVis[j].nplanes == nplanes) {
-
-            /* Fixup the masks */
-            modes->redMask   = pVis[j].redMask;
-            modes->greenMask = pVis[j].greenMask;
-            modes->blueMask  = pVis[j].blueMask;
-
-            /* Recalc the sizes */
-            modes->redBits   = count_bits(modes->redMask);
-            modes->greenBits = count_bits(modes->greenMask);
-            modes->blueBits  = count_bits(modes->blueMask);
-            }
-        }
-    }
-}
-#endif
 static void __glXAquaScreenDestroy(__GLXscreen *screen) {
 
     GLAQUA_DEBUG_MSG("%s(%p)\n", __func__, screen);

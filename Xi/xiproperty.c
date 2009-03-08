@@ -58,11 +58,17 @@ static long XIPropHandlerID = 1;
 /**
  * Return the type assigned to the specified atom or 0 if the atom isn't known
  * to the DIX.
+ *
+ * If name is NULL, None is returned.
  */
 _X_EXPORT Atom
 XIGetKnownProperty(char *name)
 {
     int i;
+
+    if (!name)
+        return None;
+
     for (i = 0; i < (sizeof(dev_properties)/sizeof(struct dev_properties)); i++)
     {
         if (strcmp(name, dev_properties[i].name) == 0)

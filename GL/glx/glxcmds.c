@@ -912,6 +912,15 @@ int __glXDisp_CopyContext(__GLXclientState *cl, GLbyte *pc)
 }
 
 
+enum {
+    GLX_VIS_CONFIG_UNPAIRED = 18,
+    GLX_VIS_CONFIG_PAIRED = 14
+};
+
+enum {
+    GLX_VIS_CONFIG_TOTAL = GLX_VIS_CONFIG_UNPAIRED + GLX_VIS_CONFIG_PAIRED
+};
+
 int DoGetVisualConfigs(__GLXclientState *cl, unsigned screen,
 		       GLboolean do_swap)
 {
@@ -919,7 +928,7 @@ int DoGetVisualConfigs(__GLXclientState *cl, unsigned screen,
     xGLXGetVisualConfigsReply reply;
     __GLXscreen *pGlxScreen;
     __GLcontextModes *modes;
-    CARD32 buf[__GLX_TOTAL_CONFIG];
+    CARD32 buf[GLX_VIS_CONFIG_TOTAL];
     int p;
     __GLX_DECLARE_SWAP_VARIABLES;
     __GLX_DECLARE_SWAP_ARRAY_VARIABLES;
@@ -932,9 +941,9 @@ int DoGetVisualConfigs(__GLXclientState *cl, unsigned screen,
     pGlxScreen = __glXActiveScreens[screen];
 
     reply.numVisuals = pGlxScreen->numUsableVisuals;
-    reply.numProps = __GLX_TOTAL_CONFIG;
+    reply.numProps = GLX_VIS_CONFIG_TOTAL;
     reply.length = (pGlxScreen->numUsableVisuals * __GLX_SIZE_CARD32 *
-		    __GLX_TOTAL_CONFIG) >> 2;
+		    GLX_VIS_CONFIG_TOTAL) >> 2;
     reply.type = X_Reply;
     reply.sequenceNumber = client->sequence;
 
@@ -974,6 +983,8 @@ int DoGetVisualConfigs(__GLXclientState *cl, unsigned screen,
 	buf[p++] = modes->stencilBits;
 	buf[p++] = modes->numAuxBuffers;
 	buf[p++] = modes->level;
+
+	assert(p == GLX_VIS_CONFIG_UNPAIRED);
 	/* 
 	** Add token/value pairs for extensions.
 	*/
@@ -992,10 +1003,12 @@ int DoGetVisualConfigs(__GLXclientState *cl, unsigned screen,
 	buf[p++] = GLX_TRANSPARENT_INDEX_VALUE;
 	buf[p++] = modes->transparentIndex;
 
+	assert(p == GLX_VIS_CONFIG_TOTAL);
+
 	if ( do_swap ) {
-	    __GLX_SWAP_INT_ARRAY(buf, __GLX_TOTAL_CONFIG);
+	    __GLX_SWAP_INT_ARRAY(buf, p);
 	}
-	WriteToClient(client, __GLX_SIZE_CARD32 * __GLX_TOTAL_CONFIG, 
+	WriteToClient(client, __GLX_SIZE_CARD32 * p, 
 		(char *)buf);
     }
     return Success;

@@ -625,6 +625,23 @@ XineramaCheckMotion(xEvent *xE, DeviceIntPtr pDev)
 
     if (xE && !syncEvents.playingEvents)
     {
+        /* GetPointerEvents() guarantees that pointer events have the correct
+           rootX/Y set already. */
+        switch(xE->u.u.type)
+        {
+            case ButtonPress:
+            case ButtonRelease:
+            case MotionNotify:
+                break;
+            default:
+                if (xE->u.u.type == DeviceButtonPress ||
+                        xE->u.u.type == DeviceButtonRelease ||
+                        xE->u.u.type == DeviceMotionNotify)
+                    break;
+                /* all other events return FALSE */
+                return FALSE;
+        }
+
 	/* Motion events entering DIX get translated to Screen 0
 	   coordinates.  Replayed events have already been
 	   translated since they've entered DIX before */

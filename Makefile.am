@@ -50,6 +50,8 @@ EXTRA_DIST = xorg-server.pc.in xorg-server.m4 ChangeLog autogen.sh
 
 MAINTAINERCLEANFILES=ChangeLog
 
+DISTCLEANFILES = doltlibtool doltcompile
+
 .PHONY: ChangeLog
 
 ChangeLog:

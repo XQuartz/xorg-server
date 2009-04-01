@@ -251,4 +251,16 @@ extern Atom XIGetKnownProperty(
 
 extern DeviceIntPtr XIGetDevice(xEvent *ev);
 
+extern _X_EXPORT int XIPropToInt(
+        XIPropertyValuePtr val,
+        int *nelem_return,
+        int **buf_return
+);
+
+extern _X_EXPORT int XIPropToFloat(
+        XIPropertyValuePtr val,
+        int *nelem_return,
+        float **buf_return
+);
+
 #endif /* EXEVENTS_H */

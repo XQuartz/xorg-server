@@ -32,6 +32,7 @@
 #include "dix.h"
 #include "inputstr.h"
 #include <X11/extensions/XI.h>
+#include <X11/Xatom.h>
 #include <X11/extensions/XIproto.h>
 #include "exglobals.h"
 #include "exevents.h"
@@ -48,7 +49,8 @@ static struct dev_properties
     Atom type;
     char *name;
 } dev_properties[] = {
-    {0, XI_PROP_ENABLED}
+    {0, XI_PROP_ENABLED},
+    {0, XATOM_FLOAT}
 };
 
 static long XIPropHandlerID = 1;
@@ -56,11 +58,17 @@ static long XIPropHandlerID = 1;
 /**
  * Return the type assigned to the specified atom or 0 if the atom isn't known
  * to the DIX.
+ *
+ * If name is NULL, None is returned.
  */
 _X_EXPORT Atom
 XIGetKnownProperty(char *name)
 {
     int i;
+
+    if (!name)
+        return None;
+
     for (i = 0; i < (sizeof(dev_properties)/sizeof(struct dev_properties)); i++)
     {
         if (strcmp(name, dev_properties[i].name) == 0)
@@ -68,6 +76,125 @@ XIGetKnownProperty(char *name)
     }
 
     return 0;
+}
+
+/**
+ * Convert the given property's value(s) into @nelem_return integer values and
+ * store them in @buf_return. If @nelem_return is larger than the number of
+ * values in the property, @nelem_return is set to the number of values in the
+ * property.
+ *
+ * If *@buf_return is NULL and @nelem_return is 0, memory is allocated
+ * automatically and must be freed by the caller.
+ *
+ * Possible return codes.
+ * Success ... No error.
+ * BadMatch ... Wrong atom type, atom is not XA_INTEGER
+ * BadAlloc ... NULL passed as buffer and allocation failed.
+ * BadLength ... @buff is NULL but @nelem_return is non-zero.
+ *
+ * @param val The property value
+ * @param nelem_return The maximum number of elements to return.
+ * @param buf_return Pointer to an array of at least @nelem_return values.
+ * @return Success or the error code if an error occured.
+ */
+_X_EXPORT int
+XIPropToInt(XIPropertyValuePtr val, int *nelem_return, int **buf_return)
+{
+    int i;
+    int *buf;
+
+    if (val->type != XA_INTEGER)
+        return BadMatch;
+    if (!*buf_return && *nelem_return)
+        return BadLength;
+
+    switch(val->format)
+    {
+        case 8:
+        case 16:
+        case 32:
+            break;
+        default:
+            return BadValue;
+    }
+
+    buf = *buf_return;
+
+    if (!buf && !(*nelem_return))
+    {
+        buf = xcalloc(val->size, sizeof(int));
+        if (!buf)
+            return BadAlloc;
+        *buf_return = buf;
+        *nelem_return = val->size;
+    } else if (val->size < *nelem_return)
+        *nelem_return = val->size;
+
+    for (i = 0; i < val->size && i < *nelem_return; i++)
+    {
+        switch(val->format)
+        {
+            case 8:  buf[i] = ((CARD8*)val->data)[i]; break;
+            case 16: buf[i] = ((CARD16*)val->data)[i]; break;
+            case 32: buf[i] = ((CARD32*)val->data)[i]; break;
+        }
+    }
+
+    return Success;
+}
+
+/**
+ * Convert the given property's value(s) into @nelem_return float values and
+ * store them in @buf_return. If @nelem_return is larger than the number of
+ * values in the property, @nelem_return is set to the number of values in the
+ * property.
+ *
+ * If *@buf_return is NULL and @nelem_return is 0, memory is allocated
+ * automatically and must be freed by the caller.
+ *
+ * Possible errors returned:
+ * Success
+ * BadMatch ... Wrong atom type, atom is not XA_FLOAT
+ * BadValue ... Wrong format, format is not 32
+ * BadAlloc ... NULL passed as buffer and allocation failed.
+ * BadLength ... @buff is NULL but @nelem_return is non-zero.
+ *
+ * @param val The property value
+ * @param nelem_return The maximum number of elements to return.
+ * @param buf_return Pointer to an array of at least @nelem_return values.
+ * @return Success or the error code if an error occured.
+ */
+_X_EXPORT int
+XIPropToFloat(XIPropertyValuePtr val, int *nelem_return, float **buf_return)
+{
+    int i;
+    float *buf;
+
+    if (!val->type || val->type != XIGetKnownProperty(XATOM_FLOAT))
+        return BadMatch;
+
+    if (val->format != 32)
+        return BadValue;
+    if (!*buf_return && *nelem_return)
+        return BadLength;
+
+    buf = *buf_return;
+
+    if (!buf && !(*nelem_return))
+    {
+        buf = xcalloc(val->size, sizeof(float));
+        if (!buf)
+            return BadAlloc;
+        *buf_return = buf;
+        *nelem_return = val->size;
+    } else if (val->size < *nelem_return)
+        *nelem_return = val->size;
+
+    for (i = 0; i < val->size && i < *nelem_return; i++)
+           buf[i] = ((float*)val->data)[i];
+
+    return Success;
 }
 
 /**

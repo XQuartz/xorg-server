@@ -95,6 +95,8 @@ __glXDRIdrawableDestroy(__GLXdrawable *drawable)
     FreeScratchGC(private->gc);
     FreeScratchGC(private->swapgc);
 
+    __glXDrawableRelease(drawable);
+
     xfree(private);
 }
 

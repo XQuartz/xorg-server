@@ -64,11 +64,6 @@ struct __GLXdrawable {
     */
     __GLXconfig *config;
 
-    /*
-    ** reference count
-    */
-    int refCount;
-
     GLenum target;
 
     /*

@@ -1543,6 +1543,7 @@ ProcXF86VidModeGetGammaRamp(ClientPtr client)
 {
     CARD16 *ramp = NULL;
     int n, length, i;
+    size_t ramplen;
     xXF86VidModeGetGammaRampReply rep;
     REQUEST(xXF86VidModeGetGammaRampReq);
 
@@ -1557,7 +1558,8 @@ ProcXF86VidModeGetGammaRamp(ClientPtr client)
     length = (stuff->size + 1) & ~1;
 
     if(stuff->size) {
-        if(!(ramp = xalloc(length * 3 * sizeof(CARD16))))
+	ramplen = length * 3 * sizeof(CARD16);
+	if (!(ramp = xalloc(ramplen)))
 	    return BadAlloc;
    
         if (!VidModeGetGammaRamp(stuff->screen, stuff->size, 
@@ -1575,13 +1577,12 @@ ProcXF86VidModeGetGammaRamp(ClientPtr client)
 	swaps(&rep.sequenceNumber, n);
 	swapl(&rep.length, n);
 	swaps(&rep.size, n);
-	for(i = 0; i < length * 3; i++)
-	    swaps(&ramp[i],n);
+	SwapShorts(ramp, length * 3);
     }
     WriteToClient(client, sizeof(xXF86VidModeGetGammaRampReply), (char *)&rep);
 
     if(stuff->size) {
-	WriteToClient(client, rep.length << 2, (char*)ramp);
+	WriteToClient(client, ramplen, (char*)ramp);
         xfree(ramp);
     }
 
@@ -2062,7 +2063,6 @@ SProcXF86VidModeGetGamma(ClientPtr client)
 static int
 SProcXF86VidModeSetGammaRamp(ClientPtr client)
 {
-    CARD16 *ramp;
     int length, n;
     REQUEST(xXF86VidModeSetGammaRampReq);
     swaps(&stuff->length, n);
@@ -2071,11 +2071,7 @@ SProcXF86VidModeSetGammaRamp(ClientPtr client)
     swaps(&stuff->screen, n);
     length = ((stuff->size + 1) & ~1) * 6;
     REQUEST_FIXED_SIZE(xXF86VidModeSetGammaRampReq, length);
-    ramp = (CARD16*)&stuff[1];
-    while(length--) {
-	swaps(ramp, n);
-	ramp++;
-    }
+    SwapRestS(stuff);
     return ProcXF86VidModeSetGammaRamp(client);
 }
 

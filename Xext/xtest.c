@@ -161,6 +161,7 @@ ProcXTestFakeInput(client)
     int nevents;
     int i;
     int base = 0;
+    int flags = 0;
 
     nev = (stuff->length << 2) - sizeof(xReq);
     if ((nev % sizeof(xEvent)) || !nev)
@@ -211,8 +212,14 @@ ProcXTestFakeInput(client)
                 client->errorValue = ev->u.u.type;
                 return BadValue;
             }
+
+            if (ev->u.u.detail == xFalse)
+                flags |= POINTER_ABSOLUTE;
         } else
+        {
             firstValuator = 0;
+            flags |= POINTER_ABSOLUTE;
+        }
 
         if (nev == 1 && type == XI_DeviceMotionNotify && !dev->valuator)
         {
@@ -281,6 +288,8 @@ ProcXTestFakeInput(client)
                 valuators[1] = ev->u.keyButtonPointer.rootY;
                 numValuators = 2;
                 firstValuator = 0;
+                if (ev->u.u.detail == xFalse)
+                    flags = POINTER_ABSOLUTE | POINTER_SCREEN;
                 break;
             default:
                 client->errorValue = ev->u.u.type;
@@ -378,14 +387,13 @@ ProcXTestFakeInput(client)
     GetEventList(&events);
     switch(type) {
         case MotionNotify:
-            nevents = GetPointerEvents(events, dev, type, 0,
-                            (ev->u.u.detail == xFalse) ?  POINTER_ABSOLUTE : 0,
+            nevents = GetPointerEvents(events, dev, type, 0, flags,
                             firstValuator, numValuators, valuators);
             break;
         case ButtonPress:
         case ButtonRelease:
             nevents = GetPointerEvents(events, dev, type, ev->u.u.detail,
-                                       POINTER_ABSOLUTE, firstValuator,
+                                       flags, firstValuator,
                                        numValuators, valuators);
             break;
         case KeyPress:

@@ -107,6 +107,8 @@ __glXDRIdrawableDestroy(__GLXdrawable *drawable)
     if (drawable->pDraw != NULL)
 	DRI2DestroyDrawable(drawable->pDraw);
 
+    __glXDrawableRelease(drawable);
+
     xfree(private);
 }
 

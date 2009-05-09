@@ -778,7 +778,7 @@ void
 SetMaskForEvent(int deviceid, Mask mask, int event)
 {
     int coretype;
-    if (deviceid < 0 || deviceid > MAXDEVICES)
+    if (deviceid < 0 || deviceid >= MAXDEVICES)
         FatalError("SetMaskForEvent: bogus device id");
     if ((event < LASTEvent) || (event >= 128))
 	FatalError("SetMaskForEvent: bogus event number");

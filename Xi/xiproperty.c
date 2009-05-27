@@ -602,13 +602,6 @@ ProcXListDeviceProperties (ClientPtr client)
     rep.length = (numProps * sizeof(Atom)) >> 2;
     rep.sequenceNumber = client->sequence;
     rep.nAtoms = numProps;
-    if (client->swapped)
-    {
-        int n;
-        swaps (&rep.sequenceNumber, n);
-        swapl (&rep.length, n);
-        swaps (&rep.nAtoms, n);
-    }
     temppAtoms = pAtoms;
     for (prop = dev->properties.properties; prop; prop = prop->next)
         *temppAtoms++ = prop->propertyName;
@@ -650,7 +643,7 @@ ProcXChangeDeviceProperty (ClientPtr client)
         return BadValue;
     }
     len = stuff->nUnits;
-    if (len > ((0xffffffff - sizeof(xChangePropertyReq)) >> 2))
+    if (len > ((0xffffffff - sizeof(xChangeDevicePropertyReq)) >> 2))
         return BadLength;
     sizeInBytes = format>>3;
     totalSize = len * sizeInBytes;

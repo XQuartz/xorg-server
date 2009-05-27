@@ -625,6 +625,23 @@ XineramaCheckMotion(xEvent *xE, DeviceIntPtr pDev)
 
     if (xE && !syncEvents.playingEvents)
     {
+        /* GetPointerEvents() guarantees that pointer events have the correct
+           rootX/Y set already. */
+        switch(xE->u.u.type)
+        {
+            case ButtonPress:
+            case ButtonRelease:
+            case MotionNotify:
+                break;
+            default:
+                if (xE->u.u.type == DeviceButtonPress ||
+                        xE->u.u.type == DeviceButtonRelease ||
+                        xE->u.u.type == DeviceMotionNotify)
+                    break;
+                /* all other events return FALSE */
+                return FALSE;
+        }
+
 	/* Motion events entering DIX get translated to Screen 0
 	   coordinates.  Replayed events have already been
 	   translated since they've entered DIX before */
@@ -4203,10 +4220,10 @@ CoreFocusEvent(DeviceIntPtr dev, int type, int mode, int detail, WindowPtr pWin)
     {
         xKeymapEvent ke;
         ClientPtr client = clients[CLIENT_ID(pWin->drawable.id)];
-        if (XaceHook(XACE_DEVICE_ACCESS, client, dev, FALSE))
-            memmove((char *)&ke.map[0], (char *)&dev->key->down[1], 31);
-        else
+        if (XaceHook(XACE_DEVICE_ACCESS, client, dev, DixReadAccess))
             bzero((char *)&ke.map[0], 31);
+        else
+            memmove((char *)&ke.map[0], (char *)&dev->key->down[1], 31);
 
         ke.type = KeymapNotify;
         (void)DeliverEventsToWindow(dev, pWin, (xEvent *)&ke, 1,

@@ -1778,7 +1778,8 @@ SendDeviceMappingNotify(ClientPtr client, CARD8 request,
     }
 
 #ifdef XKB
-    if (request == MappingKeyboard || request == MappingModifier)
+    if (!noXkbExtension && (request == MappingKeyboard ||
+                            request == MappingModifier))
         XkbApplyMappingChange(dev, request, firstKeyCode, count, client);
 #endif
 

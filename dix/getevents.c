@@ -820,11 +820,15 @@ GetKeyboardValuatorEvents(EventList *events, DeviceIntPtr pDev, int type,
         if (noXkbExtension)
 #endif
         {
-            numEvents += GetKeyboardValuatorEvents(events, pDev,
-                                                   KeyRelease, key_code,
-                                                   first_valuator, num_valuators,
-                                                   valuators);
-            events += numEvents;
+            int numReleaseEvents;
+
+            numReleaseEvents = GetKeyboardValuatorEvents(events, pDev,
+                                                         KeyRelease, key_code,
+                                                         first_valuator,
+                                                         num_valuators,
+                                                         valuators);
+            numEvents += numReleaseEvents;
+            events += numReleaseEvents;
         }
     }
 

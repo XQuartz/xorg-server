@@ -224,7 +224,7 @@ glxGetScreen(ScreenPtr pScreen)
 }
 
 void GlxSetVisualConfigs(int nconfigs, 
-                         __GLXvisualConfig *configs, void **privates)
+                         void *configs, void **privates)
 {
     /* We keep this stub around for the DDX drivers that still
      * call it. */

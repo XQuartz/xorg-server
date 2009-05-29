@@ -282,11 +282,7 @@ fbFillRegionTiled (DrawablePtr	pDrawable,
     BoxPtr	pbox = REGION_RECTS(pRegion);
     int		xRot = pDrawable->x;
     int		yRot = pDrawable->y;
-#ifdef ROOTLESS_SAFEALPHA
-    FbBits planeMask = FB_ALLONES & ~RootlessAlphaMask(dstBpp);
-#else
-    FbBits planeMask = FB_ALLONES;
-#endif
+    FbBits	planeMask;
     
 #ifdef PANORAMIX
     if(!noPanoramiXExtension) 
@@ -305,6 +301,12 @@ fbFillRegionTiled (DrawablePtr	pDrawable,
     tileHeight = pTile->drawable.height;
     xRot += dstXoff;
     yRot += dstYoff;
+
+#ifdef ROOTLESS_SAFEALPHA
+    planeMask = FB_ALLONES & ~RootlessAlphaMask(dstBpp);
+#else
+    planeMask = FB_ALLONES;
+#endif
     
     while (n--)
     {

@@ -58,7 +58,7 @@ typedef struct {
         );
     void (*setVisualConfigs)(
         int                nconfigs,
-        __GLXvisualConfig *configs,
+        void              *configs,
         void              **privates
         );
 } __GLXextensionInfo;

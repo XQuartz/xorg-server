@@ -284,6 +284,8 @@ get_std_timing_section(Uchar *c, struct std_timings *r,
     }
 }
 
+static const unsigned char empty_block[18];
+
 static void
 get_dt_md_section(Uchar *c, struct edid_version *ver, 
 		  struct detailed_monitor_section *det_mon)
@@ -327,6 +329,7 @@ get_dt_md_section(Uchar *c, struct edid_version *ver,
 	break;
       case ADD_EST_TIMINGS:
 	det_mon[i].type = DS_EST_III;
+	memcpy(det_mon[i].section.est_iii, c + 6, 6);
 	break;
       case ADD_DUMMY:
 	det_mon[i].type = DS_DUMMY;
@@ -335,10 +338,10 @@ get_dt_md_section(Uchar *c, struct edid_version *ver,
         det_mon[i].type = DS_UNKOWN;
         break;
       }
-      if (c[3] <= 0x0F) {
+      if (c[3] <= 0x0F && memcmp(c, empty_block, sizeof(empty_block))) {
 	det_mon[i].type = DS_VENDOR + c[3];
       }
-    } else { 
+    } else {
       det_mon[i].type = DT;
       get_detailed_timing_section(c,&det_mon[i].section.d_timings);
     }

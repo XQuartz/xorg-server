@@ -35,6 +35,4 @@ EXTRA_DIST = \
 	xf86tokens.h
 
 sdk_HEADERS = \
-	$(LIBHEADERS) \
-	xf86Parser.h \
-	xf86Optrec.h
+	$(LIBHEADERS)

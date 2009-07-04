@@ -146,7 +146,7 @@ exaDDXDriverInit(ScreenPtr pScreen)
 	pExaScr->optimize_migration =
 	    xf86ReturnOptValBool(pScreenPriv->options,
 				 EXAOPT_OPTIMIZE_MIGRATION,
-				 TRUE);
+				 FALSE);
     }
 
     if (xf86ReturnOptValBool(pScreenPriv->options,

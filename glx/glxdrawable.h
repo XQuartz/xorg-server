@@ -65,6 +65,7 @@ struct __GLXdrawable {
     __GLXconfig *config;
 
     GLenum target;
+    GLenum format;
 
     /*
     ** Event mask

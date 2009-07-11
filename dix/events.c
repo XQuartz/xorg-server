@@ -1161,7 +1161,7 @@ EnqueueEvent(xEvent *xE, DeviceIntPtr device, int count)
 #ifdef XKB
     /* Fix for key repeating bug. */
     if (device->key != NULL && device->key->xkbInfo != NULL &&
-	xE->u.u.type == KeyRelease)
+	(xE->u.u.type == KeyRelease || xE->u.u.type == DeviceKeyRelease))
 	AccessXCancelRepeatKey(device->key->xkbInfo, xE->u.u.detail);
 #endif
 

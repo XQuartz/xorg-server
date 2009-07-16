@@ -360,6 +360,7 @@ void DarwinKeyboardInit(DeviceIntPtr pDev) {
         XkbSetRepeatKeys(pDev, -1, AutoRepeatModeOn);
     }
 
+    SwitchCoreKeyboard(pDev);
 }
 
 void DarwinKeyboardReloadHandler(int screenNum, xEventPtr xe, DeviceIntPtr pDev, int nevents) {

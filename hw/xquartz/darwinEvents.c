@@ -572,6 +572,7 @@ void DarwinSendDDXEvent(int type, int argc, ...) {
     INT32 *argv;
     int i, max_args;
     va_list args;
+    DeviceIntPtr pDev;
 
     memset(&xe, 0, sizeof(xe));
     xe.u.u.type = type;
@@ -587,8 +588,9 @@ void DarwinSendDDXEvent(int type, int argc, ...) {
         va_end (args);
     }
 
+    pDev = (!darwinPointer->isMaster && darwinPointer->u.master) ? darwinPointer->u.master : darwinPointer;
     darwinEvents_lock(); {
-        mieqEnqueue(darwinPointer, &xe);
+        mieqEnqueue(pDev, &xe);
         DarwinPokeEQ();
     } darwinEvents_unlock();
 }

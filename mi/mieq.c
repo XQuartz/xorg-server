@@ -263,7 +263,7 @@ mieqEnqueue(DeviceIntPtr pDev, xEvent *e)
         evt->event->u.keyButtonPointer.time = miEventQueue.lastEventTime;
 
     miEventQueue.lastEventTime = evt->event->u.keyButtonPointer.time;
-    miEventQueue.events[oldtail].pScreen = EnqueueScreen(pDev);
+    miEventQueue.events[oldtail].pScreen = pDev ? EnqueueScreen(pDev) : NULL;
     miEventQueue.events[oldtail].pDev = pDev;
 
     miEventQueue.lastMotion = isMotion;
@@ -423,7 +423,7 @@ mieqProcessInputEvents(void)
 #endif
         
         type    = event->u.u.type;
-        master  = (!dev->isMaster && dev->u.master) ? dev->u.master : NULL;
+        master  = (dev && !dev->isMaster && dev->u.master) ? dev->u.master : NULL;
 
         if (screenIsSaved == SCREEN_SAVER_ON)
             dixSaveScreens (serverClient, SCREEN_SAVER_OFF, ScreenSaverReset);
@@ -438,7 +438,7 @@ mieqProcessInputEvents(void)
         /* Custom event handler */
         handler = miEventQueue.handlers[type];
 
-        if (screen != DequeueScreen(dev) && !handler) {
+        if (dev && DequeueScreen(dev) && screen != DequeueScreen(dev) && !handler) {
             /* Assumption - screen switching can only occur on motion events. */
             DequeueScreen(dev) = screen;
             x = event->u.keyButtonPointer.rootX;
@@ -464,10 +464,10 @@ mieqProcessInputEvents(void)
              * steal it. */
             if (handler)
             {
-                handler(DequeueScreen(dev)->myNum, event, dev, nevents);
+                int screenNum = dev && DequeueScreen(dev) ? DequeueScreen(dev)->myNum : (screen ? screen->myNum : 0);
+                handler(screenNum, event, dev, nevents);
                 if (master)
-                    handler(DequeueScreen(master)->myNum,
-                            masterEvents->event, master, nevents);
+                    handler(screenNum, masterEvents->event, master, nevents);
             } else
             {
                 /* process slave first, then master */

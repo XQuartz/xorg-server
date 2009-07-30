@@ -156,10 +156,6 @@ const int NUMFORMATS = sizeof(formats)/sizeof(formats[0]);
 #define XSERVER_VERSION "?"
 #endif
 
-void DDXRingBell(int volume, int pitch, int duration) {
-  // FIXME -- make some noise, yo
-}
-
 void
 DarwinPrintBanner(void)
 { 

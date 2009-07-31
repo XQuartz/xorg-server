@@ -55,6 +55,7 @@
 
 #include "capabilities.h"
 #include "visualConfigs.h"
+#include "darwinfb.h"
 
 /* Based originally on code from indirect.c which was based on code from i830_dri.c. */
 void setVisualConfigs(void) {
@@ -146,42 +147,23 @@ void setVisualConfigs(void) {
 					visualConfigs[i].class = TrueColor;
 					
 					visualConfigs[i].rgba = true;
+
+					if(GLCAPS_COLOR_BUF_INVALID_VALUE != conf->color_buffers[color].a) {
+					    visualConfigs[i].alphaSize =  conf->color_buffers[color].a;
+					} else {
+					    visualConfigs[i].alphaSize = 0;
+					}
+	
 					visualConfigs[i].redSize = conf->color_buffers[color].r;
 					visualConfigs[i].greenSize = conf->color_buffers[color].g;
 					visualConfigs[i].blueSize = conf->color_buffers[color].b;
 
-					if(GLCAPS_COLOR_BUF_INVALID_VALUE == conf->color_buffers[color].a) {
-					    /* This visual has no alpha. */
-					    visualConfigs[i].alphaSize = 0;
-					} else {
-					    visualConfigs[i].alphaSize = conf->color_buffers[color].a;
-					}
-	
-					/* 
-					 * If the .a/alpha value is unset, then don't add it to the
-					 * bufferSize specification.  The INVALID_VALUE indicates that it
-					 * was unset.
-					 * 
-					 * This prevents odd bufferSizes, such as 14.
-					 */
-					if(GLCAPS_COLOR_BUF_INVALID_VALUE == conf->color_buffers[color].a) {
-					    visualConfigs[i].bufferSize = conf->color_buffers[color].r +
-						conf->color_buffers[color].g + conf->color_buffers[color].b;
-					} else {
-					    visualConfigs[i].bufferSize = conf->color_buffers[color].r +
-						conf->color_buffers[color].g + conf->color_buffers[color].b +
-						conf->color_buffers[color].a;
-					}
+					visualConfigs[i].bufferSize = visualConfigs[i].alphaSize + visualConfigs[i].redSize + visualConfigs[i].greenSize + visualConfigs[i].blueSize;
 
-					/*
-					 * I'm uncertain about these masks.
-					 * I don't think we actually care what the values are in our
-					 * libGL, so it doesn't seem to make a difference.
-					 */
-					visualConfigs[i].redMask = -1;
-					visualConfigs[i].greenMask = -1;
-					visualConfigs[i].blueMask = -1;
-					visualConfigs[i].alphaMask = -1;
+					visualConfigs[i].alphaMask = AM_ARGB(visualConfigs[i].alphaSize, visualConfigs[i].redSize, visualConfigs[i].greenSize, visualConfigs[i].blueSize);
+					visualConfigs[i].redMask   = RM_ARGB(visualConfigs[i].alphaSize, visualConfigs[i].redSize, visualConfigs[i].greenSize, visualConfigs[i].blueSize);
+					visualConfigs[i].greenMask = GM_ARGB(visualConfigs[i].alphaSize, visualConfigs[i].redSize, visualConfigs[i].greenSize, visualConfigs[i].blueSize);
+					visualConfigs[i].blueMask  = BM_ARGB(visualConfigs[i].alphaSize, visualConfigs[i].redSize, visualConfigs[i].greenSize, visualConfigs[i].blueSize);
 					
 					if(conf->total_accum_buffers > 0) {
 					    visualConfigs[i].accumRedSize = conf->accum_buffers[accum].r;

@@ -48,6 +48,9 @@ typedef struct {
     int                 bitsPerRGB;
     int                 bitsPerPixel;
     int                 preferredCVC;
+    Pixel               redMask;
+    Pixel               greenMask;
+    Pixel               blueMask;
 } DarwinFramebufferRec, *DarwinFramebufferPtr;
 
 // From darwin.c

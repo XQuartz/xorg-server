@@ -430,6 +430,7 @@ static int __glXAquaContextForceCurrent(__GLXcontext *baseContext)
 /* Drawing surface notification callbacks */
 
 static GLboolean __glXAquaDrawableResize(__GLXdrawable *base)  {
+    // Don't remove, <rdar://problem/7114913>
     GLAQUA_DEBUG_MSG("unimplemented glAquaDrawableResize\n");
     return GL_TRUE;
 }

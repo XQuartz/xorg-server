@@ -3556,7 +3556,7 @@ CheckWindowOptionalNeed (WindowPtr w)
     WindowOptPtr optional;
     WindowOptPtr parentOptional;
 
-    if (!w->parent)
+    if (!w->parent || !w->optional)
 	return;
     optional = w->optional;
     if (optional->dontPropagateMask != DontPropagateMasks[w->dontPropagate])

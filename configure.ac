@@ -559,7 +559,6 @@ AC_ARG_ENABLE(tslib,          AS_HELP_STRING([--enable-tslib], [Build kdrive tsl
 AC_ARG_ENABLE(xevie,          AS_HELP_STRING([--disable-xevie], [Build XEvIE extension (default: enabled)]), [XEVIE=$enableval], [XEVIE=yes])
 AC_ARG_ENABLE(cup,            AS_HELP_STRING([--disable-cup], [Build TOG-CUP extension (default: enabled)]), [CUP=$enableval], [CUP=yes])
 AC_ARG_ENABLE(multibuffer,    AS_HELP_STRING([--enable-multibuffer], [Build Multibuffer extension (default: disabled)]), [MULTIBUFFER=$enableval], [MULTIBUFFER=no])
-AC_ARG_ENABLE(fontcache,      AS_HELP_STRING([--enable-fontcache], [Build FontCache extension (default: disabled)]), [FONTCACHE=$enableval], [FONTCACHE=no])
 AC_ARG_ENABLE(dbe,            AS_HELP_STRING([--disable-dbe], [Build DBE extension (default: enabled)]), [DBE=$enableval], [DBE=yes])
 AC_ARG_ENABLE(xf86bigfont,    AS_HELP_STRING([--disable-xf86bigfont], [Build XF86 Big Font extension (default: enabled)]), [XF86BIGFONT=$enableval], [XF86BIGFONT=auto])
 AC_ARG_ENABLE(dpms,           AS_HELP_STRING([--disable-dpms], [Build DPMS extension (default: enabled)]), [DPMSExtension=$enableval], [DPMSExtension=yes])
@@ -967,12 +966,6 @@ AM_CONDITIONAL(MULTIBUFFER, [test "x$MULTIBUFFER" = xyes])
 if test "x$MULTIBUFFER" = xyes; then
 	AC_DEFINE(MULTIBUFFER, 1, [Build Multibuffer extension])
 	# Requires xextproto which is always required
-fi
-
-AM_CONDITIONAL(FONTCACHE, [test "x$FONTCACHE" = xyes])
-if test "x$FONTCACHE" = xyes; then
-	AC_DEFINE(FONTCACHE, 1, [Build FontCache extension])
-	REQUIRED_MODULES="$REQUIRED_MODULES fontcacheproto"
 fi
 
 AM_CONDITIONAL(DBE, [test "x$DBE" = xyes])

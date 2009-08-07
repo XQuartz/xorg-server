@@ -42,9 +42,7 @@ from The Open Group.
 #include "scrnintstr.h"
 #include "dixevents.h"
 #include "sleepuntil.h"
-#define _XTEST_SERVER_
-#include <X11/extensions/XTest.h>
-#include <X11/extensions/xteststr.h>
+#include <X11/extensions/xtestproto.h>
 #ifdef XINPUT
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>

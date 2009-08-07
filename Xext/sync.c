@@ -67,8 +67,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "dixstruct.h"
 #include "resource.h"
 #include "opaque.h"
-#include <X11/extensions/sync.h>
-#include <X11/extensions/syncstr.h>
+#include <X11/extensions/syncproto.h>
 #include "syncsrv.h"
 
 #include <stdio.h>

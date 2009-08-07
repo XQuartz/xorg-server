@@ -79,7 +79,6 @@
 #include "dpmsproc.h"
 #endif
 #include "vidmodeproc.h"
-#include "xf86miscproc.h"
 #include "loader.h"
 #include "xisb.h"
 #include "vbe.h"
@@ -648,23 +647,6 @@ _X_HIDDEN void *xfree86LookupTab[] = {
     /* xf86Versions.c */
     SYMFUNC(xf86GetBuiltinInterfaceVersion)
     SYMFUNC(xf86RegisterBuiltinInterfaceVersion)
-
-    /* xf86MiscExt.c */
-#ifdef XF86MISC
-    SYMFUNC(MiscExtGetMouseSettings)
-    SYMFUNC(MiscExtGetMouseValue)
-    SYMFUNC(MiscExtSetMouseValue)
-    SYMFUNC(MiscExtSetMouseDevice)
-    SYMFUNC(MiscExtGetKbdSettings)
-    SYMFUNC(MiscExtGetKbdValue)
-    SYMFUNC(MiscExtSetKbdValue)
-    SYMFUNC(MiscExtSetGrabKeysState)
-    SYMFUNC(MiscExtCreateStruct)
-    SYMFUNC(MiscExtDestroyStruct)
-    SYMFUNC(MiscExtApply)
-    SYMFUNC(MiscExtGetFilePaths)
-    SYMFUNC(MiscExtPassMessage)
-#endif
 
     /* Misc */
     SYMFUNC(GetTimeInMillis)

@@ -121,9 +121,6 @@ extern Bool noShapeExtension;
 #ifdef XCSECURITY
 extern Bool noSecurityExtension;
 #endif
-#ifdef XSYNC
-extern Bool noSyncExtension;
-#endif
 #ifdef RES
 extern Bool noResExtension;
 #endif
@@ -236,9 +233,7 @@ extern void ScreenSaverExtensionInit (INITARGS);
 extern void XvExtensionInit(INITARGS);
 extern void XvMCExtensionInit(INITARGS);
 #endif
-#ifdef XSYNC
 extern void SyncExtensionInit(INITARGS);
-#endif
 #ifdef XKB
 extern void XkbExtensionInit(INITARGS);
 #endif
@@ -347,9 +342,6 @@ static ExtensionToggle ExtensionToggleList[] =
 #endif
 #ifdef XCSECURITY
     { "SECURITY", &noSecurityExtension },
-#endif
-#ifdef XSYNC
-    { "SYNC", &noSyncExtension },
 #endif
 #ifdef RES
     { "X-Resource", &noResExtension },
@@ -463,9 +455,7 @@ InitExtensions(argc, argv)
       XvMCExtensionInit();
     }
 #endif
-#ifdef XSYNC
-    if (!noSyncExtension) SyncExtensionInit();
-#endif
+    SyncExtensionInit();
 #if defined(XKB)
     if (!noXkbExtension) XkbExtensionInit();
 #endif
@@ -554,6 +544,7 @@ static ExtensionModule staticExtensions[] = {
 #ifdef XIDLE
     { XIdleExtensionInit, "XIDLE", &noXIdleExtension, NULL, NULL },
 #endif
+    { SyncExtensionInit, "SYNC", NULL, NULL, NULL },
 #ifdef XKB
     { XkbExtensionInit, XkbName, &noXkbExtension, NULL, NULL },
 #endif

@@ -167,9 +167,6 @@ _X_EXPORT Bool noShapeExtension = FALSE;
 #ifdef XCSECURITY
 _X_EXPORT Bool noSecurityExtension = FALSE;
 #endif
-#ifdef XSYNC
-_X_EXPORT Bool noSyncExtension = FALSE;
-#endif
 #ifdef RES
 _X_EXPORT Bool noResExtension = FALSE;
 #endif

@@ -94,10 +94,6 @@ extern Bool noShapeExtension;
 extern Bool noSecurityExtension;
 #endif
 
-#ifdef XSYNC
-extern Bool noSyncExtension;
-#endif
-
 #ifdef RES
 extern Bool noResExtension;
 #endif

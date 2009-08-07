@@ -98,13 +98,6 @@ if XEVIE
 BUILTIN_SRCS += $(XEVIE_SRCS)
 endif
 
-# Colormap Utilization Protocol: Less flashing when switching between
-# PsuedoColor apps and better sharing of limited colormap slots
-CUP_SRCS = cup.c
-if CUP
-MODULE_SRCS  += $(CUP_SRCS)
-endif
-
 # Multi-buffering extension
 MULTIBUFFER_SRCS = mbuf.c
 EXTRA_MULTIBUFFER_SRCS = mbufbf.c mbufpx.c
@@ -150,7 +143,6 @@ EXTRA_DIST = \
 	$(XCALIBRATE_SRCS) \
 	$(XINERAMA_SRCS) \
 	$(XEVIE_SRCS) \
-	$(CUP_SRCS) \
 	$(MULTIBUFFER_SRCS) \
 	$(EXTRA_MULTIBUFFER_SRCS) \
 	$(FONTCACHE_SRCS) \

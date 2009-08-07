@@ -118,13 +118,11 @@ static OsCommPtr AvailableInput = (OsCommPtr)NULL;
 #define get_req_len(req,cli) ((cli)->swapped ? \
 			      lswaps((req)->length) : (req)->length)
 
-#ifdef BIGREQS
 #include <X11/extensions/bigreqstr.h>
 
 #define get_big_req_len(req,cli) ((cli)->swapped ? \
 				  lswapl(((xBigReq *)(req))->length) : \
 				  ((xBigReq *)(req))->length)
-#endif
 
 #define MAX_TIMES_PER         10
 
@@ -204,9 +202,7 @@ ReadRequestFromClient(ClientPtr client)
     int result;
     register xReq *request;
     Bool need_header;
-#ifdef BIGREQS
     Bool move_header;
-#endif
 
     /* If an input buffer was empty, either free it if it is too big
      * or link it into our list of free input buffers.  This means that
@@ -255,9 +251,7 @@ ReadRequestFromClient(ClientPtr client)
     oci->bufptr += oci->lenLastReq;
 
     need_header = FALSE;
-#ifdef BIGREQS
     move_header = FALSE;
-#endif
     gotnow = oci->bufcnt + oci->buffer - oci->bufptr;
     if (gotnow < sizeof(xReq))
     {
@@ -274,7 +268,6 @@ ReadRequestFromClient(ClientPtr client)
 	 */
 	request = (xReq *)oci->bufptr;
 	needed = get_req_len(request, client);
-#ifdef BIGREQS
 	if (!needed && client->big_requests)
 	{
 	    /* It's a Big Request. */
@@ -288,7 +281,6 @@ ReadRequestFromClient(ClientPtr client)
 	    else
 		needed = get_big_req_len(request, client);
 	}
-#endif
 	client->req_len = needed;
 	needed <<= 2; /* needed is in bytes now */
     }
@@ -301,14 +293,12 @@ ReadRequestFromClient(ClientPtr client)
 	 */
 
 	oci->lenLastReq = 0;
-#ifdef BIGREQS
 	if (needed > maxBigRequestSize << 2)
 	{
 	    /* request is too big for us to handle */
 	    YieldControlDeath();
 	    return -1;
 	}
-#endif
 	if ((gotnow == 0) ||
 	    ((oci->bufptr - oci->buffer + needed) > oci->size))
 	{
@@ -385,7 +375,6 @@ ReadRequestFromClient(ClientPtr client)
 	    /* We wanted an xReq, now we've gotten it. */
 	    request = (xReq *)oci->bufptr;
 	    needed = get_req_len(request, client);
-#ifdef BIGREQS
 	    if (!needed && client->big_requests)
 	    {
 		move_header = TRUE;
@@ -394,7 +383,6 @@ ReadRequestFromClient(ClientPtr client)
 		else
 		    needed = get_big_req_len(request, client);
 	    }
-#endif
 	    client->req_len = needed;
 	    needed <<= 2;
 	}
@@ -407,11 +395,9 @@ ReadRequestFromClient(ClientPtr client)
     }
     if (needed == 0)
     {
-#ifdef BIGREQS
 	if (client->big_requests)
 	    needed = sizeof(xBigReq);
 	else
-#endif
 	    needed = sizeof(xReq);
     }
     oci->lenLastReq = needed;
@@ -429,12 +415,10 @@ ReadRequestFromClient(ClientPtr client)
     {
 	request = (xReq *)(oci->bufptr + needed);
 	if (gotnow >= (result = (get_req_len(request, client) << 2))
-#ifdef BIGREQS
 	    && (result ||
 		(client->big_requests &&
 		 (gotnow >= sizeof(xBigReq) &&
 		  gotnow >= (get_big_req_len(request, client) << 2))))
-#endif
 	    )
 	    FD_SET(fd, &ClientsWithInput);
 	else
@@ -463,7 +447,6 @@ ReadRequestFromClient(ClientPtr client)
 #endif
     if (++timesThisConnection >= MAX_TIMES_PER)
 	YieldControl();
-#ifdef BIGREQS
     if (move_header)
     {
 	request = (xReq *)oci->bufptr;
@@ -472,7 +455,6 @@ ReadRequestFromClient(ClientPtr client)
 	oci->lenLastReq -= (sizeof(xBigReq) - sizeof(xReq));
 	client->req_len -= (sizeof(xBigReq) - sizeof(xReq)) >> 2;
     }
-#endif
     client->requestBuffer = (pointer)oci->bufptr;
 #ifdef DEBUG_COMMUNICATION
     {
@@ -584,7 +566,6 @@ ResetCurrentRequest(ClientPtr client)
     {
 	request = (xReq *)oci->bufptr;
 	needed = get_req_len(request, client);
-#ifdef BIGREQS
 	if (!needed && client->big_requests)
 	{
 	    oci->bufptr -= sizeof(xBigReq) - sizeof(xReq);
@@ -596,7 +577,6 @@ ResetCurrentRequest(ClientPtr client)
 		swapl(&((xBigReq *)oci->bufptr)->length, n);
 	    }
 	}
-#endif
 	if (gotnow >= (needed << 2))
 	{
 	    if (FD_ISSET(fd, &AllClients))

@@ -74,15 +74,6 @@ static ExtensionModule extensionModules[] = {
 	NULL
     },
 #endif
-#ifdef BIGREQS
-     {
-	BigReqExtensionInit,
-	XBigReqExtensionName,
-	&noBigReqExtension,
-	NULL,
-	NULL
-     },
-#endif
 #ifdef XSYNC
     {
 	SyncExtensionInit,

@@ -2661,8 +2661,8 @@ WindowsRestructured(void)
     DeviceIntPtr pDev = inputInfo.devices;
     while(pDev)
     {
-        if (DevHasCursor(pDev))
-            CheckMotion((xEvent *)NULL, pDev);
+        if (pDev->isMaster || !pDev->u.master)
+            CheckMotion(NULL, pDev);
         pDev = pDev->next;
     }
 }

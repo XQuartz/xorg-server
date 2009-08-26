@@ -43,9 +43,7 @@
 #include "dixevents.h"
 #include "sleepuntil.h"
 #include "mi.h"
-#define _XTEST_SERVER_
-#include <X11/extensions/XTest.h>
-#include <X11/extensions/xteststr.h>
+#include <X11/extensions/xtestproto.h>
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
 

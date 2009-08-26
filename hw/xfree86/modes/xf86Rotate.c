@@ -198,6 +198,7 @@ xf86RotatePrepare (ScreenPtr pScreen)
 		DamageRegister (&(*pScreen->GetScreenPixmap)(pScreen)->drawable,
 				xf86_config->rotation_damage);
 		xf86_config->rotation_damage_registered = TRUE;
+		EnableLimitedSchedulingLatency();
 	    }
 	    
 	    xf86CrtcDamageShadow (crtc);
@@ -308,6 +309,7 @@ xf86RotateDestroy (xf86CrtcPtr crtc)
 	    DamageUnregister (&(*pScreen->GetScreenPixmap)(pScreen)->drawable,
 			      xf86_config->rotation_damage);
 	    xf86_config->rotation_damage_registered = FALSE;
+	    DisableLimitedSchedulingLatency();
 	}
 	DamageDestroy (xf86_config->rotation_damage);
 	xf86_config->rotation_damage = NULL;

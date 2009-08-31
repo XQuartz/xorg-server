@@ -700,7 +700,7 @@ else
 	RENDERPROTO="renderproto"
 fi
 
-REQUIRED_MODULES="[randrproto >= 1.2] $RENDERPROTO [fixesproto >= 4.0] [damageproto >= 1.1] xcmiscproto [xextproto >= 7.0.99.1] [xproto >= 7.0.9] [xtrans >= 1.2.2] [scrnsaverproto >= 1.1] bigreqsproto resourceproto fontsproto [inputproto >= 1.4.4] [kbproto >= 1.0.3]"
+REQUIRED_MODULES="[randrproto >= 1.2] $RENDERPROTO [fixesproto >= 4.0] [damageproto >= 1.1] xcmiscproto [xextproto >= 7.0.99.3] [xproto >= 7.0.9] [xtrans >= 1.2.2] [scrnsaverproto >= 1.1] bigreqsproto resourceproto fontsproto [inputproto >= 1.4.4] [kbproto >= 1.0.3]"
 REQUIRED_LIBS="xfont xau fontenc [pixman-1 >= 0.9.5]"
 
 dnl HAVE_DBUS is true if we actually have the D-Bus library, whereas

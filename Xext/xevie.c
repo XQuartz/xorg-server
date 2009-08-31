@@ -45,8 +45,7 @@ of the copyright holder.
 #include "colormapst.h"
 #include "scrnintstr.h"
 #include "servermd.h"
-#define  _XEVIE_SERVER_
-#include <X11/extensions/Xeviestr.h>
+#include <X11/extensions/evieproto.h>
 #include <X11/Xfuncproto.h>
 #include "input.h"
 #include "inputstr.h"

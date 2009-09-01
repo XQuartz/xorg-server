@@ -382,6 +382,7 @@ ProcXTestFakeInput(client)
     if (screenIsSaved == SCREEN_SAVER_ON)
         dixSaveScreens(serverClient, SCREEN_SAVER_OFF, ScreenSaverReset);
 
+    OsBlockSignals();
     GetEventList(&events);
     switch(type) {
         case MotionNotify:
@@ -400,7 +401,6 @@ ProcXTestFakeInput(client)
             break;
     }
 
-    OsBlockSignals();
     for (i = 0; i < nevents; i++)
         mieqEnqueue(dev, (events+i)->event);
     OsReleaseSignals();

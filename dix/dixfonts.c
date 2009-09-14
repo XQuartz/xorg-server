@@ -1815,6 +1815,9 @@ SetFontPath(ClientPtr client, int npaths, unsigned char *paths, int *error)
 int
 SetDefaultFontPath(char *path)
 {
+    char       *temp_path,
+               *start,
+               *end;
     unsigned char *cp,
                *pp,
                *nump,
@@ -1825,12 +1828,31 @@ SetDefaultFontPath(char *path)
                 size = 0,
                 bad;
 
+    /* ensure temp_path contains "built-ins" */
+    start = path;
+    while (1) {
+	start = strstr(start, "built-ins");
+	if (start == NULL)
+	    break;
+	end = start + strlen("built-ins");
+	if ((start == path || start[-1] == ',') && (!*end || *end == ','))
+	    break;
+	start = end;
+    }
+    if (!start) {
+	temp_path = Xprintf("%s%sbuilt-ins", path, *path ? "," : "");
+    } else {
+	temp_path = Xstrdup(path);
+    }
+    if (!temp_path)
+        return BadAlloc;
+
     /* get enough for string, plus values -- use up commas */
-    len = strlen(path) + 1;
-    nump = cp = newpath = (unsigned char *) xalloc(len);
+    len = strlen(temp_path) + 1;
+    nump = cp = newpath = xalloc(len);
     if (!newpath)
 	return BadAlloc;
-    pp = (unsigned char *) path;
+    pp = (unsigned char *) temp_path;
     cp++;
     while (*pp) {
 	if (*pp == ',') {
@@ -1849,6 +1871,7 @@ SetDefaultFontPath(char *path)
     err = SetFontPathElements(num, newpath, &bad, TRUE);
 
     xfree(newpath);
+    xfree(temp_path);
 
     return err;
 }

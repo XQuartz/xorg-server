@@ -4771,7 +4771,7 @@ ProcQueryPointer(ClientPtr client)
     if (rc != Success)
 	return rc;
     rc = XaceHook(XACE_DEVICE_ACCESS, client, mouse, DixReadAccess);
-    if (rc != Success)
+    if (rc != Success && rc != BadAccess)
 	return rc;
 
     pSprite = mouse->spriteInfo->sprite;
@@ -4814,6 +4814,15 @@ ProcQueryPointer(ClientPtr client)
 	}
     }
 #endif
+
+    if (rc == BadAccess) {
+	rep.mask = 0;
+	rep.child = None;
+	rep.rootX = 0;
+	rep.rootY = 0;
+	rep.winX = 0;
+	rep.winY = 0;
+    }
 
     WriteReplyToClient(client, sizeof(xQueryPointerReply), &rep);
 

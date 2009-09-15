@@ -2477,11 +2477,14 @@ ProcQueryKeymap(ClientPtr client)
     rep.length = 2;
 
     rc = XaceHook(XACE_DEVICE_ACCESS, client, keybd, DixReadAccess);
-    if (rc != Success)
+    if (rc != Success && rc != BadAccess)
 	return rc;
 
     for (i = 0; i<32; i++)
 	rep.map[i] = down[i];
+
+    if (rc == BadAccess)
+	memset(rep.map, 0, 32);
 
     WriteReplyToClient(client, sizeof(xQueryKeymapReply), &rep);
 

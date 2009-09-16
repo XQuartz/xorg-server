@@ -57,12 +57,12 @@ Xserver-dtrace.h: $(srcdir)/Xserver.d
 if !XQUARTZ	
 # Generate dtrace object code for probes in libdix
 dtrace-dix.o: $(top_srcdir)/dix/Xserver.d $(am_libdix_la_OBJECTS)
-	$(DTRACE) -G -C -o $@ -s $(top_srcdir)/dix/Xserver.d .libs/*.o
+	$(DTRACE) -G -C -o $@ -s $(top_srcdir)/dix/Xserver.d $(am_libdix_la_OBJECTS:%.lo=.libs/%.o)
 
 noinst_PROGRAMS = dix.O
 
 dix.O: dtrace-dix.o $(am_libdix_la_OBJECTS)
-	ld -r -o $@ .libs/*.o
+	ld -r -o $@ $(am_libdix_la_OBJECTS:%.lo=.libs/%.o)
 endif
 endif
 

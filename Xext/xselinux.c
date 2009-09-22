@@ -400,6 +400,16 @@ SELinuxTypeToClass(RESTYPE type)
 }
 
 /*
+ * Returns true if device is a pointer device.
+ * Note: this duplicates dix IsPointerDevice() which is not exported.
+ */
+static inline Bool
+IsPointerDev(DeviceIntPtr dev)
+{
+    return (dev->type == MASTER_POINTER) || (dev->valuator && dev->button);
+}
+
+/*
  * Performs an SELinux permission check.
  */
 static int
@@ -662,6 +672,7 @@ SELinuxDevice(CallbackListPtr *pcbl, pointer unused, pointer calldata)
     SELinuxSubjectRec *subj;
     SELinuxObjectRec *obj;
     SELinuxAuditRec auditdata = { .client = rec->client, .dev = rec->dev };
+    security_class_t cls;
     int rc;
 
     subj = dixLookupPrivate(&rec->client->devPrivates, subjectKey);
@@ -686,8 +697,8 @@ SELinuxDevice(CallbackListPtr *pcbl, pointer unused, pointer calldata)
 	}
     }
 
-    rc = SELinuxDoCheck(subj, obj, SECCLASS_X_DEVICE, rec->access_mode,
-			&auditdata);
+    cls = IsPointerDev(rec->dev) ? SECCLASS_X_POINTER : SECCLASS_X_KEYBOARD;
+    rc = SELinuxDoCheck(subj, obj, cls, rec->access_mode, &auditdata);
     if (rc != Success)
 	rec->status = rc;
 }

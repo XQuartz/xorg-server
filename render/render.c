@@ -54,6 +54,9 @@
 #define UINT32_MAX 0xffffffffU
 #endif
 
+#define SERVER_RENDER_MAJOR 0
+#define SERVER_RENDER_MINOR 10
+
 static int ProcRenderQueryVersion (ClientPtr pClient);
 static int ProcRenderQueryPictFormats (ClientPtr pClient);
 static int ProcRenderQueryPictIndexValues (ClientPtr pClient);
@@ -271,8 +274,8 @@ ProcRenderQueryVersion (ClientPtr client)
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
-    rep.majorVersion = RENDER_MAJOR;
-    rep.minorVersion = RENDER_MINOR;
+    rep.majorVersion = SERVER_RENDER_MAJOR;
+    rep.minorVersion = SERVER_RENDER_MINOR;
     if (client->swapped) {
     	swaps(&rep.sequenceNumber, n);
     	swapl(&rep.length, n);

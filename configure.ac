@@ -1038,7 +1038,7 @@ AC_DEFINE(XCMISC, 1, [Support XCMisc extension])
 AC_DEFINE(BIGREQS, 1, [Support BigRequests extension])
 AC_DEFINE(PIXPRIV, 1, [Support pixmap privates])
 
-if test "x$WDTRACE" != "xno" ; then
+if test "x$WDTRACE" != "xno" && test "x$XQUARTZ" = "xno"; then
   DIX_LIB='$(top_builddir)/dix/dix.O'
   OS_LIB='$(top_builddir)/os/os.O'
 else

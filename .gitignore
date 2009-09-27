@@ -28,6 +28,7 @@ configure
 configure.lineno
 depcomp
 doltcompile
+doltlibtool
 install-sh
 libtool
 ltmain.sh

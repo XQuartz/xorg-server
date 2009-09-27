@@ -192,7 +192,7 @@ XIGetDevice(xEvent* xE)
  * This code is basically the old SwitchCoreKeyboard.
  */
 
-static void
+void
 CopyKeyClass(DeviceIntPtr device, DeviceIntPtr master)
 {
     KeyClassPtr mk = master->key;

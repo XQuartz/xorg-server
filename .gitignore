@@ -38,6 +38,7 @@ cscope*
 ylwrap
 xorg-server.pc
 stamp-h?
+dix/Xserver-dtrace.h
 do-not-use-config.h
 do-not-use-config.h.in
 doc/Xserver.1x

@@ -536,7 +536,7 @@ static EventListPtr
 updateFromMaster(EventListPtr events, DeviceIntPtr dev, int *num_events)
 {
     DeviceIntPtr master = dev->u.master;
-    if (master && master->u.lastSlave != dev)
+    if (master && master->u.lastSlave != dev && dev->coreEvents)
     {
         updateSlaveDeviceCoords(master, dev);
         master->u.lastSlave = dev;
@@ -674,7 +674,7 @@ positionSprite(DeviceIntPtr dev, int *x, int *y,
      * to the current screen. */
     miPointerSetPosition(dev, &dev->last.valuators[0], &dev->last.valuators[1]);
 
-    if (dev->u.master) {
+    if (dev->u.master && dev->coreEvents) {
         dev->u.master->last.valuators[0] = dev->last.valuators[0];
         dev->u.master->last.valuators[1] = dev->last.valuators[1];
     }

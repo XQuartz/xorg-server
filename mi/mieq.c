@@ -445,7 +445,7 @@ mieqProcessInputEvents(void)
             NewCurrentScreen (dev, DequeueScreen(dev), x, y);
         }
         else {
-            if (master) {
+            if (master && dev->coreEvents) {
                 /* Force a copy of the key class into the VCK so that the layout
                    is transferred. */
                 if (event->u.u.type == DeviceKeyPress ||
@@ -472,7 +472,7 @@ mieqProcessInputEvents(void)
                 /* process slave first, then master */
                 dev->public.processInputProc(event, dev, nevents);
 
-                if (master)
+                if (master && dev->coreEvents)
                     master->public.processInputProc(masterEvents->event, master,
                                                     nevents);
             }

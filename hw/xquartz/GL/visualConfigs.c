@@ -240,7 +240,7 @@ void setVisualConfigs(void) {
     }
 
     if (c - visualConfigs != numConfigs) {
-        FatalError("numConfigs calculation error in setVisualConfigs!  numConfigs is %d  i is %d\n", numConfigs, c - visualConfigs);
+        FatalError("numConfigs calculation error in setVisualConfigs!  numConfigs is %d  i is %d\n", numConfigs, (int)(c - visualConfigs));
     }
     
     freeGlCapabilities(&caps);

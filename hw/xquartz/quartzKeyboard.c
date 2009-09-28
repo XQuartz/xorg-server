@@ -251,6 +251,10 @@ static void DarwinBuildModifierMaps(darwinKeyboardInfo *info) {
                 break;
 
             case XK_Mode_switch:
+                info->modifierKeycodes[NX_MODIFIERKEY_ALTERNATE][0] = i;
+#ifdef NX_MODIFIERKEY_RALTERNATE
+                info->modifierKeycodes[NX_MODIFIERKEY_RALTERNATE][0] = i;
+#endif
                 info->modMap[MIN_KEYCODE + i] = Mod1Mask;
                 break;
 
@@ -354,7 +358,7 @@ void DarwinKeyboardInit(DeviceIntPtr pDev) {
     CopyKeyClass(pDev, inputInfo.keyboard);
 }
 
-void DarwinKeyboardReloadHandler(int screenNum, xEventPtr xe, DeviceIntPtr pDev, int nevents) {
+void DarwinKeyboardReloadHandler(void) {
     KeySymsRec keySyms;
 
     DEBUG_LOG("DarwinKeyboardReloadHandler\n");

@@ -537,7 +537,7 @@ void RootlessSetPixmapOfAncestors(WindowPtr pWin);
 void RootlessStartDrawing(WindowPtr pWin);
 void RootlessDamageRegion(WindowPtr pWin, RegionPtr prgn);
 Bool IsFramedWindow(WindowPtr pWin);
-#endif
+#endif 
 
 _X_EXPORT void
 miPaintWindow(WindowPtr pWin, RegionPtr prgn, int what)

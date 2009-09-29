@@ -270,6 +270,10 @@ static void DarwinEventHandler(int screenNum, xEventPtr xe, DeviceIntPtr dev, in
                 DEBUG_LOG("kXquartzSpaceChanged\n");
                 QuartzSpaceChanged(xe[i].u.clientMessage.u.l.longs0);
                 break;
+                
+            case kXquartzReloadKeymap:
+                DarwinKeyboardReloadHandler();
+                break;
 
             default:
                 ErrorF("Unknown application defined event type %d.\n", xe[i].u.u.type);
@@ -322,7 +326,7 @@ Bool DarwinEQInit(void) {
     }
     
     mieqInit();
-    mieqSetHandler(kXquartzReloadKeymap, DarwinKeyboardReloadHandler);
+    mieqSetHandler(kXquartzReloadKeymap, DarwinEventHandler);
     mieqSetHandler(kXquartzActivate, DarwinEventHandler);
     mieqSetHandler(kXquartzDeactivate, DarwinEventHandler);
     mieqSetHandler(kXquartzReloadPreferences, DarwinEventHandler);

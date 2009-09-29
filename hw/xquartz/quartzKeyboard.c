@@ -367,7 +367,7 @@ void DarwinKeyboardInit(DeviceIntPtr pDev) {
     SwitchCoreKeyboard(pDev);   
 }
 
-void DarwinKeyboardReloadHandler(int screenNum, xEventPtr xe, DeviceIntPtr pDev, int nevents) {
+void DarwinKeyboardReloadHandler(void) {
     KeySymsRec keySyms;
 
     DEBUG_LOG("DarwinKeyboardReloadHandler\n");

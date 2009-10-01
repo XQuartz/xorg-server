@@ -332,8 +332,6 @@ Bool DarwinEQInit(void) {
     mieqSetHandler(kXquartzReloadPreferences, DarwinEventHandler);
     mieqSetHandler(kXquartzSetRootClip, DarwinEventHandler);
     mieqSetHandler(kXquartzQuit, DarwinEventHandler);
-    mieqSetHandler(kXquartzReadPasteboard, QuartzReadPasteboard);
-    mieqSetHandler(kXquartzWritePasteboard, QuartzWritePasteboard);
     mieqSetHandler(kXquartzToggleFullscreen, DarwinEventHandler);
     mieqSetHandler(kXquartzSetRootless, DarwinEventHandler);
     mieqSetHandler(kXquartzSpaceChanged, DarwinEventHandler);

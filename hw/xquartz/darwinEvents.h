@@ -54,8 +54,6 @@ enum {
     kXquartzDeactivate,       // clip X drawing and switch to Aqua cursor
     kXquartzSetRootClip,      // enable or disable drawing to the X screen
     kXquartzQuit,             // kill the X server and release the display
-    kXquartzReadPasteboard,   // copy Mac OS X pasteboard into X cut buffer
-    kXquartzWritePasteboard,  // copy X cut buffer onto Mac OS X pasteboard
     kXquartzBringAllToFront,  // bring all X windows to front
     kXquartzToggleFullscreen, // Enable/Disable fullscreen mode
     kXquartzSetRootless,      // Set rootless mode

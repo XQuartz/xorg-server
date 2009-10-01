@@ -33,8 +33,6 @@
 #ifndef _QUARTZ_H
 #define _QUARTZ_H
 
-#include "quartzPasteboard.h"
-
 #include "screenint.h"
 #include "window.h"
 

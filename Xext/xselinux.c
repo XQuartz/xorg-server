@@ -400,16 +400,6 @@ SELinuxTypeToClass(RESTYPE type)
 }
 
 /*
- * Returns true if device is a pointer device.
- * Note: this duplicates dix IsPointerDevice() which is not exported.
- */
-static inline Bool
-IsPointerDev(DeviceIntPtr dev)
-{
-    return (dev->type == MASTER_POINTER) || (dev->valuator && dev->button);
-}
-
-/*
  * Performs an SELinux permission check.
  */
 static int
@@ -697,7 +687,7 @@ SELinuxDevice(CallbackListPtr *pcbl, pointer unused, pointer calldata)
 	}
     }
 
-    cls = IsPointerDev(rec->dev) ? SECCLASS_X_POINTER : SECCLASS_X_KEYBOARD;
+    cls = IsPointerDevice(rec->dev) ? SECCLASS_X_POINTER : SECCLASS_X_KEYBOARD;
     rc = SELinuxDoCheck(subj, obj, cls, rec->access_mode, &auditdata);
     if (rc != Success)
 	rec->status = rc;

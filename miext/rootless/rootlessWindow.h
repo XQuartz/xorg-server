@@ -58,7 +58,9 @@ void RootlessPaintWindowBackground(WindowPtr pWin, RegionPtr pRegion,
 void RootlessPaintWindowBorder(WindowPtr pWin, RegionPtr pRegion,
                                int what);
 void RootlessChangeBorderWidth(WindowPtr pWin, unsigned int width);
+#ifdef __APPLE__
 void RootlessNativeWindowMoved (WindowPtr pWin);
 void RootlessNativeWindowStateChanged (WindowPtr pWin, unsigned int state); 
+#endif
 
 #endif

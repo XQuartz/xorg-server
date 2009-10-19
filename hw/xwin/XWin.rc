@@ -106,3 +106,4 @@ END
  */
 
 IDI_XWIN		ICON	"X.ico"
+IDI_XWIN_BOXED		ICON	"X-boxed.ico"

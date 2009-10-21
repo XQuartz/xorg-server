@@ -1862,7 +1862,6 @@ SProcSELinuxDispatch(ClientPtr client)
     }
 }
 
-#ifdef HAVE_AVC_NETLINK_ACQUIRE_FD
 static int netlink_fd;
 
 static void
@@ -1876,7 +1875,6 @@ SELinuxWakeupHandler(void *data, int err, void *read_mask)
     if (FD_ISSET(netlink_fd, (fd_set *)read_mask))
         avc_netlink_check_nb();
 }
-#endif
 
 
 /*
@@ -1908,12 +1906,10 @@ SELinuxResetProc(ExtensionEntry *extEntry)
     label_hnd = NULL;
 
     audit_close(audit_fd);
-#ifdef HAVE_AVC_NETLINK_ACQUIRE_FD
     avc_netlink_release_fd();
     RemoveBlockAndWakeupHandlers(SELinuxBlockHandler, SELinuxWakeupHandler,
                                  NULL);
     RemoveGeneralSocket(netlink_fd);
-#endif
 
     avc_destroy();
     avc_active = 0;
@@ -2016,12 +2012,10 @@ SELinuxExtensionInit(INITARGS)
     if (atom_client_ctx == BAD_RESOURCE)
 	FatalError("SELinux: Failed to create atom\n");
 
-#ifdef HAVE_AVC_NETLINK_ACQUIRE_FD
     netlink_fd = avc_netlink_acquire_fd();
     AddGeneralSocket(netlink_fd);
     RegisterBlockAndWakeupHandlers(SELinuxBlockHandler, SELinuxWakeupHandler,
                                    NULL);
-#endif
 
     /* Register callbacks */
     ret &= dixRegisterPrivateInitFunc(subjectKey, SELinuxSubjectInit, NULL);

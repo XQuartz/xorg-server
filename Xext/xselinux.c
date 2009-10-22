@@ -544,7 +544,7 @@ SELinuxLabelResource(XaceResourceAccessRec *rec, SELinuxSubjectRec *subj,
     security_id_t tsid;
 
     /* Check for a create context */
-    if (rec->rtype == RT_WINDOW && subj->win_create_sid) {
+    if (rec->rtype & RC_DRAWABLE && subj->win_create_sid) {
 	sidget(obj->sid = subj->win_create_sid);
 	return Success;
     }
@@ -662,6 +662,7 @@ SELinuxDevice(CallbackListPtr *pcbl, pointer unused, pointer calldata)
     SELinuxSubjectRec *subj;
     SELinuxObjectRec *obj;
     SELinuxAuditRec auditdata = { .client = rec->client, .dev = rec->dev };
+    security_class_t cls;
     int rc;
 
     subj = dixLookupPrivate(&rec->client->devPrivates, subjectKey);
@@ -686,19 +687,8 @@ SELinuxDevice(CallbackListPtr *pcbl, pointer unused, pointer calldata)
 	}
     }
 
-    /* XXX only check read permission on XQueryKeymap */
-    /* This is to allow the numerous apps that call XQueryPointer to work */
-    if (rec->access_mode & DixReadAccess) {
-	ClientPtr client = rec->client;
-	REQUEST(xReq);
-	if (stuff && stuff->reqType != X_QueryKeymap) {
-	    rec->access_mode &= ~DixReadAccess;
-	    rec->access_mode |= DixGetAttrAccess;
-	}
-    }
-
-    rc = SELinuxDoCheck(subj, obj, SECCLASS_X_DEVICE, rec->access_mode,
-			&auditdata);
+    cls = IsPointerDevice(rec->dev) ? SECCLASS_X_POINTER : SECCLASS_X_KEYBOARD;
+    rc = SELinuxDoCheck(subj, obj, cls, rec->access_mode, &auditdata);
     if (rc != Success)
 	rec->status = rc;
 }
@@ -1958,8 +1948,10 @@ SELinuxExtensionInit(INITARGS)
     }
 
     /* Don't init unless there's something to do */
-    if (!security_get_boolean_active("xserver_object_manager"))
+    if (!security_get_boolean_active("xserver_object_manager")) {
+	LogMessage(X_INFO, "SELinux: Disabled by boolean\n");
         return;
+    }
 
     /* Check SELinux mode in configuration file */
     switch(selinuxEnforcingState) {

@@ -202,7 +202,8 @@ void exaFinishAccess_mixed(PixmapPtr pPixmap, int index)
 {
     ExaPixmapPriv(pPixmap);
 
-    if (pExaPixmap->pDamage && exaPixmapIsOffscreen(pPixmap)) {
+    if (pExaPixmap->pDamage && exaPixmapIsOffscreen(pPixmap) &&
+	!pExaPixmap->offscreen) {
 	DamageRegionProcessPending(&pPixmap->drawable);
 	exaMoveInPixmap_mixed(pPixmap);
     }

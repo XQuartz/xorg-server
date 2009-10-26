@@ -1982,7 +1982,7 @@ SELinuxExtensionInit(INITARGS)
 
     /* Don't init unless there's something to do */
     if (!security_get_boolean_active("xserver_object_manager")) {
-	LogMessage(X_INFO, "SELinux: Disabled by boolean\n");
+	LogMessage(X_INFO, "SELinux: xserver_object_manager boolean not set, disabling\n");
         return;
     }
 

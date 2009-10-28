@@ -975,6 +975,8 @@ xf86DDCGetModes(int scrnIndex, xf86MonPtr DDC)
     if (quirks & DDC_QUIRK_PREFER_LARGE_75)
 	xf86DDCSetPreferredRefresh(scrnIndex, Modes, 75);
 
+    Modes = xf86PruneDuplicateModes(Modes);
+
     return Modes;
 }
 

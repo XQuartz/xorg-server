@@ -1441,7 +1441,7 @@ AllowSome(ClientPtr client, TimeStamp time, DeviceIntPtr thisDev, int newState)
     thisGrabbed = thisDev->grab && SameClient(thisDev->grab, client);
     thisSynced = FALSE;
     otherGrabbed = FALSE;
-    othersFrozen = TRUE;
+    othersFrozen = FALSE;
     grabTime = thisDev->grabTime;
     for (dev = inputInfo.devices; dev; dev = dev->next)
     {
@@ -1455,11 +1455,9 @@ AllowSome(ClientPtr client, TimeStamp time, DeviceIntPtr thisDev, int newState)
 	    otherGrabbed = TRUE;
 	    if (thisDev->sync.other == dev->grab)
 		thisSynced = TRUE;
-	    if (dev->sync.state < FROZEN)
-		othersFrozen = FALSE;
+	    if (dev->sync.state >= FROZEN)
+		othersFrozen = TRUE;
 	}
-	else if (!dev->sync.other || !SameClient(dev->sync.other, client))
-	    othersFrozen = FALSE;
     }
     if (!((thisGrabbed && thisDev->sync.state >= FROZEN) || thisSynced))
 	return;

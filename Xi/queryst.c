@@ -96,7 +96,7 @@ ProcXQueryDeviceState(ClientPtr client)
     rep.sequenceNumber = client->sequence;
 
     rc = dixLookupDevice(&dev, stuff->deviceid, client, DixReadAccess);
-    if (rc != Success)
+    if (rc != Success && rc != BadAccess)
 	return rc;
 
     v = dev->valuator;
@@ -129,8 +129,9 @@ ProcXQueryDeviceState(ClientPtr client)
 	tk->class = KeyClass;
 	tk->length = sizeof(xKeyState);
 	tk->num_keys = k->curKeySyms.maxKeyCode - k->curKeySyms.minKeyCode + 1;
-	for (i = 0; i < 32; i++)
-	    tk->keys[i] = k->down[i];
+	if (rc != BadAccess)
+	    for (i = 0; i < 32; i++)
+		tk->keys[i] = k->down[i];
 	buf += sizeof(xKeyState);
     }
 
@@ -139,7 +140,8 @@ ProcXQueryDeviceState(ClientPtr client)
 	tb->class = ButtonClass;
 	tb->length = sizeof(xButtonState);
 	tb->num_buttons = b->numButtons;
-	memcpy(tb->buttons, b->down, sizeof(b->down));
+	if (rc != BadAccess)
+	    memcpy(tb->buttons, b->down, sizeof(b->down));
 	buf += sizeof(xButtonState);
     }
 
@@ -151,7 +153,9 @@ ProcXQueryDeviceState(ClientPtr client)
 	tv->mode = v->mode;
 	buf += sizeof(xValuatorState);
 	for (i = 0, values = v->axisVal; i < v->numAxes; i++) {
-	    *((int *)buf) = *values++;
+	    if (rc != BadAccess)
+		*((int *)buf) = *values;
+	    values++;
 	    if (client->swapped) {
 		swapl((int *)buf, n);	/* macro - braces needed */
 	    }

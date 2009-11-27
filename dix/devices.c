@@ -908,6 +908,9 @@ CloseDownDevices(void)
         DeleteInputDeviceRequest(dev);
     }
 
+    CloseDevice(inputInfo.pointer);
+    CloseDevice(inputInfo.keyboard);
+
     inputInfo.devices = NULL;
     inputInfo.off_devices = NULL;
     inputInfo.keyboard = NULL;

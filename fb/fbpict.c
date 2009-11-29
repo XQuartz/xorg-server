@@ -163,9 +163,9 @@ fbComposite (CARD8      op,
     if (pMask)
 	miCompositeSourceValidate (pMask, xMask, yMask, width, height);
     
-    src = image_from_pict (pSrc, TRUE);
-    mask = image_from_pict (pMask, TRUE);
-    dest = image_from_pict (pDst, TRUE);
+    src = image_from_pict (pSrc, TRUE, TRUE);
+    mask = image_from_pict (pMask, TRUE, TRUE);
+    dest = image_from_pict (pDst, TRUE, FALSE);
 
     if (src && dest && !(pMask && !mask))
     {
@@ -361,7 +361,7 @@ set_image_properties (pixman_image_t *image, PicturePtr pict)
     
     if (pict->alphaMap)
     {
-	pixman_image_t *alpha_map = image_from_pict (pict->alphaMap, TRUE);
+	pixman_image_t *alpha_map = image_from_pict (pict->alphaMap, TRUE, TRUE);
 	
 	pixman_image_set_alpha_map (
 	    image, alpha_map, pict->alphaOrigin.x, pict->alphaOrigin.y);
@@ -395,7 +395,8 @@ set_image_properties (pixman_image_t *image, PicturePtr pict)
 
 pixman_image_t *
 image_from_pict (PicturePtr pict,
-		 Bool has_clip)
+		 Bool has_clip,
+		 Bool is_src)
 {
     pixman_image_t *image = NULL;
 

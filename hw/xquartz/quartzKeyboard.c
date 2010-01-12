@@ -412,7 +412,6 @@ void DarwinKeyboardReloadHandler(void) {
         keySyms.minKeyCode = MIN_KEYCODE;
         keySyms.maxKeyCode = MAX_KEYCODE;
 
-	// TODO: We should build the entire XkbDescRec and use XkbCopyKeymap
         /* Apply the mappings to darwinKeyboard */
         SetKeySymsMap(&darwinKeyboard->key->curKeySyms, &keySyms);
         memcpy(darwinKeyboard->key->modifierMap, keyInfo.modMap, sizeof(keyInfo.modMap));
@@ -798,12 +797,9 @@ Bool QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
 #endif
         }
 
-        // There seems to be an issue with this in 1.5+, shift-space is not
-        // producing space, it's sending NoSymbol... ?
-        //if (k[3] == k[2]) k[3] = NoSymbol;
-        //if (k[1] == k[0]) k[1] = NoSymbol;
-        //if (k[0] == k[2] && k[1] == k[3]) k[2] = k[3] = NoSymbol;
-        //if (k[3] == k[0] && k[2] == k[1] && k[2] == NoSymbol) k[3] = NoSymbol;
+        if (k[3] == k[2]) k[3] = NoSymbol;
+        if (k[1] == k[0]) k[1] = NoSymbol;
+        if (k[0] == k[2] && k[1] == k[3]) k[2] = k[3] = NoSymbol;
     }
 
     /* Fix up some things that are normally missing.. */
@@ -814,7 +810,7 @@ Bool QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
 
             if    (k[0] == NoSymbol && k[1] == NoSymbol
                 && k[2] == NoSymbol && k[3] == NoSymbol)
-	      k[0] = k[1] = k[2] = k[3] = known_keys[i].keysym;
+	      k[0] = known_keys[i].keysym;
         }
     }
 
@@ -827,7 +823,7 @@ Bool QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
             k = info->keyMap + known_numeric_keys[i].keycode * GLYPHS_PER_KEY;
 
             if (k[0] == known_numeric_keys[i].normal)
-                k[0] = k[1] = k[2] = k[3] = known_numeric_keys[i].keypad;
+                k[0] = known_numeric_keys[i].keypad;
         }
     }
 

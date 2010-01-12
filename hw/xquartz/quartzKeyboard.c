@@ -194,6 +194,17 @@ static void DarwinBuildModifierMaps(darwinKeyboardInfo *info) {
     int i;
     KeySym *k;
 
+    /* This avoids processing the data a second time which will happen
+     * upon the first keypress (since we need to reload our keymap to
+     * clobber XKB).  Doing this a second time will result in an
+     * incorrect keycode for left alt because both are changed to 
+     * mode_switch here.  This is not a good "final" solution, but it
+     * works around the issue for now.
+     */
+    if(info->modMapInitialized)
+        return;
+    info->modMapInitialized = TRUE;
+
     memset(info->modMap, NoSymbol, sizeof(info->modMap));
     memset(info->modifierKeycodes, 0, sizeof(info->modifierKeycodes));
 
@@ -251,6 +262,7 @@ static void DarwinBuildModifierMaps(darwinKeyboardInfo *info) {
                 break;
 
             case XK_Mode_switch:
+                ErrorF("DarwinBuildModifierMaps: XK_Mode_switch encountered, unable to determine side.\n");
                 info->modifierKeycodes[NX_MODIFIERKEY_ALTERNATE][0] = i;
 #ifdef NX_MODIFIERKEY_RALTERNATE
                 info->modifierKeycodes[NX_MODIFIERKEY_RALTERNATE][0] = i;
@@ -395,7 +407,6 @@ void DarwinKeyboardReloadHandler(void) {
     
     pthread_mutex_lock(&keyInfo_mutex); {
         /* Initialize our keySyms */
-        DarwinBuildModifierMaps(&keyInfo);
         keySyms.map = keyInfo.keyMap;
         keySyms.mapWidth   = GLYPHS_PER_KEY;
         keySyms.minKeyCode = MIN_KEYCODE;
@@ -819,6 +830,9 @@ Bool QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
                 k[0] = k[1] = k[2] = k[3] = known_numeric_keys[i].keypad;
         }
     }
+
+    info->modMapInitialized = FALSE;
+    DarwinBuildModifierMaps(info);
 
     return TRUE;
 }

@@ -45,6 +45,7 @@ typedef struct darwinKeyboardInfo_struct {
     CARD8 modMap[MAP_LENGTH];
     KeySym keyMap[MAP_LENGTH * GLYPHS_PER_KEY];
     unsigned char modifierKeycodes[32][2];
+    Bool modMapInitialized;
 } darwinKeyboardInfo;
 
 /* These functions need to be implemented by Xquartz, XDarwin, etc. */

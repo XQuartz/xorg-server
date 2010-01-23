@@ -904,7 +904,6 @@ is constructed. This is mainly a matter of personal preference.
 .B  " 4      simple (normal when slow, otherwise accelerated)"
 .B  " 5      power (power function)"
 .B  " 6      linear (more speed, more acceleration)"
-.B  " 7      limited (like linear, but maxes out at threshold)"
 .fi
 .RE
 .TP 7

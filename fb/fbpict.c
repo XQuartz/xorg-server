@@ -50,24 +50,19 @@ fbComposite (CARD8      op,
 	     CARD16     height)
 {
     pixman_image_t *src, *mask, *dest;
-    int src_xoff, src_yoff;
-    int msk_xoff, msk_yoff;
-    int dst_xoff, dst_yoff;
     
     miCompositeSourceValidate (pSrc, xSrc - xDst, ySrc - yDst, width, height);
     if (pMask)
 	miCompositeSourceValidate (pMask, xMask - xDst, yMask - yDst, width, height);
     
-    src = image_from_pict (pSrc, FALSE, &src_xoff, &src_yoff);
-    mask = image_from_pict (pMask, FALSE, &msk_xoff, &msk_yoff);
-    dest = image_from_pict (pDst, TRUE, &dst_xoff, &dst_yoff);
+    src = image_from_pict (pSrc, TRUE);
+    mask = image_from_pict (pMask, TRUE);
+    dest = image_from_pict (pDst, TRUE);
 
     if (src && dest && !(pMask && !mask))
     {
 	pixman_image_composite (op, src, mask, dest,
-				xSrc + src_xoff, ySrc + src_yoff,
-				xMask + msk_xoff, yMask + msk_yoff,
-				xDst + dst_xoff, yDst + dst_yoff,
+				xSrc, ySrc, xMask, yMask, xDst, yDst,
 				width, height);
     }
 
@@ -146,22 +141,22 @@ create_conical_gradient_image (PictGradient *gradient)
 
 static pixman_image_t *
 create_bits_picture (PicturePtr pict,
-		     Bool       has_clip,
-		     int	*xoff,
-		     int	*yoff)
+		     Bool       has_clip)
 {
-    PixmapPtr pixmap;
     FbBits *bits;
     FbStride stride;
-    int bpp;
+    int bpp, xoff, yoff;
     pixman_image_t *image;
     
-    fbGetDrawablePixmap (pict->pDrawable, pixmap, *xoff, *yoff);
-    fbGetPixmapBitsData(pixmap, bits, stride, bpp);
+    fbGetDrawable (pict->pDrawable, bits, stride, bpp, xoff, yoff);
+
+    bits = (FbBits*)((CARD8*)bits +
+		     (pict->pDrawable->y + yoff) * stride * sizeof(FbBits) +
+		     (pict->pDrawable->x + xoff) * (bpp / 8));
 
     image = pixman_image_create_bits (
 	pict->format,
-	pixmap->drawable.width, pixmap->drawable.height,
+	pict->pDrawable->width, pict->pDrawable->height,
 	(uint32_t *)bits, stride * sizeof (FbStride));
 
     if (!image)
@@ -189,55 +184,33 @@ create_bits_picture (PicturePtr pict,
 	if (pict->clientClipType != CT_NONE)
 	    pixman_image_set_has_client_clip (image, TRUE);
 
-	if (*xoff || *yoff)
-	    pixman_region_translate (pict->pCompositeClip, *xoff, *yoff);
+	pixman_region_translate (pict->pCompositeClip, - pict->pDrawable->x, - pict->pDrawable->y);
 
 	pixman_image_set_clip_region (image, pict->pCompositeClip);
 
-	if (*xoff || *yoff)
-	    pixman_region_translate (pict->pCompositeClip, -*xoff, -*yoff);
+	pixman_region_translate (pict->pCompositeClip, pict->pDrawable->x, pict->pDrawable->y);
     }
     
     /* Indexed table */
     if (pict->pFormat->index.devPrivate)
 	pixman_image_set_indexed (image, pict->pFormat->index.devPrivate);
 
-    /* Add in drawable origin to position within the image */
-    *xoff += pict->pDrawable->x;
-    *yoff += pict->pDrawable->y;
-
     return image;
 }
 
 static pixman_image_t *
-image_from_pict_internal (PicturePtr pict, Bool has_clip, int *xoff, int *yoff, Bool is_alpha_map);
+image_from_pict_internal (PicturePtr pict, Bool has_clip, Bool is_alpha_map);
 
 static void
-set_image_properties (pixman_image_t *image, PicturePtr pict, Bool has_clip, int *xoff, int *yoff, Bool is_alpha_map)
+set_image_properties (pixman_image_t *image, PicturePtr pict, Bool is_alpha_map)
 {
     pixman_repeat_t repeat;
     pixman_filter_t filter;
     
     if (pict->transform)
     {
-	/* For source images, adjust the transform to account
-	 * for the drawable offset within the pixman image,
-	 * then set the offset to 0 as it will be used
-	 * to compute positions within the transformed image.
-	 */
-	if (!has_clip) {
-	    struct pixman_transform	adjusted;
-
-	    adjusted = *pict->transform;
-	    pixman_transform_translate(&adjusted,
-				       NULL,
-				       pixman_int_to_fixed(*xoff),
-				       pixman_int_to_fixed(*yoff));
-	    pixman_image_set_transform (image, &adjusted);
-	    *xoff = 0;
-	    *yoff = 0;
-	} else
-	    pixman_image_set_transform (image, pict->transform);
+	pixman_image_set_transform (
+	    image, (pixman_transform_t *)pict->transform);
     }
     
     switch (pict->repeatType)
@@ -267,8 +240,7 @@ set_image_properties (pixman_image_t *image, PicturePtr pict, Bool has_clip, int
      */
     if (pict->alphaMap && !is_alpha_map)
     {
-	int alpha_xoff, alpha_yoff;
-	pixman_image_t *alpha_map = image_from_pict_internal (pict->alphaMap, FALSE, &alpha_xoff, &alpha_yoff, TRUE);
+	pixman_image_t *alpha_map = image_from_pict_internal (pict->alphaMap, TRUE, TRUE);
 	
 	pixman_image_set_alpha_map (
 	    image, alpha_map, pict->alphaOrigin.x, pict->alphaOrigin.y);
@@ -301,7 +273,8 @@ set_image_properties (pixman_image_t *image, PicturePtr pict, Bool has_clip, int
 }
 
 static pixman_image_t *
-image_from_pict_internal (PicturePtr pict, Bool has_clip, int *xoff, int *yoff, Bool is_alpha_map)
+image_from_pict_internal (PicturePtr pict,
+		 Bool has_clip, Bool is_alpha_map)
 {
     pixman_image_t *image = NULL;
 
@@ -310,7 +283,7 @@ image_from_pict_internal (PicturePtr pict, Bool has_clip, int *xoff, int *yoff, 
 
     if (pict->pDrawable)
     {
-	image = create_bits_picture (pict, has_clip, xoff, yoff);
+	image = create_bits_picture (pict, has_clip);
     }
     else if (pict->pSourcePict)
     {
@@ -331,19 +304,18 @@ image_from_pict_internal (PicturePtr pict, Bool has_clip, int *xoff, int *yoff, 
 	    else if (sp->type == SourcePictTypeConical)
 		image = create_conical_gradient_image (gradient);
 	}
-	*xoff = *yoff = 0;
     }
     
     if (image)
-	set_image_properties (image, pict, has_clip, xoff, yoff, is_alpha_map);
+	set_image_properties (image, pict, is_alpha_map);
     
     return image;
 }
 
 pixman_image_t *
-image_from_pict (PicturePtr pict, Bool has_clip, int *xoff, int *yoff)
+image_from_pict (PicturePtr pict, Bool has_clip)
 {
-    return image_from_pict_internal (pict, has_clip, xoff, yoff, FALSE);
+    return image_from_pict_internal (pict, has_clip, FALSE);
 }
 
 void

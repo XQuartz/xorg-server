@@ -37,8 +37,7 @@ fbAddTraps (PicturePtr	pPicture,
 	    int		ntrap,
 	    xTrap	*traps)
 {
-    int image_xoff, image_yoff;
-    pixman_image_t *image = image_from_pict (pPicture, FALSE, &image_xoff, &image_yoff);
+    pixman_image_t *image = image_from_pict (pPicture, FALSE);
 
     if (!image)
 	return;
@@ -54,8 +53,7 @@ fbRasterizeTrapezoid (PicturePtr    pPicture,
 		      int	    x_off,
 		      int	    y_off)
 {
-    int	mask_xoff, mask_yoff;
-    pixman_image_t *image = image_from_pict (pPicture, FALSE, &mask_xoff, &mask_yoff);
+    pixman_image_t *image = image_from_pict (pPicture, FALSE);
 
     if (!image)
 	return;

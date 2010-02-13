@@ -39,12 +39,11 @@ fbAddTraps (PicturePtr	pPicture,
 	    xTrap	*traps)
 {
     pixman_image_t *image;
-    int dst_xoff, dst_yoff;
 
-    if (!(image = image_from_pict (pPicture, FALSE, &dst_xoff, &dst_yoff)))
+    if (!(image = image_from_pict (pPicture, FALSE)))
 	return;
     
-    pixman_add_traps (image, x_off + dst_xoff, y_off + dst_yoff,
+    pixman_add_traps (image, x_off, y_off,
 		      ntrap, (pixman_trap_t *)traps);
 
     free_pixman_pict (pPicture, image);
@@ -57,14 +56,13 @@ fbRasterizeTrapezoid (PicturePtr    pPicture,
 		      int	    y_off)
 {
     pixman_image_t *image;
-    int	dst_xoff, dst_yoff;
 
-    if (!(image = image_from_pict (pPicture, FALSE, &dst_xoff, &dst_yoff)))
+    if (!(image = image_from_pict (pPicture, FALSE)))
 	return;
 
     pixman_rasterize_trapezoid (image, (pixman_trapezoid_t *)trap,
-				x_off + dst_xoff,
-				y_off + dst_yoff);
+				x_off,
+				y_off);
 
     free_pixman_pict (pPicture, image);
 }
@@ -77,13 +75,12 @@ fbAddTriangles (PicturePtr  pPicture,
 		xTriangle *tris)
 {
     pixman_image_t *image;
-    int dst_xoff, dst_yoff;
 
-    if (!(image = image_from_pict (pPicture, FALSE, &dst_xoff, &dst_yoff)))
+    if (!(image = image_from_pict (pPicture, FALSE)))
 	return;
     
     pixman_add_triangles (image,
-			  dst_xoff + x_off, dst_yoff + y_off,
+			  x_off, y_off,
 			  ntri, (pixman_triangle_t *)tris);
 
     free_pixman_pict (pPicture, image);
@@ -110,13 +107,11 @@ fbShapes (CompositeShapesFunc	composite,
 	  const uint8_t *	shapes)
 {
     pixman_image_t *src, *dst;
-    int src_xoff, src_yoff;
-    int dst_xoff, dst_yoff;
 
     miCompositeSourceValidate (pSrc);
 
-    src = image_from_pict (pSrc, FALSE, &src_xoff, &src_yoff);
-    dst = image_from_pict (pDst, TRUE, &dst_xoff, &dst_yoff);
+    src = image_from_pict (pSrc, FALSE);
+    dst = image_from_pict (pDst, TRUE);
 
     if (src && dst)
     {
@@ -136,10 +131,10 @@ fbShapes (CompositeShapesFunc	composite,
 	    for (i = 0; i < nshapes; ++i)
 	    {
 		composite (op, src, dst, format,
-			   xSrc + src_xoff,
-			   ySrc + src_yoff,
-			   dst_xoff,
-			   dst_yoff,
+			   xSrc,
+			   ySrc,
+			   0,
+			   0,
 			   1, shapes + i * shape_size);
 	    }
 	}
@@ -162,10 +157,10 @@ fbShapes (CompositeShapesFunc	composite,
 	    }
 	    
 	    composite (op, src, dst, format,
-		       xSrc + src_xoff,
-		       ySrc + src_yoff,
-		       dst_xoff,
-		       dst_yoff,
+		       xSrc,
+		       ySrc,
+		       0,
+		       0,
 		       nshapes, shapes);
 	}
 

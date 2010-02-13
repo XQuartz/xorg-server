@@ -1684,8 +1684,7 @@ fbFillRegionSolid(DrawablePtr pDrawable,
                   RegionPtr pRegion, FbBits and, FbBits xor);
 
 extern _X_EXPORT pixman_image_t *image_from_pict(PicturePtr pict,
-                                                 Bool has_clip,
-                                                 int *xoff, int *yoff);
+                                                 Bool has_clip);
 
 extern _X_EXPORT void free_pixman_pict(PicturePtr, pixman_image_t *);
 

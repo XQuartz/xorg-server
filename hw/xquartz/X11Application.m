@@ -483,7 +483,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
 	return out;
 }
 
-- (CFPropertyListRef) prefs_get:(NSString *)key {
+- (CFPropertyListRef) prefs_get_copy:(NSString *)key {
     CFPropertyListRef value;
 	
     value = CFPreferencesCopyAppValue ((CFStringRef) key, app_prefs_domain_cfstr);
@@ -544,7 +544,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
   CFPropertyListRef value;
   int ret;
   
-  value = [self prefs_get:key];
+  value = [self prefs_get_copy:key];
   
   if (value != NULL && CFGetTypeID (value) == CFNumberGetTypeID ())
     CFNumberGetValue (value, kCFNumberIntType, &ret);
@@ -562,7 +562,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
   CFPropertyListRef value;
   const char *ret = NULL;
   
-  value = [self prefs_get:key];
+  value = [self prefs_get_copy:key];
   
   if (value != NULL && CFGetTypeID (value) == CFStringGetTypeID ()) {
     NSString *s = (NSString *) value;
@@ -579,12 +579,13 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
     CFPropertyListRef value;
     NSURL *ret = NULL;
     
-    value = [self prefs_get:key];
+    value = [self prefs_get_copy:key];
     
     if (value != NULL && CFGetTypeID (value) == CFStringGetTypeID ()) {
         NSString *s = (NSString *) value;
 
         ret = [NSURL URLWithString:s];
+        [ret retain];
     }
     
     if (value != NULL) CFRelease (value);
@@ -596,7 +597,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
   CFPropertyListRef value;
   float ret = def;
   
-  value = [self prefs_get:key];
+  value = [self prefs_get_copy:key];
   
   if (value != NULL
       && CFGetTypeID (value) == CFNumberGetTypeID ()
@@ -614,7 +615,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
   CFPropertyListRef value;
   int ret = def;
   
-  value = [self prefs_get:key];
+  value = [self prefs_get_copy:key];
   
   if (value != NULL) {
     if (CFGetTypeID (value) == CFNumberGetTypeID ())
@@ -638,7 +639,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
   NSArray *ret = nil;
   CFPropertyListRef value;
   
-  value = [self prefs_get:key];
+  value = [self prefs_get_copy:key];
   
   if (value != NULL) {
     if (CFGetTypeID (value) == CFArrayGetTypeID ())
@@ -758,7 +759,7 @@ static NSMutableArray * cfarray_to_nsarray (CFArrayRef in) {
     NSURL *url =  [self prefs_copy_url:@PREFS_UPDATE_FEED default:nil];
     if(url) {
         [[SUUpdater sharedUpdater] setFeedURL:url];
-        CFRelease(url);
+        [url release];
     }
 #endif
 }
@@ -971,6 +972,7 @@ void X11ApplicationMain (int argc, char **argv, char **envp) {
 //    [[SUUpdater sharedUpdater] checkForUpdates:X11App];
 #endif
 
+    [pool release];
     [NSApp run];
     /* not reached */
 }

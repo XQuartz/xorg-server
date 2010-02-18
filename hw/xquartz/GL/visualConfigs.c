@@ -63,7 +63,7 @@ void setVisualConfigs(void) {
     __GLXvisualConfig *visualConfigs, *c;
     void **visualPrivates = NULL;
     struct glCapabilities caps;
-    struct glCapabilitiesConfig *conf = NULL;
+    struct glCapabilitiesConfig *conf;
     int stereo, depth, aux, buffers, stencil, accum, color, msample;
     
     if(getGlCapabilities(&caps)) {
@@ -95,7 +95,6 @@ void setVisualConfigs(void) {
      */
     
     assert(NULL != caps.configurations);
-    conf = caps.configurations;
     
     numConfigs = 0;
     

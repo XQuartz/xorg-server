@@ -759,6 +759,7 @@ LIBXI="xi >= 1.2.99.1"
 LIBXTST="xtst >= 1.0.99.2"
 LIBPCIACCESS="pciaccess >= 0.8.0"
 LIBGLIB="glib-2.0 >= 2.16"
+LIBSELINUX="libselinux >= 2.0.86"
 
 dnl HAVE_DBUS is true if we actually have the D-Bus library, whereas
 dnl CONFIG_DBUS_API is true if we want to enable the D-Bus config
@@ -1014,7 +1015,7 @@ if test "x$XSELINUX" = xyes; then
 	fi
 	AC_CHECK_HEADERS([libaudit.h], [], AC_MSG_ERROR([SELinux extension requires audit system headers]))
 	AC_CHECK_LIB(audit, audit_open, [], AC_MSG_ERROR([SELinux extension requires audit system library]))
-	PKG_CHECK_MODULES([SELINUX], [libselinux >= 2.0.86])
+	PKG_CHECK_MODULES([SELINUX], $LIBSELINUX)
 	SELINUX_LIBS="$SELINUX_LIBS -laudit"
 	AC_DEFINE(XSELINUX, 1, [Build SELinux extension])
 fi

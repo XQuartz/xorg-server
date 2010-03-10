@@ -387,7 +387,7 @@ DRI2Connect(ScreenPtr pScreen, unsigned int driverType, int *fd,
 	return FALSE;
 
     if (driverType != DRI2DriverDRI)
-	return BadValue;
+	return FALSE;
 
     *fd = ds->fd;
     *driverName = ds->driverName;

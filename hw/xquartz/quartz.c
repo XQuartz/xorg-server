@@ -241,6 +241,7 @@ static void QuartzUpdateScreens(void) {
     WindowPtr pRoot;
     int x, y, width, height, sx, sy;
     xEvent e;
+    BoxRec bounds;
     
     if (noPseudoramiXExtension || screenInfo.numScreens != 1)
     {
@@ -276,7 +277,17 @@ static void QuartzUpdateScreens(void) {
     pScreen->ResizeWindow(pRoot, x - sx, y - sy, width, height, NULL);
     //pScreen->PaintWindowBackground (pRoot, &pRoot->borderClip,  PW_BACKGROUND);
     miPaintWindow(pRoot, &pRoot->borderClip,  PW_BACKGROUND);
-    DefineInitialRootWindow(pRoot);
+
+    /* <rdar://problem/7770779> pointer events are clipped to old display region after display reconfiguration
+     * http://xquartz.macosforge.org/trac/ticket/346
+     */
+    bounds.x1 = 0;
+    bounds.x2 = width;
+    bounds.y1 = 0;
+    bounds.y2 = height;
+    pScreen->ConstrainCursor(inputInfo.pointer, pScreen, &bounds);
+    inputInfo.pointer->spriteInfo->sprite->physLimits = bounds;
+    inputInfo.pointer->spriteInfo->sprite->hotLimits = bounds;
 
     DEBUG_LOG("Root Window: %dx%d @ (%d, %d) darwinMainScreen (%d, %d) xy (%d, %d) dixScreenOrigins (%d, %d)\n", width, height, x - sx, y - sy, darwinMainScreenX, darwinMainScreenY, x, y, dixScreenOrigins[pScreen->myNum].x, dixScreenOrigins[pScreen->myNum].y);
 

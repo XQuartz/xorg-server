@@ -345,7 +345,7 @@ int __glXDispSwap_CreatePbuffer(__GLXclientState *cl, GLbyte *pc)
 
 int __glXDispSwap_DestroyPbuffer(__GLXclientState *cl, GLbyte *pc)
 {
-    xGLXDestroyPbufferReq *req = (xGLXDestroyPbufferReq *) req;
+    xGLXDestroyPbufferReq *req = (xGLXDestroyPbufferReq *) pc;
 
     return BadRequest;
 }
@@ -353,7 +353,7 @@ int __glXDispSwap_DestroyPbuffer(__GLXclientState *cl, GLbyte *pc)
 int __glXDispSwap_ChangeDrawableAttributes(__GLXclientState *cl, GLbyte *pc)
 {
     xGLXChangeDrawableAttributesReq *req =
-	(xGLXChangeDrawableAttributesReq *) req;
+	(xGLXChangeDrawableAttributesReq *) pc;
 
     return BadRequest;
 }

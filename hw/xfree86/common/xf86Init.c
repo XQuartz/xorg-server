@@ -1245,7 +1245,9 @@ AbortDDX(void)
 	       * we might not have been wrapped yet. Therefore enable
 	       * screen explicitely.
 	       */
+	      xf86VGAarbiterLock(xf86Screens[i]);
 	      (xf86Screens[i]->LeaveVT)(i, 0);
+	      xf86VGAarbiterUnlock(xf86Screens[i]);
 	  }
   }
 

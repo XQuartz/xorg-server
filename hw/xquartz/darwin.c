@@ -45,6 +45,7 @@
 #include "site.h"
 #include "globals.h"
 #include "dix.h"
+#include "xkbsrv.h"
 
 #ifdef XINPUT
 # include <X11/extensions/XI.h>
@@ -426,6 +427,8 @@ int DarwinParseModifierList(const char *constmodifiers, int separatelr)
  */
 void InitInput( int argc, char **argv )
 {
+    XkbSetRulesDflts("base", "empty", "empty", NULL, NULL);
+
     darwinKeyboard = AddInputDevice(DarwinKeybdProc, TRUE);
     RegisterKeyboardDevice( darwinKeyboard );
     darwinKeyboard->name = strdup("keyboard");

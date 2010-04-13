@@ -308,9 +308,6 @@ void DarwinKeyboardInit(DeviceIntPtr pDev) {
 
     bzero(&names, sizeof(names));
 
-    /* We need to really have rules... or something... */
-    //XkbSetRulesDflts("base", "pc105", "us", NULL, NULL);
-
     pthread_mutex_lock(&keyInfo_mutex);
 
     /* Initialize our keySyms */

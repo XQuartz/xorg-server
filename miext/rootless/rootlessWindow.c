@@ -1520,7 +1520,7 @@ RootlessPaintWindowBorder(WindowPtr pWin, RegionPtr pRegion, int what)
 {
     RL_DEBUG_MSG("paintwindowborder start (win 0x%x) ", pWin);
 
-    if (0 && IsFramedWindow(pWin)) {
+    if (IsFramedWindow(pWin)) {
         RootlessStartDrawing(pWin);
         RootlessDamageRegion(pWin, pRegion);
 

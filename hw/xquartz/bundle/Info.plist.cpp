@@ -19,9 +19,9 @@
 	<key>CFBundlePackageType</key>
 		<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-		<string>2.3.5</string>
+		<string>2.3.6</string>
 	<key>CFBundleVersion</key>
-		<string>2.3.5</string>
+		<string>2.3.6</string>
 	<key>CFBundleSignature</key>
 		<string>x11a</string>
 	<key>CSResourcesFileMapped</key>

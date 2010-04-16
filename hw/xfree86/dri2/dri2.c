@@ -45,15 +45,14 @@
 
 #include "xf86.h"
 
-static int dri2ScreenPrivateKeyIndex;
+static int           dri2ScreenPrivateKeyIndex;
 static DevPrivateKey dri2ScreenPrivateKey = &dri2ScreenPrivateKeyIndex;
-static int dri2WindowPrivateKeyIndex;
-static DevPrivateKey dri2WindowPrivateKey = &dri2WindowPrivateKeyIndex;
-static int dri2PixmapPrivateKeyIndex;
-static DevPrivateKey dri2PixmapPrivateKey = &dri2PixmapPrivateKeyIndex;
+static RESTYPE       dri2DrawableRes;
+
+typedef struct _DRI2Screen *DRI2ScreenPtr;
 
 typedef struct _DRI2Drawable {
-    unsigned int	 refCount;
+    DRI2ScreenPtr        dri2_screen;
     int			 width;
     int			 height;
     DRI2BufferPtr	*buffers;
@@ -67,9 +66,8 @@ typedef struct _DRI2Drawable {
     int			 swap_limit; /* for N-buffering */
 } DRI2DrawableRec, *DRI2DrawablePtr;
 
-typedef struct _DRI2Screen *DRI2ScreenPtr;
-
 typedef struct _DRI2Screen {
+    ScreenPtr			 screen;
     unsigned int		 numDrivers;
     const char			**driverNames;
     const char			*deviceName;
@@ -95,43 +93,33 @@ DRI2GetScreen(ScreenPtr pScreen)
 static DRI2DrawablePtr
 DRI2GetDrawable(DrawablePtr pDraw)
 {
-    WindowPtr		  pWin;
-    PixmapPtr		  pPixmap;
-
-    if (!pDraw)
+    DRI2DrawablePtr pPriv;
+    int rc;
+ 
+    rc = dixLookupResourceByType((pointer *) &pPriv, pDraw->id,
+				 dri2DrawableRes, NULL, DixReadAccess);
+    if (rc != Success)
 	return NULL;
 
-    if (pDraw->type == DRAWABLE_WINDOW)
-    {
-	pWin = (WindowPtr) pDraw;
-	return dixLookupPrivate(&pWin->devPrivates, dri2WindowPrivateKey);
-    }
-    else
-    {
-	pPixmap = (PixmapPtr) pDraw;
-	return dixLookupPrivate(&pPixmap->devPrivates, dri2PixmapPrivateKey);
-    }
+    return pPriv;
 }
 
 int
 DRI2CreateDrawable(DrawablePtr pDraw)
 {
-    WindowPtr	    pWin;
-    PixmapPtr	    pPixmap;
     DRI2DrawablePtr pPriv;
+    int rc;
 
-    pPriv = DRI2GetDrawable(pDraw);
-    if (pPriv != NULL)
-    {
-	pPriv->refCount++;
-	return Success;
-    }
+    rc = dixLookupResourceByType((pointer *) &pPriv, pDraw->id,
+				 dri2DrawableRes, NULL, DixReadAccess);
+    if (rc == Success || rc != BadValue)
+	return rc;
 
     pPriv = xalloc(sizeof *pPriv);
     if (pPriv == NULL)
 	return BadAlloc;
 
-    pPriv->refCount = 1;
+    pPriv->dri2_screen = DRI2GetScreen(pDraw->pScreen);
     pPriv->width = pDraw->width;
     pPriv->height = pDraw->height;
     pPriv->buffers = NULL;
@@ -144,43 +132,30 @@ DRI2CreateDrawable(DrawablePtr pDraw)
     pPriv->last_swap_target = -1;
     pPriv->swap_limit = 1; /* default to double buffering */
 
-    if (pDraw->type == DRAWABLE_WINDOW)
-    {
-	pWin = (WindowPtr) pDraw;
-	dixSetPrivate(&pWin->devPrivates, dri2WindowPrivateKey, pPriv);
-    }
-    else
-    {
-	pPixmap = (PixmapPtr) pDraw;
-	dixSetPrivate(&pPixmap->devPrivates, dri2PixmapPrivateKey, pPriv);
-    }
+    if (!AddResource(pDraw->id, dri2DrawableRes, pPriv))
+	return BadAlloc;
 
     return Success;
 }
 
-static void
-DRI2FreeDrawable(DrawablePtr pDraw)
+static int DRI2DrawableGone(pointer p, XID id)
 {
-    DRI2DrawablePtr pPriv;
-    WindowPtr  	    pWin;
-    PixmapPtr	    pPixmap;
+    DRI2DrawablePtr pPriv = p;
+    DRI2ScreenPtr   ds = pPriv->dri2_screen;
+    DrawablePtr     root;
+    int i;
 
-    pPriv = DRI2GetDrawable(pDraw);
-    if (pPriv == NULL)
-	return;
+    root = &WindowTable[ds->screen->myNum]->drawable;
+    if (pPriv->buffers != NULL) {
+	for (i = 0; i < pPriv->bufferCount; i++)
+	    (*ds->DestroyBuffer)(root, pPriv->buffers[i]);
+
+	xfree(pPriv->buffers);
+    }
 
     xfree(pPriv);
 
-    if (pDraw->type == DRAWABLE_WINDOW)
-    {
-	pWin = (WindowPtr) pDraw;
-	dixSetPrivate(&pWin->devPrivates, dri2WindowPrivateKey, NULL);
-    }
-    else
-    {
-	pPixmap = (PixmapPtr) pDraw;
-	dixSetPrivate(&pPixmap->devPrivates, dri2PixmapPrivateKey, NULL);
-    }
+    return Success;
 }
 
 static int
@@ -534,13 +509,6 @@ DRI2SwapComplete(ClientPtr client, DrawablePtr pDraw, int frame,
 	return;
     }
 
-    if (pPriv->refCount == 0) {
-        xf86DrvMsg(pScreen->myNum, X_ERROR,
-		   "[DRI2] %s: bad drawable refcount\n", __func__);
-	DRI2FreeDrawable(pDraw);
-	return;
-    }
-
     ust = ((CARD64)tv_sec * 1000000) + tv_usec;
     if (swap_complete)
 	swap_complete(client, swap_data, type, ust, frame, pPriv->swap_count);
@@ -753,36 +721,6 @@ DRI2WaitSBC(ClientPtr client, DrawablePtr pDraw, CARD64 target_sbc,
     return Success;
 }
 
-void
-DRI2DestroyDrawable(DrawablePtr pDraw)
-{
-    DRI2ScreenPtr   ds = DRI2GetScreen(pDraw->pScreen);
-    DRI2DrawablePtr pPriv;
-
-    pPriv = DRI2GetDrawable(pDraw);
-    if (pPriv == NULL)
-	return;
-
-    pPriv->refCount--;
-    if (pPriv->refCount > 0)
-	return;
-
-    if (pPriv->buffers != NULL) {
-	int i;
-
-	for (i = 0; i < pPriv->bufferCount; i++)
-	    (*ds->DestroyBuffer)(pDraw, pPriv->buffers[i]);
-
-	xfree(pPriv->buffers);
-    }
-
-    /* If the window is destroyed while we have a swap pending, don't
-     * actually free the priv yet.  We'll need it in the DRI2SwapComplete()
-     * callback and we'll free it there once we're done. */
-    if (!pPriv->swapsPending)
-	DRI2FreeDrawable(pDraw);
-}
-
 Bool
 DRI2Connect(ScreenPtr pScreen, unsigned int driverType, int *fd,
 	    const char **driverName, const char **deviceName)
@@ -834,6 +772,7 @@ DRI2ScreenInit(ScreenPtr pScreen, DRI2InfoPtr info)
     if (!ds)
 	return FALSE;
 
+    ds->screen         = pScreen;
     ds->fd	       = info->fd;
     ds->deviceName     = info->deviceName;
 
@@ -896,6 +835,8 @@ static pointer
 DRI2Setup(pointer module, pointer opts, int *errmaj, int *errmin)
 {
     static Bool setupDone = FALSE;
+
+    dri2DrawableRes = CreateNewResourceType(DRI2DrawableGone, "DRI2Drawable");
 
     if (!setupDone)
     {

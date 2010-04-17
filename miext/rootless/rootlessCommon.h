@@ -288,6 +288,4 @@ void RootlessUpdateRooted (Bool state);
 void RootlessEnableRoot (ScreenPtr pScreen);
 void RootlessDisableRoot (ScreenPtr pScreen);
 
-void RootlessSetPixmapOfAncestors(WindowPtr pWin);
-
 #endif /* _ROOTLESSCOMMON_H */

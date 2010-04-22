@@ -505,7 +505,7 @@ exaHWCopyNtoN (DrawablePtr    pSrcDrawable,
 	    (*pExaScr->info->DoneCopy) (pDstPixmap);
 	    exaMarkSync (pDstDrawable->pScreen);
 	/* UTS: mainly for SHM PutImage's secondary path. */
-	} else {
+	} else if (pSrcExaPixmap->sys_ptr) {
 	    int bpp = pSrcDrawable->bitsPerPixel;
 	    int src_stride = exaGetPixmapPitch(pSrcPixmap);
 	    CARD8 *src = NULL;
@@ -532,7 +532,8 @@ exaHWCopyNtoN (DrawablePtr    pSrcDrawable,
 
 		pbox++;
 	    }
-	}
+	} else
+	    goto fallback;
     } else
 	goto fallback;
 

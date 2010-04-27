@@ -51,6 +51,7 @@
 #include "xf86Module.h"
 
 static ExtensionEntry	*dri2Extension;
+static RESTYPE		 dri2DrawableRes;
 
 static Bool
 validDrawable(ClientPtr client, XID drawable, Mask access_mode,
@@ -171,6 +172,11 @@ ProcDRI2CreateDrawable(ClientPtr client)
     if (status != Success)
 	return status;
 
+    if (!AddResource(stuff->drawable, dri2DrawableRes, pDrawable)) {
+	DRI2DestroyDrawable(pDrawable);
+	return BadAlloc;
+    }
+
     return client->noClientException;
 }
 
@@ -185,6 +191,8 @@ ProcDRI2DestroyDrawable(ClientPtr client)
     if (!validDrawable(client, stuff->drawable, DixRemoveAccess,
 		       &pDrawable, &status))
 	return status;
+
+    FreeResourceByType(stuff->drawable, dri2DrawableRes, FALSE);
 
     return client->noClientException;
 }
@@ -612,11 +620,25 @@ SProcDRI2Dispatch (ClientPtr client)
     }
 }
 
+static int DRI2DrawableGone(pointer p, XID id)
+{
+    DrawablePtr pDrawable = p;
+
+    DRI2DestroyDrawable(pDrawable);
+
+    return Success;
+}
+
 int DRI2EventBase;
 
 static void
 DRI2ExtensionInit(void)
 {
+    dri2DrawableRes = CreateNewResourceType(DRI2DrawableGone, "DRI2Drawable");
+
+    if (!dri2DrawableRes)
+	return;
+
     dri2Extension = AddExtension(DRI2_NAME,
 				 DRI2NumberEvents,
 				 DRI2NumberErrors,

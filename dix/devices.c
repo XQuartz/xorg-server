@@ -857,6 +857,8 @@ CloseDevice(DeviceIntPtr dev)
     }
 
     if (DevHasCursor(dev) && dev->spriteInfo->sprite) {
+	if (dev->spriteInfo->sprite->current)
+	    FreeCursor(dev->spriteInfo->sprite->current, None);
         xfree(dev->spriteInfo->sprite->spriteTrace);
         xfree(dev->spriteInfo->sprite);
     }

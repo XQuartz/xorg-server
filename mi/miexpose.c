@@ -408,7 +408,8 @@ void RootlessSetPixmapOfAncestors(WindowPtr pWin);
 void RootlessStartDrawing(WindowPtr pWin);
 void RootlessDamageRegion(WindowPtr pWin, RegionPtr prgn);
 Bool IsFramedWindow(WindowPtr pWin);
-#endif
+#include "../fb/fb.h"
+#endif 
 
 void
 miPaintWindow(WindowPtr pWin, RegionPtr prgn, int what)
@@ -437,20 +438,32 @@ miPaintWindow(WindowPtr pWin, RegionPtr prgn, int what)
     Bool solid = TRUE;
     DrawablePtr drawable = &pWin->drawable;
 
-#ifdef ROOTLESS
-    if (IsFramedWindow(pWin)) {
-        RootlessStartDrawing(pWin);
-        RootlessDamageRegion(pWin, prgn);
-
-        if (pWin->backgroundState == ParentRelative) {
-            if ((what == PW_BACKGROUND) ||
-                (what == PW_BORDER && !pWin->borderIsPixel))
-                RootlessSetPixmapOfAncestors(pWin);
-        }
-    }
+#ifdef XQUARTZ_CLIP_DEBUG
+    ErrorF("START %d BS %d (pR = %ld)\n", what, pWin->backgroundState, ParentRelative);
+    ErrorF("      Rgn: %d %d %d %d\n", prgn->extents.x1, prgn->extents.y1,
+	                               prgn->extents.x2 - prgn->extents.x1,
+	                               prgn->extents.y2 - prgn->extents.y1);
+    ErrorF("      Win: %d %d (%d %d) %d %d\n", pWin->origin.x, pWin->origin.y,
+	                                       pWin->winSize.extents.x1, pWin->winSize.extents.y1,
+	                                       pWin->winSize.extents.x2 - pWin->winSize.extents.x1,
+					       pWin->winSize.extents.y2 - pWin->winSize.extents.y1);
+    ErrorF("     Draw: %d %d %d %d\n", pWin->drawable.x, pWin->drawable.y,
+				       pWin->drawable.width, pWin->drawable.height);
 #endif
 
-    if (what == PW_BACKGROUND) {
+    if (what == PW_BACKGROUND)
+    {
+#ifdef ROOTLESS
+        if(IsFramedWindow(pWin)) {
+            RootlessStartDrawing(pWin);
+            RootlessDamageRegion(pWin, prgn);
+
+            if(pWin->backgroundState == ParentRelative) {
+                RootlessSetPixmapOfAncestors(pWin);
+            }
+        }
+#endif
+
         while (pWin->backgroundState == ParentRelative)
             pWin = pWin->parent;
 
@@ -475,6 +488,18 @@ miPaintWindow(WindowPtr pWin, RegionPtr prgn, int what)
     else {
         PixmapPtr pixmap;
 
+#ifdef ROOTLESS
+	if(IsFramedWindow(pWin)) {
+	    RootlessStartDrawing(pWin);
+	    RootlessDamageRegion(pWin, prgn);
+	    
+	    if(!pWin->borderIsPixel &&
+		pWin->backgroundState == ParentRelative) {
+		RootlessSetPixmapOfAncestors(pWin);
+	    }
+	}
+#endif
+
         fill = pWin->border;
         solid = pWin->borderIsPixel;
 
@@ -484,6 +509,11 @@ miPaintWindow(WindowPtr pWin, RegionPtr prgn, int what)
         pixmap = (*pScreen->GetWindowPixmap) ((WindowPtr) drawable);
         drawable = &pixmap->drawable;
 
+#ifdef XQUARTZ_CLIP_DEBUG
+        ErrorF("     Draw: %d %d %d %d\n",
+               drawable->x, drawable->y, drawable->width, drawable->height);    
+#endif
+	
         while (pWin->backgroundState == ParentRelative)
             pWin = pWin->parent;
 
@@ -549,6 +579,57 @@ miPaintWindow(WindowPtr pWin, RegionPtr prgn, int what)
 
     ChangeGC(NullClient, pGC, gcmask, gcval);
     ValidateGC(drawable, pGC);
+
+#ifdef XQUARTZ_CLIP_DEBUG
+    ErrorF("       GC: %d %d %d %d\n",
+	   pGC->pCompositeClip->extents.x1, pGC->pCompositeClip->extents.y1,
+	   pGC->pCompositeClip->extents.x2 - pGC->pCompositeClip->extents.x1,
+	   pGC->pCompositeClip->extents.y2 - pGC->pCompositeClip->extents.y1);
+#endif
+    
+#ifdef XQUARTZ
+    /* Looks like our clipping isn't set right for some reason:
+     * http://xquartz.macosforge.org/trac/ticket/290
+     */
+    if(what == PW_BORDER) {
+
+#if 0
+	if(solid) {
+#if 1
+	    fbFillRegionSolid(&pWin->drawable,
+			      prgn,
+			      0,
+			      fbReplicatePixel(fill.pixel,
+					       pWin->drawable.bitsPerPixel));
+#else
+	    fbFillRegionSolid(drawable,
+			      prgn,
+			      0,
+			      fbReplicatePixel(fill.pixel,
+					       drawable->bitsPerPixel));
+#endif
+	    return;
+	}
+#endif
+    
+	pGC->pCompositeClip->extents.x1 += prgn->extents.x1;
+	pGC->pCompositeClip->extents.y1 += prgn->extents.y1;
+	pGC->pCompositeClip->extents.x2 += prgn->extents.x1;
+	pGC->pCompositeClip->extents.y2 += prgn->extents.y1;
+	
+	if(pGC->pCompositeClip->extents.x2 > drawable->pScreen->width)
+	    pGC->pCompositeClip->extents.x2 = drawable->pScreen->width;
+	if(pGC->pCompositeClip->extents.y2 > drawable->pScreen->height)
+	    pGC->pCompositeClip->extents.y2 = drawable->pScreen->height;
+    }
+#endif
+
+#ifdef XQUARTZ_CLIP_DEBUG
+    ErrorF("       GC: %d %d %d %d\n",
+	   pGC->pCompositeClip->extents.x1, pGC->pCompositeClip->extents.y1,
+	   pGC->pCompositeClip->extents.x2 - pGC->pCompositeClip->extents.x1,
+	   pGC->pCompositeClip->extents.y2 - pGC->pCompositeClip->extents.y1);    
+#endif
 
     numRects = RegionNumRects(prgn);
     pbox = RegionRects(prgn);

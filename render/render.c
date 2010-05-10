@@ -1159,6 +1159,12 @@ ProcRenderAddGlyphs (ClientPtr client)
 						   width, height, depth,
 						   CREATE_PIXMAP_USAGE_GLYPH_PICTURE);
 
+		if (!pDstPix)
+		{
+		    err = BadAlloc;
+		    goto bail;
+		}
+
 		GlyphPicture (glyph)[screen] = pDst =
 			CreatePicture (0, &pDstPix->drawable,
 				       glyphSet->format,
@@ -1168,6 +1174,7 @@ ProcRenderAddGlyphs (ClientPtr client)
 		/* The picture takes a reference to the pixmap, so we
 		   drop ours. */
 		(pScreen->DestroyPixmap) (pDstPix);
+		pDstPix = NULL;
 
 		if (! pDst)
 		{

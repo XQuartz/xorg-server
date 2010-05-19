@@ -780,7 +780,7 @@ miDCDeviceInitialize(DeviceIntPtr pDev, ScreenPtr pScreen)
     {
         pScreen = screenInfo.screens[i];
 
-        pBuffer = xalloc(sizeof(miDCBufferRec));
+        pBuffer = xcalloc(1, sizeof(miDCBufferRec));
         if (!pBuffer)
             goto failure;
 

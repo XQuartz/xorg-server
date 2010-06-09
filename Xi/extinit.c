@@ -1122,8 +1122,6 @@ RestoreExtensionEvents(void)
 static void
 IResetProc(ExtensionEntry * unused)
 {
-    XIResetProperties();
-
     ReplySwapVector[IReqCode] = ReplyNotSwappd;
     EventSwapVector[DeviceValuator] = NotImplemented;
     EventSwapVector[DeviceKeyPress] = NotImplemented;
@@ -1304,6 +1302,8 @@ XInputExtensionInit(void)
 
 	inputInfo.all_devices = &xi_all_devices;
 	inputInfo.all_master_devices = &xi_all_master_devices;
+
+	XIResetProperties();
     } else {
 	FatalError("IExtensionInit: AddExtensions failed\n");
     }

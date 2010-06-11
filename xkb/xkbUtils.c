@@ -1940,7 +1940,7 @@ _XkbCopyGeom(XkbDescPtr src, XkbDescPtr dst)
         /* font */
         if (src->geom->label_font) {
             if (!dst->geom->label_font) {
-                tmp = xalloc(strlen(src->geom->label_font));
+                tmp = xalloc(strlen(src->geom->label_font) + 1);
                 if (!tmp)
                     return FALSE;
                 dst->geom->label_font = tmp;
@@ -1948,7 +1948,7 @@ _XkbCopyGeom(XkbDescPtr src, XkbDescPtr dst)
             else if (strlen(src->geom->label_font) !=
                 strlen(dst->geom->label_font)) {
                 tmp = xrealloc(dst->geom->label_font,
-                               strlen(src->geom->label_font));
+                               strlen(src->geom->label_font) + 1);
                 if (!tmp)
                     return FALSE;
                 dst->geom->label_font = tmp;

@@ -516,9 +516,8 @@ static int
 ProcDRI2WaitSBC(ClientPtr client)
 {
     REQUEST(xDRI2WaitSBCReq);
-    xDRI2MSCReply rep;
     DrawablePtr pDrawable;
-    CARD64 target, ust, msc, sbc;
+    CARD64 target;
     int status;
 
     REQUEST_SIZE_MATCH(xDRI2WaitSBCReq);
@@ -528,18 +527,9 @@ ProcDRI2WaitSBC(ClientPtr client)
 	return status;
 
     target = vals_to_card64(stuff->target_sbc_lo, stuff->target_sbc_hi);
-    status = DRI2WaitSBC(client, pDrawable, target, &ust, &msc, &sbc);
-    if (status != Success)
-	return status;
+    status = DRI2WaitSBC(client, pDrawable, target);
 
-    rep.type = X_Reply;
-    rep.length = 0;
-    rep.sequenceNumber = client->sequence;
-    load_msc_reply(&rep, ust, msc, sbc);
-
-    WriteToClient(client, sizeof(xDRI2MSCReply), &rep);
-
-    return client->noClientException;
+    return status;
 }
 
 static int

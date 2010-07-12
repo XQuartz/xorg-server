@@ -530,12 +530,16 @@ static Bool
 VGAarbiterEnterVT(int index, int flags)
 {
     Bool val;
+    ScrnInfoPtr pScrn = xf86Screens[index];
     ScreenPtr pScreen = screenInfo.screens[index];
     VGAarbiterScreenPtr pScreenPriv = (VGAarbiterScreenPtr)dixLookupPrivate(
         &pScreen->devPrivates, VGAarbiterScreenKey);
 
     VGAGet();
-    val = (*pScreenPriv->EnterVT)(index, flags);
+    pScrn->EnterVT = pScreenPriv->EnterVT;
+    val = (*pScrn->EnterVT)(index, flags);
+    pScreenPriv->EnterVT = pScrn->EnterVT;
+    pScrn->EnterVT = VGAarbiterEnterVT;
     VGAPut();
     return val;
 }
@@ -543,12 +547,16 @@ VGAarbiterEnterVT(int index, int flags)
 static void
 VGAarbiterLeaveVT(int index, int flags)
 {
+    ScrnInfoPtr pScrn = xf86Screens[index];
     ScreenPtr pScreen = screenInfo.screens[index];
     VGAarbiterScreenPtr pScreenPriv = (VGAarbiterScreenPtr)dixLookupPrivate(
         &pScreen->devPrivates, VGAarbiterScreenKey);
 
     VGAGet();
+    pScrn->LeaveVT = pScreenPriv->LeaveVT;
     (*pScreenPriv->LeaveVT)(index, flags);
+    pScreenPriv->LeaveVT = pScrn->LeaveVT;
+    pScrn->LeaveVT = VGAarbiterLeaveVT;
     VGAPut();
 }
 

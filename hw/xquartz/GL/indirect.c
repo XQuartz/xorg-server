@@ -360,7 +360,7 @@ static void surface_notify(void *_arg, void *data) {
     case AppleDRISurfaceNotifyDestroyed:
         if (surface_hash != NULL)
             x_hash_table_remove(surface_hash, x_cvt_uint_to_vptr(arg->id));
-	        draw->base.pDraw = NULL;
+	        draw->pDraw = NULL;
 			draw->sid = 0;
         break;
 

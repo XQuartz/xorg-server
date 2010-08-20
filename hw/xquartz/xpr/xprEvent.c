@@ -78,7 +78,7 @@ static void xprEventHandler(int screenNum, xEventPtr xe, DeviceIntPtr dev, int n
                 
             case kXquartzBringAllToFront:
                 DEBUG_LOG("kXquartzBringAllToFront\n");
-                RootlessOrderAllWindows();
+                RootlessOrderAllWindows(xe[i].u.clientMessage.u.l.longs0);
                 break;
         }
     }

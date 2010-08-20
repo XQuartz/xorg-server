@@ -274,7 +274,6 @@ static void QuartzUpdateScreens(void) {
     pScreen->height = height;
     
     DarwinAdjustScreenOrigins(&screenInfo);
-    quartzProcs->UpdateScreen(pScreen);
     
     /* DarwinAdjustScreenOrigins or UpdateScreen may change dixScreenOrigins,
      * so use it rather than x/y
@@ -286,7 +285,7 @@ static void QuartzUpdateScreens(void) {
     pRoot = WindowTable[pScreen->myNum];
     AppleWMSetScreenOrigin(pRoot);
     pScreen->ResizeWindow(pRoot, x - sx, y - sy, width, height, NULL);
-    //pScreen->PaintWindowBackground (pRoot, &pRoot->borderClip,  PW_BACKGROUND);
+
     miPaintWindow(pRoot, &pRoot->borderClip,  PW_BACKGROUND);
     DefineInitialRootWindow(pRoot);
 
@@ -303,6 +302,8 @@ static void QuartzUpdateScreens(void) {
     e.u.configureNotify.borderWidth = wBorderWidth(pRoot);
     e.u.configureNotify.override = pRoot->overrideRedirect;
     DeliverEvents(pRoot, &e, 1, NullWindow);
+
+    quartzProcs->UpdateScreen(pScreen);
     
 #ifdef FAKE_RANDR
     RREditConnectionInfo(pScreen);

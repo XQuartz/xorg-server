@@ -243,7 +243,7 @@ static void DarwinEventHandler(int screenNum, xEventPtr xe, DeviceIntPtr dev, in
             case kXquartzToggleFullscreen:
                 DEBUG_LOG("kXquartzToggleFullscreen\n");
                 if (quartzEnableRootless) 
-                    QuartzSetFullscreen(!quartzHasRoot);
+                    ErrorF("Ignoring kXquartzToggleFullscreen because of rootless mode.");
                 else if (quartzHasRoot)
                     QuartzHide();
                 else

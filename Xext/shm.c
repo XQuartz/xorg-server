@@ -993,7 +993,6 @@ CreatePmap:
 	    pMap->drawable.serialNumber = NEXT_SERIAL_NUMBER;
 	    pMap->drawable.id = newPix->info[j].id;
 	    if (!AddResource(newPix->info[j].id, RT_PIXMAP, (pointer)pMap)) {
-		(*pScreen->DestroyPixmap)(pMap);
 		result = BadAlloc;
 		break;
 	    }
@@ -1004,10 +1003,8 @@ CreatePmap:
     }
 
     if(result == BadAlloc) {
-	while(j--) {
-	    (*pScreen->DestroyPixmap)(pMap);
+	while(j--)
 	    FreeResource(newPix->info[j].id, RT_NONE);
-	}
 	free(newPix);
     } else 
 	AddResource(stuff->pid, XRT_PIXMAP, newPix);
@@ -1112,7 +1109,6 @@ CreatePmap:
 	{
 	    return Success;
 	}
-	pDraw->pScreen->DestroyPixmap(pMap);
     }
     return BadAlloc;
 }

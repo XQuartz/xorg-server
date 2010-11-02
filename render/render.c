@@ -2572,8 +2572,8 @@ static void swapStops(void *stuff, int num)
     }
     colors = (CARD16 *)(stops);
     for (i = 0; i < 4*num; ++i) {
-        swaps(stops, n);
-        ++stops;
+        swaps(colors, n);
+        ++colors;
     }
 }
 

@@ -1273,6 +1273,11 @@ int __glXDisp_CreatePixmap(__GLXclientState *cl, GLbyte *pc)
     __GLXscreen *pGlxScreen;
     int err;
 
+    REQUEST_AT_LEAST_SIZE(xGLXCreatePixmapReq);
+    if (req->numAttribs > (UINT32_MAX >> 3)) {
+	client->errorValue = req->numAttribs;
+	return BadValue;
+    }
     REQUEST_FIXED_SIZE(xGLXCreatePixmapReq, req->numAttribs << 3);
 
     if (!validGlxScreen(cl->client, req->screen, &pGlxScreen, &err))
@@ -1376,6 +1381,11 @@ int __glXDisp_CreatePbuffer(__GLXclientState *cl, GLbyte *pc)
     CARD32			*attrs;
     int				 width, height, i;
 
+    REQUEST_AT_LEAST_SIZE(xGLXCreatePbufferReq);
+    if (req->numAttribs > (UINT32_MAX >> 3)) {
+	client->errorValue = req->numAttribs;
+	return BadValue;
+    }
     REQUEST_FIXED_SIZE(xGLXCreatePbufferReq, req->numAttribs << 3);
 
     attrs = (CARD32 *) (req + 1);
@@ -1463,6 +1473,11 @@ int __glXDisp_ChangeDrawableAttributes(__GLXclientState *cl, GLbyte *pc)
     xGLXChangeDrawableAttributesReq *req =
 	(xGLXChangeDrawableAttributesReq *) pc;
 
+    REQUEST_AT_LEAST_SIZE(xGLXChangeDrawableAttributesReq);
+    if (req->numAttribs > (UINT32_MAX >> 3)) {
+	client->errorValue = req->numAttribs;
+	return BadValue;
+    }
     REQUEST_FIXED_SIZE(xGLXChangeDrawableAttributesReq, req->numAttribs << 3);
 
     return DoChangeDrawableAttributes(cl->client, req->drawable,
@@ -1475,6 +1490,11 @@ int __glXDisp_ChangeDrawableAttributesSGIX(__GLXclientState *cl, GLbyte *pc)
     xGLXChangeDrawableAttributesSGIXReq *req =
 	(xGLXChangeDrawableAttributesSGIXReq *)pc;
 
+    REQUEST_AT_LEAST_SIZE(xGLXChangeDrawableAttributesSGIXReq);
+    if (req->numAttribs > (UINT32_MAX >> 3)) {
+	client->errorValue = req->numAttribs;
+	return BadValue;
+    }
     REQUEST_FIXED_SIZE(xGLXChangeDrawableAttributesSGIXReq, req->numAttribs << 3);
 
     return DoChangeDrawableAttributes(cl->client, req->drawable,
@@ -1490,6 +1510,11 @@ int __glXDisp_CreateWindow(__GLXclientState *cl, GLbyte *pc)
     DrawablePtr		 pDraw;
     int			 err;
 
+    REQUEST_AT_LEAST_SIZE(xGLXCreateWindowReq);
+    if (req->numAttribs > (UINT32_MAX >> 3)) {
+	client->errorValue = req->numAttribs;
+	return BadValue;
+    }
     REQUEST_FIXED_SIZE(xGLXCreateWindowReq, req->numAttribs << 3);
 
     if (!validGlxScreen(client, req->screen, &pGlxScreen, &err))

@@ -320,6 +320,10 @@ int __glXDispSwap_CreatePixmap(__GLXclientState *cl, GLbyte *pc)
     __GLX_SWAP_INT(&req->glxpixmap);
     __GLX_SWAP_INT(&req->numAttribs);
 
+    if (req->numAttribs > (UINT32_MAX >> 3)) {
+	client->errorValue = req->numAttribs;
+	return BadValue;
+    }
     REQUEST_FIXED_SIZE(xGLXCreatePixmapReq, req->numAttribs << 3);
     attribs = (CARD32*)(req + 1);
     __GLX_SWAP_INT_ARRAY(attribs, req->numAttribs << 1);
@@ -401,6 +405,10 @@ int __glXDispSwap_CreatePbuffer(__GLXclientState *cl, GLbyte *pc)
     __GLX_SWAP_INT(&req->pbuffer);
     __GLX_SWAP_INT(&req->numAttribs);
 
+    if (req->numAttribs > (UINT32_MAX >> 3)) {
+	client->errorValue = req->numAttribs;
+	return BadValue;
+    }
     REQUEST_FIXED_SIZE(xGLXCreatePbufferReq, req->numAttribs << 3);
     attribs = (CARD32*)(req + 1);
     __GLX_SWAP_INT_ARRAY(attribs, req->numAttribs << 1);
@@ -465,6 +473,10 @@ int __glXDispSwap_ChangeDrawableAttributes(__GLXclientState *cl, GLbyte *pc)
     __GLX_SWAP_INT(&req->drawable);
     __GLX_SWAP_INT(&req->numAttribs);
 
+    if (req->numAttribs > (UINT32_MAX >> 3)) {
+	client->errorValue = req->numAttribs;
+	return BadValue;
+    }
     REQUEST_FIXED_SIZE(xGLXChangeDrawableAttributesReq, req->numAttribs << 3);
     attribs = (CARD32*)(req + 1);
     __GLX_SWAP_INT_ARRAY(attribs, req->numAttribs << 1);
@@ -487,6 +499,10 @@ int __glXDispSwap_ChangeDrawableAttributesSGIX(__GLXclientState *cl,
     __GLX_SWAP_INT(&req->drawable);
     __GLX_SWAP_INT(&req->numAttribs);
 
+    if (req->numAttribs > (UINT32_MAX >> 3)) {
+	client->errorValue = req->numAttribs;
+	return BadValue;
+    }
     REQUEST_FIXED_SIZE(xGLXChangeDrawableAttributesSGIXReq, req->numAttribs << 3);
     attribs = (CARD32*)(req + 1);
     __GLX_SWAP_INT_ARRAY(attribs, req->numAttribs << 1);
@@ -510,6 +526,10 @@ int __glXDispSwap_CreateWindow(__GLXclientState *cl, GLbyte *pc)
     __GLX_SWAP_INT(&req->glxwindow);
     __GLX_SWAP_INT(&req->numAttribs);
 
+    if (req->numAttribs > (UINT32_MAX >> 3)) {
+	client->errorValue = req->numAttribs;
+	return BadValue;
+    }
     REQUEST_FIXED_SIZE(xGLXCreateWindowReq, req->numAttribs << 3);
     attribs = (CARD32*)(req + 1);
     __GLX_SWAP_INT_ARRAY(attribs, req->numAttribs << 1);

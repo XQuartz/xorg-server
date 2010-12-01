@@ -1536,7 +1536,7 @@ int __glXGetVisualConfigs(__GLXclientState *cl, GLbyte *pc)
     int i, p;
 
     screen = req->screen;
-    if (screen > screenInfo.numScreens) {
+    if (screen >= screenInfo.numScreens) {
 	/* The client library must send a valid screen number. */
 	client->errorValue = screen;
 	return BadValue;
@@ -2685,7 +2685,7 @@ int __glXGetFBConfigs(__GLXclientState *cl, GLbyte *pc)
     int numFBConfigs, i, p;
     __GLXscreenInfo *pGlxScreen;
 
-    if (screen > screenInfo.numScreens) {
+    if (screen >= screenInfo.numScreens) {
 	/* The client library must send a valid screen number. */
 	client->errorValue = screen;
 	return BadValue;
@@ -3107,7 +3107,7 @@ int __glXCreatePbuffer(__GLXclientState *cl, GLbyte *pc)
    /*
     ** Look up screen and FBConfig.
     */
-    if (screen > screenInfo.numScreens) {
+    if (screen >= screenInfo.numScreens) {
         /* The client library must send a valid screen number. */
         client->errorValue = screen;
         return BadValue;

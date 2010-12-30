@@ -1145,8 +1145,10 @@ Bool LocalClient(ClientPtr client)
 	}
 	for (host = selfhosts; host; host = host->next)
 	{
-	    if (addrEqual (family, addr, alen, host))
+	    if (addrEqual (family, addr, alen, host)) {
+		free(from);
 		return TRUE;
+	    }
 	}
 	free(from);
     }

@@ -1034,19 +1034,21 @@ FreeEventList(EventListPtr list, int num_events)
 }
 
 static void
-transformAbsolute(DeviceIntPtr dev, int v[MAX_VALUATORS])
+transformAbsolute(DeviceIntPtr dev, int first, int num, int *valuators)
 {
-    struct pixman_f_vector p;
+    struct pixman_f_vector p = { .v = {0.0, 0.0, 1.0} };
 
     /* p' = M * p in homogeneous coordinates */
-    p.v[0] = v[0];
-    p.v[1] = v[1];
-    p.v[2] = 1.0;
+    if (num >= 1 && first == 0)
+        p.v[0] = *(valuators + 0);
+
+    if (first <= 1 && num >= (2 - first))
+        p.v[1] = *(valuators + 1 - first);
 
     pixman_f_transform_point(&dev->transform, &p);
 
-    v[0] = lround(p.v[0]);
-    v[1] = lround(p.v[1]);
+    valuators[0] = lround(p.v[0]);
+    valuators[1] = lround(p.v[1]);
 }
 
 /**
@@ -1124,7 +1126,7 @@ GetPointerEvents(EventList *events, DeviceIntPtr pDev, int type, int buttons,
                         scr->height);
         }
 
-        transformAbsolute(pDev, valuators);
+        transformAbsolute(pDev, first_valuator, num_valuators, valuators);
         moveAbsolute(pDev, &x, &y, first_valuator, num_valuators, valuators);
     } else {
         if (flags & POINTER_ACCELERATE) {

@@ -35,7 +35,6 @@ from The Open Group.
 #include "winmsg.h"
 #include "winconfig.h"
 #include "winprefs.h"
-#include "X11/Xlocale.h"
 #ifdef DPMSExtension
 #include "dpmsproc.h"
 #endif
@@ -1018,14 +1017,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char *argv[])
     if (g_fXdmcpEnabled || g_fAuthEnabled)
         winGenerateAuthorization();
 
-    /* Perform some one time initialization */
-    if (1 == serverGeneration) {
-        /*
-         * setlocale applies to all threads in the current process.
-         * Apply locale specified in LANG environment variable.
-         */
-        setlocale(LC_ALL, "");
-    }
 
 #if CYGDEBUG || YES
     winDebug("InitOutput - Returning.\n");

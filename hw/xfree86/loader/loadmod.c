@@ -533,6 +533,7 @@ LoaderListDirs(const char **subdirlist, const char **patternlist)
 				FreePathList(pathlist);
 				FreeSubdirs(subdirs);
 				FreePatterns(patterns);
+				closedir(d);
 				return NULL;
 			    }
 			    listing[n] = malloc(len + 1);
@@ -541,6 +542,7 @@ LoaderListDirs(const char **subdirlist, const char **patternlist)
 				FreePathList(pathlist);
 				FreeSubdirs(subdirs);
 				FreePatterns(patterns);
+				closedir(d);
 				return NULL;
 			    }
 			    strncpy(listing[n], dp->d_name + match[1].rm_so,
@@ -557,6 +559,10 @@ LoaderListDirs(const char **subdirlist, const char **patternlist)
     }
     if (listing)
 	listing[n] = NULL;
+
+    FreePathList(pathlist);
+    FreeSubdirs(subdirs);
+    FreePatterns(patterns);
     return listing;
 }
 

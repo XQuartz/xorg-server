@@ -32,12 +32,21 @@ DOXYGEN_HEAD=\
 DOXYGEN_REST= \
 	dmx.txt \
 	scaled.txt \
+	html/annotated.html \
+	html/bc_s.png \
 	html/ChkNotMaskEv_8c.html \
 	html/ChkNotMaskEv_8h.html \
 	html/ChkNotMaskEv_8h_source.html \
 	html/classes.html \
+	html/closed.png \
+	html/dmx-config_8h.html \
+	html/dmx-config_8h_source.html \
+	html/dmx_8c.html \
 	html/dmx_8h.html \
 	html/dmx_8h_source.html \
+	html/dmx__glxvisuals_8c.html \
+	html/dmx__glxvisuals_8h.html \
+	html/dmx__glxvisuals_8h_source.html \
 	html/dmxarg_8c.html \
 	html/dmxarg_8h.html \
 	html/dmxarg_8h_source.html \
@@ -89,7 +98,6 @@ DOXYGEN_REST= \
 	html/dmxgcops_8c.html \
 	html/dmxgcops_8h.html \
 	html/dmxgcops_8h_source.html \
-	html/dmx__glxvisuals_8h_source.html \
 	html/dmxinit_8c.html \
 	html/dmxinit_8h.html \
 	html/dmxinit_8h_source.html \
@@ -138,6 +146,7 @@ DOXYGEN_REST= \
 	html/dmxsync_8c.html \
 	html/dmxsync_8h.html \
 	html/dmxsync_8h_source.html \
+	html/dmxtodmx_8c.html \
 	html/dmxvisual_8c.html \
 	html/dmxvisual_8h.html \
 	html/dmxvisual_8h_source.html \
@@ -159,17 +168,119 @@ DOXYGEN_REST= \
 	html/ftv2node.png \
 	html/ftv2plastnode.png \
 	html/ftv2pnode.png \
+	html/ftv2splitbar.png \
 	html/ftv2vertline.png \
 	html/functions.html \
+	html/functions_0x62.html \
+	html/functions_0x63.html \
+	html/functions_0x64.html \
+	html/functions_0x65.html \
+	html/functions_0x66.html \
+	html/functions_0x67.html \
+	html/functions_0x68.html \
+	html/functions_0x69.html \
+	html/functions_0x6b.html \
+	html/functions_0x6c.html \
+	html/functions_0x6d.html \
+	html/functions_0x6e.html \
+	html/functions_0x6f.html \
+	html/functions_0x70.html \
+	html/functions_0x72.html \
+	html/functions_0x73.html \
+	html/functions_0x74.html \
+	html/functions_0x75.html \
+	html/functions_0x76.html \
+	html/functions_0x77.html \
+	html/functions_0x78.html \
+	html/functions_0x79.html \
+	html/functions_eval.html \
 	html/functions_vars.html \
+	html/functions_vars_0x62.html \
+	html/functions_vars_0x63.html \
+	html/functions_vars_0x64.html \
+	html/functions_vars_0x65.html \
+	html/functions_vars_0x66.html \
+	html/functions_vars_0x67.html \
+	html/functions_vars_0x68.html \
+	html/functions_vars_0x69.html \
+	html/functions_vars_0x6b.html \
+	html/functions_vars_0x6c.html \
+	html/functions_vars_0x6d.html \
+	html/functions_vars_0x6e.html \
+	html/functions_vars_0x6f.html \
+	html/functions_vars_0x70.html \
+	html/functions_vars_0x72.html \
+	html/functions_vars_0x73.html \
+	html/functions_vars_0x74.html \
+	html/functions_vars_0x75.html \
+	html/functions_vars_0x76.html \
+	html/functions_vars_0x77.html \
+	html/functions_vars_0x78.html \
+	html/functions_vars_0x79.html \
+	html/globals.html \
+	html/globals_0x61.html \
+	html/globals_0x62.html \
+	html/globals_0x63.html \
+	html/globals_0x64.html \
+	html/globals_0x65.html \
+	html/globals_0x66.html \
+	html/globals_0x67.html \
+	html/globals_0x69.html \
+	html/globals_0x6b.html \
+	html/globals_0x6c.html \
+	html/globals_0x6d.html \
+	html/globals_0x6e.html \
+	html/globals_0x6f.html \
+	html/globals_0x70.html \
+	html/globals_0x71.html \
+	html/globals_0x72.html \
+	html/globals_0x73.html \
+	html/globals_0x74.html \
+	html/globals_0x75.html \
+	html/globals_0x76.html \
+	html/globals_0x78.html \
+	html/globals_0x79.html \
 	html/globals_defs.html \
+	html/globals_defs_0x62.html \
+	html/globals_defs_0x63.html \
+	html/globals_defs_0x64.html \
+	html/globals_defs_0x65.html \
+	html/globals_defs_0x66.html \
+	html/globals_defs_0x67.html \
+	html/globals_defs_0x6c.html \
+	html/globals_defs_0x6d.html \
+	html/globals_defs_0x6e.html \
+	html/globals_defs_0x6f.html \
+	html/globals_defs_0x70.html \
+	html/globals_defs_0x72.html \
+	html/globals_defs_0x73.html \
+	html/globals_defs_0x74.html \
+	html/globals_defs_0x75.html \
+	html/globals_defs_0x76.html \
 	html/globals_enum.html \
 	html/globals_eval.html \
 	html/globals_func.html \
-	html/globals.html \
+	html/globals_func_0x61.html \
+	html/globals_func_0x63.html \
+	html/globals_func_0x64.html \
+	html/globals_func_0x65.html \
+	html/globals_func_0x67.html \
+	html/globals_func_0x69.html \
+	html/globals_func_0x6b.html \
+	html/globals_func_0x6c.html \
+	html/globals_func_0x6d.html \
+	html/globals_func_0x6e.html \
+	html/globals_func_0x6f.html \
+	html/globals_func_0x70.html \
+	html/globals_func_0x73.html \
+	html/globals_func_0x75.html \
+	html/globals_func_0x76.html \
+	html/globals_func_0x78.html \
+	html/globals_func_0x79.html \
 	html/globals_type.html \
 	html/globals_vars.html \
 	html/index.html \
+	html/jquery.js \
 	html/lnx-keyboard_8c.html \
 	html/lnx-keyboard_8h.html \
 	html/lnx-keyboard_8h_source.html \
@@ -179,15 +290,18 @@ DOXYGEN_REST= \
 	html/lnx-ps2_8c.html \
 	html/lnx-ps2_8h.html \
 	html/lnx-ps2_8h_source.html \
-	html/main.html \
+	html/nav_f.png \
+	html/nav_h.png \
+	html/navtree.css \
+	html/navtree.js \
+	html/open.png \
+	html/resize.js \
 	html/struct__dmxArg.html \
 	html/struct__dmxColormapPriv.html \
-	html/structDMXConfigCmdStruct.html \
 	html/struct__DMXConfigComment.html \
 	html/struct__DMXConfigDisplay.html \
 	html/struct__DMXConfigEntry.html \
 	html/struct__DMXConfigFullDim.html \
-	html/structDMXConfigListStruct.html \
 	html/struct__DMXConfigNumber.html \
 	html/struct__DMXConfigOption.html \
 	html/struct__DMXConfigPair.html \
@@ -199,26 +313,33 @@ DOXYGEN_REST= \
 	html/struct__DMXConfigVirtual.html \
 	html/struct__DMXConfigWall.html \
 	html/struct__dmxCursorPriv.html \
-	html/structDMXDesktopAttributesRec.html \
 	html/struct__DMXEventMap.html \
 	html/struct__dmxFontPriv.html \
 	html/struct__dmxGCPriv.html \
-	html/structdmxGlxVisualPrivate.html \
 	html/struct__dmxGlyphPriv.html \
-	html/structDMXInputAttributesRec.html \
 	html/struct__DMXInputInfo.html \
 	html/struct__DMXLocalInitInfo.html \
 	html/struct__DMXLocalInputInfo.html \
 	html/struct__dmxPictPriv.html \
 	html/struct__dmxPixPriv.html \
-	html/structDMXScreenAttributesRec.html \
 	html/struct__DMXScreenInfo.html \
 	html/struct__DMXStatAvg.html \
 	html/struct__DMXStatInfo.html \
-	html/structDMXWindowAttributesRec.html \
 	html/struct__dmxWinPriv.html \
 	html/struct__myPrivate.html \
-	html/tree.html \
+	html/structDMXConfigCmdStruct.html \
+	html/structDMXConfigListStruct.html \
+	html/structDMXDesktopAttributesRec.html \
+	html/structdmxGlxVisualPrivate.html \
+	html/structDMXInputAttributesRec.html \
+	html/structDMXScreenAttributesRec.html \
+	html/structDMXWindowAttributesRec.html \
+	html/structstack.html \
+	html/tab_a.png \
+	html/tab_b.png \
+	html/tab_h.png \
+	html/tab_s.png \
+	html/tabs.css \
 	html/usb-common_8c.html \
 	html/usb-common_8h.html \
 	html/usb-common_8h_source.html \
@@ -232,7 +353,9 @@ DOXYGEN_REST= \
 	html/usb-other_8h.html \
 	html/usb-other_8h_source.html \
 	html/usb-private_8h.html \
-	html/usb-private_8h_source.html
+	html/usb-private_8h_source.html \
+	html/vdltodmx_8c.html \
+	html/xdmxconfig_8c.html
 
 DOXYGEN_FILES=$(DOXYGEN_HEAD) $(DOXYGEN_REST)
 

@@ -1305,9 +1305,7 @@ System(char *command)
     }
 #endif
 
-#ifdef DEBUG
-    ErrorF("System: `%s'\n", command);
-#endif
+    DebugF("System: `%s'\n", command);
 
     switch (pid = fork()) {
     case -1:	/* error */
@@ -1424,9 +1422,7 @@ Popen(char *command, char *type)
     cur->next = pidlist;
     pidlist = cur;
 
-#ifdef DEBUG
-    ErrorF("Popen: `%s', fp = %p\n", command, iop);
-#endif
+    DebugF("Popen: `%s', fp = %p\n", command, iop);
 
     return iop;
 }
@@ -1501,9 +1497,7 @@ Fopen(char *file, char *type)
     cur->next = pidlist;
     pidlist = cur;
 
-#ifdef DEBUG
-    ErrorF("Fopen(%s), fp = %p\n", file, iop);
-#endif
+    DebugF("Fopen(%s), fp = %p\n", file, iop);
 
     return iop;
 #else
@@ -1532,9 +1526,7 @@ Pclose(pointer iop)
     int pstat;
     int pid;
 
-#ifdef DEBUG
-    ErrorF("Pclose: fp = %p\n", iop);
-#endif
+    DebugF("Pclose: fp = %p\n", iop);
 
     fclose(iop);
 

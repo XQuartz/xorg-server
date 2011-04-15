@@ -353,6 +353,7 @@ detach_slave(ClientPtr client, xXIDetachSlaveInfo *c, int flags[MAXDEVICES])
         goto unwind;
     }
 
+    ReleaseButtonsAndKeys(dev);
     AttachDevice(client, dev, NULL);
     flags[dev->id] |= XISlaveDetached;
 
@@ -404,6 +405,7 @@ attach_slave(ClientPtr client, xXIAttachSlaveInfo *c,
         goto unwind;
     }
 
+    ReleaseButtonsAndKeys(dev);
     AttachDevice(client, dev, newmaster);
     flags[dev->id] |= XISlaveAttached;
 

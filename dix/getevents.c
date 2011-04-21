@@ -1075,9 +1075,10 @@ transformAbsolute(DeviceIntPtr dev, ValuatorMask *mask)
 
     pixman_f_transform_point(&dev->transform, &p);
 
-    if (lround(p.v[0]) != dev->last.valuators[0])
+    if (valuator_mask_isset(mask, 0))
         valuator_mask_set(mask, 0, lround(p.v[0]));
-    if (lround(p.v[1]) != dev->last.valuators[1])
+
+    if (valuator_mask_isset(mask, 1))
         valuator_mask_set(mask, 1, lround(p.v[1]));
 }
 

@@ -1213,8 +1213,11 @@ static void dix_valuator_alloc(void)
 
         g_assert(v);
         g_assert(v->numAxes == num_axes);
+#ifndef __i386__
+        /* must be double-aligned on 64 bit */
         g_assert(((void*)v->axisVal - (void*)v) % sizeof(double) == 0);
         g_assert(((void*)v->axes - (void*)v) % sizeof(double) == 0);
+#endif
         num_axes ++;
     }
 

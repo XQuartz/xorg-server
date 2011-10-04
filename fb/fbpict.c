@@ -163,7 +163,9 @@ create_bits_picture (PicturePtr pict,
 	pict->format,
 	pixmap->drawable.width, pixmap->drawable.height,
 	(uint32_t *)bits, stride * sizeof (FbStride));
-    
+
+    if (!image)
+	return NULL;
     
 #ifdef FB_ACCESS_WRAPPER
 #if FB_SHIFT==5

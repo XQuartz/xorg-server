@@ -411,7 +411,7 @@ static int
 ProcIDispatch(ClientPtr client)
 {
     REQUEST(xReq);
-    if (stuff->data > ARRAY_SIZE(ProcIVector) || !ProcIVector[stuff->data])
+    if (stuff->data >= ARRAY_SIZE(ProcIVector) || !ProcIVector[stuff->data])
         return BadRequest;
 
     return (*ProcIVector[stuff->data])(client);
@@ -430,7 +430,7 @@ static int
 SProcIDispatch(ClientPtr client)
 {
     REQUEST(xReq);
-    if (stuff->data > ARRAY_SIZE(SProcIVector) || !SProcIVector[stuff->data])
+    if (stuff->data >= ARRAY_SIZE(SProcIVector) || !SProcIVector[stuff->data])
         return BadRequest;
 
     return (*SProcIVector[stuff->data])(client);

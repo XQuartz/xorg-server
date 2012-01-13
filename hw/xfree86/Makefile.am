@@ -43,8 +43,7 @@ DIST_SUBDIRS = common ddc i2c x86emu int10 fbdevhw os-support \
 bin_PROGRAMS = Xorg
 nodist_Xorg_SOURCES = sdksyms.c
 
-AM_CFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@
-AM_CPPFLAGS = $(XORG_INCS) -I$(srcdir)/parser -I$(top_srcdir)/miext/cw \
+AM_CPPFLAGS = $(DIX_CFLAGS) @XORG_CFLAGS@ $(XORG_INCS) -I$(srcdir)/parser -I$(top_srcdir)/miext/cw \
 	-I$(srcdir)/ddc -I$(srcdir)/i2c -I$(srcdir)/modes -I$(srcdir)/ramdac \
 	-I$(srcdir)/dri -I$(srcdir)/dri2 -I$(top_srcdir)/dri3
 
@@ -118,7 +117,7 @@ CLEANFILES = sdksyms.c sdksyms.dep
 EXTRA_DIST += sdksyms.sh
 
 sdksyms.dep sdksyms.c: sdksyms.sh
-	$(AM_V_GEN)CPP='$(CPP)' AWK='$(AWK)' $(SHELL) $(srcdir)/sdksyms.sh $(top_srcdir) $(CFLAGS) $(AM_CFLAGS) $(AM_CPPFLAGS)
+	$(AM_V_GEN)CPP='$(CPP)' AWK='$(AWK)' $(SHELL) $(srcdir)/sdksyms.sh $(top_srcdir) $(CPPFLAGS) $(AM_CPPFLAGS)
 
 SDKSYMS_DEP = sdksyms.dep
 include $(SDKSYMS_DEP)

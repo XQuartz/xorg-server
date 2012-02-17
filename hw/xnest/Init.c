@@ -141,7 +141,7 @@ void OsVendorInit(void)
     return;
 }
 
-void OsVendorFatalError(void)
+void OsVendorFatalError(const char *f, va_list args)
 {
     return;
 }

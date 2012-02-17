@@ -296,7 +296,7 @@ extern _X_EXPORT void OsInit(void);
 
 extern _X_EXPORT void OsCleanup(Bool);
 
-extern _X_EXPORT void OsVendorFatalError(void);
+extern _X_EXPORT void OsVendorFatalError(const char *f, va_list args) _X_ATTRIBUTE_PRINTF(1,0);;
 
 extern _X_EXPORT void OsVendorInit(void);
 

@@ -76,6 +76,8 @@ void X11ApplicationLaunchClient (const char *cmd);
 
 Bool X11ApplicationCanEnterRandR (void);
 
+void X11ApplicationFatalError(const char *f, va_list args) __printflike(1, 0);
+
 void X11ApplicationMain(int argc, char **argv, char **envp);
 
 #define PREFS_APPSMENU              "apps_menu"

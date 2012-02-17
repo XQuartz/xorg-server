@@ -69,6 +69,7 @@ static dispatch_queue_t eventTranslationQueue;
 #endif
 
 extern Bool noTestExtensions;
+extern BOOL serverRunning;
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 static TISInputSourceRef last_key_layout;
@@ -939,6 +940,47 @@ Bool X11ApplicationCanEnterRandR(void) {
             return NO;
     }
 }
+
+void X11ApplicationFatalError(const char *f, va_list args) {
+    NSString *title, *msg;
+    char *error_cmsg;
+
+    /* This is called by FatalError() in the server thread just before
+     * we would abort.  If the server never got off the ground, We should
+     * inform the user of the error rather than letting the ever-so-friendly
+     * CrashReporter do it for us.
+     *
+     * This also has the benefit of forcing user interaction rather than
+     * allowing an infinite throttled-restart if the crash occurs before
+     * we can drain the launchd socket.
+     */
+
+    if (serverRunning) {
+        return;
+    }
+
+    title = NSLocalizedString(@"Fatal Error",
+                              @"Dialog title when encountering a fatal error");
+    msg = NSLocalizedString(@"The X11 server encountered the following fatal error during startup.  You may either quit or trigger a crash report for more verbose information.",
+                            @"Dialog when encountering a fatal error");
+
+    vasprintf(&error_cmsg, f, args);
+    if (error_cmsg) {
+        NSString *error_msg = [NSString stringWithUTF8String:error_cmsg];
+        free(error_cmsg);
+
+        msg = [msg stringByAppendingString:@"\n\n"];
+        msg = [msg stringByAppendingString:error_msg];
+    }
+
+    if (NSAlertDefaultReturn == NSRunAlertPanel(title, msg, NSLocalizedString(@"Quit", @""),
+                                                NSLocalizedString (@"Crash", @""), nil)) {
+        exit(EXIT_FAILURE);
+    }
+
+    /* fall back to caller to do the abort() in the DIX */
+}
+
 
 static void check_xinitrc (void) {
     char *tem, buf[1024];

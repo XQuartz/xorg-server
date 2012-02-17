@@ -77,6 +77,8 @@
 #include "quartzKeyboard.h"
 #include "quartz.h"
 
+#include "X11Application.h"
+
 aslclient aslc;
 
 void xq_asl_log (int level, const char *subsystem, const char *file, const char *function, int line, const char *fmt, ...) {
@@ -607,7 +609,7 @@ void InitOutput( ScreenInfo *pScreenInfo, int argc, char **argv )
  */
 void OsVendorFatalError(const char *f, va_list args)
 {
-    ErrorF( "   OsVendorFatalError\n" );
+    X11ApplicationFatalError(f, args);
 }
 
 

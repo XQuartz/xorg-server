@@ -43,7 +43,7 @@ void ProcessInputEvents(void) {
 void OsVendorInit(void) {
 }
 
-void OsVendorFatalError(void) {
+void OsVendorFatalError(const char *f, va_list args) {
 }
 
 void AbortDDX(enum ExitCode error) {

@@ -857,7 +857,7 @@ void OsVendorInit(void)
  * OsVendorVErrorFProc will cause \a VErrorF() (which is called by the
  * two routines mentioned here, as well as by others) to use the
  * referenced routine instead of \a vfprintf().) */
-void OsVendorFatalError(void)
+void OsVendorFatalError(const char *f, va_list args)
 {
 }
 

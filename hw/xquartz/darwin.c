@@ -56,6 +56,7 @@
 
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/stat.h>
 #include <sys/syslimits.h>
 #include <stdio.h>
 #include <fcntl.h>
@@ -621,7 +622,15 @@ void OsVendorInit(void)
         char *lf;
         char *home = getenv("HOME");
         assert(home);
-        assert(0 < asprintf(&lf, "%s/Library/Logs/%s.X11.log", home, bundle_id_prefix));
+        assert(0 < asprintf(&lf, "%s/Library/Logs/X11", home));
+
+        /* Ignore errors.  If EEXIST, we don't care.  If anything else,
+         * LogInit will handle it for us.
+         */
+        (void)mkdir(lf, S_IRWXU | S_IRWXG | S_IRWXO);
+        free(lf);
+
+        assert(0 < asprintf(&lf, "%s/Library/Logs/X11/%s.log", home, bundle_id_prefix));
         LogInit(lf, ".old");
         free(lf);
 

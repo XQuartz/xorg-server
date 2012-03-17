@@ -428,11 +428,11 @@ static void DarwinPrepareValuators(DeviceIntPtr pDev, ValuatorMask *pmask, Scree
         valuator_mask_set_double(pmask, 2, XQUARTZ_VALUATOR_LIMIT * pressure);
         valuator_mask_set_double(pmask, 3, XQUARTZ_VALUATOR_LIMIT * tilt_x);
         valuator_mask_set_double(pmask, 4, XQUARTZ_VALUATOR_LIMIT * tilt_y);
+    DEBUG_LOG("Pointer (%lf, %lf), Valuators: {%lf,%lf,%lf,%lf,%lf}\n", pointer_x, pointer_y,
+              valuator_mask_get_double(pmask, 0), valuator_mask_get_double(pmask, 1),
+              valuator_mask_get_double(pmask, 2), valuator_mask_get_double(pmask, 3),
+              valuator_mask_get_double(pmask, 4));
     }
-    //DEBUG_LOG("Pointer (%lf, %lf), Valuators: {%lf,%lf,%lf,%lf,%lf}\n", pointer_x, pointer_y,
-    //          valuator_mask_get_double(pmask, 0), valuator_mask_get_double(pmask, 1),
-    //          valuator_mask_get_double(pmask, 2), valuator_mask_get_double(pmask, 3),
-    //          valuator_mask_get_double(pmask, 4));
 }
 
 void DarwinInputReleaseButtonsAndKeys(DeviceIntPtr pDev) {

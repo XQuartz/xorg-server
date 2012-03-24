@@ -408,10 +408,10 @@ static void message_kit_thread (SEL selector, NSObject *arg) {
     if (for_x) {
 #ifdef HAVE_LIBDISPATCH
         dispatch_async(eventTranslationQueue, ^{
-#endif
             [self sendX11NSEvent:e];
-#ifdef HAVE_LIBDISPATCH
         });
+#else
+        [self sendX11NSEvent:e];
 #endif
     }
 }

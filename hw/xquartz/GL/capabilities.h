@@ -55,12 +55,14 @@ struct glCapabilitiesConfig {
     struct glCapabilitiesConfig *next;
 };
 
-struct glCapabilities  {
+struct glCapabilities {
     struct glCapabilitiesConfig *configurations;
     int total_configurations;
 };
 
-bool getGlCapabilities(struct glCapabilities *cap);
-void freeGlCapabilities(struct glCapabilities *cap);
+bool
+getGlCapabilities(struct glCapabilities *cap);
+void
+freeGlCapabilities(struct glCapabilities *cap);
 
 #endif

@@ -37,21 +37,31 @@
 #include "darwin.h"
 
 #undef DEBUG_LOG
-#define DEBUG_LOG(msg, args...) ASL_LOG(ASL_LEVEL_DEBUG, "xpr", msg, ##args)
+#define DEBUG_LOG(msg, args ...) ASL_LOG(ASL_LEVEL_DEBUG, "xpr", msg, ## args)
 
-Bool QuartzModeBundleInit(void);
+Bool
+QuartzModeBundleInit(void);
 
-void AppleDRIExtensionInit(void);
-void xprAppleWMInit(void);
-Bool xprInit(ScreenPtr pScreen);
-Bool xprIsX11Window(int windowNumber);
-WindowPtr xprGetXWindow(xp_window_id wid);
+void
+AppleDRIExtensionInit(void);
+void
+xprAppleWMInit(void);
+Bool
+xprInit(ScreenPtr pScreen);
+Bool
+xprIsX11Window(int windowNumber);
+WindowPtr
+xprGetXWindow(xp_window_id wid);
 
-void xprHideWindows(Bool hide);
+void
+xprHideWindows(Bool hide);
 
-Bool QuartzInitCursor(ScreenPtr pScreen);
-void QuartzSuspendXCursor(ScreenPtr pScreen);
-void QuartzResumeXCursor(ScreenPtr pScreen);
+Bool
+QuartzInitCursor(ScreenPtr pScreen);
+void
+QuartzSuspendXCursor(ScreenPtr pScreen);
+void
+QuartzResumeXCursor(ScreenPtr pScreen);
 
 /* If we are rooted, we need the root window and desktop levels to be below
  * the menubar (24) but above native windows.  Normal window level is 0.
@@ -60,10 +70,10 @@ void QuartzResumeXCursor(ScreenPtr pScreen);
  */
 
 #include <X11/extensions/applewmconst.h>
-static const int normal_window_levels[AppleWMNumWindowLevels+1] = {
+static const int normal_window_levels[AppleWMNumWindowLevels + 1] = {
     0, 3, 4, 5, INT_MIN + 30, INT_MIN + 29,
 };
-static const int rooted_window_levels[AppleWMNumWindowLevels+1] = {
+static const int rooted_window_levels[AppleWMNumWindowLevels + 1] = {
     20, 21, 22, 23, 19, 18,
 };
 

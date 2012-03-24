@@ -41,12 +41,14 @@
 // Other shared data
 extern DevPrivateKeyRec quartzScreenKeyRec;
 #define quartzScreenKey (&quartzScreenKeyRec)
-extern int              aquaMenuBarHeight;
+extern int aquaMenuBarHeight;
 
 // Name of GLX bundle for native OpenGL
 extern const char      *quartzOpenGLBundle;
 
-void QuartzBlockHandler(pointer blockData, OSTimePtr pTimeout, pointer pReadmask);
-void QuartzWakeupHandler(pointer blockData, int result, pointer pReadmask);
+void
+QuartzBlockHandler(pointer blockData, OSTimePtr pTimeout, pointer pReadmask);
+void
+QuartzWakeupHandler(pointer blockData, int result, pointer pReadmask);
 
 #endif  /* _QUARTZCOMMON_H */

@@ -31,21 +31,37 @@
 /* For extra precision of our cursor and other valuators */
 #define XQUARTZ_VALUATOR_LIMIT (1 << 16)
 
-Bool DarwinEQInit(void);
-void DarwinEQFini(void);
-void DarwinEQEnqueue(const xEventPtr e);
-void DarwinEQPointerPost(DeviceIntPtr pDev, xEventPtr e);
-void DarwinEQSwitchScreen(ScreenPtr pScreen, Bool fromDIX);
-void DarwinInputReleaseButtonsAndKeys(DeviceIntPtr pDev);
-void DarwinSendPointerEvents(DeviceIntPtr pDev, int ev_type, int ev_button, double pointer_x, double pointer_y,
-                             double pressure, double tilt_x, double tilt_y);
-void DarwinSendProximityEvents(DeviceIntPtr pDev, int ev_type, double pointer_x, double pointer_y,
-                               double pressure, double tilt_x, double tilt_y);
-void DarwinSendKeyboardEvents(int ev_type, int keycode);
-void DarwinSendScrollEvents(double scroll_x, double scroll_y, double pointer_x, double pointer_y,
-                            double pressure, double tilt_x, double tilt_y);
-void DarwinUpdateModKeys(int flags);
-void DarwinListenOnOpenFD(int fd);
+Bool
+DarwinEQInit(void);
+void
+DarwinEQFini(void);
+void
+DarwinEQEnqueue(const xEventPtr e);
+void
+DarwinEQPointerPost(DeviceIntPtr pDev, xEventPtr e);
+void
+DarwinEQSwitchScreen(ScreenPtr pScreen, Bool fromDIX);
+void
+DarwinInputReleaseButtonsAndKeys(DeviceIntPtr pDev);
+void
+DarwinSendPointerEvents(DeviceIntPtr pDev, int ev_type, int ev_button,
+                        double pointer_x, double pointer_y, double pressure,
+                        double tilt_x,
+                        double tilt_y);
+void
+DarwinSendProximityEvents(DeviceIntPtr pDev, int ev_type, double pointer_x,
+                          double pointer_y, double pressure, double tilt_x,
+                          double tilt_y);
+void
+DarwinSendKeyboardEvents(int ev_type, int keycode);
+void
+DarwinSendScrollEvents(double scroll_x, double scroll_y, double pointer_x,
+                       double pointer_y, double pressure, double tilt_x,
+                       double tilt_y);
+void
+DarwinUpdateModKeys(int flags);
+void
+DarwinListenOnOpenFD(int fd);
 
 /*
  * Subtypes for the ET_XQuartz event type
@@ -76,7 +92,8 @@ enum {
 };
 
 /* Send one of the above events to the server thread. */
-void DarwinSendDDXEvent(int type, int argc, ...);
+void
+DarwinSendDDXEvent(int type, int argc, ...);
 
 /* A mask of the modifiers that are in our X11 keyboard layout:
  * (Fn for example is just useful for 3button mouse emulation) */

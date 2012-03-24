@@ -31,6 +31,7 @@
 
 #define ERROR_FD -1
 
-int launchd_display_fd(void);
+int
+launchd_display_fd(void);
 
 #endif /* _XQUARTZ_LAUNCHD_FD_H_ */

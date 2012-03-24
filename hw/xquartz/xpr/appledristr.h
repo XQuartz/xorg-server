@@ -1,29 +1,29 @@
 /**************************************************************************
 
-Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.
-Copyright 2000 VA Linux Systems, Inc.
-Copyright (c) 2002-2012 Apple Computer, Inc.
-All Rights Reserved.
+   Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.
+   Copyright 2000 VA Linux Systems, Inc.
+   Copyright (c) 2002-2012 Apple Computer, Inc.
+   All Rights Reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sub license, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the
+   "Software"), to deal in the Software without restriction, including
+   without limitation the rights to use, copy, modify, merge, publish,
+   distribute, sub license, and/or sell copies of the Software, and to
+   permit persons to whom the Software is furnished to do so, subject to
+   the following conditions:
 
-The above copyright notice and this permission notice (including the
-next paragraph) shall be included in all copies or substantial portions
-of the Software.
+   The above copyright notice and this permission notice (including the
+   next paragraph) shall be included in all copies or substantial portions
+   of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
-IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
-ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
+   IN NO EVENT SHALL PRECISION INSIGHT AND/OR ITS SUPPLIERS BE LIABLE FOR
+   ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+   TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
 
@@ -41,22 +41,20 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "appledri.h"
 
-#define APPLEDRINAME "Apple-DRI"
+#define APPLEDRINAME            "Apple-DRI"
 
-#define APPLE_DRI_MAJOR_VERSION	1       /* current version numbers */
-#define APPLE_DRI_MINOR_VERSION	0
-#define APPLE_DRI_PATCH_VERSION	0
+#define APPLE_DRI_MAJOR_VERSION 1       /* current version numbers */
+#define APPLE_DRI_MINOR_VERSION 0
+#define APPLE_DRI_PATCH_VERSION 0
 
-typedef struct _AppleDRIQueryVersion
-{
+typedef struct _AppleDRIQueryVersion {
     CARD8 reqType;               /* always DRIReqCode */
     CARD8 driReqType;            /* always X_DRIQueryVersion */
     CARD16 length B16;
 } xAppleDRIQueryVersionReq;
-#define sz_xAppleDRIQueryVersionReq	4
+#define sz_xAppleDRIQueryVersionReq 4
 
-typedef struct
-{
+typedef struct {
     BYTE type;                   /* X_Reply */
     BOOL pad1;
     CARD16 sequenceNumber B16;
@@ -69,19 +67,17 @@ typedef struct
     CARD32 pad5 B32;
     CARD32 pad6 B32;
 } xAppleDRIQueryVersionReply;
-#define sz_xAppleDRIQueryVersionReply	32
+#define sz_xAppleDRIQueryVersionReply 32
 
-typedef struct _AppleDRIQueryDirectRenderingCapable
-{
+typedef struct _AppleDRIQueryDirectRenderingCapable {
     CARD8 reqType;               /* always DRIReqCode */
     CARD8 driReqType;            /* X_DRIQueryDirectRenderingCapable */
     CARD16 length B16;
     CARD32 screen B32;
 } xAppleDRIQueryDirectRenderingCapableReq;
-#define sz_xAppleDRIQueryDirectRenderingCapableReq	8
+#define sz_xAppleDRIQueryDirectRenderingCapableReq 8
 
-typedef struct
-{
+typedef struct {
     BYTE type;                   /* X_Reply */
     BOOL pad1;
     CARD16 sequenceNumber B16;
@@ -96,20 +92,18 @@ typedef struct
     CARD32 pad8 B32;
     CARD32 pad9 B32;
 } xAppleDRIQueryDirectRenderingCapableReply;
-#define sz_xAppleDRIQueryDirectRenderingCapableReply	32
+#define sz_xAppleDRIQueryDirectRenderingCapableReply 32
 
-typedef struct _AppleDRIAuthConnection
-{
+typedef struct _AppleDRIAuthConnection {
     CARD8 reqType;               /* always DRIReqCode */
     CARD8 driReqType;            /* always X_DRICloseConnection */
     CARD16 length B16;
     CARD32 screen B32;
     CARD32 magic B32;
 } xAppleDRIAuthConnectionReq;
-#define sz_xAppleDRIAuthConnectionReq	12
+#define sz_xAppleDRIAuthConnectionReq 12
 
-typedef struct
-{
+typedef struct {
     BYTE type;
     BOOL pad1;
     CARD16 sequenceNumber B16;
@@ -121,10 +115,9 @@ typedef struct
     CARD32 pad5 B32;
     CARD32 pad6 B32;
 } xAppleDRIAuthConnectionReply;
-#define zx_xAppleDRIAuthConnectionReply  32
+#define zx_xAppleDRIAuthConnectionReply 32
 
-typedef struct _AppleDRICreateSurface
-{
+typedef struct _AppleDRICreateSurface {
     CARD8 reqType;               /* always DRIReqCode */
     CARD8 driReqType;            /* always X_DRICreateSurface */
     CARD16 length B16;
@@ -132,10 +125,9 @@ typedef struct _AppleDRICreateSurface
     CARD32 drawable B32;
     CARD32 client_id B32;
 } xAppleDRICreateSurfaceReq;
-#define sz_xAppleDRICreateSurfaceReq	16
+#define sz_xAppleDRICreateSurfaceReq 16
 
-typedef struct
-{
+typedef struct {
     BYTE type;                   /* X_Reply */
     BOOL pad1;
     CARD16 sequenceNumber B16;
@@ -147,20 +139,18 @@ typedef struct
     CARD32 pad5 B32;
     CARD32 pad6 B32;
 } xAppleDRICreateSurfaceReply;
-#define sz_xAppleDRICreateSurfaceReply	32
+#define sz_xAppleDRICreateSurfaceReply 32
 
-typedef struct _AppleDRIDestroySurface
-{
+typedef struct _AppleDRIDestroySurface {
     CARD8 reqType;               /* always DRIReqCode */
     CARD8 driReqType;            /* always X_DRIDestroySurface */
     CARD16 length B16;
     CARD32 screen B32;
     CARD32 drawable B32;
 } xAppleDRIDestroySurfaceReq;
-#define sz_xAppleDRIDestroySurfaceReq	12
+#define sz_xAppleDRIDestroySurfaceReq 12
 
-typedef struct _AppleDRINotify
-{
+typedef struct _AppleDRINotify {
     BYTE type;                   /* always eventBase + event type */
     BYTE kind;
     CARD16 sequenceNumber B16;
@@ -172,11 +162,9 @@ typedef struct _AppleDRINotify
     CARD32 pad5 B32;
     CARD32 pad6 B32;
 } xAppleDRINotifyEvent;
-#define sz_xAppleDRINotifyEvent	32
+#define sz_xAppleDRINotifyEvent 32
 
-
-typedef struct
-{
+typedef struct {
     CARD8 reqType;
     CARD8 driReqType;
     CARD16 length B16;
@@ -188,8 +176,7 @@ typedef struct
 
 #define sz_xAppleDRICreateSharedBufferReq 16
 
-typedef struct
-{
+typedef struct {
     BYTE type;
     BYTE data1;
     CARD16 sequenceNumber B16;
@@ -204,8 +191,7 @@ typedef struct
 
 #define sz_xAppleDRICreateSharedBufferReply 32
 
-typedef struct
-{
+typedef struct {
     CARD8 reqType;
     CARD8 driReqType;
     CARD16 length B16;
@@ -215,8 +201,7 @@ typedef struct
 
 #define sz_xAppleDRISwapBuffersReq 12
 
-typedef struct
-{
+typedef struct {
     CARD8 reqType;               /*1 */
     CARD8 driReqType;            /*2 */
     CARD16 length B16;           /*4 */
@@ -226,8 +211,7 @@ typedef struct
 
 #define sz_xAppleDRICreatePixmapReq 12
 
-typedef struct
-{
+typedef struct {
     BYTE type;                   /*1 */
     BOOL pad1;                   /*2 */
     CARD16 sequenceNumber B16;   /*4 */
@@ -242,8 +226,7 @@ typedef struct
 
 #define sz_xAppleDRICreatePixmapReply 32
 
-typedef struct
-{
+typedef struct {
     CARD8 reqType;               /*1 */
     CARD8 driReqType;            /*2 */
     CARD16 length B16;           /*4 */
@@ -256,12 +239,12 @@ typedef struct
 
 void AppleDRISendEvent(
 #if NeedFunctionPrototypes
-                       int /* type */ ,
-                       unsigned int /* mask */ ,
-                       int /* which */ ,
-                       int    /* arg */
+    int /* type */,
+    unsigned int /* mask */,
+    int /* which */,
+    int                       /* arg */
 #endif
-                       );
+    );
 
 #endif /* _APPLEDRI_SERVER_ */
 #endif /* _APPLEDRISTR_H_ */

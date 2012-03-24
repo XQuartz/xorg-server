@@ -9,10 +9,10 @@
  * publish, distribute, sublicense, and/or sell copies of the Software,
  * and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -21,7 +21,7 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
- * 
+ *
  * Except as contained in this notice, the name(s) of the above
  * copyright holders shall not be used in advertising or otherwise to
  * promote the sale, use or other dealings in this Software without
@@ -58,11 +58,11 @@ typedef unsigned int NSUInteger;
 
 @interface X11Controller : NSObject
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-<NSTableViewDataSource>
+    <NSTableViewDataSource>
 #endif
 {
     IBOutlet NSPanel *prefs_panel;
-    
+
     IBOutlet NSButton *fake_buttons;
     IBOutlet NSButton *enable_fullscreen;
     IBOutlet NSButton *enable_fullscreen_menu;
@@ -84,13 +84,13 @@ typedef unsigned int NSUInteger;
     IBOutlet NSTextField *sync_text1;
     IBOutlet NSTextField *sync_text2;
     IBOutlet NSPopUpButton *depth;
-    
+
     IBOutlet NSMenuItem *window_separator;
     // window_separator is DEPRECATED due to this radar:
     // <rdar://problem/7088335> NSApplication releases the separator in the Windows menu even though it's an IBOutlet
     // It is kept around for localization compatability and is subject to removal "eventually"
     // If it is !NULL (meaning it is in the nib), it is removed from the menu and released
-    
+
     IBOutlet NSMenuItem *x11_about_item;
     IBOutlet NSMenuItem *dock_window_separator;
     IBOutlet NSMenuItem *apps_separator;
@@ -101,55 +101,57 @@ typedef unsigned int NSUInteger;
     IBOutlet NSMenuItem *copy_menu_item;
     IBOutlet NSMenu *dock_apps_menu;
     IBOutlet NSTableView *apps_table;
-    
+
     NSArray *apps;
     NSMutableArray *table_apps;
-    
+
     IBOutlet NSMenu *dock_menu;
-    
+
     // This is where in the Windows menu we'll start (this will be the index of the separator)
     NSInteger windows_menu_start;
-    
+
     int checked_window_item;
     x_list *pending_apps;
-    
+
     OSX_BOOL finished_launching;
     OSX_BOOL can_quit;
 }
 
-- (void) set_window_menu:(NSArray *)list;
-- (void) set_window_menu_check:(NSNumber *)n;
-- (void) set_apps_menu:(NSArray *)list;
+- (void)set_window_menu:(NSArray *)list;
+- (void)set_window_menu_check:(NSNumber *)n;
+- (void)set_apps_menu:(NSArray *)list;
 #ifdef XQUARTZ_SPARKLE
-- (void) setup_sparkle;
-- (void) updater:(SUUpdater *)updater willInstallUpdate:(SUAppcastItem *)update;
+- (void)setup_sparkle;
+- (void)updater:(SUUpdater *)updater willInstallUpdate:(SUAppcastItem *)
+   update;
 #endif
-- (void) set_can_quit:(OSX_BOOL)state;
-- (void) server_ready;
-- (OSX_BOOL) application:(NSApplication *)app openFile:(NSString *)filename;
+- (void)set_can_quit:(OSX_BOOL)state;
+- (void)server_ready;
+- (OSX_BOOL)application:(NSApplication *)app openFile:(NSString *)filename;
 
-- (IBAction) apps_table_show:(id)sender;
-- (IBAction) apps_table_done:(id)sender;
-- (IBAction) apps_table_new:(id)sender;
-- (IBAction) apps_table_duplicate:(id)sender;
-- (IBAction) apps_table_delete:(id)sender;
-- (IBAction) bring_to_front:(id)sender;
-- (IBAction) close_window:(id)sender;
-- (IBAction) minimize_window:(id)sender;
-- (IBAction) zoom_window:(id)sender;
-- (IBAction) next_window:(id)sender;
-- (IBAction) previous_window:(id)sender;
-- (IBAction) enable_fullscreen_changed:(id)sender;
-- (IBAction) toggle_fullscreen:(id)sender;
-- (IBAction) prefs_changed:(id)sender;
-- (IBAction) prefs_show:(id)sender;
-- (IBAction) quit:(id)sender;
-- (IBAction) x11_help:(id)sender;
+- (IBAction)apps_table_show:(id)sender;
+- (IBAction)apps_table_done:(id)sender;
+- (IBAction)apps_table_new:(id)sender;
+- (IBAction)apps_table_duplicate:(id)sender;
+- (IBAction)apps_table_delete:(id)sender;
+- (IBAction)bring_to_front:(id)sender;
+- (IBAction)close_window:(id)sender;
+- (IBAction)minimize_window:(id)sender;
+- (IBAction)zoom_window:(id)sender;
+- (IBAction)next_window:(id)sender;
+- (IBAction)previous_window:(id)sender;
+- (IBAction)enable_fullscreen_changed:(id)sender;
+- (IBAction)toggle_fullscreen:(id)sender;
+- (IBAction)prefs_changed:(id)sender;
+- (IBAction)prefs_show:(id)sender;
+- (IBAction)quit:(id)sender;
+- (IBAction)x11_help:(id)sender;
 
 @end
 
 #endif /* __OBJC__ */
 
-void X11ControllerMain(int argc, char **argv, char **envp);
+void
+X11ControllerMain(int argc, char **argv, char **envp);
 
 #endif /* X11CONTROLLER_H */

@@ -9,28 +9,28 @@
  * following copyright notice:
  */
 /*****************************************************************
- Copyright (c) 1991, 1997 Digital Equipment Corporation, Maynard, Massachusetts.
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software.
- 
- The above copyright notice and this permission notice shall be included in
- all copies or substantial portions of the Software.
- 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- DIGITAL EQUIPMENT CORPORATION BE LIABLE FOR ANY CLAIM, DAMAGES, INCLUDING,
- BUT NOT LIMITED TO CONSEQUENTIAL OR INCIDENTAL DAMAGES, OR OTHER LIABILITY,
- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
- IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- Except as contained in this notice, the name of Digital Equipment Corporation
- shall not be used in advertising or otherwise to promote the sale, use or other
- dealings in this Software without prior written authorization from Digital
- Equipment Corporation.
+   Copyright (c) 1991, 1997 Digital Equipment Corporation, Maynard, Massachusetts.
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software.
+
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+   DIGITAL EQUIPMENT CORPORATION BE LIABLE FOR ANY CLAIM, DAMAGES, INCLUDING,
+   BUT NOT LIMITED TO CONSEQUENTIAL OR INCIDENTAL DAMAGES, OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
+   IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+   Except as contained in this notice, the name of Digital Equipment Corporation
+   shall not be used in advertising or otherwise to promote the sale, use or other
+   dealings in this Software without prior written authorization from Digital
+   Equipment Corporation.
  ******************************************************************/
 
 #ifdef HAVE_DIX_CONFIG_H
@@ -47,26 +47,41 @@
 
 Bool noPseudoramiXExtension = FALSE;
 
-extern int ProcPanoramiXQueryVersion (ClientPtr client);
+extern int
+ProcPanoramiXQueryVersion(ClientPtr client);
 
-static void PseudoramiXResetProc(ExtensionEntry *extEntry);
+static void
+PseudoramiXResetProc(ExtensionEntry *extEntry);
 
-static int ProcPseudoramiXQueryVersion(ClientPtr client);
-static int ProcPseudoramiXGetState(ClientPtr client);
-static int ProcPseudoramiXGetScreenCount(ClientPtr client);
-static int ProcPseudoramiXGetScreenSize(ClientPtr client);
-static int ProcPseudoramiXIsActive(ClientPtr client);
-static int ProcPseudoramiXQueryScreens(ClientPtr client);
-static int ProcPseudoramiXDispatch(ClientPtr client);
+static int
+ProcPseudoramiXQueryVersion(ClientPtr client);
+static int
+ProcPseudoramiXGetState(ClientPtr client);
+static int
+ProcPseudoramiXGetScreenCount(ClientPtr client);
+static int
+ProcPseudoramiXGetScreenSize(ClientPtr client);
+static int
+ProcPseudoramiXIsActive(ClientPtr client);
+static int
+ProcPseudoramiXQueryScreens(ClientPtr client);
+static int
+ProcPseudoramiXDispatch(ClientPtr client);
 
-static int SProcPseudoramiXQueryVersion(ClientPtr client);
-static int SProcPseudoramiXGetState(ClientPtr client);
-static int SProcPseudoramiXGetScreenCount(ClientPtr client);
-static int SProcPseudoramiXGetScreenSize(ClientPtr client);
-static int SProcPseudoramiXIsActive(ClientPtr client);
-static int SProcPseudoramiXQueryScreens(ClientPtr client);
-static int SProcPseudoramiXDispatch(ClientPtr client);
-
+static int
+SProcPseudoramiXQueryVersion(ClientPtr client);
+static int
+SProcPseudoramiXGetState(ClientPtr client);
+static int
+SProcPseudoramiXGetScreenCount(ClientPtr client);
+static int
+SProcPseudoramiXGetScreenSize(ClientPtr client);
+static int
+SProcPseudoramiXIsActive(ClientPtr client);
+static int
+SProcPseudoramiXQueryScreens(ClientPtr client);
+static int
+SProcPseudoramiXDispatch(ClientPtr client);
 
 typedef struct {
     int x;
@@ -80,7 +95,6 @@ static int pseudoramiXScreensAllocated = 0;
 static int pseudoramiXNumScreens = 0;
 static unsigned long pseudoramiXGeneration = 0;
 
-
 // Add a PseudoramiX screen.
 // The rest of the X server will know nothing about this screen.
 // Can be called before or after extension init.
@@ -89,18 +103,18 @@ void
 PseudoramiXAddScreen(int x, int y, int w, int h)
 {
     PseudoramiXScreenRec *s;
-    
+
     if (noPseudoramiXExtension) return;
-    
+
     if (pseudoramiXNumScreens == pseudoramiXScreensAllocated) {
         pseudoramiXScreensAllocated += pseudoramiXScreensAllocated + 1;
         pseudoramiXScreens = realloc(pseudoramiXScreens,
                                      pseudoramiXScreensAllocated *
                                      sizeof(PseudoramiXScreenRec));
     }
-    
+
     DEBUG_LOG("x: %d, y: %d, w: %d, h: %d\n", x, y, w, h);
-    
+
     s = &pseudoramiXScreens[pseudoramiXNumScreens++];
     s->x = x;
     s->y = y;
@@ -108,20 +122,20 @@ PseudoramiXAddScreen(int x, int y, int w, int h)
     s->h = h;
 }
 
-
 // Initialize PseudoramiX.
 // Copied from PanoramiXExtensionInit
-void PseudoramiXExtensionInit(int argc, char *argv[])
+void
+PseudoramiXExtensionInit(int argc, char *argv[])
 {
-    Bool	     	success = FALSE;
-    ExtensionEntry 	*extEntry;
-    
+    Bool success = FALSE;
+    ExtensionEntry      *extEntry;
+
     if (noPseudoramiXExtension) return;
-    
+
     TRACE();
-    
+
     /* Even with only one screen we need to enable PseudoramiX to allow
-     dynamic screen configuration changes. */
+       dynamic screen configuration changes. */
 #if 0
     if (pseudoramiXNumScreens == 1) {
         // Only one screen - disable Xinerama extension.
@@ -129,7 +143,7 @@ void PseudoramiXExtensionInit(int argc, char *argv[])
         return;
     }
 #endif
-    
+
     if (pseudoramiXGeneration != serverGeneration) {
         extEntry = AddExtension(PANORAMIX_PROTOCOL_NAME, 0, 0,
                                 ProcPseudoramiXDispatch,
@@ -138,12 +152,13 @@ void PseudoramiXExtensionInit(int argc, char *argv[])
                                 StandardMinorOpcode);
         if (!extEntry) {
             ErrorF("PseudoramiXExtensionInit(): AddExtension failed\n");
-        } else {
+        }
+        else {
             pseudoramiXGeneration = serverGeneration;
             success = TRUE;
         }
     }
-    
+
     if (!success) {
         ErrorF("%s Extension (PseudoramiX) failed to initialize\n",
                PANORAMIX_PROTOCOL_NAME);
@@ -151,47 +166,47 @@ void PseudoramiXExtensionInit(int argc, char *argv[])
     }
 }
 
-
-void PseudoramiXResetScreens(void)
+void
+PseudoramiXResetScreens(void)
 {
     TRACE();
-    
+
     pseudoramiXNumScreens = 0;
 }
 
-
-static void PseudoramiXResetProc(ExtensionEntry *extEntry)
+static void
+PseudoramiXResetProc(ExtensionEntry *extEntry)
 {
     TRACE();
-    
+
     PseudoramiXResetScreens();
 }
 
-
 // was PanoramiX
-static int ProcPseudoramiXQueryVersion(ClientPtr client)
+static int
+ProcPseudoramiXQueryVersion(ClientPtr client)
 {
     TRACE();
-    
+
     return ProcPanoramiXQueryVersion(client);
 }
 
-
 // was PanoramiX
-static int ProcPseudoramiXGetState(ClientPtr client)
+static int
+ProcPseudoramiXGetState(ClientPtr client)
 {
     REQUEST(xPanoramiXGetStateReq);
     WindowPtr pWin;
     xPanoramiXGetStateReply rep;
     register int rc;
-    
+
     TRACE();
-    
+
     REQUEST_SIZE_MATCH(xPanoramiXGetStateReq);
     rc = dixLookupWindow(&pWin, stuff->window, client, DixGetAttrAccess);
     if (rc != Success)
         return rc;
-    
+
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
@@ -201,26 +216,26 @@ static int ProcPseudoramiXGetState(ClientPtr client)
         swapl(&rep.length);
         swaps(&rep.state);
     }
-    WriteToClient (client, sizeof (xPanoramiXGetStateReply), (char *) &rep);
+    WriteToClient(client, sizeof(xPanoramiXGetStateReply), (char *)&rep);
     return Success;
 }
 
-
 // was PanoramiX
-static int ProcPseudoramiXGetScreenCount(ClientPtr client)
+static int
+ProcPseudoramiXGetScreenCount(ClientPtr client)
 {
     REQUEST(xPanoramiXGetScreenCountReq);
     WindowPtr pWin;
     xPanoramiXGetScreenCountReply rep;
     register int rc;
-    
+
     TRACE();
-    
+
     REQUEST_SIZE_MATCH(xPanoramiXGetScreenCountReq);
     rc = dixLookupWindow(&pWin, stuff->window, client, DixGetAttrAccess);
     if (rc != Success)
         return rc;
-    
+
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
@@ -230,31 +245,31 @@ static int ProcPseudoramiXGetScreenCount(ClientPtr client)
         swapl(&rep.length);
         swaps(&rep.ScreenCount);
     }
-    WriteToClient (client, sizeof(xPanoramiXGetScreenCountReply), (char *)&rep);
+    WriteToClient(client, sizeof(xPanoramiXGetScreenCountReply), (char *)&rep);
     return Success;
 }
 
-
 // was PanoramiX
-static int ProcPseudoramiXGetScreenSize(ClientPtr client)
+static int
+ProcPseudoramiXGetScreenSize(ClientPtr client)
 {
     REQUEST(xPanoramiXGetScreenSizeReq);
-    WindowPtr			pWin;
-    xPanoramiXGetScreenSizeReply	rep;
-    register int			n, rc;
-    
+    WindowPtr pWin;
+    xPanoramiXGetScreenSizeReply rep;
+    register int n, rc;
+
     TRACE();
-    
+
     REQUEST_SIZE_MATCH(xPanoramiXGetScreenSizeReq);
     rc = dixLookupWindow(&pWin, stuff->window, client, DixGetAttrAccess);
     if (rc != Success)
         return rc;
-    
+
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
     /* screen dimensions */
-    rep.width  = pseudoramiXScreens[stuff->screen].w;
+    rep.width = pseudoramiXScreens[stuff->screen].w;
     // was screenInfo.screens[stuff->screen]->width;
     rep.height = pseudoramiXScreens[stuff->screen].h;
     // was screenInfo.screens[stuff->screen]->height;
@@ -264,21 +279,21 @@ static int ProcPseudoramiXGetScreenSize(ClientPtr client)
         swaps(&rep.width);
         swaps(&rep.height);
     }
-    WriteToClient (client, sizeof(xPanoramiXGetScreenSizeReply), (char *)&rep);
+    WriteToClient(client, sizeof(xPanoramiXGetScreenSizeReply), (char *)&rep);
     return Success;
 }
 
-
 // was Xinerama
-static int ProcPseudoramiXIsActive(ClientPtr client)
+static int
+ProcPseudoramiXIsActive(ClientPtr client)
 {
     /* REQUEST(xXineramaIsActiveReq); */
-    xXineramaIsActiveReply	rep;
-    
+    xXineramaIsActiveReply rep;
+
     TRACE();
-    
+
     REQUEST_SIZE_MATCH(xXineramaIsActiveReq);
-    
+
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
@@ -288,21 +303,23 @@ static int ProcPseudoramiXIsActive(ClientPtr client)
         swapl(&rep.length);
         swapl(&rep.state);
     }
-    WriteToClient (client, sizeof (xXineramaIsActiveReply), (char *) &rep);
+    WriteToClient(client, sizeof(xXineramaIsActiveReply), (char *)&rep);
     return Success;
 }
 
-
 // was Xinerama
-static int ProcPseudoramiXQueryScreens(ClientPtr client)
+static int
+ProcPseudoramiXQueryScreens(ClientPtr client)
 {
     /* REQUEST(xXineramaQueryScreensReq); */
-    xXineramaQueryScreensReply	rep;
-    
-    DEBUG_LOG("noPseudoramiXExtension=%d, pseudoramiXNumScreens=%d\n", noPseudoramiXExtension, pseudoramiXNumScreens);
-    
+    xXineramaQueryScreensReply rep;
+
+    DEBUG_LOG("noPseudoramiXExtension=%d, pseudoramiXNumScreens=%d\n",
+              noPseudoramiXExtension,
+              pseudoramiXNumScreens);
+
     REQUEST_SIZE_MATCH(xXineramaQueryScreensReq);
-    
+
     rep.type = X_Reply;
     rep.sequenceNumber = client->sequence;
     rep.number = noPseudoramiXExtension ? 0 : pseudoramiXNumScreens;
@@ -312,151 +329,156 @@ static int ProcPseudoramiXQueryScreens(ClientPtr client)
         swapl(&rep.length);
         swapl(&rep.number);
     }
-    WriteToClient (client, sizeof (xXineramaQueryScreensReply), (char *) &rep);
-    
+    WriteToClient(client, sizeof(xXineramaQueryScreensReply), (char *)&rep);
+
     if (!noPseudoramiXExtension) {
         xXineramaScreenInfo scratch;
         int i;
-        
-        for(i = 0; i < pseudoramiXNumScreens; i++) {
-            scratch.x_org  = pseudoramiXScreens[i].x;
-            scratch.y_org  = pseudoramiXScreens[i].y;
-            scratch.width  = pseudoramiXScreens[i].w;
+
+        for (i = 0; i < pseudoramiXNumScreens; i++) {
+            scratch.x_org = pseudoramiXScreens[i].x;
+            scratch.y_org = pseudoramiXScreens[i].y;
+            scratch.width = pseudoramiXScreens[i].w;
             scratch.height = pseudoramiXScreens[i].h;
-            
-            if(client->swapped) {
+
+            if (client->swapped) {
                 swaps(&scratch.x_org);
                 swaps(&scratch.y_org);
                 swaps(&scratch.width);
                 swaps(&scratch.height);
             }
-            WriteToClient (client, sz_XineramaScreenInfo, (char *) &scratch);
+            WriteToClient(client, sz_XineramaScreenInfo, (char *)&scratch);
         }
     }
-    
+
     return Success;
 }
 
-
 // was PanoramiX
-static int ProcPseudoramiXDispatch (ClientPtr client)
-{   REQUEST(xReq);
+static int
+ProcPseudoramiXDispatch(ClientPtr client)
+{
+    REQUEST(xReq);
     TRACE();
-    switch (stuff->data)
-    {
-        case X_PanoramiXQueryVersion:
-            return ProcPseudoramiXQueryVersion(client);
-        case X_PanoramiXGetState:
-            return ProcPseudoramiXGetState(client);
-        case X_PanoramiXGetScreenCount:
-            return ProcPseudoramiXGetScreenCount(client);
-        case X_PanoramiXGetScreenSize:
-            return ProcPseudoramiXGetScreenSize(client);
-        case X_XineramaIsActive:
-            return ProcPseudoramiXIsActive(client);
-        case X_XineramaQueryScreens:
-            return ProcPseudoramiXQueryScreens(client);
+    switch (stuff->data) {
+    case X_PanoramiXQueryVersion:
+        return ProcPseudoramiXQueryVersion(client);
+
+    case X_PanoramiXGetState:
+        return ProcPseudoramiXGetState(client);
+
+    case X_PanoramiXGetScreenCount:
+        return ProcPseudoramiXGetScreenCount(client);
+
+    case X_PanoramiXGetScreenSize:
+        return ProcPseudoramiXGetScreenSize(client);
+
+    case X_XineramaIsActive:
+        return ProcPseudoramiXIsActive(client);
+
+    case X_XineramaQueryScreens:
+        return ProcPseudoramiXQueryScreens(client);
     }
     return BadRequest;
 }
 
-
-
 static int
-SProcPseudoramiXQueryVersion (ClientPtr client)
+SProcPseudoramiXQueryVersion(ClientPtr client)
 {
-	REQUEST(xPanoramiXQueryVersionReq);
-    
+    REQUEST(xPanoramiXQueryVersionReq);
+
     TRACE();
-    
-	swaps(&stuff->length);
-	REQUEST_SIZE_MATCH (xPanoramiXQueryVersionReq);
-	return ProcPseudoramiXQueryVersion(client);
+
+    swaps(&stuff->length);
+    REQUEST_SIZE_MATCH(xPanoramiXQueryVersionReq);
+    return ProcPseudoramiXQueryVersion(client);
 }
 
 static int
 SProcPseudoramiXGetState(ClientPtr client)
 {
-	REQUEST(xPanoramiXGetStateReq);
-    
+    REQUEST(xPanoramiXGetStateReq);
+
     TRACE();
-    
-	swaps(&stuff->length);
-	REQUEST_SIZE_MATCH(xPanoramiXGetStateReq);
-	return ProcPseudoramiXGetState(client);
+
+    swaps(&stuff->length);
+    REQUEST_SIZE_MATCH(xPanoramiXGetStateReq);
+    return ProcPseudoramiXGetState(client);
 }
 
 static int
 SProcPseudoramiXGetScreenCount(ClientPtr client)
 {
-	REQUEST(xPanoramiXGetScreenCountReq);
-    
+    REQUEST(xPanoramiXGetScreenCountReq);
+
     TRACE();
-    
-	swaps(&stuff->length);
-	REQUEST_SIZE_MATCH(xPanoramiXGetScreenCountReq);
-	return ProcPseudoramiXGetScreenCount(client);
+
+    swaps(&stuff->length);
+    REQUEST_SIZE_MATCH(xPanoramiXGetScreenCountReq);
+    return ProcPseudoramiXGetScreenCount(client);
 }
 
 static int
 SProcPseudoramiXGetScreenSize(ClientPtr client)
 {
-	REQUEST(xPanoramiXGetScreenSizeReq);
-    
-    TRACE();
-    
-	swaps(&stuff->length);
-	REQUEST_SIZE_MATCH(xPanoramiXGetScreenSizeReq);
-	return ProcPseudoramiXGetScreenSize(client);
-}
+    REQUEST(xPanoramiXGetScreenSizeReq);
 
+    TRACE();
+
+    swaps(&stuff->length);
+    REQUEST_SIZE_MATCH(xPanoramiXGetScreenSizeReq);
+    return ProcPseudoramiXGetScreenSize(client);
+}
 
 static int
 SProcPseudoramiXIsActive(ClientPtr client)
 {
-	REQUEST(xXineramaIsActiveReq);
-    
-    TRACE();
-    
-	swaps(&stuff->length);
-	REQUEST_SIZE_MATCH(xXineramaIsActiveReq);
-	return ProcPseudoramiXIsActive(client);
-}
+    REQUEST(xXineramaIsActiveReq);
 
+    TRACE();
+
+    swaps(&stuff->length);
+    REQUEST_SIZE_MATCH(xXineramaIsActiveReq);
+    return ProcPseudoramiXIsActive(client);
+}
 
 static int
 SProcPseudoramiXQueryScreens(ClientPtr client)
 {
-	REQUEST(xXineramaQueryScreensReq);
-    
+    REQUEST(xXineramaQueryScreensReq);
+
     TRACE();
-    
-	swaps(&stuff->length);
-	REQUEST_SIZE_MATCH(xXineramaQueryScreensReq);
-	return ProcPseudoramiXQueryScreens(client);
+
+    swaps(&stuff->length);
+    REQUEST_SIZE_MATCH(xXineramaQueryScreensReq);
+    return ProcPseudoramiXQueryScreens(client);
 }
 
-
 static int
-SProcPseudoramiXDispatch (ClientPtr client)
-{   REQUEST(xReq);
-    
+SProcPseudoramiXDispatch(ClientPtr client)
+{
+    REQUEST(xReq);
+
     TRACE();
-    
-    switch (stuff->data)
-    {
-        case X_PanoramiXQueryVersion:
-            return SProcPseudoramiXQueryVersion(client);
-        case X_PanoramiXGetState:
-            return SProcPseudoramiXGetState(client);
-        case X_PanoramiXGetScreenCount:
-            return SProcPseudoramiXGetScreenCount(client);
-        case X_PanoramiXGetScreenSize:
-            return SProcPseudoramiXGetScreenSize(client);
-        case X_XineramaIsActive:
-            return SProcPseudoramiXIsActive(client);
-        case X_XineramaQueryScreens:
-            return SProcPseudoramiXQueryScreens(client);
+
+    switch (stuff->data) {
+    case X_PanoramiXQueryVersion:
+        return SProcPseudoramiXQueryVersion(client);
+
+    case X_PanoramiXGetState:
+        return SProcPseudoramiXGetState(client);
+
+    case X_PanoramiXGetScreenCount:
+        return SProcPseudoramiXGetScreenCount(client);
+
+    case X_PanoramiXGetScreenSize:
+        return SProcPseudoramiXGetScreenSize(client);
+
+    case X_XineramaIsActive:
+        return SProcPseudoramiXIsActive(client);
+
+    case X_XineramaQueryScreens:
+        return SProcPseudoramiXQueryScreens(client);
     }
     return BadRequest;
 }

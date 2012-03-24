@@ -1,7 +1,7 @@
 /*
  * Xplugin rootless implementation screen functions
  *
- * Copyright (c) 2002 Apple Computer, Inc. All Rights Reserved.
+ * Copyright (c) 2002-2012 Apple Computer, Inc. All Rights Reserved.
  * Copyright (c) 2004 Torrey T. Lyons. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -55,7 +55,7 @@
 #endif
 
 /* 10.4's deferred update makes X slower.. have to live with the tearing
-   for now.. */
+ * for now.. */
 #define XP_NO_DEFERRED_UPDATES 8
 
 // Name of GLX bundle for native OpenGL
@@ -80,7 +80,7 @@ static void eventHandler(unsigned int type, const void *arg,
                 
                 DEBUG_LOG("XP_EVENT_WINDOW_STATE_CHANGED: id=%d, state=%d\n", ws_arg->id, ws_arg->state);
                 DarwinSendDDXEvent(kXquartzWindowState, 2,
-                                          ws_arg->id, ws_arg->state);
+                                   ws_arg->id, ws_arg->state);
             } else {
                 DEBUG_LOG("XP_EVENT_WINDOW_STATE_CHANGED: ignored\n");
             }
@@ -133,7 +133,7 @@ displayAtIndex(int index)
     CGError err;
     CGDisplayCount cnt;
     CGDirectDisplayID dpy[index+1];
-
+    
     err = CGGetActiveDisplayList(index + 1, dpy, &cnt);
     if (err == kCGErrorSuccess && cnt == index + 1)
         return dpy[index];
@@ -149,9 +149,9 @@ static CGRect
 displayScreenBounds(CGDirectDisplayID id)
 {
     CGRect frame;
-
+    
     frame = CGDisplayBounds(id);
-
+    
     DEBUG_LOG("    %dx%d @ (%d,%d).\n",
               (int)frame.size.width, (int)frame.size.height,
               (int)frame.origin.x, (int)frame.origin.y);
@@ -162,11 +162,11 @@ displayScreenBounds(CGDirectDisplayID id)
         frame.origin.y += aquaMenuBarHeight;
         frame.size.height -= aquaMenuBarHeight;
     }
-
+    
     DEBUG_LOG("    %dx%d @ (%d,%d).\n",
               (int)frame.size.width, (int)frame.size.height,
               (int)frame.origin.x, (int)frame.origin.y);
-
+    
     return frame;
 }
 
@@ -181,11 +181,11 @@ xprAddPseudoramiXScreens(int *x, int *y, int *width, int *height, ScreenPtr pScr
     CGDisplayCount i, displayCount;
     CGDirectDisplayID *displayList = NULL;
     CGRect unionRect = CGRectNull, frame;
-
+    
     // Find all the CoreGraphics displays
     CGGetActiveDisplayList(0, NULL, &displayCount);
     DEBUG_LOG("displayCount: %d\n", (int)displayCount);
-
+    
     if(!displayCount) {
         ErrorF("CoreGraphics has reported no connected displays.  Creating a stub 800x600 display.\n");
         *x = *y = 0;
@@ -195,52 +195,52 @@ xprAddPseudoramiXScreens(int *x, int *y, int *width, int *height, ScreenPtr pScr
         QuartzCopyDisplayIDs(pScreen, 0, NULL);
         return;
     }
-
+    
     /* If the displays are captured, we are in a RandR game mode
      * on the primary display, so we only want to include the first
      * display.  The others are covered by the shield window.
      */
     if (CGDisplayIsCaptured(kCGDirectMainDisplay))
         displayCount = 1;
-
+    
     displayList = malloc(displayCount * sizeof(CGDirectDisplayID));
     if(!displayList)
         FatalError("Unable to allocate memory for list of displays.\n");
     CGGetActiveDisplayList(displayCount, displayList, &displayCount);
     QuartzCopyDisplayIDs(pScreen, displayCount, displayList);
-
+    
     /* Get the union of all screens */
     for (i = 0; i < displayCount; i++) {
         CGDirectDisplayID dpy = displayList[i];
         frame = displayScreenBounds(dpy);
         unionRect = CGRectUnion(unionRect, frame);
     }
-
+    
     /* Use unionRect as the screen size for the X server. */
     *x = unionRect.origin.x;
     *y = unionRect.origin.y;
     *width = unionRect.size.width;
     *height = unionRect.size.height;
-
+    
     DEBUG_LOG("  screen union origin: (%d,%d) size: (%d,%d).\n",
               *x, *y, *width, *height);
-
+    
     /* Tell PseudoramiX about the real screens. */
     for (i = 0; i < displayCount; i++)
     {
         CGDirectDisplayID dpy = displayList[i];
-
+        
         frame = displayScreenBounds(dpy);
         frame.origin.x -= unionRect.origin.x;
         frame.origin.y -= unionRect.origin.y;
-
+        
         DEBUG_LOG("    placed at X11 coordinate (%d,%d).\n",
                   (int)frame.origin.x, (int)frame.origin.y);
-
+        
         PseudoramiXAddScreen(frame.origin.x, frame.origin.y,
                              frame.size.width, frame.size.height);
     }
-
+    
     free(displayList);
 }
 
@@ -252,22 +252,22 @@ static void
 xprDisplayInit(void)
 {
     CGDisplayCount displayCount;
-
+    
     TRACE();
-
+    
     CGGetActiveDisplayList(0, NULL, &displayCount);
-
+    
     /* With PseudoramiX, the X server only sees one screen; only PseudoramiX
-       itself knows about all of the screens. */
-
+     itself knows about all of the screens. */
+    
     if (noPseudoramiXExtension)
         darwinScreensFound = displayCount;
     else
         darwinScreensFound =  1;
-
+    
     if (xp_init(XP_BACKGROUND_EVENTS | XP_NO_DEFERRED_UPDATES) != Success)
         FatalError("Could not initialize the Xplugin library.");
-
+    
     xp_select_events(XP_EVENT_DISPLAY_CHANGED
                      | XP_EVENT_WINDOW_STATE_CHANGED
                      | XP_EVENT_WINDOW_MOVED
@@ -277,10 +277,10 @@ xprDisplayInit(void)
                      | XP_EVENT_SURFACE_CHANGED
                      | XP_EVENT_SURFACE_DESTROYED,
                      eventHandler, NULL);
-
+    
     AppleDRIExtensionInit();
     xprAppleWMInit();
-
+    
     XQuartzIsRootless = XQuartzRootlessDefault;
     if (!XQuartzIsRootless)
         RootlessHideAllWindows();
@@ -295,7 +295,7 @@ xprAddScreen(int index, ScreenPtr pScreen)
 {
     DarwinFramebufferPtr dfb = SCREEN_PRIV(pScreen);
     int depth = darwinDesiredDepth;
-
+    
     DEBUG_LOG("index=%d depth=%d\n", index, depth);
     
     if(depth == -1) {
@@ -308,7 +308,7 @@ xprAddScreen(int index, ScreenPtr pScreen)
         modeRef = CGDisplayCopyDisplayMode(kCGDirectMainDisplay);
         if(!modeRef)
             goto have_depth;
-
+        
         encStrRef = CGDisplayModeCopyPixelEncoding(modeRef);
         CFRelease(modeRef);
         if(!encStrRef)
@@ -321,7 +321,7 @@ xprAddScreen(int index, ScreenPtr pScreen)
         } else if(CFStringCompare(encStrRef, CFSTR(IO8BitIndexedPixels), kCFCompareCaseInsensitive) == kCFCompareEqualTo) {
             depth = 8;
         }
-
+        
         CFRelease(encStrRef);
 #endif
     }
@@ -350,7 +350,7 @@ have_depth:
             dfb->greenMask = GM_ARGB(0,5,5,5);
             dfb->blueMask  = BM_ARGB(0,5,5,5);
             break;
-//        case 24:
+            //        case 24:
         default:
             if(depth != 24)
                 ErrorF("Unsupported color depth requested.  Defaulting to 24bit. (depth=%d darwinDesiredDepth=%d)\n", depth, darwinDesiredDepth);
@@ -364,19 +364,19 @@ have_depth:
             dfb->blueMask  = BM_ARGB(0,8,8,8);
             break;
     }
-
+    
     if (noPseudoramiXExtension)
     {
         CGDirectDisplayID dpy;
         CGRect frame;
-
+        
         ErrorF("Warning: noPseudoramiXExtension!\n");
         
         dpy = displayAtIndex(index);
         QuartzCopyDisplayIDs(pScreen, 1, &dpy);
-
+        
         frame = displayScreenBounds(dpy);
-
+        
         dfb->x = frame.origin.x;
         dfb->y = frame.origin.y;
         dfb->width =  frame.size.width;
@@ -386,15 +386,15 @@ have_depth:
     {
         xprAddPseudoramiXScreens(&dfb->x, &dfb->y, &dfb->width, &dfb->height, pScreen);
     }
-
+    
     /* Passing zero width (pitch) makes miCreateScreenResources set the
-       screen pixmap to the framebuffer pointer, i.e. NULL. The generic
-       rootless code takes care of making this work. */
+     screen pixmap to the framebuffer pointer, i.e. NULL. The generic
+     rootless code takes care of making this work. */
     dfb->pitch = 0;
     dfb->framebuffer = NULL;
-
+    
     DRIScreenInit(pScreen);
-
+    
     return TRUE;
 }
 
@@ -411,11 +411,11 @@ xprSetupScreen(int index, ScreenPtr pScreen)
     if (!DamageSetup(pScreen))
         return FALSE;
 #endif
-
+    
     // Initialize generic rootless code
     if (!xprInit(pScreen))
         return FALSE;
-
+    
     return DRIFinishScreenInit(pScreen);
 }
 
@@ -428,9 +428,9 @@ xprUpdateScreen(ScreenPtr pScreen)
 {
     rootlessGlobalOffsetX = darwinMainScreenX;
     rootlessGlobalOffsetY = darwinMainScreenY;
-
+    
     AppleWMSetScreenOrigin(pScreen->root);
-
+    
     RootlessRepositionWindows(pScreen);
     RootlessUpdateScreenPixmap(pScreen);
 }
@@ -443,10 +443,10 @@ static void
 xprInitInput(int argc, char **argv)
 {
     int i;
-
+    
     rootlessGlobalOffsetX = darwinMainScreenX;
     rootlessGlobalOffsetY = darwinMainScreenY;
-
+    
     for (i = 0; i < screenInfo.numScreens; i++)
         AppleWMSetScreenOrigin(screenInfo.screens[i]->root);
 }

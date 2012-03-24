@@ -2,7 +2,7 @@
  * GLX implementation that uses Apple's OpenGL.framework
  * (Indirect rendering path -- it's also used for some direct mode code too)
  *
- * Copyright (c) 2007-2011 Apple Inc.
+ * Copyright (c) 2007-2012 Apple Inc.
  * Copyright (c) 2004 Torrey T. Lyons. All Rights Reserved.
  * Copyright (c) 2002 Greg Parker. All Rights Reserved.
  *
@@ -118,20 +118,20 @@ struct __GLXAquaDrawable {
 
 static __GLXcontext *
 __glXAquaScreenCreateContext(__GLXscreen *screen,
-			     __GLXconfig *conf,
-			     __GLXcontext *baseShareContext)
+                             __GLXconfig *conf,
+                             __GLXcontext *baseShareContext)
 {
     __GLXAquaContext *context;
     __GLXAquaContext *shareContext = (__GLXAquaContext *) baseShareContext;
     CGLError gl_err;
-  
+    
     GLAQUA_DEBUG_MSG("glXAquaScreenCreateContext\n");
     
     context = calloc(1, sizeof (__GLXAquaContext));
     
     if (context == NULL)
-	return NULL;
-
+        return NULL;
+    
     memset(context, 0, sizeof *context);
     
     context->base.pGlxScreen = screen;
@@ -148,17 +148,17 @@ __glXAquaScreenCreateContext(__GLXscreen *screen,
         free(context);
         return NULL;
     }
-
+    
     context->ctx = NULL;
     gl_err = CGLCreateContext(context->pixelFormat,
-			      shareContext ? shareContext->ctx : NULL,
-			      &context->ctx);
+                              shareContext ? shareContext->ctx : NULL,
+                              &context->ctx);
     
     if (gl_err != 0) {
-	ErrorF("CGLCreateContext error: %s\n", CGLErrorString(gl_err));
-	CGLDestroyPixelFormat(context->pixelFormat);
-	free(context);
-	return NULL;
+        ErrorF("CGLCreateContext error: %s\n", CGLErrorString(gl_err));
+        CGLDestroyPixelFormat(context->pixelFormat);
+        free(context);
+        return NULL;
     }
     
     setup_dispatch_table();
@@ -172,47 +172,47 @@ static x_hash_table *surface_hash;
 
 static void __glXAquaContextDestroy(__GLXcontext *baseContext) {
     x_list *lst;
-
+    
     __GLXAquaContext *context = (__GLXAquaContext *) baseContext;
     
     GLAQUA_DEBUG_MSG("glAquaContextDestroy (ctx %p)\n", baseContext);
     if (context != NULL) {
-      if (context->sid != 0 && surface_hash != NULL) {
-		lst = x_hash_table_lookup(surface_hash, x_cvt_uint_to_vptr(context->sid), NULL);
-		lst = x_list_remove(lst, context);
-		x_hash_table_insert(surface_hash, x_cvt_uint_to_vptr(context->sid), lst);
-      }
-
-      if (context->ctx != NULL)
-	  CGLDestroyContext(context->ctx);
-
-      if (context->pixelFormat != NULL)
-	  CGLDestroyPixelFormat(context->pixelFormat);
-      
-      free(context);
+        if (context->sid != 0 && surface_hash != NULL) {
+            lst = x_hash_table_lookup(surface_hash, x_cvt_uint_to_vptr(context->sid), NULL);
+            lst = x_list_remove(lst, context);
+            x_hash_table_insert(surface_hash, x_cvt_uint_to_vptr(context->sid), lst);
+        }
+        
+        if (context->ctx != NULL)
+            CGLDestroyContext(context->ctx);
+        
+        if (context->pixelFormat != NULL)
+            CGLDestroyPixelFormat(context->pixelFormat);
+        
+        free(context);
     }
 }
 
 static int __glXAquaContextLoseCurrent(__GLXcontext *baseContext) {
     CGLError gl_err;
-
+    
     GLAQUA_DEBUG_MSG("glAquaLoseCurrent (ctx 0x%p)\n", baseContext);
-
+    
     gl_err = CGLSetCurrentContext(NULL);
     if (gl_err != 0)
-      ErrorF("CGLSetCurrentContext error: %s\n", CGLErrorString(gl_err));
-
+        ErrorF("CGLSetCurrentContext error: %s\n", CGLErrorString(gl_err));
+    
     /* 
      * There should be no need to set __glXLastContext to NULL here, because
      * glxcmds.c does it as part of the context cache flush after calling 
      * this.
      */
-
+    
     return GL_TRUE;
 }
 
 /* Called when a surface is destroyed as a side effect of destroying
-   the window it's attached to. */
+ the window it's attached to. */
 static void surface_notify(void *_arg, void *data) {
     DRISurfaceNotifyArg *arg = (DRISurfaceNotifyArg *)_arg;
     __GLXAquaDrawable *draw = (__GLXAquaDrawable *)data;
@@ -225,26 +225,26 @@ static void surface_notify(void *_arg, void *data) {
 	
     GLAQUA_DEBUG_MSG("surface_notify(%p, %p)\n", _arg, data);
     switch (arg->kind) {
-    case AppleDRISurfaceNotifyDestroyed:
-        if (surface_hash != NULL)
-            x_hash_table_remove(surface_hash, x_cvt_uint_to_vptr(arg->id));
-	draw->pDraw = NULL;
-	draw->sid = 0;
-        break;
-
-    case AppleDRISurfaceNotifyChanged:
-        if (surface_hash != NULL) {
-            lst = x_hash_table_lookup(surface_hash, x_cvt_uint_to_vptr(arg->id), NULL);
-            for (; lst != NULL; lst = lst->next)
-		{
-                context = lst->data;
-                xp_update_gl_context(context->ctx);
+        case AppleDRISurfaceNotifyDestroyed:
+            if (surface_hash != NULL)
+                x_hash_table_remove(surface_hash, x_cvt_uint_to_vptr(arg->id));
+            draw->pDraw = NULL;
+            draw->sid = 0;
+            break;
+            
+        case AppleDRISurfaceNotifyChanged:
+            if (surface_hash != NULL) {
+                lst = x_hash_table_lookup(surface_hash, x_cvt_uint_to_vptr(arg->id), NULL);
+                for (; lst != NULL; lst = lst->next)
+                {
+                    context = lst->data;
+                    xp_update_gl_context(context->ctx);
+                }
             }
-        }
-        break;
-    default:
-	ErrorF("surface_notify: unknown kind %d\n", arg->kind);
-	break;
+            break;
+        default:
+            ErrorF("surface_notify: unknown kind %d\n", arg->kind);
+            break;
     }
 }
 
@@ -254,58 +254,58 @@ static BOOL attach(__GLXAquaContext *context, __GLXAquaDrawable *draw) {
     GLAQUA_DEBUG_MSG("attach(%p, %p)\n", context, draw);
 	
     if(NULL == context || NULL == draw)
-	return TRUE;
-
+        return TRUE;
+    
     pDraw = draw->base.pDraw;
-
+    
     if(NULL == pDraw) {
-	ErrorF("%s:%s() pDraw is NULL!\n", __FILE__, __func__);
-	return TRUE;
+        ErrorF("%s:%s() pDraw is NULL!\n", __FILE__, __func__);
+        return TRUE;
     }
-
+    
     if (draw->sid == 0) {
-	//if (!quartzProcs->CreateSurface(pDraw->pScreen, pDraw->id, pDraw,
+        //if (!quartzProcs->CreateSurface(pDraw->pScreen, pDraw->id, pDraw,
         if (!DRICreateSurface(pDraw->pScreen, pDraw->id, pDraw,
-			      0, &draw->sid, NULL,
-			      surface_notify, draw))
+                              0, &draw->sid, NULL,
+                              surface_notify, draw))
             return TRUE;
         draw->pDraw = pDraw;
     } 
     
     if (!context->isAttached || context->sid != draw->sid) {
         x_list *lst;
-	
+        
         if (xp_attach_gl_context(context->ctx, draw->sid) != Success) {
-	    //quartzProcs->DestroySurface(pDraw->pScreen, pDraw->id, pDraw,
+            //quartzProcs->DestroySurface(pDraw->pScreen, pDraw->id, pDraw,
             DRIDestroySurface(pDraw->pScreen, pDraw->id, pDraw,
-			      surface_notify, draw);
+                              surface_notify, draw);
             if (surface_hash != NULL)
                 x_hash_table_remove(surface_hash, x_cvt_uint_to_vptr(draw->sid));
-	    
+            
             draw->sid = 0;
             return TRUE;
         }
-	
+        
         context->isAttached = TRUE;
         context->sid = draw->sid;
-	
+        
         if (surface_hash == NULL)
             surface_hash = x_hash_table_new(NULL, NULL, NULL, NULL);
-	
+        
         lst = x_hash_table_lookup(surface_hash, x_cvt_uint_to_vptr(context->sid), NULL);
         if (x_list_find(lst, context) == NULL) {
             lst = x_list_prepend(lst, context);
             x_hash_table_insert(surface_hash, x_cvt_uint_to_vptr(context->sid), lst);
         }
-	
-	
-
+        
+        
+        
         GLAQUA_DEBUG_MSG("attached 0x%x to 0x%x\n", (unsigned int) pDraw->id,
                          (unsigned int) draw->sid);
     } 
-
+    
     draw->context = context;
-
+    
     return FALSE;
 }
 
@@ -319,13 +319,13 @@ static void unattach(__GLXAquaContext *context) {
 	}
     if (context->isAttached) {
         GLAQUA_DEBUG_MSG("unattaching\n");
-
+        
         if (surface_hash != NULL) {
             lst = x_hash_table_lookup(surface_hash, (void *) context->sid, NULL);
             lst = x_list_remove(lst, context);
             x_hash_table_insert(surface_hash, (void *) context->sid, lst);
         }
-
+        
         CGLClearDrawable(context->ctx);
         context->isAttached = FALSE;
         context->sid = 0;
@@ -341,8 +341,8 @@ static int __glXAquaContextMakeCurrent(__GLXcontext *baseContext) {
     GLAQUA_DEBUG_MSG("glAquaMakeCurrent (ctx 0x%p)\n", baseContext);
     
     if(attach(context, drawPriv))
-	return /*error*/ 0;
-
+        return /*error*/ 0;
+    
     gl_err = CGLSetCurrentContext(context->ctx);
     if (gl_err != 0)
         ErrorF("CGLSetCurrentContext error: %s\n", CGLErrorString(gl_err));
@@ -353,16 +353,16 @@ static int __glXAquaContextMakeCurrent(__GLXcontext *baseContext) {
 static int __glXAquaContextCopy(__GLXcontext *baseDst, __GLXcontext *baseSrc, unsigned long mask)
 {
     CGLError gl_err;
-
+    
     __GLXAquaContext *dst = (__GLXAquaContext *) baseDst;
     __GLXAquaContext *src = (__GLXAquaContext *) baseSrc;
-
+    
     GLAQUA_DEBUG_MSG("GLXAquaContextCopy\n");
-
+    
     gl_err = CGLCopyContext(src->ctx, dst->ctx, mask);
     if (gl_err != 0)
         ErrorF("CGLCopyContext error: %s\n", CGLErrorString(gl_err));
-
+    
     return gl_err == 0;
 }
 
@@ -370,30 +370,30 @@ static int __glXAquaContextCopy(__GLXcontext *baseDst, __GLXcontext *baseSrc, un
 static GLboolean __glXAquaDrawableSwapBuffers(ClientPtr client, __GLXdrawable *base) {
     CGLError err;
     __GLXAquaDrawable *drawable;
- 
+    
     //    GLAQUA_DEBUG_MSG("glAquaDrawableSwapBuffers(%p)\n",base);
 	
     if(!base) {
-	ErrorF("%s passed NULL\n", __func__);
-	return GL_FALSE;
+        ErrorF("%s passed NULL\n", __func__);
+        return GL_FALSE;
     }
-
+    
     drawable = (__GLXAquaDrawable *)base;
-
+    
     if(NULL == drawable->context) {
-	ErrorF("%s called with a NULL->context for drawable %p!\n",
-	       __func__, (void *)drawable);
-	return GL_FALSE;
+        ErrorF("%s called with a NULL->context for drawable %p!\n",
+               __func__, (void *)drawable);
+        return GL_FALSE;
     }
-
+    
     err = CGLFlushDrawable(drawable->context->ctx);
-
+    
     if(kCGLNoError != err) {
-	ErrorF("CGLFlushDrawable error: %s in %s\n", CGLErrorString(err),
-	       __func__);
-	return GL_FALSE;
+        ErrorF("CGLFlushDrawable error: %s in %s\n", CGLErrorString(err),
+               __func__);
+        return GL_FALSE;
     }
-
+    
     return GL_TRUE;
 }
 
@@ -406,76 +406,76 @@ static CGLPixelFormatObj makeFormat(__GLXconfig *conf) {
     int i = 0;
     
     if(conf->doubleBufferMode)
-	attr[i++] = kCGLPFADoubleBuffer;
-
+        attr[i++] = kCGLPFADoubleBuffer;
+    
     if(conf->stereoMode)
-	attr[i++] = kCGLPFAStereo;
-
+        attr[i++] = kCGLPFAStereo;
+    
     attr[i++] = kCGLPFAColorSize;
     attr[i++] = conf->redBits + conf->greenBits + conf->blueBits;
     attr[i++] = kCGLPFAAlphaSize;
     attr[i++] = conf->alphaBits;
-
+    
     if((conf->accumRedBits + conf->accumGreenBits + conf->accumBlueBits +
-	conf->accumAlphaBits) > 0) {
-
-	attr[i++] = kCGLPFAAccumSize;
+        conf->accumAlphaBits) > 0) {
+        
+        attr[i++] = kCGLPFAAccumSize;
         attr[i++] = conf->accumRedBits + conf->accumGreenBits
 	    + conf->accumBlueBits + conf->accumAlphaBits;
     }
     
     attr[i++] = kCGLPFADepthSize;
     attr[i++] = conf->depthBits;
-
+    
     if(conf->stencilBits) {
-	attr[i++] = kCGLPFAStencilSize;
+        attr[i++] = kCGLPFAStencilSize;
         attr[i++] = conf->stencilBits;	
     }
     
     if(conf->numAuxBuffers > 0) {
-	attr[i++] = kCGLPFAAuxBuffers;
-	attr[i++] = conf->numAuxBuffers;
+        attr[i++] = kCGLPFAAuxBuffers;
+        attr[i++] = conf->numAuxBuffers;
     }
-
+    
     if(conf->sampleBuffers > 0) {
-       attr[i++] = kCGLPFASampleBuffers;
-       attr[i++] = conf->sampleBuffers;
-       attr[i++] = kCGLPFASamples;
-       attr[i++] = conf->samples;
+        attr[i++] = kCGLPFASampleBuffers;
+        attr[i++] = conf->sampleBuffers;
+        attr[i++] = kCGLPFASamples;
+        attr[i++] = conf->samples;
     }
-     
+    
     attr[i] = 0;
-
+    
     error = CGLChoosePixelFormat(attr, &fobj, &formats);
     if(error) {
-	ErrorF("error: creating pixel format %s\n", CGLErrorString(error));
-	return NULL;
+        ErrorF("error: creating pixel format %s\n", CGLErrorString(error));
+        return NULL;
     }
-
+    
     return fobj;
 }
 
 static void __glXAquaScreenDestroy(__GLXscreen *screen) {
-
+    
     GLAQUA_DEBUG_MSG("glXAquaScreenDestroy(%p)\n", screen);
     __glXScreenDestroy(screen);
-
+    
     free(screen);
 }
 
 /* This is called by __glXInitScreens(). */
 static __GLXscreen * __glXAquaScreenProbe(ScreenPtr pScreen) {
     __GLXAquaScreen *screen;
-
+    
     GLAQUA_DEBUG_MSG("glXAquaScreenProbe\n");
-
+    
     if (pScreen == NULL) 
-	return NULL;
-
+        return NULL;
+    
     screen = calloc(1, sizeof *screen);
-
+    
     if(NULL == screen)
-	return NULL;
+        return NULL;
     
     screen->base.destroy        = __glXAquaScreenDestroy;
     screen->base.createContext  = __glXAquaScreenCreateContext;
@@ -484,9 +484,9 @@ static __GLXscreen * __glXAquaScreenProbe(ScreenPtr pScreen) {
     screen->base.pScreen       = pScreen;
     
     screen->base.fbconfigs = __glXAquaCreateVisualConfigs(&screen->base.numFBConfigs, pScreen->myNum);
-
+    
     __glXScreenInit(&screen->base, pScreen);
-
+    
     screen->base.GLXmajor = 1;
     screen->base.GLXminor = 4;
     screen->base.GLXextensions = strdup("GLX_SGIX_fbconfig "
@@ -502,7 +502,7 @@ static __GLXscreen * __glXAquaScreenProbe(ScreenPtr pScreen) {
 
 #if 0 // unused
 static void __glXAquaDrawableCopySubBuffer (__GLXdrawable *drawable,
-					    int x, int y, int w, int h) {
+                                            int x, int y, int w, int h) {
     /*TODO finish me*/
 }
 #endif
@@ -514,54 +514,54 @@ static void __glXAquaDrawableDestroy(__GLXdrawable *base) {
      * does this too...
      */
     __GLXAquaDrawable *glxPriv = (__GLXAquaDrawable *)base;
-
+    
     GLAQUA_DEBUG_MSG("TRACE");
     
     /* It doesn't work to call DRIDestroySurface here, the drawable's
-       already gone.. But dri.c notices the window destruction and
-       frees the surface itself. */
-
+     already gone.. But dri.c notices the window destruction and
+     frees the surface itself. */
+    
     /*gstaplin: verify the statement above.  The surface destroy
      *messages weren't making it through, and may still not be.
      *We need a good test case for surface creation and destruction.
      *We also need a good way to enable introspection on the server
      *to validate the test, beyond using gdb with print.
      */
-
+    
     free(glxPriv);
 }
 
 static __GLXdrawable *
 __glXAquaScreenCreateDrawable(ClientPtr client,
                               __GLXscreen *screen,
-			      DrawablePtr pDraw,
-			      XID drawId,
-			      int type,
-			      XID glxDrawId,
-			      __GLXconfig *conf) {
-  __GLXAquaDrawable *glxPriv;
-
-  glxPriv = malloc(sizeof *glxPriv);
-
-  if(glxPriv == NULL)
-      return NULL;
-
-  memset(glxPriv, 0, sizeof *glxPriv);
-
-  if(!__glXDrawableInit(&glxPriv->base, screen, pDraw, type, glxDrawId, conf)) {
-    free(glxPriv);
-    return NULL;
-  }
-
-  glxPriv->base.destroy       = __glXAquaDrawableDestroy;
-  glxPriv->base.swapBuffers   = __glXAquaDrawableSwapBuffers;
-  glxPriv->base.copySubBuffer = NULL; /* __glXAquaDrawableCopySubBuffer; */
-
-  glxPriv->pDraw = pDraw;
-  glxPriv->sid = 0;
-  glxPriv->context = NULL;
-  
-  return &glxPriv->base;
+                              DrawablePtr pDraw,
+                              XID drawId,
+                              int type,
+                              XID glxDrawId,
+                              __GLXconfig *conf) {
+    __GLXAquaDrawable *glxPriv;
+    
+    glxPriv = malloc(sizeof *glxPriv);
+    
+    if(glxPriv == NULL)
+        return NULL;
+    
+    memset(glxPriv, 0, sizeof *glxPriv);
+    
+    if(!__glXDrawableInit(&glxPriv->base, screen, pDraw, type, glxDrawId, conf)) {
+        free(glxPriv);
+        return NULL;
+    }
+    
+    glxPriv->base.destroy       = __glXAquaDrawableDestroy;
+    glxPriv->base.swapBuffers   = __glXAquaDrawableSwapBuffers;
+    glxPriv->base.copySubBuffer = NULL; /* __glXAquaDrawableCopySubBuffer; */
+    
+    glxPriv->pDraw = pDraw;
+    glxPriv->sid = 0;
+    glxPriv->context = NULL;
+    
+    return &glxPriv->base;
 }
 
 // Extra goodies for glx
@@ -569,7 +569,7 @@ __glXAquaScreenCreateDrawable(ClientPtr client,
 GLuint __glFloorLog2(GLuint val)
 {
     int c = 0;
-
+    
     while (val > 1) {
         c++;
         val >>= 1;
@@ -585,28 +585,28 @@ static void setup_dispatch_table(void) {
     static struct _glapi_table *disp = NULL;
     static void *handle;
     const char *opengl_framework_path;
-
+    
     if(disp)  {
         _glapi_set_dispatch(disp);
         return;
     }
-
+    
     opengl_framework_path = getenv("OPENGL_FRAMEWORK_PATH");
     if (!opengl_framework_path) {
         opengl_framework_path = OPENGL_FRAMEWORK_PATH;
     }
-
+    
     (void) dlerror();            /*drain dlerror */
     handle = dlopen(opengl_framework_path, RTLD_LOCAL);
-
+    
     if (!handle) {
         ErrorF("unable to dlopen %s : %s, using RTLD_DEFAULT\n",
-                opengl_framework_path, dlerror());
+               opengl_framework_path, dlerror());
         handle = RTLD_DEFAULT;
     }
-
+    
     disp = _glapi_create_table_from_handle(handle, "gl");
     assert(disp);
-
+    
     _glapi_set_dispatch(disp);
 }

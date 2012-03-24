@@ -1,7 +1,7 @@
 /**************************************************************
  *
  * Startup code for the Quartz Darwin X Server
- *
+ * Copyright (c) 2008-2012 Apple Inc. All rights reserved.
  * Copyright (c) 2001-2004 Torrey T. Lyons. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -93,7 +93,7 @@ void QuartzInitServer(int argc, char **argv, char **envp) {
 int server_main(int argc, char **argv, char **envp) {
     int         i;
     int         fd[2];
-
+    
     /* Unset CFProcessPath, so our children don't inherit this kludge we need
      * to load our nib.  If an xterm gets this set, then it fails to
      * 'open hi.txt' properly.
@@ -105,7 +105,7 @@ int server_main(int argc, char **argv, char **envp) {
     darwinEventReadFD = fd[0];
     darwinEventWriteFD = fd[1];
     fcntl(darwinEventReadFD, F_SETFL, O_NONBLOCK);
-
+    
     for (i = 1; i < argc; i++) {
         // Display version info without starting Mac OS X UI if requested
         if (!strcmp( argv[i], "-showconfig" ) || !strcmp( argv[i], "-version" )) {
@@ -113,7 +113,7 @@ int server_main(int argc, char **argv, char **envp) {
             exit(0);
         }
     }
-
+    
     X11ControllerMain(argc, argv, envp);
     exit(0);
 }

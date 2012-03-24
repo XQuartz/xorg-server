@@ -2,7 +2,7 @@
 
 Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.
 Copyright 2000 VA Linux Systems, Inc.
-Copyright (c) 2002, 2009-2011 Apple Inc.
+Copyright (c) 2002, 2009-2012 Apple Inc.
 All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a
@@ -32,6 +32,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *   Kevin E. Martin <martin@valinux.com>
  *   Jens Owen <jens@valinux.com>
  *   Rickard E. (Rik) Faith <faith@valinux.com>
+ *   Jeremy Huddleston <jeremyhu@apple.com>
  *
  */
 
@@ -79,19 +80,19 @@ typedef struct _DRIEvent {
 /*ARGSUSED*/
 static void
 AppleDRIResetProc (
-    ExtensionEntry* extEntry
-)
+                   ExtensionEntry* extEntry
+                   )
 {
     DRIReset();
 }
 
 static int
 ProcAppleDRIQueryVersion(
-    register ClientPtr client
-)
+                         register ClientPtr client
+                         )
 {
     xAppleDRIQueryVersionReply rep;
-
+    
     REQUEST_SIZE_MATCH(xAppleDRIQueryVersionReq);
     rep.type = X_Reply;
     rep.length = 0;
@@ -115,79 +116,79 @@ ProcAppleDRIQueryVersion(
 
 static int
 ProcAppleDRIQueryDirectRenderingCapable(
-    register ClientPtr client
-)
+                                        register ClientPtr client
+                                        )
 {
     xAppleDRIQueryDirectRenderingCapableReply rep;
     Bool isCapable;
-
+    
     REQUEST(xAppleDRIQueryDirectRenderingCapableReq);
     REQUEST_SIZE_MATCH(xAppleDRIQueryDirectRenderingCapableReq);
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
-
+    
     if (!DRIQueryDirectRenderingCapable( screenInfo.screens[stuff->screen], 
-                                         &isCapable)) {
+                                        &isCapable)) {
         return BadValue;
     }
     rep.isCapable = isCapable;
-
+    
     if (!LocalClient(client))
         rep.isCapable = 0;
-
+    
     if (client->swapped) {
         swaps(&rep.sequenceNumber);
         swapl(&rep.length);
     }
-
+    
     WriteToClient(client, 
-        sizeof(xAppleDRIQueryDirectRenderingCapableReply), (char *)&rep);
+                  sizeof(xAppleDRIQueryDirectRenderingCapableReply), (char *)&rep);
     return Success;
 }
 
 static int
 ProcAppleDRIAuthConnection(
-    register ClientPtr client
-)
+                           register ClientPtr client
+                           )
 {
     xAppleDRIAuthConnectionReply rep;
     
     REQUEST(xAppleDRIAuthConnectionReq);
     REQUEST_SIZE_MATCH(xAppleDRIAuthConnectionReq);
-
+    
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
     rep.authenticated = 1;
-
+    
     if (!DRIAuthConnection( screenInfo.screens[stuff->screen], stuff->magic)) {
         ErrorF("Failed to authenticate %u\n", (unsigned int)stuff->magic);
         rep.authenticated = 0;
     }
-
+    
     if (client->swapped) {
         swaps(&rep.sequenceNumber);
         swapl(&rep.length);
         swapl(&rep.authenticated); /* Yes, this is a CARD32 ... sigh */
     }
-
+    
     WriteToClient(client, sizeof(xAppleDRIAuthConnectionReply), (char *)&rep);
     return Success;
 }
 
 static void surface_notify(
-    void *_arg,
-    void *data
-)
+                           void *_arg,
+                           void *data
+                           )
 {
     DRISurfaceNotifyArg *arg = _arg;
     int client_index = (int) x_cvt_vptr_to_uint(data);
     xAppleDRINotifyEvent se;
-
+    
     if (client_index < 0 || client_index >= currentMaxClients)
         return;
-
+    
     se.type = DRIEventBase + AppleDRISurfaceNotify;
     se.kind = arg->kind;
     se.arg = arg->id;
@@ -197,40 +198,40 @@ static void surface_notify(
 
 static int
 ProcAppleDRICreateSurface(
-    ClientPtr client
-)
+                          ClientPtr client
+                          )
 {
     xAppleDRICreateSurfaceReply rep;
     DrawablePtr pDrawable;
     xp_surface_id sid;
     unsigned int key[2];
     int rc;
-
+    
     REQUEST(xAppleDRICreateSurfaceReq);
     REQUEST_SIZE_MATCH(xAppleDRICreateSurfaceReq);
     rep.type = X_Reply;
     rep.length = 0;
     rep.sequenceNumber = client->sequence;
-
+    
     rc = dixLookupDrawable(&pDrawable, stuff->drawable, client, 0,
-			   DixReadAccess);
+                           DixReadAccess);
     if (rc != Success)
-	return rc;
-
+        return rc;
+    
     rep.key_0 = rep.key_1 = rep.uid = 0;
-
+    
     if (!DRICreateSurface( screenInfo.screens[stuff->screen],
-                           (Drawable)stuff->drawable, pDrawable,
-                           stuff->client_id, &sid, key,
-                           surface_notify,
-                           x_cvt_uint_to_vptr(client->index))) {
+                          (Drawable)stuff->drawable, pDrawable,
+                          stuff->client_id, &sid, key,
+                          surface_notify,
+                          x_cvt_uint_to_vptr(client->index))) {
         return BadValue;
     }
-
+    
     rep.key_0 = key[0];
     rep.key_1 = key[1];
     rep.uid = sid;
-
+    
     if (client->swapped) {
         swaps(&rep.sequenceNumber);
         swapl(&rep.length);
@@ -238,32 +239,32 @@ ProcAppleDRICreateSurface(
         swapl(&rep.key_1);
         swapl(&rep.uid);
     }
-
+    
     WriteToClient(client, sizeof(xAppleDRICreateSurfaceReply), (char *)&rep);
     return Success;
 }
 
 static int
 ProcAppleDRIDestroySurface(
-    register ClientPtr client
-)
+                           register ClientPtr client
+                           )
 {
     int rc;
     REQUEST(xAppleDRIDestroySurfaceReq);
     DrawablePtr pDrawable;
     REQUEST_SIZE_MATCH(xAppleDRIDestroySurfaceReq);
-
+    
     rc = dixLookupDrawable(&pDrawable, stuff->drawable, client, 0,
-			   DixReadAccess);
+                           DixReadAccess);
     if (rc != Success)
-	return rc;
-
+        return rc;
+    
     if (!DRIDestroySurface( screenInfo.screens[stuff->screen], 
-                            (Drawable)stuff->drawable,
-                            pDrawable, NULL, NULL)) {
+                           (Drawable)stuff->drawable,
+                           pDrawable, NULL, NULL)) {
         return BadValue;
     }
-
+    
     return Success;
 }
 
@@ -277,29 +278,29 @@ ProcAppleDRICreatePixmap(ClientPtr client)
     xAppleDRICreatePixmapReply rep;
     int width, height, pitch, bpp;
     void *ptr;
-
+    
     REQUEST_SIZE_MATCH(xAppleDRICreatePixmapReq);
-
+    
     rc = dixLookupDrawable(&pDrawable, stuff->drawable, client, 0,
                            DixReadAccess);
-
+    
     if(rc != Success)
         return rc;
     
     if(!DRICreatePixmap(screenInfo.screens[stuff->screen],
-                              (Drawable)stuff->drawable,
-                              pDrawable,
-			      path, PATH_MAX)) {
+                        (Drawable)stuff->drawable,
+                        pDrawable,
+                        path, PATH_MAX)) {
         return BadValue;
     }
-
+    
     if(!DRIGetPixmapData(pDrawable, &width, &height,
-			 &pitch, &bpp, &ptr)) {
-	return BadValue;
+                         &pitch, &bpp, &ptr)) {
+        return BadValue;
     } 
 	
     rep.stringLength = strlen(path) + 1;
-		
+    
     rep.type = X_Reply;
     rep.length = bytes_to_int32(rep.stringLength);
     rep.sequenceNumber = client->sequence;
@@ -308,9 +309,9 @@ ProcAppleDRICreatePixmap(ClientPtr client)
     rep.pitch = pitch;
     rep.bpp = bpp;
     rep.size = pitch * height;
-
+    
     if(sizeof(rep) != sz_xAppleDRICreatePixmapReply)
-	ErrorF("error sizeof(rep) is %zu\n", sizeof(rep)); 
+        ErrorF("error sizeof(rep) is %zu\n", sizeof(rep)); 
     
     if (client->swapped) {
         swaps(&rep.sequenceNumber);
@@ -322,10 +323,10 @@ ProcAppleDRICreatePixmap(ClientPtr client)
         swapl(&rep.bpp);
         swapl(&rep.size);
     }
-
+    
     WriteToClient(client, sizeof(rep), &rep);
     WriteToClient(client, rep.stringLength, path);
-
+    
     return Success;
 }
 
@@ -336,15 +337,15 @@ ProcAppleDRIDestroyPixmap(ClientPtr client)
     int rc;
     REQUEST(xAppleDRIDestroyPixmapReq);
     REQUEST_SIZE_MATCH(xAppleDRIDestroyPixmapReq);
-
+    
     rc = dixLookupDrawable(&pDrawable, stuff->drawable, client, 0,
-			    DixReadAccess);
-
+                           DixReadAccess);
+    
     if(rc != Success)
-	return rc;
+        return rc;
     
     DRIDestroyPixmap(pDrawable);
-
+    
     return Success;
 }
 
@@ -352,45 +353,45 @@ ProcAppleDRIDestroyPixmap(ClientPtr client)
 
 static int
 ProcAppleDRIDispatch (
-    register ClientPtr client
-)
+                      register ClientPtr client
+                      )
 {
     REQUEST(xReq);
-
+    
     switch (stuff->data)
     {
-    case X_AppleDRIQueryVersion:
-        return ProcAppleDRIQueryVersion(client);
-    case X_AppleDRIQueryDirectRenderingCapable:
-        return ProcAppleDRIQueryDirectRenderingCapable(client);
+        case X_AppleDRIQueryVersion:
+            return ProcAppleDRIQueryVersion(client);
+        case X_AppleDRIQueryDirectRenderingCapable:
+            return ProcAppleDRIQueryDirectRenderingCapable(client);
     }
-
+    
     if (!LocalClient(client))
         return DRIErrorBase + AppleDRIClientNotLocal;
-
+    
     switch (stuff->data)
     {
-    case X_AppleDRIAuthConnection:
-        return ProcAppleDRIAuthConnection(client);
-    case X_AppleDRICreateSurface:
-        return ProcAppleDRICreateSurface(client);
-    case X_AppleDRIDestroySurface:
-        return ProcAppleDRIDestroySurface(client);
-    case X_AppleDRICreatePixmap:
-	return ProcAppleDRICreatePixmap(client);
-    case X_AppleDRIDestroyPixmap:
-	return ProcAppleDRIDestroyPixmap(client);
-
-    default:
-        return BadRequest;
+        case X_AppleDRIAuthConnection:
+            return ProcAppleDRIAuthConnection(client);
+        case X_AppleDRICreateSurface:
+            return ProcAppleDRICreateSurface(client);
+        case X_AppleDRIDestroySurface:
+            return ProcAppleDRIDestroySurface(client);
+        case X_AppleDRICreatePixmap:
+            return ProcAppleDRICreatePixmap(client);
+        case X_AppleDRIDestroyPixmap:
+            return ProcAppleDRIDestroyPixmap(client);
+            
+        default:
+            return BadRequest;
     }
 }
 
 static void
 SNotifyEvent(
-    xAppleDRINotifyEvent *from,
-    xAppleDRINotifyEvent *to
-)
+             xAppleDRINotifyEvent *from,
+             xAppleDRINotifyEvent *to
+             )
 {
     to->type = from->type;
     to->kind = from->kind;
@@ -401,8 +402,8 @@ SNotifyEvent(
 
 static int
 SProcAppleDRIQueryVersion(
-    register ClientPtr client
-)
+                          register ClientPtr client
+                          )
 {
     REQUEST(xAppleDRIQueryVersionReq);
     swaps(&stuff->length);
@@ -411,8 +412,8 @@ SProcAppleDRIQueryVersion(
 
 static int
 SProcAppleDRIQueryDirectRenderingCapable(
-    register ClientPtr client
-)
+                                         register ClientPtr client
+                                         )
 {
     REQUEST(xAppleDRIQueryDirectRenderingCapableReq);
     swaps(&stuff->length);
@@ -422,8 +423,8 @@ SProcAppleDRIQueryDirectRenderingCapable(
 
 static int
 SProcAppleDRIAuthConnection(
-    register ClientPtr client
-)
+                            register ClientPtr client
+                            )
 {
     REQUEST(xAppleDRIAuthConnectionReq);
     swaps(&stuff->length);
@@ -434,8 +435,8 @@ SProcAppleDRIAuthConnection(
 
 static int
 SProcAppleDRICreateSurface(
-    register ClientPtr client
-)
+                           register ClientPtr client
+                           )
 {
     REQUEST(xAppleDRICreateSurfaceReq);
     swaps(&stuff->length);
@@ -447,8 +448,8 @@ SProcAppleDRICreateSurface(
 
 static int
 SProcAppleDRIDestroySurface(
-    register ClientPtr client
-)
+                            register ClientPtr client
+                            )
 {
     REQUEST(xAppleDRIDestroySurfaceReq);
     swaps(&stuff->length);
@@ -459,8 +460,8 @@ SProcAppleDRIDestroySurface(
 
 static int
 SProcAppleDRICreatePixmap(
-    register ClientPtr client
-)
+                          register ClientPtr client
+                          )
 {
     REQUEST(xAppleDRICreatePixmapReq);
     swaps(&stuff->length);
@@ -471,8 +472,8 @@ SProcAppleDRICreatePixmap(
 
 static int
 SProcAppleDRIDestroyPixmap(
-    register ClientPtr client
-)
+                           register ClientPtr client
+                           )
 {
     REQUEST(xAppleDRIDestroyPixmapReq);
     swaps(&stuff->length);
@@ -482,37 +483,37 @@ SProcAppleDRIDestroyPixmap(
 
 static int
 SProcAppleDRIDispatch (
-    register ClientPtr client
-)
+                       register ClientPtr client
+                       )
 {
     REQUEST(xReq);
-
+    
     switch (stuff->data)
     {
-    case X_AppleDRIQueryVersion:
-        return SProcAppleDRIQueryVersion(client);
-    case X_AppleDRIQueryDirectRenderingCapable:
-        return SProcAppleDRIQueryDirectRenderingCapable(client);
+        case X_AppleDRIQueryVersion:
+            return SProcAppleDRIQueryVersion(client);
+        case X_AppleDRIQueryDirectRenderingCapable:
+            return SProcAppleDRIQueryDirectRenderingCapable(client);
     }
-
+    
     if (!LocalClient(client))
         return DRIErrorBase + AppleDRIClientNotLocal;
-
+    
     switch (stuff->data)
     {
-    case X_AppleDRIAuthConnection:
-        return SProcAppleDRIAuthConnection(client);
-    case X_AppleDRICreateSurface:
-        return SProcAppleDRICreateSurface(client);
-    case X_AppleDRIDestroySurface:
-        return SProcAppleDRIDestroySurface(client);
-    case X_AppleDRICreatePixmap:
-	return SProcAppleDRICreatePixmap(client);
-    case X_AppleDRIDestroyPixmap:
-	return SProcAppleDRIDestroyPixmap(client);
-
-    default:
-        return BadRequest;
+        case X_AppleDRIAuthConnection:
+            return SProcAppleDRIAuthConnection(client);
+        case X_AppleDRICreateSurface:
+            return SProcAppleDRICreateSurface(client);
+        case X_AppleDRIDestroySurface:
+            return SProcAppleDRIDestroySurface(client);
+        case X_AppleDRICreatePixmap:
+            return SProcAppleDRICreatePixmap(client);
+        case X_AppleDRIDestroyPixmap:
+            return SProcAppleDRIDestroyPixmap(client);
+            
+        default:
+            return BadRequest;
     }
 }
 
@@ -520,7 +521,7 @@ void
 AppleDRIExtensionInit(void)
 {
     ExtensionEntry* extEntry;
-
+    
     if (DRIExtensionInit() &&
         (extEntry = AddExtension(APPLEDRINAME,
                                  AppleDRINumberEvents,

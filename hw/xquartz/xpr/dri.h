@@ -1,7 +1,7 @@
 /**************************************************************************
 
 Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.
-Copyright (c) 2002, 2009 Apple Computer, Inc.
+Copyright (c) 2002-2012 Apple Computer, Inc.
 All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a
@@ -29,7 +29,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /*
  * Authors:
  *   Jens Owen <jens@precisioninsight.com>
- *
+ *   Jeremy Huddleston <jeremyhu@apple.com>
  */
 
 /* Prototypes for AppleDRI functions */
@@ -89,10 +89,10 @@ extern Bool DRICreateSurface(ScreenPtr pScreen,
                              void *notify_data);
 
 extern Bool DRIDestroySurface(ScreenPtr pScreen,
-                             Drawable id,
-                             DrawablePtr pDrawable,
-                             void (*notify) (void *arg, void *data),
-                             void *notify_data);
+                              Drawable id,
+                              DrawablePtr pDrawable,
+                              void (*notify) (void *arg, void *data),
+                              void *notify_data);
 
 extern Bool DRIDrawablePrivDelete(pointer pResource,
                                   XID id);
@@ -116,8 +116,8 @@ extern void DRIClipNotify(WindowPtr pWin,
                           int dy);
 
 extern void DRIWindowExposures(WindowPtr pWin,
-                              RegionPtr prgn,
-                              RegionPtr bsreg);
+                               RegionPtr prgn,
+                               RegionPtr bsreg);
 
 extern void DRISurfaceNotify (xp_surface_id id, int kind);
 
@@ -126,11 +126,11 @@ extern void DRIQueryVersion(int *majorVersion,
                             int *patchVersion);
 
 extern Bool DRICreatePixmap(ScreenPtr pScreen, Drawable id,
-			    DrawablePtr pDrawable, char *path,
-			    size_t pathmax);
+                            DrawablePtr pDrawable, char *path,
+                            size_t pathmax);
 
 extern Bool DRIGetPixmapData(DrawablePtr pDrawable, int *width, int *height,
-			     int *pitch, int *bpp, void **ptr);
+                             int *pitch, int *bpp, void **ptr);
 
 
 extern void DRIDestroyPixmap(DrawablePtr pDrawable);

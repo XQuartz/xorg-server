@@ -1,31 +1,32 @@
 /* x-hash.c - basic hash tables
-
-   Copyright (c) 2002 Apple Computer, Inc. All rights reserved.
-
-   Permission is hereby granted, free of charge, to any person
-   obtaining a copy of this software and associated documentation files
-   (the "Software"), to deal in the Software without restriction,
-   including without limitation the rights to use, copy, modify, merge,
-   publish, distribute, sublicense, and/or sell copies of the Software,
-   and to permit persons to whom the Software is furnished to do so,
-   subject to the following conditions:
-
-   The above copyright notice and this permission notice shall be
-   included in all copies or substantial portions of the Software.
-
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-   NONINFRINGEMENT.  IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT
-   HOLDER(S) BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
-
-   Except as contained in this notice, the name(s) of the above
-   copyright holders shall not be used in advertising or otherwise to
-   promote the sale, use or other dealings in this Software without
-   prior written authorization. */
+ *
+ * Copyright (c) 2002-2012 Apple Inc. All rights reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation files
+ * (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT.  IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT
+ * HOLDER(S) BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ * 
+ * Except as contained in this notice, the name(s) of the above
+ * copyright holders shall not be used in advertising or otherwise to
+ * promote the sale, use or other dealings in this Software without
+ * prior written authorization.
+ */
 
 #ifdef HAVE_DIX_CONFIG_H
 #include <dix-config.h>
@@ -40,7 +41,7 @@ struct x_hash_table_struct {
     unsigned int bucket_index;
     unsigned int total_keys;
     x_list **buckets;
-
+    
     x_hash_fun *hash_key;
     x_compare_fun *compare_keys;
     x_destroy_fun *destroy_key;
@@ -75,7 +76,7 @@ hash_table_destroy_item (x_hash_table *h, void *k, void *v)
 {
     if (h->destroy_key != 0)
         (*h->destroy_key) (k);
-
+    
     if (h->destroy_value != 0)
         (*h->destroy_value) (v);
 }
@@ -106,38 +107,38 @@ hash_table_split (x_hash_table *h)
     int new_size, old_size;
     size_t b;
     int i;
-
+    
     if (h->bucket_index == N_BUCKET_SIZES - 1)
         return;
-
+    
     old_size = hash_table_total_buckets (h);
     old = h->buckets;
-
+    
     h->bucket_index++;
-
+    
     new_size = hash_table_total_buckets (h);
     new = calloc (new_size, sizeof (x_list *));
-
+    
     if (new == 0)
     {
         h->bucket_index--;
         return;
     }
-
+    
     for (i = 0; i < old_size; i++)
     {
         for (node = old[i]; node != 0; node = next)
         {
             next = node->next;
             item = node->data;
-
+            
             b = hash_table_hash_key (h, ITEM_KEY (item)) % new_size;
-
+            
             node->next = new[b];
             new[b] = node;
         }
     }
-
+    
     h->buckets = new;
     free (old);
 }
@@ -149,14 +150,14 @@ X_PFX (hash_table_new) (x_hash_fun *hash,
                         x_destroy_fun *value_destroy)
 {
     x_hash_table *h;
-
+    
     h = calloc (1, sizeof (x_hash_table));
     if (h == 0)
         return 0;
-
+    
     h->bucket_index = 0;
     h->buckets = calloc (hash_table_total_buckets (h), sizeof (x_list *));
-
+    
     if (h->buckets == 0)
     {
         free (h);
@@ -167,7 +168,7 @@ X_PFX (hash_table_new) (x_hash_fun *hash,
     h->compare_keys = compare;
     h->destroy_key = key_destroy;
     h->destroy_value = value_destroy;
-
+    
     return h;
 }
 
@@ -176,11 +177,11 @@ X_PFX (hash_table_free) (x_hash_table *h)
 {
     int n, i;
     x_list *node, *item;
-
+    
     assert (h != NULL);
-
+    
     n = hash_table_total_buckets (h);
-
+    
     for (i = 0; i < n; i++)
     {
         for (node = h->buckets[i]; node != 0; node = node->next)
@@ -191,7 +192,7 @@ X_PFX (hash_table_free) (x_hash_table *h)
         }
         X_PFX (list_free) (h->buckets[i]);
     }
-
+    
     free (h->buckets);
     free (h);
 }
@@ -200,7 +201,7 @@ X_EXTERN unsigned int
 X_PFX (hash_table_size) (x_hash_table *h)
 {
     assert (h != NULL);
-
+    
     return h->total_keys;
 }
 
@@ -209,16 +210,16 @@ hash_table_modify (x_hash_table *h, void *k, void *v, int replace)
 {
     size_t hash_value;
     x_list *node, *item;
-
+    
     assert (h != NULL);
-
+    
     hash_value = hash_table_hash_key (h, k);
-
+    
     for (node = h->buckets[hash_value % hash_table_total_buckets (h)];
          node != 0; node = node->next)
     {
         item = node->data;
-
+        
         if (hash_table_compare_keys (h, ITEM_KEY (item), k))
         {
             if (replace)
@@ -236,15 +237,15 @@ hash_table_modify (x_hash_table *h, void *k, void *v, int replace)
             return;
         }
     }
-
+    
     /* Key isn't already in the table. Insert it. */
-
+    
     if (h->total_keys + 1
         > hash_table_total_buckets (h) * SPLIT_THRESHOLD_FACTOR)
     {
         hash_table_split (h);
     }
-
+    
     hash_value = hash_value % hash_table_total_buckets (h);
     h->buckets[hash_value] = X_PFX (list_prepend) (h->buckets[hash_value],
                                                    ITEM_NEW (k, v));
@@ -268,16 +269,16 @@ X_PFX (hash_table_remove) (x_hash_table *h, void *k)
 {
     size_t hash_value;
     x_list **ptr, *item;
-
+    
     assert (h != NULL);
-
+    
     hash_value = hash_table_hash_key (h, k);
-
+    
     for (ptr = &h->buckets[hash_value % hash_table_total_buckets (h)];
          *ptr != 0; ptr = &((*ptr)->next))
     {
         item = (*ptr)->data;
-
+        
         if (hash_table_compare_keys (h, ITEM_KEY (item), k))
         {
             hash_table_destroy_item (h, ITEM_KEY (item), ITEM_VALUE (item));
@@ -296,29 +297,29 @@ X_PFX (hash_table_lookup) (x_hash_table *h, void *k, void **k_ret)
 {
     size_t hash_value;
     x_list *node, *item;
-
+    
     assert (h != NULL);
-
+    
     hash_value = hash_table_hash_key (h, k);
-
+    
     for (node = h->buckets[hash_value % hash_table_total_buckets (h)];
          node != 0; node = node->next)
     {
         item = node->data;
-
+        
         if (hash_table_compare_keys (h, ITEM_KEY (item), k))
         {
             if (k_ret != 0)
-            *k_ret = ITEM_KEY (item);
-
+                *k_ret = ITEM_KEY (item);
+            
             return ITEM_VALUE (item);
         }
     }
-
+    
     if (k_ret != 0)
         *k_ret = 0;
-
-    return 0;
+        
+        return 0;
 }
 
 X_EXTERN void
@@ -327,11 +328,11 @@ X_PFX (hash_table_foreach) (x_hash_table *h,
 {
     int i, n;
     x_list *node, *item;
-
+    
     assert (h != NULL);
-
+    
     n = hash_table_total_buckets (h);
-
+    
     for (i = 0; i < n; i++)
     {
         for (node = h->buckets[i]; node != 0; node = node->next)

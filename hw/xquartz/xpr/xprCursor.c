@@ -70,20 +70,20 @@ load_cursor(CursorPtr src, int screen)
     uint32_t rowbytes;
     int width, height;
     int hot_x, hot_y;
-
+    
     uint32_t fg_color, bg_color;
     uint8_t *srow, *sptr;
     uint8_t *mrow, *mptr;
     uint32_t *drow, *dptr;
     unsigned xcount, ycount;
-
+    
     xp_error err;
-
+    
     width = src->bits->width;
     height = src->bits->height;
     hot_x = src->bits->xhot;
     hot_y = src->bits->yhot;
-
+    
 #ifdef ARGB_CURSOR
     if (src->bits->argb != NULL)
     {
@@ -110,15 +110,15 @@ load_cursor(CursorPtr src, int screen)
         fg_color <<= 16;
         fg_color |= src->foreGreen & 0xFF00;
         fg_color |= src->foreBlue >> 8;
-
+        
         bg_color = 0xFF00 | (src->backRed >> 8);
         bg_color <<= 16;
         bg_color |= src->backGreen & 0xFF00;
         bg_color |= src->backBlue >> 8;
-
+        
         fg_color = htonl(fg_color);
         bg_color = htonl(bg_color);
-
+        
         /* round up to 8 pixel boundary so we can convert whole bytes */
         rowbytes = ((src->bits->width * 4) + 31) & ~31;
         data = malloc(rowbytes * src->bits->height);
@@ -132,18 +132,18 @@ load_cursor(CursorPtr src, int screen)
             ycount = src->bits->height;
             srow = src->bits->source; mrow = src->bits->mask;
             drow = data;
-
+            
             while (ycount-- > 0)
             {
                 xcount = bits_to_bytes(src->bits->width);
                 sptr = srow; mptr = mrow;
                 dptr = drow;
-
+                
                 while (xcount-- > 0)
                 {
                     uint8_t s, m;
                     int i;
-
+                    
                     s = *sptr++; m = *mptr++;
                     for (i = 0; i < 8; i++)
                     {
@@ -162,7 +162,7 @@ load_cursor(CursorPtr src, int screen)
 #endif
                     }
                 }
-
+                
                 srow += BitmapBytePad(src->bits->width);
                 mrow += BitmapBytePad(src->bits->width);
                 drow = (uint32_t *) ((char *) drow + rowbytes);
@@ -173,7 +173,7 @@ load_cursor(CursorPtr src, int screen)
             memset(data, 0, src->bits->height * rowbytes);
         }
     }
-
+    
     err = xp_set_cursor(width, height, hot_x, hot_y, data, rowbytes);
     if(free_data)
         free(data);
@@ -182,12 +182,12 @@ load_cursor(CursorPtr src, int screen)
 
 
 /*
-===========================================================================
-
+ ===========================================================================
+ 
  Pointer sprite functions
-
-===========================================================================
-*/
+ 
+ ===========================================================================
+ */
 
 /*
  * QuartzRealizeCursor
@@ -198,9 +198,9 @@ QuartzRealizeCursor(DeviceIntPtr pDev, ScreenPtr pScreen, CursorPtr pCursor)
 {
     if(pCursor == NULL || pCursor->bits == NULL)
         return FALSE;
-
+    
     /* FIXME: cache ARGB8888 representation? */
-
+    
     return TRUE;
 }
 
@@ -224,10 +224,10 @@ static void
 QuartzSetCursor(DeviceIntPtr pDev, ScreenPtr pScreen, CursorPtr pCursor, int x, int y)
 {
     QuartzCursorScreenPtr ScreenPriv = CURSOR_PRIV(pScreen);
-
+    
     if (!XQuartzServerVisible)
         return;
-
+    
     if (pCursor == NULL)
     {
         if (ScreenPriv->cursorVisible)
@@ -239,7 +239,7 @@ QuartzSetCursor(DeviceIntPtr pDev, ScreenPtr pScreen, CursorPtr pCursor, int x, 
     else
     {
         load_cursor(pCursor, pScreen->myNum);
-
+        
         if (!ScreenPriv->cursorVisible)
         {
             xp_show_cursor();
@@ -258,12 +258,12 @@ QuartzMoveCursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
 }
 
 /*
-===========================================================================
-
+ ===========================================================================
+ 
  Pointer screen functions
-
-===========================================================================
-*/
+ 
+ ===========================================================================
+ */
 
 /*
  * QuartzCursorOffScreen
@@ -297,13 +297,13 @@ QuartzWarpCursor(DeviceIntPtr pDev, ScreenPtr pScreen, int x, int y)
     if (XQuartzServerVisible)
     {
         int sx, sy;
-
+        
         sx = pScreen->x + darwinMainScreenX;
         sy = pScreen->y + darwinMainScreenY;
-
+        
         CGWarpMouseCursorPosition(CGPointMake(sx + x, sy + y));
     }
-
+    
     miPointerWarpCursor(pDev, pScreen, x, y);
     miPointerUpdateSprite(pDev);
 }
@@ -319,12 +319,12 @@ static miPointerScreenFuncRec quartzScreenFuncsRec = {
 
 
 /*
-===========================================================================
-
+ ===========================================================================
+ 
  Other screen functions
-
-===========================================================================
-*/
+ 
+ ===========================================================================
+ */
 
 /*
  * QuartzCursorQueryBestSize
@@ -335,7 +335,7 @@ QuartzCursorQueryBestSize(int class, unsigned short *width,
                           unsigned short *height, ScreenPtr pScreen)
 {
     QuartzCursorScreenPtr ScreenPriv = CURSOR_PRIV(pScreen);
-
+    
     if (class == CursorShape)
     {
         /* FIXME: query window server? */
@@ -357,29 +357,29 @@ QuartzInitCursor(ScreenPtr pScreen)
 {
     QuartzCursorScreenPtr ScreenPriv;
     miPointerScreenPtr PointPriv;
-
+    
     /* initialize software cursor handling (always needed as backup) */
     if (!miDCInitialize(pScreen, &quartzScreenFuncsRec))
         return FALSE;
-
+    
     if (!dixRegisterPrivateKey(&darwinCursorScreenKeyRec, PRIVATE_SCREEN, 0))
-	return FALSE;
-
+        return FALSE;
+    
     ScreenPriv = calloc(1, sizeof(QuartzCursorScreenRec));
     if (ScreenPriv == NULL)
         return FALSE;
-
+    
     /* CURSOR_PRIV(pScreen) = ScreenPriv; */
     dixSetPrivate(&pScreen->devPrivates, darwinCursorScreenKey, ScreenPriv);
-
+    
     /* override some screen procedures */
     ScreenPriv->QueryBestSize = pScreen->QueryBestSize;
     pScreen->QueryBestSize = QuartzCursorQueryBestSize;
-
+    
     PointPriv = dixLookupPrivate(&pScreen->devPrivates, miPointerScreenKey);
-
+    
     ScreenPriv->spriteFuncs = PointPriv->spriteFuncs;
-
+    
     PointPriv->spriteFuncs->RealizeCursor = QuartzRealizeCursor;
     PointPriv->spriteFuncs->UnrealizeCursor = QuartzUnrealizeCursor;
     PointPriv->spriteFuncs->SetCursor = QuartzSetCursor;
@@ -408,16 +408,16 @@ QuartzResumeXCursor(ScreenPtr pScreen)
 {
     WindowPtr pWin;
     CursorPtr pCursor;
-
+    
     /* TODO: Tablet? */
     
     pWin = GetSpriteWindow(darwinPointer);
     if (pWin->drawable.pScreen != pScreen)
         return;
-
+    
     pCursor = GetSpriteCursor(darwinPointer);
     if (pCursor == NULL)
         return;
-
+    
     QuartzSetCursor(darwinPointer, pScreen, pCursor, /* x */ 0, /* y */ 0);
 }

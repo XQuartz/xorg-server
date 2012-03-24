@@ -1,4 +1,5 @@
 /*
+ * Copyright (c) 2002-2012 Apple Inc. All rights reserved.
  * Copyright (c) 2003-2004 Torrey T. Lyons. All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a

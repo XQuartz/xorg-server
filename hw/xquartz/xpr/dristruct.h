@@ -1,7 +1,7 @@
 /**************************************************************************
 
 Copyright 1998-1999 Precision Insight, Inc., Cedar Park, Texas.
-Copyright (c) 2002 Apple Computer, Inc.
+Copyright (c) 2002-2012 Apple Computer, Inc.
 All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a
@@ -29,7 +29,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 /*
  * Authors:
  *   Jens Owen <jens@precisioninsight.com>
- *
+ *   Jeremy Huddleston <jeremyhu@apple.com>
  */
 
 #ifndef DRI_STRUCT_H
@@ -41,10 +41,10 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define DRI_MAX_DRAWABLES 256
 
 #define DRI_DRAWABLE_PRIV_FROM_WINDOW(pWin) ((DRIDrawablePrivPtr) \
-    dixLookupPrivate(&(pWin)->devPrivates, DRIWindowPrivKey))
+dixLookupPrivate(&(pWin)->devPrivates, DRIWindowPrivKey))
 
 #define DRI_DRAWABLE_PRIV_FROM_PIXMAP(pPix) ((DRIDrawablePrivPtr) \
-    dixLookupPrivate(&(pPix)->devPrivates, DRIPixmapPrivKey))
+dixLookupPrivate(&(pPix)->devPrivates, DRIPixmapPrivKey))
 
 typedef struct _DRIDrawablePrivRec
 {
@@ -62,7 +62,7 @@ typedef struct _DRIDrawablePrivRec
 
 #define DRI_SCREEN_PRIV_FROM_INDEX(screenIndex) ((DRIScreenPrivPtr) \
     dixLookupPrivate(&screenInfo.screens[screenIndex]->devPrivates, \
-		     DRIScreenPrivKey))
+                     DRIScreenPrivKey))
 
 
 typedef struct _DRIScreenPrivRec

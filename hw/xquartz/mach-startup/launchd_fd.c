@@ -1,4 +1,4 @@
-/* Copyright (c) 2008 Apple Inc.
+/* Copyright (c) 2008-2012 Apple Inc.
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation files
@@ -41,7 +41,7 @@ extern aslclient aslc;
 int launchd_display_fd(void) {
     launch_data_t sockets_dict, checkin_request, checkin_response;
     launch_data_t listening_fd_array, listening_fd;
-
+    
     /* Get launchd fd */
     if ((checkin_request = launch_data_new_string(LAUNCH_KEY_CHECKIN)) == NULL) {
         asl_log(aslc, NULL, ASL_LEVEL_ERR, "launch_data_new_string(\"" LAUNCH_KEY_CHECKIN "\") Unable to create string.\n");

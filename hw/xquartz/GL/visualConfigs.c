@@ -139,9 +139,9 @@ __GLXconfig *__glXAquaCreateVisualConfigs(int *numConfigsPtr, int screenNumber) 
                                         c->visualID = -1;
                                         c->visualType = GLX_TRUE_COLOR;
                                         c->next = c + 1;
-
+                                        
                                         c->screen = screenNumber;
-
+                                        
                                         c->level = 0;
                                         c->indexBits = 0;
                                         c->pixmapMode = 0; // TODO: What should this be?
@@ -165,13 +165,13 @@ __GLXconfig *__glXAquaCreateVisualConfigs(int *numConfigsPtr, int screenNumber) 
                                         
                                         // Stereo
                                         c->stereoMode = stereo ? TRUE : FALSE;
-
+                                        
                                         // Aux buffers
                                         c->numAuxBuffers = aux ? conf->aux_buffers : 0;
                                         
                                         // Double Buffered
                                         c->doubleBufferMode = buffers ? TRUE : FALSE;
-
+                                        
                                         // Stencil Buffer
                                         if(conf->total_stencil_bit_depths > 0) {
                                             c->stencilBits = conf->stencil_bit_depths[stencil];
@@ -190,12 +190,12 @@ __GLXconfig *__glXAquaCreateVisualConfigs(int *numConfigsPtr, int screenNumber) 
                                         c->blueBits  = conf->color_buffers[color].b;
                                         
                                         c->rgbBits = c->alphaBits + c->redBits + c->greenBits + c->blueBits;
-
+                                        
                                         c->alphaMask = AM_ARGB(c->alphaBits, c->redBits, c->greenBits, c->blueBits);
                                         c->redMask   = RM_ARGB(c->alphaBits, c->redBits, c->greenBits, c->blueBits);
                                         c->greenMask = GM_ARGB(c->alphaBits, c->redBits, c->greenBits, c->blueBits);
                                         c->blueMask  = BM_ARGB(c->alphaBits, c->redBits, c->greenBits, c->blueBits);
-                                                                                
+                                        
                                         // Accumulation Buffers
                                         if(conf->total_accum_buffers > 0) {
                                             c->accumRedBits = conf->accum_buffers[accum].r;
@@ -212,7 +212,7 @@ __GLXconfig *__glXAquaCreateVisualConfigs(int *numConfigsPtr, int screenNumber) 
                                             c->accumBlueBits = 0;
                                             c->accumAlphaBits = 0;
                                         } 
-
+                                        
                                         // Depth
                                         c->depthBits = conf->depth_buffers[depth];
                                         
@@ -272,9 +272,9 @@ __GLXconfig *__glXAquaCreateVisualConfigs(int *numConfigsPtr, int screenNumber) 
             }
         }
     }
-
+    
     (c-1)->next = NULL;
-
+    
     if (c - visualConfigs != numConfigs) {
         FatalError("numConfigs calculation error in setVisualConfigs!  numConfigs is %d  i is %d\n", numConfigs, (int)(c - visualConfigs));
     }

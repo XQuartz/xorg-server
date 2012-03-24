@@ -2,6 +2,7 @@
  * Xplugin rootless implementation
  *
  * Copyright (c) 2003 Torrey T. Lyons. All Rights Reserved.
+ * Copyright (c) 2002-2012 Apple Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -60,10 +61,10 @@ void QuartzResumeXCursor(ScreenPtr pScreen);
 
 #include <X11/extensions/applewmconst.h>
 static const int normal_window_levels[AppleWMNumWindowLevels+1] = {
-0, 3, 4, 5, INT_MIN + 30, INT_MIN + 29,
+    0, 3, 4, 5, INT_MIN + 30, INT_MIN + 29,
 };
 static const int rooted_window_levels[AppleWMNumWindowLevels+1] = {
-20, 21, 22, 23, 19, 18,
+    20, 21, 22, 23, 19, 18,
 };
 
 #endif /* XPR_H */

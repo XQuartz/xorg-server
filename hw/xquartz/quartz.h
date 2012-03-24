@@ -4,6 +4,7 @@
  * External interface of the Quartz display modes seen by the generic, mode
  * independent parts of the Darwin X server.
  *
+ * Copyright (c) 2002-2012 Apple Inc. All rights reserved.
  * Copyright (c) 2001-2003 Greg Parker and Torrey T. Lyons.
  *                 All Rights Reserved.
  *

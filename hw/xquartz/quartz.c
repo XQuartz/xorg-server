@@ -2,6 +2,7 @@
  *
  * Quartz-specific support for the Darwin X Server
  *
+ * Copyright (c) 2002-2012 Apple Inc. All rights reserved.
  * Copyright (c) 2001-2004 Greg Parker and Torrey T. Lyons.
  *                 All Rights Reserved.
  *
@@ -85,27 +86,27 @@ Bool XQuartzFullscreenMenu = FALSE;
 int32_t XQuartzShieldingWindowLevel = 0;
 
 /*
-===========================================================================
-
+ ===========================================================================
+ 
  Screen functions
-
-===========================================================================
-*/
+ 
+ ===========================================================================
+ */
 
 /*
  * QuartzAddScreen
  *  Do mode dependent initialization of each screen for Quartz.
  */
 Bool QuartzAddScreen(
-    int index,
-    ScreenPtr pScreen)
+                     int index,
+                     ScreenPtr pScreen)
 {
     // allocate space for private per screen Quartz specific storage
     QuartzScreenPtr displayInfo = calloc(sizeof(QuartzScreenRec), 1);
-
+    
     // QUARTZ_PRIV(pScreen) = displayInfo;
     dixSetPrivate(&pScreen->devPrivates, quartzScreenKey, displayInfo);
-
+    
     // do Quartz mode specific initialization
     return quartzProcs->AddScreen(index, pScreen);
 }
@@ -116,24 +117,24 @@ Bool QuartzAddScreen(
  *  Finalize mode specific setup of each screen.
  */
 Bool QuartzSetupScreen(
-    int index,
-    ScreenPtr pScreen)
+                       int index,
+                       ScreenPtr pScreen)
 {
     // do Quartz mode specific setup
     if (! quartzProcs->SetupScreen(index, pScreen))
         return FALSE;
-
+    
     // setup cursor support
     if (! quartzProcs->InitCursor(pScreen))
         return FALSE;
-
+    
 #if defined(RANDR)
     if(!QuartzRandRInit(pScreen)) {
         DEBUG_LOG("Failed to init RandR extension.\n");
         return FALSE;
     }
 #endif
-
+    
     return TRUE;
 }
 
@@ -143,8 +144,8 @@ Bool QuartzSetupScreen(
  *  Quartz display initialization.
  */
 void QuartzInitOutput(
-    int argc,
-    char **argv )
+                      int argc,
+                      char **argv )
 {
     /* For XQuartz, we want to just use the default signal handler to work better with CrashTracer */
     signal(SIGSEGV, SIG_DFL);
@@ -165,17 +166,17 @@ void QuartzInitOutput(
 #ifdef SIGXFSZ
     signal(SIGXFSZ, SIG_DFL);
 #endif
-
+    
     if (!RegisterBlockAndWakeupHandlers(QuartzBlockHandler,
                                         QuartzWakeupHandler,
                                         NULL))
     {
         FatalError("Could not register block and wakeup handlers.");
     }
-
+    
     if (!dixRegisterPrivateKey(&quartzScreenKeyRec, PRIVATE_SCREEN, 0))
-	FatalError("Failed to alloc quartz screen private.\n");
-
+        FatalError("Failed to alloc quartz screen private.\n");
+    
     // Do display mode specific initialization
     quartzProcs->DisplayInit();
 }
@@ -186,8 +187,8 @@ void QuartzInitOutput(
  *  Inform the main thread the X server is ready to handle events.
  */
 void QuartzInitInput(
-    int argc,
-    char **argv )
+                     int argc,
+                     char **argv )
 {
     X11ApplicationSetCanQuit(0);
     X11ApplicationServerReady();
@@ -238,7 +239,7 @@ void QuartzUpdateScreens(void) {
     pRoot = pScreen->root;
     AppleWMSetScreenOrigin(pRoot);
     pScreen->ResizeWindow(pRoot, x - sx, y - sy, width, height, NULL);
-
+    
     /* <rdar://problem/7770779> pointer events are clipped to old display region after display reconfiguration
      * http://xquartz.macosforge.org/trac/ticket/346
      */
@@ -249,9 +250,9 @@ void QuartzUpdateScreens(void) {
     pScreen->ConstrainCursor(inputInfo.pointer, pScreen, &bounds);
     inputInfo.pointer->spriteInfo->sprite->physLimits = bounds;
     inputInfo.pointer->spriteInfo->sprite->hotLimits = bounds;
-
+    
     DEBUG_LOG("Root Window: %dx%d @ (%d, %d) darwinMainScreen (%d, %d) xy (%d, %d) dixScreenOrigins (%d, %d)\n", width, height, x - sx, y - sy, darwinMainScreenX, darwinMainScreenY, x, y, pScreen->x, pScreen->y);
-
+    
     /* Send an event for the root reconfigure */
     e.u.u.type = ConfigureNotify;
     e.u.configureNotify.window = pRoot->drawable.id;
@@ -263,12 +264,12 @@ void QuartzUpdateScreens(void) {
     e.u.configureNotify.borderWidth = wBorderWidth(pRoot);
     e.u.configureNotify.override = pRoot->overrideRedirect;
     DeliverEvents(pRoot, &e, 1, NullWindow);
-
+    
     quartzProcs->UpdateScreen(pScreen);
-
+    
     /* miPaintWindow needs to be called after RootlessUpdateScreenPixmap (from xprUpdateScreen) */
     miPaintWindow(pRoot, &pRoot->borderClip,  PW_BACKGROUND);
-
+    
     /* Tell RandR about the new size, so new connections get the correct info */
     RRScreenSizeNotify(pScreen);
 }
@@ -281,13 +282,13 @@ static void QuartzScreenSaver(int state) {
     static CFRunLoopTimerRef pokeActivityTimer = NULL;
     static CFRunLoopTimerContext pokeActivityContext = { 0, NULL, NULL, NULL, NULL };
     static OSSpinLock pokeActivitySpinLock = OS_SPINLOCK_INIT;
-
+    
     OSSpinLockLock(&pokeActivitySpinLock);
-
+    
     if(state) {
         if(pokeActivityTimer == NULL)
             goto QuartzScreenSaverEnd;
-
+        
         CFRunLoopTimerInvalidate(pokeActivityTimer);
         CFRelease(pokeActivityTimer);
         pokeActivityTimer = NULL;
@@ -300,7 +301,7 @@ static void QuartzScreenSaver(int state) {
             ErrorF("Unable to create pokeActivityTimer.\n");
             goto QuartzScreenSaverEnd;
         }
-
+        
         CFRunLoopAddTimer(CFRunLoopGetMain(), pokeActivityTimer, kCFRunLoopCommonModes);
     }
 QuartzScreenSaverEnd:
@@ -340,7 +341,7 @@ void QuartzShowFullscreen(int state) {
             //RootlessUpdateScreenPixmap(pScreen);
         }
     }
-
+    
     /* Somehow the menubar manages to interfere with our event stream
      * in fullscreen mode, even though it's not visible. 
      */
@@ -362,22 +363,22 @@ void QuartzSetRootless(Bool state) {
         QuartzShowFullscreen(FALSE);
     
     XQuartzIsRootless = state;
-
+    
     xp_disable_update();
-
+    
     /* When in rootless, the menubar is not part of the screen, so we need to update our screens on toggle */    
     QuartzUpdateScreens();
-
+    
     if(XQuartzIsRootless) {
         RootlessShowAllWindows();
     } else {
         RootlessHideAllWindows();
     }
-
+    
     X11ApplicationShowHideMenubar(TRUE);
-
+    
     xp_reenable_update();
-
+    
     xp_disable_hot_keys(FALSE);
 }
 
@@ -389,7 +390,7 @@ void QuartzSetRootless(Bool state) {
  */
 void QuartzShow(void) {
     int i;
-
+    
     if (XQuartzServerVisible)
         return;
     
@@ -414,7 +415,7 @@ void QuartzShow(void) {
 void QuartzHide(void)
 {
     int i;
-
+    
     if (XQuartzServerVisible) {
         for (i = 0; i < screenInfo.numScreens; i++) {
             if (screenInfo.screens[i]) {
@@ -422,7 +423,7 @@ void QuartzHide(void)
             }
         }
     }
-
+    
     if(!XQuartzIsRootless)
         QuartzShowFullscreen(FALSE);
     XQuartzServerVisible = FALSE;
@@ -434,13 +435,13 @@ void QuartzHide(void)
  *  Enable or disable rendering to the X screen.
  */
 void QuartzSetRootClip(
-    BOOL enable)
+                       BOOL enable)
 {
     int i;
-
+    
     if (!XQuartzServerVisible)
         return;
-
+    
     for (i = 0; i < screenInfo.numScreens; i++) {
         if (screenInfo.screens[i]) {
             SetRootClip(screenInfo.screens[i], enable);
@@ -465,23 +466,23 @@ void QuartzSpaceChanged(uint32_t space_id) {
 void QuartzCopyDisplayIDs(ScreenPtr pScreen,
                           int displayCount, CGDirectDisplayID *displayIDs) {
     QuartzScreenPtr pQuartzScreen = QUARTZ_PRIV(pScreen);
-
+    
     free(pQuartzScreen->displayIDs);
     if(displayCount) {
         size_t size = displayCount * sizeof(CGDirectDisplayID);
         pQuartzScreen->displayIDs = malloc(size);
         memcpy(pQuartzScreen->displayIDs, displayIDs, size);
     } else {
-       pQuartzScreen->displayIDs = NULL;
+        pQuartzScreen->displayIDs = NULL;
     }
     pQuartzScreen->displayCount = displayCount;
 }
 
 void NSBeep(void);
 void DDXRingBell(
-    int volume,         // volume is % of max
-    int pitch,          // pitch is Hz
-    int duration)       // duration is milliseconds
+                 int volume,         // volume is % of max
+                 int pitch,          // pitch is Hz
+                 int duration)       // duration is milliseconds
 {
     if (volume)
         NSBeep();

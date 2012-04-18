@@ -165,7 +165,7 @@ asm(".desc ___crashreporter_info__, 0x10");
 #define X_NOT_IMPLEMENTED_STRING	"(NI)"
 #endif
 #ifndef X_NONE_STRING
-#define X_NONE_STRING                   ""
+#define X_NONE_STRING			""
 #endif
 
 /*
@@ -223,7 +223,7 @@ LogInit(const char *fname, const char *backup)
      * needed.
      */
     if (saveBuffer && bufferSize > 0) {
-        free(saveBuffer);       /* Must be free(), not free() */
+        free(saveBuffer);
         saveBuffer = NULL;
         bufferSize = 0;
     }

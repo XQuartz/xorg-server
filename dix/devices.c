@@ -432,6 +432,8 @@ DisableDevice(DeviceIntPtr dev, BOOL sendevent)
     if (*prev != dev)
         return FALSE;
 
+    ReleaseButtonsAndKeys(dev);
+
     /* float attached devices */
     if (IsMaster(dev)) {
         for (other = inputInfo.devices; other; other = other->next) {

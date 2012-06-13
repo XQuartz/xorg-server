@@ -4314,7 +4314,6 @@ OtherClientGone(pointer value, XID id)
         prev = other;
     }
     FatalError("client not on event list");
-     /*NOTREACHED*/ return -1;  /* make compiler happy */
 }
 
 int

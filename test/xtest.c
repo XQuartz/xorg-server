@@ -63,8 +63,6 @@ xtest_init_devices(void)
     dixResetPrivates();
     InitAtoms();
 
-    XkbInitPrivates();
-
     /* this also inits the xtest devices */
     InitCoreDevices();
 

@@ -256,7 +256,7 @@ ProcPseudoramiXGetScreenSize(ClientPtr client)
     REQUEST(xPanoramiXGetScreenSizeReq);
     WindowPtr pWin;
     xPanoramiXGetScreenSizeReply rep;
-    register int n, rc;
+    register int rc;
 
     TRACE();
 

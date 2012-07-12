@@ -125,7 +125,7 @@ PseudoramiXAddScreen(int x, int y, int w, int h)
 // Initialize PseudoramiX.
 // Copied from PanoramiXExtensionInit
 void
-PseudoramiXExtensionInit(int argc, char *argv[])
+PseudoramiXExtensionInit(void)
 {
     Bool success = FALSE;
     ExtensionEntry      *extEntry;

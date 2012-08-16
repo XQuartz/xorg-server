@@ -73,6 +73,7 @@
 #include "xf86DDC.h"
 #include "xf86Xinput.h"
 #include "xf86InPriv.h"
+#include "xf86Crtc.h"
 #include "picturestr.h"
 #include "randrstr.h"
 #include "glxvndabi.h"
@@ -223,6 +224,19 @@ Bool
 xf86PrivsElevated(void)
 {
     return PrivsElevated();
+}
+
+static void
+xf86AutoConfigOutputDevices(void)
+{
+    int i;
+
+    if (!xf86Info.autoBindGPU)
+        return;
+
+    for (i = 0; i < xf86NumGPUScreens; i++)
+        RRProviderAutoConfigGpuScreen(xf86ScrnToScreen(xf86GPUScreens[i]),
+                                      xf86ScrnToScreen(xf86Screens[0]));
 }
 
 static void
@@ -703,6 +717,8 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
     for (i = 0; i < xf86NumGPUScreens; i++)
         AttachUnboundGPU(xf86Screens[0]->pScreen, xf86GPUScreens[i]->pScreen);
 
+    xf86AutoConfigOutputDevices();
+
     xf86VGAarbiterWrapFunctions();
     if (sigio_blocked)
         input_unlock();
@@ -1178,6 +1194,10 @@ ddxProcessArgument(int argc, char **argv, int i)
     if (!strcmp(argv[i], "-iglx") || !strcmp(argv[i], "+iglx")) {
         xf86Info.iglxFrom = X_CMDLINE;
         return 0;
+    }
+    if (!strcmp(argv[i], "-noautoBindGPU")) {
+        xf86AutoBindGPUDisabled = TRUE;
+        return 1;
     }
 
     /* OS-specific processing */

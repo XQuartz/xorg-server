@@ -451,4 +451,7 @@ VidModeExtensionInit(ScreenPtr pScreen);
 
 #endif                          /* _NO_XF86_PROTOTYPES */
 
+/* Update the internal total dimensions of all ScreenRecs together */
+extern _X_EXPORT void
+xf86UpdateDesktopDimensions(void);
 #endif                          /* _XF86_H */

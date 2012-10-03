@@ -1834,3 +1834,9 @@ xf86MotionHistoryAllocate(InputInfoPtr pInfo)
 {
     AllocateMotionHistory(pInfo->dev);
 }
+
+void
+xf86UpdateDesktopDimensions(void)
+{
+    update_desktop_dimensions();
+}

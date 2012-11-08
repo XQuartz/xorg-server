@@ -572,8 +572,8 @@ TouchBuildSprite(DeviceIntPtr sourcedev, TouchPointInfoPtr ti,
         return FALSE;
 
     /* Mark which grabs/event selections we're delivering to: max one grab per
-     * window plus the bottom-most event selection. */
-    ti->listeners = calloc(sprite->spriteTraceGood + 1, sizeof(*ti->listeners));
+     * window plus the bottom-most event selection, plus any active grab. */
+    ti->listeners = calloc(sprite->spriteTraceGood + 2, sizeof(*ti->listeners));
     if (!ti->listeners) {
         sprite->spriteTraceGood = 0;
         return FALSE;
@@ -1028,4 +1028,32 @@ TouchAcceptReject(ClientPtr client, DeviceIntPtr dev, int mode,
         return BadAccess;
 
     return TouchListenerAcceptReject(dev, ti, i, mode);
+}
+
+/**
+ * End physically active touches for a device.
+ */
+void
+TouchEndPhysicallyActiveTouches(DeviceIntPtr dev)
+{
+    InternalEvent *eventlist = InitEventList(GetMaximumEventsNum());
+    int i;
+
+    OsBlockSignals();
+    mieqProcessInputEvents();
+    for (i = 0; i < dev->last.num_touches; i++) {
+        DDXTouchPointInfoPtr ddxti = dev->last.touches + i;
+
+        if (ddxti->active) {
+            int j;
+            int nevents = GetTouchEvents(eventlist, dev, ddxti->ddx_id,
+                                         XI_TouchEnd, 0, NULL);
+
+            for (j = 0; j < nevents; j++)
+                mieqProcessDeviceEvent(dev, eventlist + j, NULL);
+        }
+    }
+    OsReleaseSignals();
+
+    FreeEventList(eventlist, GetMaximumEventsNum());
 }

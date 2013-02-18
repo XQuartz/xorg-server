@@ -787,10 +787,32 @@ add_to_scroll_valuator(DeviceIntPtr dev, ValuatorMask *mask, int valuator, doubl
  * @param[in,out] mask Valuator data for this event, modified in-place.
  */
 static void
-moveRelative(DeviceIntPtr dev, ValuatorMask *mask)
+moveRelative(DeviceIntPtr dev, int flags, ValuatorMask *mask)
 {
     int i;
     Bool clip_xy = IsMaster(dev) || !IsFloating(dev);
+
+    /* for abs devices in relative mode, we've just scaled wrong, since we
+       mapped the device's shape into the screen shape. Undo this. */
+    if ((flags & POINTER_ABSOLUTE) == 0 && dev->valuator &&
+        dev->valuator->axes[0].min_value < dev->valuator->axes[0].max_value) {
+
+        double ratio = 1.0 * screenInfo.width/screenInfo.height;
+
+        if (ratio > 1.0) {
+            double y;
+            if (valuator_mask_fetch_double(mask, 1, &y)) {
+                y *= ratio;
+                valuator_mask_set_double(mask, 1, y);
+            }
+        } else {
+            double x;
+            if (valuator_mask_fetch_double(mask, 0, &x)) {
+                x *= ratio;
+                valuator_mask_set_double(mask, 0, x);
+            }
+        }
+    }
 
     /* calc other axes, clip, drop back into valuators */
     for (i = 0; i < valuator_mask_size(mask); i++) {
@@ -844,14 +866,14 @@ scale_from_screen(DeviceIntPtr dev, ValuatorMask *mask)
         scaled = valuator_mask_get_double(mask, 0) + scr->x;
         scaled = rescaleValuatorAxis(scaled,
                                      NULL, dev->valuator->axes + 0,
-                                     0, scr->width);
+                                     screenInfo.x, screenInfo.width);
         valuator_mask_set_double(mask, 0, scaled);
     }
     if (valuator_mask_isset(mask, 1)) {
         scaled = valuator_mask_get_double(mask, 1) + scr->y;
         scaled = rescaleValuatorAxis(scaled,
                                      NULL, dev->valuator->axes + 1,
-                                     0, scr->height);
+                                     screenInfo.y, screenInfo.height);
         valuator_mask_set_double(mask, 1, scaled);
     }
 }
@@ -1387,7 +1409,7 @@ fill_pointer_events(InternalEvent *events, DeviceIntPtr pDev, int type,
         if ((flags & POINTER_NORAW) == 0)
             set_raw_valuators(raw, &mask, raw->valuators.data);
 
-        moveRelative(pDev, &mask);
+        moveRelative(pDev, flags, &mask);
     }
 
     /* valuators are in device coordinate system in absolute coordinates */

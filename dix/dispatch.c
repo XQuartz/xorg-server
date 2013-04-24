@@ -3398,6 +3398,7 @@ CloseDownClient(ClientPtr client)
             clientinfo.setup = (xConnSetup *) NULL;
             CallCallbacks((&ClientStateCallback), (pointer) &clientinfo);
         }
+        TouchListenerGone(client->clientAsMask);
         FreeClientResources(client);
         /* Disable client ID tracking. This must be done after
          * ClientStateCallback. */

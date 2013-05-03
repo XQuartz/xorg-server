@@ -1488,9 +1488,6 @@ ActivatePointerGrab(DeviceIntPtr mouse, GrabPtr grab,
         grabinfo->grabTime = syncEvents.time;
     else
         grabinfo->grabTime = time;
-    if (grab->cursor)
-        grab->cursor->refcnt++;
-    BUG_WARN(grabinfo->grab != NULL);
     grabinfo->grab = AllocGrab(grab);
     grabinfo->fromPassiveGrab = isPassive;
     grabinfo->implicitGrab = autoGrab & ImplicitGrabMask;
@@ -1549,8 +1546,6 @@ DeactivatePointerGrab(DeviceIntPtr mouse)
     if (grab->confineTo)
         ConfineCursorToWindow(mouse, GetCurrentRootWindow(mouse), FALSE, FALSE);
     PostNewCursor(mouse);
-    if (grab->cursor)
-        FreeCursor(grab->cursor, (Cursor) 0);
 
     if (!wasImplicit && grab->grabtype == XI2)
         ReattachToOldMaster(mouse);
@@ -4857,7 +4852,6 @@ ProcGrabPointer(ClientPtr client)
     GrabPtr grab;
     GrabMask mask;
     WindowPtr confineTo;
-    CursorPtr oldCursor;
     BYTE status;
 
     REQUEST(xGrabPointerReq);
@@ -4880,15 +4874,10 @@ ProcGrabPointer(ClientPtr client)
             return rc;
     }
 
-    oldCursor = NullCursor;
     grab = device->deviceGrab.grab;
 
-    if (grab) {
-        if (grab->confineTo && !confineTo)
-            ConfineCursorToWindow(device, GetCurrentRootWindow(device), FALSE,
-                                  FALSE);
-        oldCursor = grab->cursor;
-    }
+    if (grab && grab->confineTo && !confineTo)
+        ConfineCursorToWindow(device, GetCurrentRootWindow(device), FALSE, FALSE);
 
     mask.core = stuff->eventMask;
 
@@ -4897,9 +4886,6 @@ ProcGrabPointer(ClientPtr client)
                     &mask, CORE, stuff->cursor, stuff->confineTo, &status);
     if (rc != Success)
         return rc;
-
-    if (oldCursor && status == GrabSuccess)
-        FreeCursor(oldCursor, (Cursor) 0);
 
     rep = (xGrabPointerReply) {
         .type = X_Reply,
@@ -5104,6 +5090,8 @@ GrabDevice(ClientPtr client, DeviceIntPtr dev,
             xi2mask_merge(tempGrab->xi2mask, mask->xi2mask);
         tempGrab->device = dev;
         tempGrab->cursor = cursor;
+        if (cursor)
+            tempGrab->cursor->refcnt++;
         tempGrab->confineTo = confineTo;
         tempGrab->grabtype = grabtype;
         (*grabInfo->ActivateGrab) (dev, tempGrab, time, FALSE);

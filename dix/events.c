@@ -1465,6 +1465,7 @@ ActivatePointerGrab(DeviceIntPtr mouse, GrabPtr grab,
                     TimeStamp time, Bool autoGrab)
 {
     GrabInfoPtr grabinfo = &mouse->deviceGrab;
+    GrabPtr oldgrab = grabinfo->grab;
     WindowPtr oldWin = (grabinfo->grab) ?
         grabinfo->grab->window : mouse->spriteInfo->sprite->win;
     Bool isPassive = autoGrab & ~ImplicitGrabMask;
@@ -1497,6 +1498,8 @@ ActivatePointerGrab(DeviceIntPtr mouse, GrabPtr grab,
     UpdateTouchesForGrab(mouse);
     CheckGrabForSyncs(mouse, (Bool) grab->pointerMode,
                       (Bool) grab->keyboardMode);
+    if (oldgrab)
+        FreeGrab(oldgrab);
 }
 
 /**
@@ -1567,6 +1570,7 @@ ActivateKeyboardGrab(DeviceIntPtr keybd, GrabPtr grab, TimeStamp time,
                      Bool passive)
 {
     GrabInfoPtr grabinfo = &keybd->deviceGrab;
+    GrabPtr oldgrab = grabinfo->grab;
     WindowPtr oldWin;
 
     /* slave devices need to float for the duration of the grab. */
@@ -1592,12 +1596,13 @@ ActivateKeyboardGrab(DeviceIntPtr keybd, GrabPtr grab, TimeStamp time,
         grabinfo->grabTime = syncEvents.time;
     else
         grabinfo->grabTime = time;
-    BUG_WARN(grabinfo->grab != NULL);
     grabinfo->grab = AllocGrab(grab);
     grabinfo->fromPassiveGrab = passive;
     grabinfo->implicitGrab = passive & ImplicitGrabMask;
     CheckGrabForSyncs(keybd, (Bool) grab->keyboardMode,
                       (Bool) grab->pointerMode);
+    if (oldgrab)
+        FreeGrab(oldgrab);
 }
 
 /**

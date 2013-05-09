@@ -574,7 +574,8 @@ InitKeyboardDeviceStruct(DeviceIntPtr dev, XkbRMLVOSet * rmlvo,
     XkbUpdateActions(dev, xkb->min_key_code, XkbNumKeys(xkb), &changes,
                      &check, &cause);
 
-    InitFocusClassDeviceStruct(dev);
+    if (!dev->focus)
+        InitFocusClassDeviceStruct(dev);
 
     xkbi->kbdProc = ctrl_func;
     dev->kbdfeed->BellProc = bell_func;

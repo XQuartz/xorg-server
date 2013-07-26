@@ -26,7 +26,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.14.3-rc1, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+AC_INIT([xorg-server], 1.14.2.901, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
 RELEASE_DATE="2013-07-25"
 RELEASE_NAME="Act semi-normal-rc1"
 AC_CONFIG_SRCDIR([Makefile.am])

@@ -931,8 +931,7 @@ ChangeToCursor(DeviceIntPtr pDev, CursorPtr cursor)
 
         (*pScreen->DisplayCursor) (pDev, pScreen, cursor);
         FreeCursor(pSprite->current, (Cursor) 0);
-        pSprite->current = cursor;
-        pSprite->current->refcnt++;
+        pSprite->current = RefCursor(cursor);
     }
 }
 
@@ -1424,21 +1423,24 @@ UpdateTouchesForGrab(DeviceIntPtr mouse)
 
     for (i = 0; i < mouse->touch->num_touches; i++) {
         TouchPointInfoPtr ti = mouse->touch->touches + i;
+        TouchListener *listener = &ti->listeners[0];
         GrabPtr grab = mouse->deviceGrab.grab;
 
         if (ti->active &&
-            CLIENT_BITS(ti->listeners[0].listener) == grab->resource) {
-            ti->listeners[0].listener = grab->resource;
-            ti->listeners[0].level = grab->grabtype;
-            ti->listeners[0].state = LISTENER_IS_OWNER;
-            ti->listeners[0].window = grab->window;
+            CLIENT_BITS(listener->listener) == grab->resource) {
+            listener->listener = grab->resource;
+            listener->level = grab->grabtype;
+            listener->state = LISTENER_IS_OWNER;
+            listener->window = grab->window;
 
             if (grab->grabtype == CORE || grab->grabtype == XI ||
                 !xi2mask_isset(grab->xi2mask, mouse, XI_TouchBegin))
-                ti->listeners[0].type = LISTENER_POINTER_GRAB;
+                listener->type = LISTENER_POINTER_GRAB;
             else
-                ti->listeners[0].type = LISTENER_GRAB;
-            ti->listeners[0].grab = grab;
+                listener->type = LISTENER_GRAB;
+            if (listener->grab)
+                FreeGrab(listener->grab);
+            listener->grab = AllocGrab(grab);
         }
     }
 }
@@ -1463,6 +1465,7 @@ ActivatePointerGrab(DeviceIntPtr mouse, GrabPtr grab,
                     TimeStamp time, Bool autoGrab)
 {
     GrabInfoPtr grabinfo = &mouse->deviceGrab;
+    GrabPtr oldgrab = grabinfo->grab;
     WindowPtr oldWin = (grabinfo->grab) ?
         grabinfo->grab->window : mouse->spriteInfo->sprite->win;
     Bool isPassive = autoGrab & ~ImplicitGrabMask;
@@ -1485,16 +1488,15 @@ ActivatePointerGrab(DeviceIntPtr mouse, GrabPtr grab,
         grabinfo->grabTime = syncEvents.time;
     else
         grabinfo->grabTime = time;
-    if (grab->cursor)
-        grab->cursor->refcnt++;
-    CopyGrab(grabinfo->activeGrab, grab);
-    grabinfo->grab = grabinfo->activeGrab;
+    grabinfo->grab = AllocGrab(grab);
     grabinfo->fromPassiveGrab = isPassive;
     grabinfo->implicitGrab = autoGrab & ImplicitGrabMask;
     PostNewCursor(mouse);
     UpdateTouchesForGrab(mouse);
     CheckGrabForSyncs(mouse, (Bool) grab->pointerMode,
                       (Bool) grab->keyboardMode);
+    if (oldgrab)
+        FreeGrab(oldgrab);
 }
 
 /**
@@ -1518,13 +1520,20 @@ DeactivatePointerGrab(DeviceIntPtr mouse)
     for (i = 0; !wasPassive && mouse->touch && i < mouse->touch->num_touches; i++) {
         TouchPointInfoPtr ti = mouse->touch->touches + i;
         if (ti->active && TouchResourceIsOwner(ti, grab_resource)) {
+            int mode = XIRejectTouch;
             /* Rejecting will generate a TouchEnd, but we must not
                emulate a ButtonRelease here. So pretend the listener
                already has the end event */
             if (grab->grabtype == CORE || grab->grabtype == XI ||
-                    !xi2mask_isset(mouse->deviceGrab.grab->xi2mask, mouse, XI_TouchBegin))
+                    !xi2mask_isset(mouse->deviceGrab.grab->xi2mask, mouse, XI_TouchBegin)) {
+                mode = XIAcceptTouch;
+                /* NOTE: we set the state here, but
+                 * ProcessTouchOwnershipEvent() will still call
+                 * TouchEmitTouchEnd for this listener. The other half of
+                 * this hack is in DeliverTouchEndEvent */
                 ti->listeners[0].state = LISTENER_HAS_END;
-            TouchListenerAcceptReject(mouse, ti, 0, XIRejectTouch);
+            }
+            TouchListenerAcceptReject(mouse, ti, 0, mode);
         }
     }
 
@@ -1544,13 +1553,13 @@ DeactivatePointerGrab(DeviceIntPtr mouse)
     if (grab->confineTo)
         ConfineCursorToWindow(mouse, GetCurrentRootWindow(mouse), FALSE, FALSE);
     PostNewCursor(mouse);
-    if (grab->cursor)
-        FreeCursor(grab->cursor, (Cursor) 0);
 
     if (!wasImplicit && grab->grabtype == XI2)
         ReattachToOldMaster(mouse);
 
     ComputeFreezes();
+
+    FreeGrab(grab);
 }
 
 /**
@@ -1563,6 +1572,7 @@ ActivateKeyboardGrab(DeviceIntPtr keybd, GrabPtr grab, TimeStamp time,
                      Bool passive)
 {
     GrabInfoPtr grabinfo = &keybd->deviceGrab;
+    GrabPtr oldgrab = grabinfo->grab;
     WindowPtr oldWin;
 
     /* slave devices need to float for the duration of the grab. */
@@ -1588,12 +1598,13 @@ ActivateKeyboardGrab(DeviceIntPtr keybd, GrabPtr grab, TimeStamp time,
         grabinfo->grabTime = syncEvents.time;
     else
         grabinfo->grabTime = time;
-    CopyGrab(grabinfo->activeGrab, grab);
-    grabinfo->grab = grabinfo->activeGrab;
+    grabinfo->grab = AllocGrab(grab);
     grabinfo->fromPassiveGrab = passive;
     grabinfo->implicitGrab = passive & ImplicitGrabMask;
     CheckGrabForSyncs(keybd, (Bool) grab->keyboardMode,
                       (Bool) grab->pointerMode);
+    if (oldgrab)
+        FreeGrab(oldgrab);
 }
 
 /**
@@ -1635,6 +1646,8 @@ DeactivateKeyboardGrab(DeviceIntPtr keybd)
         ReattachToOldMaster(keybd);
 
     ComputeFreezes();
+
+    FreeGrab(grab);
 }
 
 void
@@ -1738,6 +1751,16 @@ AllowSome(ClientPtr client, TimeStamp time, DeviceIntPtr thisDev, int newState)
             ComputeFreezes();
         }
         break;
+    }
+
+    /* We've unfrozen the grab. If the grab was a touch grab, we're now the
+     * owner and expected to accept/reject it. Reject == ReplayPointer which
+     * we've handled in ComputeFreezes() (during DeactivateGrab) above,
+     * anything else is accept.
+     */
+    if (newState != NOT_GRABBED /* Replay */ &&
+        IsTouchEvent((InternalEvent*)grabinfo->sync.event)) {
+        TouchAcceptAndEnd(thisDev, grabinfo->sync.event->touchid);
     }
 }
 
@@ -1971,7 +1994,7 @@ ActivateImplicitGrab(DeviceIntPtr dev, ClientPtr client, WindowPtr win,
     else
         return FALSE;
 
-    tempGrab = AllocGrab();
+    tempGrab = AllocGrab(NULL);
     if (!tempGrab)
         return FALSE;
     tempGrab->next = NULL;
@@ -3191,11 +3214,10 @@ InitializeSprite(DeviceIntPtr pDev, WindowPtr pWin)
         pSprite->pEnqueueScreen = screenInfo.screens[0];
         pSprite->pDequeueScreen = pSprite->pEnqueueScreen;
     }
-    if (pCursor)
-        pCursor->refcnt++;
+    pCursor = RefCursor(pCursor);
     if (pSprite->current)
         FreeCursor(pSprite->current, None);
-    pSprite->current = pCursor;
+    pSprite->current = RefCursor(pCursor);
 
     if (pScreen) {
         (*pScreen->RealizeCursor) (pDev, pScreen, pSprite->current);
@@ -3274,9 +3296,7 @@ UpdateSpriteForScreen(DeviceIntPtr pDev, ScreenPtr pScreen)
     pSprite->hotLimits.x2 = pScreen->width;
     pSprite->hotLimits.y2 = pScreen->height;
     pSprite->win = win;
-    pCursor = wCursor(win);
-    if (pCursor)
-        pCursor->refcnt++;
+    pCursor = RefCursor(wCursor(win));
     if (pSprite->current)
         FreeCursor(pSprite->current, 0);
     pSprite->current = pCursor;
@@ -3878,7 +3898,7 @@ CheckPassiveGrabsOnWindow(WindowPtr pWin,
     if (!grab)
         return NULL;
 
-    tempGrab = AllocGrab();
+    tempGrab = AllocGrab(NULL);
 
     /* Fill out the grab details, but leave the type for later before
      * comparing */
@@ -4836,7 +4856,6 @@ ProcGrabPointer(ClientPtr client)
     GrabPtr grab;
     GrabMask mask;
     WindowPtr confineTo;
-    CursorPtr oldCursor;
     BYTE status;
 
     REQUEST(xGrabPointerReq);
@@ -4859,15 +4878,10 @@ ProcGrabPointer(ClientPtr client)
             return rc;
     }
 
-    oldCursor = NullCursor;
     grab = device->deviceGrab.grab;
 
-    if (grab) {
-        if (grab->confineTo && !confineTo)
-            ConfineCursorToWindow(device, GetCurrentRootWindow(device), FALSE,
-                                  FALSE);
-        oldCursor = grab->cursor;
-    }
+    if (grab && grab->confineTo && !confineTo)
+        ConfineCursorToWindow(device, GetCurrentRootWindow(device), FALSE, FALSE);
 
     mask.core = stuff->eventMask;
 
@@ -4876,9 +4890,6 @@ ProcGrabPointer(ClientPtr client)
                     &mask, CORE, stuff->cursor, stuff->confineTo, &status);
     if (rc != Success)
         return rc;
-
-    if (oldCursor && status == GrabSuccess)
-        FreeCursor(oldCursor, (Cursor) 0);
 
     rep = (xGrabPointerReply) {
         .type = X_Reply,
@@ -4935,9 +4946,7 @@ ProcChangeActivePointerGrab(ClientPtr client)
         (CompareTimeStamps(time, device->deviceGrab.grabTime) == EARLIER))
         return Success;
     oldCursor = grab->cursor;
-    grab->cursor = newCursor;
-    if (newCursor)
-        newCursor->refcnt++;
+    grab->cursor = RefCursor(newCursor);
     PostNewCursor(device);
     if (oldCursor)
         FreeCursor(oldCursor, (Cursor) 0);
@@ -5067,7 +5076,7 @@ GrabDevice(ClientPtr client, DeviceIntPtr dev,
     else {
         GrabPtr tempGrab;
 
-        tempGrab = AllocGrab();
+        tempGrab = AllocGrab(NULL);
 
         tempGrab->next = NULL;
         tempGrab->window = pWin;
@@ -5082,7 +5091,7 @@ GrabDevice(ClientPtr client, DeviceIntPtr dev,
         else
             xi2mask_merge(tempGrab->xi2mask, mask->xi2mask);
         tempGrab->device = dev;
-        tempGrab->cursor = cursor;
+        tempGrab->cursor = RefCursor(cursor);
         tempGrab->confineTo = confineTo;
         tempGrab->grabtype = grabtype;
         (*grabInfo->ActivateGrab) (dev, tempGrab, time, FALSE);
@@ -5423,7 +5432,7 @@ ProcUngrabKey(ClientPtr client)
         client->errorValue = stuff->modifiers;
         return BadValue;
     }
-    tempGrab = AllocGrab();
+    tempGrab = AllocGrab(NULL);
     if (!tempGrab)
         return BadAlloc;
     tempGrab->resource = client->clientAsMask;
@@ -5617,7 +5626,7 @@ ProcUngrabButton(ClientPtr client)
 
     ptr = PickPointer(client);
 
-    tempGrab = AllocGrab();
+    tempGrab = AllocGrab(NULL);
     if (!tempGrab)
         return BadAlloc;
     tempGrab->resource = client->clientAsMask;

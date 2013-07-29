@@ -96,10 +96,16 @@ reply_XIQueryVersion_multiple(ClientPtr client, int len, char *data, void *closu
     if (versions->major_cached == -1) {
         versions->major_cached = rep->major_version;
         versions->minor_cached = rep->minor_version;
+    } else if (versions->major_cached >= 2 &&
+               versions->minor_cached >= 2) {
+        /* First request was for 2.2 or higher, reply
+           must be 2.2 or higher, whichever requested */
+        assert(rep->major_version >= 2);
+        assert(rep->minor_version >= 2);
+    } else {
+        assert(versions->major_cached == rep->major_version);
+        assert(versions->minor_cached == rep->minor_version);
     }
-
-    assert(versions->major_cached == rep->major_version);
-    assert(versions->minor_cached == rep->minor_version);
 }
 
 /**

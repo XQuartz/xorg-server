@@ -4139,6 +4139,9 @@ DeliverOneGrabbedEvent(InternalEvent *event, DeviceIntPtr dev,
     GrabPtr grab = grabinfo->grab;
     Mask filter;
 
+    if (grab->grabtype != level)
+        return 0;
+
     switch (level) {
     case XI2:
         rc = EventToXI2(event, &xE);

@@ -337,6 +337,7 @@ typedef struct _rrScrPriv {
 
     RRProviderDestroyProcPtr rrProviderDestroy;
 
+    Bool resourcesChanged;      /* screen resources change */
 } rrScrPrivRec, *rrScrPrivPtr;
 
 extern _X_EXPORT DevPrivateKeyRec rrPrivKeyRec;
@@ -485,6 +486,9 @@ extern _X_EXPORT int
  */
 extern _X_EXPORT void
  RRDeliverScreenEvent(ClientPtr client, WindowPtr pWin, ScreenPtr pScreen);
+
+extern _X_EXPORT void
+ RRResourcesChanged(ScreenPtr pScreen);
 
 /* randr.c */
 /* set a screen change on the primary screen */

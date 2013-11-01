@@ -39,7 +39,7 @@ RRCrtcChanged(RRCrtcPtr crtc, Bool layoutChanged)
     if (pScreen) {
         rrScrPriv(pScreen);
 
-        pScrPriv->changed = TRUE;
+        RRSetChanged(pScreen);
         /*
          * Send ConfigureNotify on any layout change
          */
@@ -101,6 +101,8 @@ RRCrtcCreate(ScreenPtr pScreen, void *devPrivate)
     /* attach the screen and crtc together */
     crtc->pScreen = pScreen;
     pScrPriv->crtcs[pScrPriv->numCrtcs++] = crtc;
+
+    RRResourcesChanged(pScreen);
 
     return crtc;
 }
@@ -672,6 +674,8 @@ RRCrtcDestroyResource(pointer value, XID pid)
                 break;
             }
         }
+
+        RRResourcesChanged(pScreen);
     }
 
     if (crtc->scanout_pixmap)

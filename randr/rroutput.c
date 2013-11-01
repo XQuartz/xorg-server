@@ -36,7 +36,7 @@ RROutputChanged(RROutputPtr output, Bool configChanged)
     output->changed = TRUE;
     if (pScreen) {
         rrScrPriv(pScreen);
-        pScrPriv->changed = TRUE;
+        RRSetChanged(pScreen);
         if (configChanged)
             pScrPriv->configChanged = TRUE;
     }
@@ -101,6 +101,9 @@ RROutputCreate(ScreenPtr pScreen,
         return NULL;
 
     pScrPriv->outputs[pScrPriv->numOutputs++] = output;
+
+    RRResourcesChanged(pScreen);
+
     return output;
 }
 
@@ -355,6 +358,8 @@ RROutputDestroyResource(pointer value, XID pid)
                 break;
             }
         }
+
+        RRResourcesChanged(pScreen);
     }
     if (output->modes) {
         for (m = 0; m < output->numModes; m++)

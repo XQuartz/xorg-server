@@ -507,10 +507,8 @@ fbPictureInit(ScreenPtr pScreen, PictFormatPtr formats, int nformats)
     ps->UnrealizeGlyph = fbUnrealizeGlyph;
     ps->CompositeRects = miCompositeRects;
     ps->RasterizeTrapezoid = fbRasterizeTrapezoid;
-    ps->Trapezoids = fbTrapezoids;
     ps->AddTraps = fbAddTraps;
     ps->AddTriangles = fbAddTriangles;
-    ps->Triangles = fbTriangles;
 
     return TRUE;
 }

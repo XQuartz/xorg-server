@@ -143,7 +143,7 @@ RRScreenSizeNotify(ScreenPtr pScreen)
     pScrPriv->height = pScreen->height;
     pScrPriv->mmWidth = pScreen->mmWidth;
     pScrPriv->mmHeight = pScreen->mmHeight;
-    RRSetChanged(pScreen);
+    pScrPriv->changed = TRUE;
 /*    pScrPriv->sizeChanged = TRUE; */
 
     RRTellChanged(pScreen);

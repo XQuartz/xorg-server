@@ -225,7 +225,7 @@ RRScreenSetSizeRange(ScreenPtr pScreen,
     pScrPriv->minHeight = minHeight;
     pScrPriv->maxWidth = maxWidth;
     pScrPriv->maxHeight = maxHeight;
-    RRSetChanged(pScreen);
+    pScrPriv->changed = TRUE;
     pScrPriv->configChanged = TRUE;
 }
 

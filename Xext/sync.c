@@ -2731,27 +2731,24 @@ IdleTimeBlockHandler(pointer pCounter, struct timeval **wt, pointer LastSelectMa
          * If we've been idle more than it, and someone wants to know about
          * that level-triggered, schedule an immediate wakeup.
          */
-        unsigned long timeout = -1;
 
         if (XSyncValueLessThan(idle, *greater)) {
             XSyncValue value;
             Bool overflow;
 
             XSyncValueSubtract(&value, *greater, idle, &overflow);
-            timeout = min(timeout, XSyncValueLow32(value));
+            AdjustWaitForDelay(wt, XSyncValueLow32(value));
         }
         else {
             for (list = counter->sync.pTriglist; list;
                  list = list->next) {
                 trig = list->pTrigger;
                 if (trig->CheckTrigger(trig, old_idle)) {
-                    timeout = min(timeout, 0);
+                    AdjustWaitForDelay(wt, 0);
                     break;
                 }
             }
         }
-
-        AdjustWaitForDelay(wt, timeout);
     }
 
     counter->value = old_idle;  /* pop */

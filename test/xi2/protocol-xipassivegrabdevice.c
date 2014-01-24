@@ -137,6 +137,7 @@ request_XIPassiveGrabDevice(ClientPtr client, xXIPassiveGrabDeviceReq * req,
 {
     int rc;
     int modifiers;
+    int mask_len;
 
     rc = ProcXIPassiveGrabDevice(&client_request);
     assert(rc == error);
@@ -153,10 +154,11 @@ request_XIPassiveGrabDevice(ClientPtr client, xXIPassiveGrabDeviceReq * req,
     swaps(&req->deviceid);
     modifiers = req->num_modifiers;
     swaps(&req->num_modifiers);
+    mask_len = req->mask_len;
     swaps(&req->mask_len);
 
     while (modifiers--) {
-        CARD32 *mod = ((CARD32 *) (req + 1)) + modifiers;
+        CARD32 *mod = ((CARD32 *) (req + 1)) + mask_len + modifiers;
 
         swapl(mod);
     }
@@ -227,6 +229,11 @@ test_XIPassiveGrabDevice(void)
     request->grab_type = XIGrabtypeButton;
     request->detail = XIAnyButton;
     request_XIPassiveGrabDevice(&client_request, request, Success, 0);
+
+    /* Set a few random masks to make sure we handle modifiers correctly */
+    SetBit(mask, XI_ButtonPress);
+    SetBit(mask, XI_KeyPress);
+    SetBit(mask, XI_Enter);
 
     /* some modifiers */
     request->num_modifiers = N_MODS;

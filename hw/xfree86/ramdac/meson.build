@@ -1,6 +1,4 @@
 srcs_xorg_ramdac = [
-    'xf86RamDac.c',
-    'xf86RamDacCmap.c',
     'xf86CursorRD.c',
     'xf86HWCurs.c',
 ]
@@ -15,7 +13,6 @@ xorg_ramdac = static_library('xorg_ramdac',
 install_data(
     [
         'xf86Cursor.h',
-        'xf86RamDac.h',
     ],
     install_dir: xorgsdkdir,
 )

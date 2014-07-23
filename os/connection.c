@@ -1300,13 +1300,6 @@ ListenOnOpenFD(int fd, int noxauth)
 
     /* Increment the count */
     ListenTransCount++;
-
-    /* This *might* not be needed... /shrug */
-    ResetAuthorization();
-    ResetHosts(display);
-#ifdef XDMCP
-    XdmcpReset();
-#endif
 }
 
 #endif

@@ -1133,7 +1133,30 @@ glxWinSetPixelFormat(HDC hdc, int bppOverride, int drawableTypeOverride,
          (config->redBits + config->greenBits + config->blueBits), bppOverride,
          config->drawableType, drawableTypeOverride);
 
-    if (!winScreen->has_WGL_ARB_pixel_format) {
+    if (winScreen->has_WGL_ARB_pixel_format) {
+        int pixelFormat =
+            fbConfigToPixelFormatIndex(hdc, config,
+                                       drawableTypeOverride, winScreen);
+        if (pixelFormat != 0) {
+            GLWIN_DEBUG_MSG("wglChoosePixelFormat: chose pixelFormatIndex %d",
+                            pixelFormat);
+            ErrorF
+                ("wglChoosePixelFormat: chose pixelFormatIndex %d (rather than %d as originally planned)\n",
+                 pixelFormat, winConfig->pixelFormatIndex);
+
+            if (!SetPixelFormat(hdc, pixelFormat, NULL)) {
+                ErrorF("SetPixelFormat error: %s\n", glxWinErrorMessage());
+                return FALSE;
+            }
+        }
+    }
+
+    /*
+      For some drivers, wglChoosePixelFormatARB() can fail when the provided
+      DC doesn't belong to the driver (e.g. it's a compatible DC for a bitmap,
+      so allow fallback to ChoosePixelFormat()
+     */
+    {
         PIXELFORMATDESCRIPTOR pfd;
         int pixelFormat;
 
@@ -1165,25 +1188,6 @@ glxWinSetPixelFormat(HDC hdc, int bppOverride, int drawableTypeOverride,
              pixelFormat, winConfig->pixelFormatIndex);
 
         if (!SetPixelFormat(hdc, pixelFormat, &pfd)) {
-            ErrorF("SetPixelFormat error: %s\n", glxWinErrorMessage());
-            return FALSE;
-        }
-    }
-    else {
-        int pixelFormat = fbConfigToPixelFormatIndex(hdc, config,
-                                                     drawableTypeOverride,
-                                                     winScreen);
-        if (pixelFormat == 0) {
-            return FALSE;
-        }
-
-        GLWIN_DEBUG_MSG("wglChoosePixelFormat: chose pixelFormatIndex %d",
-                        pixelFormat);
-        ErrorF
-            ("wglChoosePixelFormat: chose pixelFormatIndex %d (rather than %d as originally planned)\n",
-             pixelFormat, winConfig->pixelFormatIndex);
-
-        if (!SetPixelFormat(hdc, pixelFormat, NULL)) {
             ErrorF("SetPixelFormat error: %s\n", glxWinErrorMessage());
             return FALSE;
         }

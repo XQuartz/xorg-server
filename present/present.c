@@ -435,7 +435,7 @@ present_flip_notify(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
     DebugPresent(("\tn %lld %p %8lld: %08lx -> %08lx\n",
                   vblank->event_id, vblank, vblank->target_msc,
                   vblank->pixmap ? vblank->pixmap->drawable.id : 0,
-                  vblank->window->drawable.id));
+                  vblank->window ? vblank->window->drawable.id : 0));
 
     assert (vblank == screen_priv->flip_pending);
 
@@ -854,10 +854,10 @@ present_pixmap(WindowPtr window,
     }
 
     if (pixmap)
-        DebugPresent(("q %lld %p %8lld: %08lx -> %08lx (crtc %p)\n",
+        DebugPresent(("q %lld %p %8lld: %08lx -> %08lx (crtc %p) flip %d vsync %d serial %d\n",
                       vblank->event_id, vblank, target_msc,
                       vblank->pixmap->drawable.id, vblank->window->drawable.id,
-                      target_crtc));
+                      target_crtc, vblank->flip, vblank->sync_flip, vblank->serial));
 
     xorg_list_add(&vblank->event_queue, &present_exec_queue);
     vblank->queued = TRUE;
@@ -949,7 +949,7 @@ present_vblank_destroy(present_vblank_ptr vblank)
     DebugPresent(("\td %lld %p %8lld: %08lx -> %08lx\n",
                   vblank->event_id, vblank, vblank->target_msc,
                   vblank->pixmap ? vblank->pixmap->drawable.id : 0,
-                  vblank->window->drawable.id));
+                  vblank->window ? vblank->window->drawable.id : 0));
 
     /* Drop pixmap reference */
     if (vblank->pixmap)

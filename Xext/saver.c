@@ -1185,6 +1185,8 @@ ProcScreenSaverUnsetAttributes(ClientPtr client)
         PanoramiXRes *draw;
         int rc, i;
 
+        REQUEST_SIZE_MATCH(xScreenSaverUnsetAttributesReq);
+
         rc = dixLookupResourceByClass((void **) &draw, stuff->drawable,
                                       XRC_DRAWABLE, client, DixWriteAccess);
         if (rc != Success)

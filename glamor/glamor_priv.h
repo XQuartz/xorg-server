@@ -1097,4 +1097,6 @@ void glamor_xv_render(glamor_port_private *port_priv);
 
 #include "glamor_font.h"
 
+#define GLAMOR_MIN_ALU_INSTRUCTIONS 128 /* Minimum required number of native ALU instructions */
+
 #endif                          /* GLAMOR_PRIV_H */

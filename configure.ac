@@ -26,7 +26,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.16.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+AC_INIT([xorg-server], 1.16.4, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
 RELEASE_DATE="2014-12-20"
 RELEASE_NAME="Marionberry Pie"
 AC_CONFIG_SRCDIR([Makefile.am])

@@ -1063,6 +1063,7 @@ MonthChangedOrBadTime(CARD32 *ms)
 void
 NoticeTime(const DeviceIntPtr dev, TimeStamp time)
 {
+    currentTime = time;
     lastDeviceEventTime[XIAllDevices].time = currentTime;
     lastDeviceEventTime[dev->id].time = currentTime;
 

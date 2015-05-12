@@ -1220,6 +1220,7 @@ SmartScheduleInit(void)
     memset((char *) &act, 0, sizeof(struct sigaction));
 
     /* Set up the timer signal function */
+    act.sa_flags = SA_RESTART;
     act.sa_handler = SmartScheduleTimer;
     sigemptyset(&act.sa_mask);
     sigaddset(&act.sa_mask, SIGALRM);

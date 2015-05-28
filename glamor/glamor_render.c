@@ -1400,6 +1400,7 @@ glamor_composite_clipped_region(CARD8 op,
 {
     ScreenPtr screen = dest->pDrawable->pScreen;
     PixmapPtr source_pixmap = NULL, mask_pixmap = NULL;
+    PixmapPtr dest_pixmap = glamor_get_drawable_pixmap(dest->pDrawable);
     PicturePtr temp_src = source, temp_mask = mask;
     glamor_pixmap_private *temp_src_priv = source_pixmap_priv;
     glamor_pixmap_private *temp_mask_priv = mask_pixmap_priv;
@@ -1502,7 +1503,14 @@ glamor_composite_clipped_region(CARD8 op,
         }
     }
 
-    /*XXXXX, self copy? */
+    if (source_pixmap == dest_pixmap) {
+        glamor_fallback("source and dest pixmaps are the same\n");
+        goto out;
+    }
+    if (mask_pixmap == dest_pixmap) {
+        glamor_fallback("mask and dest pixmaps are the same\n");
+        goto out;
+    }
 
     x_dest += dest->pDrawable->x;
     y_dest += dest->pDrawable->y;

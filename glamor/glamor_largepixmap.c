@@ -1046,6 +1046,15 @@ glamor_composite_largepixmap_region(CARD8 op,
     int source_repeat_type = 0, mask_repeat_type = 0;
     int ok = TRUE;
 
+    if (source_pixmap_priv == dest_pixmap_priv) {
+        glamor_fallback("source and dest pixmaps are the same\n");
+        return FALSE;
+    }
+    if (mask_pixmap_priv ==  dest_pixmap_priv) {
+        glamor_fallback("mask and dest pixmaps are the same\n");
+        return FALSE;
+    }
+
     if (source->repeat)
         source_repeat_type = source->repeatType;
     else

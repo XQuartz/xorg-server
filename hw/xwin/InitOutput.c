@@ -716,6 +716,11 @@ winUseMsg(void)
            "\tthe updated region when num_boxes, or more, are in the\n"
            "\tupdated region.\n");
 
+    ErrorF("-[no]compositewm\n"
+           "\tUse the Composite extension to keep a bitmap image of each top-level\n"
+           "\tX window, so window contents which are occluded show correctly in\n"
+           "\ttask bar and task switcher previews.\n");
+
 #ifdef XWIN_XF86CONFIG
     ErrorF("-config\n" "\tSpecify a configuration file.\n");
 

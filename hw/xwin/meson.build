@@ -137,6 +137,7 @@ xwin_dep = [
     dependency('xcb-image'),
     dependency('xcb-ewmh'),
     dependency('xcb-icccm'),
+    dependency('xcb-composite'),
 ]
 
 executable(

@@ -461,6 +461,11 @@ winFinishScreenInitFB(int i, ScreenPtr pScreen, int argc, char **argv)
 
 
     if (pScreenInfo->fMultiWindow) {
+        if ((pScreenInfo->dwBPP == 8) && (pScreenInfo->fCompositeWM)) {
+            ErrorF("-compositewm disabled due to 8bpp depth\n");
+            pScreenInfo->fCompositeWM = FALSE;
+        }
+
 #if CYGDEBUG || YES
         winDebug("winFinishScreenInitFB - Calling winInitWM.\n");
 #endif
@@ -471,7 +476,8 @@ winFinishScreenInitFB(int i, ScreenPtr pScreen, int argc, char **argv)
                        &pScreenPriv->ptXMsgProc,
                        &pScreenPriv->pmServerStarted,
                        pScreenInfo->dwScreen,
-                       (HWND) &pScreenPriv->hwndScreen)) {
+                       (HWND) &pScreenPriv->hwndScreen,
+                       pScreenInfo->fCompositeWM)) {
             ErrorF("winFinishScreenInitFB - winInitWM () failed.\n");
             return FALSE;
         }

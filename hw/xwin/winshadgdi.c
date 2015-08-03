@@ -750,6 +750,12 @@ winBltExposedRegionsShadowGDI(ScreenPtr pScreen)
 
     /* BeginPaint gives us an hdc that clips to the invalidated region */
     hdcUpdate = BeginPaint(pScreenPriv->hwndScreen, &ps);
+    /* Avoid the BitBlt if the PAINTSTRUCT region is bogus */
+    if (ps.rcPaint.right == 0 && ps.rcPaint.bottom == 0 &&
+        ps.rcPaint.left == 0 && ps.rcPaint.top == 0) {
+        EndPaint(pScreenPriv->hwndScreen, &ps);
+        return 0;
+    }
 
     /* Realize the palette, if we have one */
     if (pScreenPriv->pcmapInstalled != NULL) {
@@ -759,11 +765,30 @@ winBltExposedRegionsShadowGDI(ScreenPtr pScreen)
         RealizePalette(hdcUpdate);
     }
 
-    /* Our BitBlt will be clipped to the invalidated region */
-    BitBlt(hdcUpdate,
-           0, 0,
-           pScreenInfo->dwWidth, pScreenInfo->dwHeight,
-           pScreenPriv->hdcShadow, 0, 0, SRCCOPY);
+    /* Try to copy from the shadow buffer to the invalidated region */
+    if (!BitBlt(hdcUpdate,
+                ps.rcPaint.left, ps.rcPaint.top,
+                ps.rcPaint.right - ps.rcPaint.left,
+                ps.rcPaint.bottom - ps.rcPaint.top,
+                pScreenPriv->hdcShadow,
+                ps.rcPaint.left,
+                ps.rcPaint.top,
+                SRCCOPY)) {
+        LPVOID lpMsgBuf;
+
+        /* Display an error message */
+        FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                      FORMAT_MESSAGE_FROM_SYSTEM |
+                      FORMAT_MESSAGE_IGNORE_INSERTS,
+                      NULL,
+                      GetLastError(),
+                      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                      (LPTSTR) &lpMsgBuf, 0, NULL);
+
+        ErrorF("winBltExposedRegionsShadowGDI - BitBlt failed: %s\n",
+               (LPSTR) lpMsgBuf);
+        LocalFree(lpMsgBuf);
+    }
 
     /* EndPaint frees the DC */
     EndPaint(pScreenPriv->hwndScreen, &ps);

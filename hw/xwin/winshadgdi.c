@@ -916,6 +916,30 @@ winBltExposedWindowRegionShadowGDI(ScreenPtr pScreen, WindowPtr pWin)
     }
     }
 
+    /* If part of the invalidated region is outside the window (which can happen
+       if the native window is being re-sized), fill that area with black */
+    if (ps.rcPaint.right > ps.rcPaint.left + pWin->drawable.width) {
+        BitBlt(hdcUpdate,
+               ps.rcPaint.left + pWin->drawable.width,
+               ps.rcPaint.top,
+               ps.rcPaint.right - (ps.rcPaint.left + pWin->drawable.width),
+               ps.rcPaint.bottom - ps.rcPaint.top,
+               NULL,
+               0, 0,
+               BLACKNESS);
+    }
+
+    if (ps.rcPaint.bottom > ps.rcPaint.top + pWin->drawable.height) {
+        BitBlt(hdcUpdate,
+               ps.rcPaint.left,
+               ps.rcPaint.top + pWin->drawable.height,
+               ps.rcPaint.right - ps.rcPaint.left,
+               ps.rcPaint.bottom - (ps.rcPaint.top + pWin->drawable.height),
+               NULL,
+               0, 0,
+               BLACKNESS);
+    }
+
     /* EndPaint frees the DC */
     EndPaint(hWnd, &ps);
 

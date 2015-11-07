@@ -831,41 +831,22 @@ winBltExposedWindowRegionShadowGDI(ScreenPtr pScreen, WindowPtr pWin)
         HBITMAP hBitmap;
         HDC hdcPixmap;
         PixmapPtr pPixmap = (*pScreen->GetWindowPixmap) (pWin);
+        winPrivPixmapPtr pPixmapPriv = winGetPixmapPriv(pPixmap);
 
-        /*
-          This is kind of clunky, and possibly not very efficient.
-
-          Would it be more efficient to only create the DIB bitmap when the
-          composite bitmap is realloced and store it in a window private?
-
-          But we still end up copying and converting all the bits from the
-          window pixmap into a DDB for every update.
-
-          Perhaps better still would be to wrap the screen CreatePixmap routine
-          so it uses CreateDIBSection()?
-         */
-
-        BITMAPV4HEADER bmih;
-        memset(&bmih, 0, sizeof(bmih));
-        bmih.bV4Size = sizeof(BITMAPV4HEADER);
-        bmih.bV4Width = pPixmap->drawable.width;
-        bmih.bV4Height = -pPixmap->drawable.height; /* top-down bitmap */
-        bmih.bV4Planes = 1;
-        bmih.bV4BitCount = pPixmap->drawable.bitsPerPixel;
-        bmih.bV4SizeImage = 0;
         /* window pixmap format is the same as the screen pixmap */
         assert(pPixmap->drawable.bitsPerPixel > 8);
-        bmih.bV4V4Compression = BI_BITFIELDS;
-        bmih.bV4RedMask = pScreenPriv->dwRedMask;
-        bmih.bV4GreenMask = pScreenPriv->dwGreenMask;
-        bmih.bV4BlueMask = pScreenPriv->dwBlueMask;
-        bmih.bV4AlphaMask = 0;
 
-        /* Create the window bitmap from the pixmap */
-        hBitmap = CreateDIBitmap(pScreenPriv->hdcScreen,
-                                 (BITMAPINFOHEADER *)&bmih, CBM_INIT,
-                                 pPixmap->devPrivate.ptr, (BITMAPINFO *)&bmih,
-                                 DIB_RGB_COLORS);
+        /* Get the window bitmap from the pixmap */
+        hBitmap = pPixmapPriv->hBitmap;
+
+        /* XXX: There may be a need for a slow-path here: If hBitmap is NULL
+           (because we couldn't back the pixmap with a Windows DIB), we should
+           fall-back to creating a Windows DIB from the pixmap, then deleting it
+           after the BitBlt (as this this code did before the fast-path was
+           added). */
+        if (!hBitmap) {
+            ErrorF("winBltExposedWindowRegionShadowGDI - slow path unimplemented\n");
+        }
 
         /* Select the window bitmap into a screen-compatible DC */
         hdcPixmap = CreateCompatibleDC(pScreenPriv->hdcScreen);
@@ -883,9 +864,8 @@ winBltExposedWindowRegionShadowGDI(ScreenPtr pScreen, WindowPtr pWin)
             ErrorF("winBltExposedWindowRegionShadowGDI - BitBlt failed: 0x%08x\n",
                    GetLastError());
 
-        /* Release */
+        /* Release DC */
         DeleteDC(hdcPixmap);
-        DeleteObject(hBitmap);
     }
     else
 #endif

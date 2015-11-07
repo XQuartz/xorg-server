@@ -296,11 +296,10 @@ typedef Bool (*winCreateScreenResourcesProc) (ScreenPtr);
  */
 
 typedef struct {
-    HDC hdcSelected;
     HBITMAP hBitmap;
-    BYTE *pbBits;
-    DWORD dwScanlineBytes;
+    void *pbBits;
     BITMAPINFOHEADER *pbmih;
+    BOOL owned;
 } winPrivPixmapRec, *winPrivPixmapPtr;
 
 /*
@@ -511,6 +510,7 @@ typedef struct _winPrivScreenRec {
     ResizeWindowProcPtr ResizeWindow;
     MoveWindowProcPtr MoveWindow;
     SetShapeProcPtr SetShape;
+    ModifyPixmapHeaderProcPtr ModifyPixmapHeader;
 
     winCursorRec cursor;
 
@@ -945,6 +945,19 @@ void
 
 winCopyWindowMultiWindow(WindowPtr pWin, DDXPointRec oldpt,
                          RegionPtr oldRegion);
+
+PixmapPtr
+winCreatePixmapMultiwindow(ScreenPtr pScreen, int width, int height, int depth,
+                           unsigned usage_hint);
+Bool
+winDestroyPixmapMultiwindow(PixmapPtr pPixmap);
+
+Bool
+winModifyPixmapHeaderMultiwindow(PixmapPtr pPixmap,
+                                 int width,
+                                 int height,
+                                 int depth,
+                                 int bitsPerPixel, int devKind, void *pPixData);
 
 XID
  winGetWindowID(WindowPtr pWin);

@@ -34,7 +34,7 @@
 	<key>SUPublicDSAKeyFile</key>
 		<string>sparkle.pem</string>
         <key>SUFeedURL</key>
-                <string>http://xquartz.macosforge.org/downloads/sparkle/release.xml</string>
+                <string>https://xquartz.macosforge.org/downloads/sparkle/release.xml</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSExceptionDomains</key>

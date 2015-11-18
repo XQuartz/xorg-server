@@ -1,4 +1,3 @@
-
 /*
  *Copyright (C) 2003-2004 Harold L Hunt II All Rights Reserved.
  *
@@ -38,7 +37,7 @@
 /* Windows headers */
 #include <X11/Xwindows.h>
 
-#define WIN_XEVENTS_SUCCESS			0
+#define WIN_XEVENTS_SUCCESS			0  // more like 'CONTINUE'
 #define WIN_XEVENTS_FAILED			1
 #define WIN_XEVENTS_NOTIFY_DATA			3
 #define WIN_XEVENTS_NOTIFY_TARGETS		4
@@ -77,6 +76,7 @@ typedef struct
     Atom atomUTF8String;
     Atom atomCompoundText;
     Atom atomTargets;
+    Atom atomIncr;
 } ClipboardAtoms;
 
 /* Modern clipboard API functions */
@@ -111,6 +111,8 @@ typedef struct
 {
   Bool fUseUnicode;
   Atom *targetList;
+  unsigned char *incr;
+  unsigned long int incrsize;
 } ClipboardConversionData;
 
 int

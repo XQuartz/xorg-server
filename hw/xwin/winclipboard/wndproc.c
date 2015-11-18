@@ -73,9 +73,8 @@ winProcessXEventsTimeout(HWND hwnd, Window iWindow, Display * pDisplay,
     int iConnNumber;
     struct timeval tv;
     int iReturn;
-    DWORD dwStopTime = GetTickCount() + iTimeoutSec * 1000;
 
-    winDebug("winProcessXEventsTimeout () - pumping X events for %d seconds\n",
+    winDebug("winProcessXEventsTimeout () - pumping X events, timeout %d seconds\n",
              iTimeoutSec);
 
     /* Get our connection number */
@@ -104,11 +103,9 @@ winProcessXEventsTimeout(HWND hwnd, Window iWindow, Display * pDisplay,
         FD_SET(iConnNumber, &fdsRead);
 
         /* Adjust timeout */
-        remainingTime = dwStopTime - GetTickCount();
+        remainingTime = iTimeoutSec * 1000;
         tv.tv_sec = remainingTime / 1000;
         tv.tv_usec = (remainingTime % 1000) * 1000;
-        winDebug("winProcessXEventsTimeout () - %ld milliseconds left\n",
-                 remainingTime);
 
         /* Break out if no time left */
         if (remainingTime <= 0)
@@ -494,6 +491,9 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         /* Process X events */
         data.fUseUnicode = fConvertToUnicode;
+        data.incr = NULL;
+        data.incrsize = 0;
+
         iReturn = winProcessXEventsTimeout(hwnd,
                                            iWindow,
                                            pDisplay,
@@ -517,10 +517,10 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             struct target_priority target_priority_table[] =
                 {
-                    { atoms->atomCompoundText, 0 },
 #ifdef X_HAVE_UTF8_STRING
-                    { atoms->atomUTF8String,   1 },
+                    { atoms->atomUTF8String,   0 },
 #endif
+                    { atoms->atomCompoundText, 1 },
                     { XA_STRING,               2 },
                 };
 

@@ -199,6 +199,7 @@ winClipboardProc(Bool fUseUnicode, char *szDisplay)
     atoms.atomUTF8String = XInternAtom (pDisplay, "UTF8_STRING", False);
     atoms.atomCompoundText = XInternAtom (pDisplay, "COMPOUND_TEXT", False);
     atoms.atomTargets = XInternAtom (pDisplay, "TARGETS", False);
+    atoms.atomIncr = XInternAtom (pDisplay, "INCR", False);
 
     /* Create a messaging window */
     iWindow = XCreateSimpleWindow(pDisplay,
@@ -265,6 +266,8 @@ winClipboardProc(Bool fUseUnicode, char *szDisplay)
     }
 
     data.fUseUnicode = fUseUnicode;
+    data.incr = NULL;
+    data.incrsize = 0;
 
     /* Loop for events */
     while (1) {

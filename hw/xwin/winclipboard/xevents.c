@@ -690,6 +690,24 @@ winClipboardFlushXEvents(HWND hwnd,
             free(pszConvertData);
             pszConvertData = NULL;
 
+            /* data will fit into a single X request (INCR not yet supported) */
+            {
+                long unsigned int maxreqsize = XExtendedMaxRequestSize(pDisplay);
+                if (maxreqsize == 0)
+                    maxreqsize = XMaxRequestSize(pDisplay);
+
+                /* covert to bytes and allow for allow for X_ChangeProperty request */
+                maxreqsize = maxreqsize*4 - 24;
+
+                if (xtpText.nitems > maxreqsize) {
+                    ErrorF("winClipboardFlushXEvents - clipboard data size %lu greater than maximum %lu\n", xtpText.nitems, maxreqsize);
+
+                    /* Abort */
+                    fAbort = TRUE;
+                    goto winClipboardFlushXEvents_SelectionRequest_Done;
+                }
+            }
+
             /* Copy the clipboard text to the requesting window */
             iReturn = XChangeProperty(pDisplay,
                                       event.xselectionrequest.requestor,

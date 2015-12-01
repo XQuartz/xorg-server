@@ -322,6 +322,20 @@ winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                          lParam);
 #endif
 
+    /*
+       If this is WM_CREATE, set up the Windows window properties which point to
+       X window information, before we populate local convenience variables...
+     */
+    if (message == WM_CREATE) {
+        SetProp(hwnd,
+                WIN_WINDOW_PROP,
+                (HANDLE) ((LPCREATESTRUCT) lParam)->lpCreateParams);
+        SetProp(hwnd,
+                WIN_WID_PROP,
+                (HANDLE) (INT_PTR)winGetWindowID(((LPCREATESTRUCT) lParam)->
+                                                 lpCreateParams));
+    }
+
     /* Check if the Windows window property for our X window pointer is valid */
     if ((pWin = GetProp(hwnd, WIN_WINDOW_PROP)) != NULL) {
         /* Our X window pointer is valid */
@@ -382,18 +396,6 @@ winTopLevelWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     /* Branch on message type */
     switch (message) {
     case WM_CREATE:
-
-        /* */
-        SetProp(hwnd,
-                WIN_WINDOW_PROP,
-                (HANDLE) ((LPCREATESTRUCT) lParam)->lpCreateParams);
-
-        /* */
-        SetProp(hwnd,
-                WIN_WID_PROP,
-                (HANDLE) (INT_PTR) winGetWindowID(((LPCREATESTRUCT) lParam)->
-                                                  lpCreateParams));
-
         /*
          * Make X windows' Z orders sync with Windows windows because
          * there can be AlwaysOnTop windows overlapped on the window

@@ -104,7 +104,7 @@ compRepaintBorder(ClientPtr pClient, void *closure)
 
         RegionNull(&exposed);
         RegionSubtract(&exposed, &pWindow->borderClip, &pWindow->winSize);
-        pWindow->drawable.pScreen->PaintWindow(pWindow, &exposed, PW_BORDER);
+        miPaintWindow(pWindow, &exposed, PW_BORDER);
         RegionUninit(&exposed);
     }
     return TRUE;

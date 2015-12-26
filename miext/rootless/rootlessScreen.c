@@ -471,7 +471,7 @@ expose_1(WindowPtr pWin)
     if (!pWin->realized)
         return;
 
-    pWin->drawable.pScreen->PaintWindow(pWin, &pWin->borderClip, PW_BACKGROUND);
+    miPaintWindow(pWin, &pWin->borderClip, PW_BACKGROUND);
 
     /* FIXME: comments in windowstr.h indicate that borderClip doesn't
        include subwindow visibility. But I'm not so sure.. so we may
@@ -667,7 +667,6 @@ RootlessWrap(ScreenPtr pScreen)
     WRAP(CloseScreen);
     WRAP(CreateGC);
     WRAP(CopyWindow);
-    WRAP(PaintWindow);
     WRAP(GetImage);
     WRAP(SourceValidate);
     WRAP(CreateWindow);

@@ -1592,7 +1592,7 @@ ChangeWindowAttributes(WindowPtr pWin, Mask vmask, XID *vlist, ClientPtr client)
 
         RegionNull(&exposed);
         RegionSubtract(&exposed, &pWin->borderClip, &pWin->winSize);
-        pWin->drawable.pScreen->PaintWindow(pWin, &exposed, PW_BORDER);
+        miPaintWindow(pWin, &exposed, PW_BORDER);
         RegionUninit(&exposed);
     }
     return error;
@@ -3159,7 +3159,7 @@ dixSaveScreens(ClientPtr client, int on, int mode)
 
                 /* make it look like screen saver is off, so that
                  * NotClippedByChildren will compute a clip list
-                 * for the root window, so PaintWindow works
+                 * for the root window, so miPaintWindow works
                  */
                 screenIsSaved = SCREEN_SAVER_OFF;
                 (*pWin->drawable.pScreen->MoveWindow) (pWin,

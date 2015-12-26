@@ -301,8 +301,8 @@ QuartzUpdateScreens(void)
 
     quartzProcs->UpdateScreen(pScreen);
 
-    /* PaintWindow needs to be called after RootlessUpdateScreenPixmap (from xprUpdateScreen) */
-    pScreen->PaintWindow(pRoot, &pRoot->borderClip, PW_BACKGROUND);
+    /* miPaintWindow needs to be called after RootlessUpdateScreenPixmap (from xprUpdateScreen) */
+    miPaintWindow(pRoot, &pRoot->borderClip, PW_BACKGROUND);
 
     /* Tell RandR about the new size, so new connections get the correct info */
     RRScreenSizeNotify(pScreen);

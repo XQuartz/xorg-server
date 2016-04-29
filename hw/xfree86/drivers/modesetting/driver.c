@@ -624,7 +624,6 @@ FreeRec(ScrnInfoPtr pScrn)
     ms = modesettingPTR(pScrn);
     if (!ms)
         return;
-    pScrn->driverPrivate = NULL;
 
     if (ms->fd > 0) {
         modesettingEntPtr ms_ent;
@@ -645,6 +644,7 @@ FreeRec(ScrnInfoPtr pScrn)
             ms_ent->fd = 0;
         }
     }
+    pScrn->driverPrivate = NULL;
     free(ms->drmmode.Options);
     free(ms);
 

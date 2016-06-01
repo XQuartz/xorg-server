@@ -1459,7 +1459,7 @@ ddxProcessArgument(int argc, char **argv, int i)
     }
     if (!strcmp(argv[i], "-iglx") || !strcmp(argv[i], "+iglx")) {
         xf86Info.iglxFrom = X_CMDLINE;
-        return 1;
+        return 0;
     }
 
     /* OS-specific processing */

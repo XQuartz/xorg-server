@@ -1639,10 +1639,8 @@ static Bool
 drmmode_xf86crtc_resize(ScrnInfoPtr scrn, int width, int height)
 {
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
-
-    drmmode_crtc_private_ptr
-        drmmode_crtc = xf86_config->crtc[0]->driver_private;
-    drmmode_ptr drmmode = drmmode_crtc->drmmode;
+    modesettingPtr ms = modesettingPTR(scrn);
+    drmmode_ptr drmmode = &ms->drmmode;
     drmmode_bo old_front;
     Bool ret;
     ScreenPtr screen = xf86ScrnToScreen(scrn);

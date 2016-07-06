@@ -619,6 +619,7 @@ ProcShmGetImage(ClientPtr client)
     xShmGetImageReply xgi;
     ShmDescPtr shmdesc;
     VisualID visual = None;
+    RegionPtr pVisibleRegion = NULL;
     int rc;
 
     REQUEST(xShmGetImageReq);
@@ -650,6 +651,9 @@ ProcShmGetImage(ClientPtr client)
                wBorderWidth((WindowPtr) pDraw) + (int) pDraw->height)
             return BadMatch;
         visual = wVisual(((WindowPtr) pDraw));
+        pVisibleRegion = NotClippedByChildren((WindowPtr) pDraw);
+        if (pVisibleRegion)
+            RegionTranslate(pVisibleRegion, -pDraw->x, -pDraw->y);
     }
     else {
         if (stuff->x < 0 ||
@@ -686,6 +690,11 @@ ProcShmGetImage(ClientPtr client)
                                      stuff->width, stuff->height,
                                      stuff->format, stuff->planeMask,
                                      shmdesc->addr + stuff->offset);
+        if (pVisibleRegion)
+            XaceCensorImage(client, pVisibleRegion,
+                    PixmapBytePad(stuff->width, pDraw->depth), pDraw,
+                    stuff->x, stuff->y, stuff->width, stuff->height,
+                    stuff->format, shmdesc->addr + stuff->offset);
     }
     else {
 
@@ -697,10 +706,18 @@ ProcShmGetImage(ClientPtr client)
                                              stuff->width, stuff->height,
                                              stuff->format, plane,
                                              shmdesc->addr + length);
+                if (pVisibleRegion)
+                    XaceCensorImage(client, pVisibleRegion,
+                            BitmapBytePad(stuff->width), pDraw,
+                            stuff->x, stuff->y, stuff->width, stuff->height,
+                            stuff->format, shmdesc->addr + length);
                 length += lenPer;
             }
         }
     }
+
+    if (pVisibleRegion)
+        RegionDestroy(pVisibleRegion);
 
     if (client->swapped) {
         swaps(&xgi.sequenceNumber);

@@ -147,7 +147,7 @@ struct xwl_output {
     struct xwl_screen *xwl_screen;
     RROutputPtr randr_output;
     RRCrtcPtr randr_crtc;
-    int32_t x, y, width, height;
+    int32_t x, y, width, height, refresh;
     Rotation rotation;
 };
 

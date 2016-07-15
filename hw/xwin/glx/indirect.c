@@ -1737,6 +1737,11 @@ fbConfigToPixelFormatIndex(HDC hdc, __GLXconfig * mode,
     if (mode->visualRating == GLX_SLOW_VISUAL_EXT)
         SET_ATTR_VALUE(WGL_ACCELERATION_ARB, WGL_NO_ACCELERATION_ARB);
 
+    if (winScreen->has_WGL_ARB_multisample) {
+        SET_ATTR_VALUE(WGL_SAMPLE_BUFFERS_ARB, mode->sampleBuffers);
+        SET_ATTR_VALUE(WGL_SAMPLES_ARB, mode->samples);
+    }
+
     // must support all the drawable types the mode supports
     if ((mode->drawableType | drawableTypeOverride) & GLX_WINDOW_BIT)
         SET_ATTR_VALUE(WGL_DRAW_TO_WINDOW_ARB, TRUE);

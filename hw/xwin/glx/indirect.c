@@ -595,6 +595,10 @@ glxWinScreenProbe(ScreenPtr pScreen)
             { "WGL_ARB_multisample", "GLX_SGIS_multisample", 0 },
             { "WGL_ARB_pixel_format_float", "GLX_ARB_fbconfig_float", 0 },
             { "WGL_EXT_pixel_format_packed_float", "GLX_EXT_fbconfig_packed_float", 0 },
+            { "WGL_ARB_create_context", "GLX_ARB_create_context", 0 },
+            { "WGL_ARB_create_context_profile", "GLX_ARB_create_context_profile", 0 },
+            { "WGL_ARB_create_context_robustness", "GLX_ARB_create_context_robustness", 0 },
+            { "WGL_EXT_create_context_es2_profile", "GLX_EXT_create_context_es2_profile", 0 },
         };
 
         //

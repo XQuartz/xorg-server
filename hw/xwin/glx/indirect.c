@@ -572,47 +572,57 @@ glxWinScreenProbe(ScreenPtr pScreen)
     // might have completely different capabilities.  Of course, good luck getting
     // those screens to be accelerated in XP and earlier...
 
+
     {
+        int i;
+
+        const struct
+        {
+            const char *wglext;
+            const char *glxext;
+            Bool mandatory;
+        } extensionMap[] = {
+            { "WGL_ARB_make_current_read", "GLX_SGI_make_current_read", 1 },
+            { "WGL_EXT_swap_control", "GLX_SGI_swap_control", 0 },
+            { "WGL_EXT_swap_control", "GLX_MESA_swap_control", 0 },
+            //      { "WGL_ARB_render_texture", "GLX_EXT_texture_from_pixmap", 0 },
+            // Sufficiently different that it's not obvious if this can be done...
+            { "WGL_ARB_pbuffer", "GLX_SGIX_pbuffer", 1 },
+            { "WGL_ARB_multisample", "GLX_ARB_multisample", 1 },
+            { "WGL_ARB_multisample", "GLX_SGIS_multisample", 0 },
+        };
+
         //
         // Based on the WGL extensions available, enable various GLX extensions
-        // XXX: make this table-driven ?
         //
         __glXInitExtensionEnableBits(screen->base.glx_enable_bits);
 
-        if (strstr(wgl_extensions, "WGL_ARB_make_current_read"))
-            screen->has_WGL_ARB_make_current_read = TRUE;
-        else
-            LogMessage(X_WARNING, "AIGLX: missing WGL_ARB_make_current_read\n");
+        for (i = 0; i < sizeof(extensionMap)/sizeof(extensionMap[0]); i++) {
+            if (strstr(wgl_extensions, extensionMap[i].wglext)) {
+                __glXEnableExtension(screen->base.glx_enable_bits, extensionMap[i].glxext);
+                LogMessage(X_INFO, "GLX: enabled %s\n", extensionMap[i].glxext);
+            }
+            else if (extensionMap[i].mandatory) {
+                LogMessage(X_ERROR, "required WGL extension %s is missing\n", extensionMap[i].wglext);
+            }
+        }
 
+        // Because it pre-dates WGL_EXT_extensions_string, GL_WIN_swap_hint might
+        // only be in GL_EXTENSIONS
         if (strstr(gl_extensions, "GL_WIN_swap_hint")) {
             __glXEnableExtension(screen->base.glx_enable_bits,
                                  "GLX_MESA_copy_sub_buffer");
             LogMessage(X_INFO, "AIGLX: enabled GLX_MESA_copy_sub_buffer\n");
         }
 
-        if (strstr(wgl_extensions, "WGL_EXT_swap_control")) {
-            __glXEnableExtension(screen->base.glx_enable_bits,
-                                 "GLX_SGI_swap_control");
-            LogMessage(X_INFO, "AIGLX: enabled GLX_SGI_swap_control\n");
-        }
-
-/*       // Hmm?  screen->texOffset */
-/*       if (strstr(wgl_extensions, "WGL_ARB_render_texture")) */
-/*         { */
-/*           __glXEnableExtension(screen->base.glx_enable_bits, "GLX_EXT_texture_from_pixmap"); */
-/*           LogMessage(X_INFO, "AIGLX: GLX_EXT_texture_from_pixmap backed by buffer objects\n"); */
-/*           screen->has_WGL_ARB_render_texture = TRUE; */
-/*         } */
+        if (strstr(wgl_extensions, "WGL_ARB_make_current_read"))
+            screen->has_WGL_ARB_make_current_read = TRUE;
 
         if (strstr(wgl_extensions, "WGL_ARB_pbuffer"))
             screen->has_WGL_ARB_pbuffer = TRUE;
-        else
-            LogMessage(X_WARNING, "AIGLX: missing WGL_ARB_pbuffer\n");
 
         if (strstr(wgl_extensions, "WGL_ARB_multisample"))
             screen->has_WGL_ARB_multisample = TRUE;
-        else
-            LogMessage(X_WARNING, "AIGLX: missing WGL_ARB_multisample\n");
 
         screen->base.destroy = glxWinScreenDestroy;
         screen->base.createContext = glxWinCreateContext;

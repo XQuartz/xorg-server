@@ -214,26 +214,14 @@ open_hw(const char *dev)
 }
 
 static int
-check_outputs(int fd, int *count)
+check_outputs(int fd)
 {
     drmModeResPtr res = drmModeGetResources(fd);
     int ret;
 
     if (!res)
         return FALSE;
-
-    if (count)
-        *count = res->count_connectors;
-
     ret = res->count_connectors > 0;
-#if defined DRM_CAP_PRIME && GLAMOR_HAS_GBM_LINEAR
-    if (ret == FALSE) {
-        uint64_t value = 0;
-        if (drmGetCap(fd, DRM_CAP_PRIME, &value) == 0 &&
-                (value & DRM_PRIME_CAP_EXPORT))
-            ret = TRUE;
-    }
-#endif
     drmModeFreeResources(res);
     return ret;
 }
@@ -248,13 +236,13 @@ probe_hw(const char *dev, struct xf86_platform_device *platform_dev)
         fd = xf86_platform_device_odev_attributes(platform_dev)->fd;
         if (fd == -1)
             return FALSE;
-        return check_outputs(fd, NULL);
+        return check_outputs(fd);
     }
 #endif
 
     fd = open_hw(dev);
     if (fd != -1) {
-        int ret = check_outputs(fd, NULL);
+        int ret = check_outputs(fd);
 
         close(fd);
         return ret;
@@ -297,7 +285,7 @@ probe_hw_pci(const char *dev, struct pci_device *pdev)
     devid = ms_DRICreatePCIBusID(pdev);
 
     if (id && devid && !strcmp(id, devid))
-        ret = check_outputs(fd, NULL);
+        ret = check_outputs(fd);
 
     close(fd);
     free(id);
@@ -784,7 +772,7 @@ PreInit(ScrnInfoPtr pScrn, int flags)
     EntityInfoPtr pEnt;
     uint64_t value = 0;
     int ret;
-    int bppflags, connector_count;
+    int bppflags;
     int defaultdepth, defaultbpp;
 
     if (pScrn->numEntities != 1)
@@ -820,9 +808,6 @@ PreInit(ScrnInfoPtr pScrn, int flags)
     if (!ms_get_drm_master_fd(pScrn))
         return FALSE;
     ms->drmmode.fd = ms->fd;
-
-    if (!check_outputs(ms->fd, &connector_count))
-        return FALSE;
 
     drmmode_get_default_bpp(pScrn, &ms->drmmode, &defaultdepth, &defaultbpp);
     if (defaultdepth == 24 && defaultbpp == 24)
@@ -903,7 +888,7 @@ PreInit(ScrnInfoPtr pScrn, int flags)
 #ifdef DRM_CAP_PRIME
     ret = drmGetCap(ms->fd, DRM_CAP_PRIME, &value);
     if (ret == 0) {
-        if (connector_count && (value & DRM_PRIME_CAP_IMPORT)) {
+        if (value & DRM_PRIME_CAP_IMPORT) {
             pScrn->capabilities |= RR_Capability_SinkOutput;
             if (ms->drmmode.glamor)
                 pScrn->capabilities |= RR_Capability_SinkOffload;
@@ -931,7 +916,7 @@ PreInit(ScrnInfoPtr pScrn, int flags)
         }
     }
 
-    if (!(pScrn->is_gpu && connector_count == 0) && pScrn->modes == NULL) {
+    if (pScrn->modes == NULL) {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "No modes.\n");
         return FALSE;
     }

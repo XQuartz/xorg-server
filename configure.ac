@@ -791,6 +791,11 @@ if test "x$HAVE_RECURSIVE_MUTEX" = "xyes" ; then
 	THREAD_DEFAULT=yes
 fi
 
+case $host_os in
+	mingw*) THREAD_DEFAULT=no  ;;
+	*)
+esac
+
 AC_ARG_ENABLE(input-thread, AS_HELP_STRING([--enable-input-thread],
 	     [Enable input threads]),
 	     [INPUTTHREAD=$enableval], [INPUTTHREAD=$THREAD_DEFAULT])

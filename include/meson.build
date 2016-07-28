@@ -60,6 +60,9 @@ else
   if not enable_input_thread and get_option('input_thread') == 'true'
     error('Input thread enabled and PTHREAD_MUTEX_RECURSIVE not found')
   endif
+  if host_machine.system() == 'windows' and get_option('input_thread') == 'auto'
+      enable_input_thread = false
+  endif
 endif
 conf_data.set('HAVE_INPUTTHREAD', enable_input_thread)
 

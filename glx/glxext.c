@@ -281,24 +281,6 @@ GlxPushProvider(__GLXprovider * provider)
     __glXProviderStack = provider;
 }
 
-static Bool
-checkScreenVisuals(void)
-{
-    int i, j;
-
-    for (i = 0; i < screenInfo.numScreens; i++) {
-        ScreenPtr screen = screenInfo.screens[i];
-        for (j = 0; j < screen->numVisuals; j++) {
-            if ((screen->visuals[j].class == TrueColor ||
-                 screen->visuals[j].class == DirectColor) &&
-                screen->visuals[j].nplanes > 12)
-                return TRUE;
-        }
-    }
-
-    return FALSE;
-}
-
 static void
 GetGLXDrawableBytes(void *value, XID id, ResourceSizePtr size)
 {
@@ -472,10 +454,6 @@ static Bool
 xorgGlxServerPreInit(const ExtensionEntry *extEntry)
 {
     if (glxGeneration != serverGeneration) {
-        /* Mesa requires at least one True/DirectColor visual */
-        if (!checkScreenVisuals())
-            return FALSE;
-
         __glXContextRes = CreateNewResourceType((DeleteType) ContextGone,
                                                 "GLXContext");
         __glXDrawableRes = CreateNewResourceType((DeleteType) DrawableGone,

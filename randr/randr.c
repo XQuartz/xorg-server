@@ -414,7 +414,12 @@ RRExtensionInit(void)
 {
     ExtensionEntry *extEntry;
 
-    if (RRNScreens == 0)
+    /*
+     * Skip the extension when screens exist but none implements RandR (for example Xnest).
+     * RRClientCallback would look up the screen private key, which only RRInit registers.
+     * With no screens at all (headless), there is no screen private to look up.
+     */
+    if (RRNScreens == 0 && screenInfo.numScreens != 0)
         return;
 
     if (!dixRegisterPrivateKey(&RRClientPrivateKeyRec, PRIVATE_CLIENT,

@@ -675,7 +675,6 @@ InitOutput(ScreenInfo *pScreenInfo, int argc, char **argv)
 void
 OsVendorFatalError(const char *f, va_list args)
 {
-    X11ApplicationFatalError(f, args);
 }
 
 /*

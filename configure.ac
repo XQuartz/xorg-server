@@ -572,7 +572,6 @@ AC_ARG_ENABLE(xfree86-utils,     AS_HELP_STRING([--enable-xfree86-utils], [Build
 AC_ARG_ENABLE(vgahw,          AS_HELP_STRING([--enable-vgahw], [Build Xorg with vga access (default: enabled)]), [VGAHW=$enableval], [VGAHW=yes])
 AC_ARG_ENABLE(vbe,            AS_HELP_STRING([--enable-vbe], [Build Xorg with VBE module (default: enabled)]), [VBE=$enableval], [VBE=yes])
 AC_ARG_ENABLE(int10-module,     AS_HELP_STRING([--enable-int10-module], [Build Xorg with int10 module (default: enabled)]), [INT10MODULE=$enableval], [INT10MODULE=yes])
-AC_ARG_ENABLE(windowswm,      AS_HELP_STRING([--enable-windowswm], [Build XWin with WindowsWM extension (default: no)]), [WINDOWSWM=$enableval], [WINDOWSWM=no])
 AC_ARG_ENABLE(windowsdri,     AS_HELP_STRING([--enable-windowsdri], [Build XWin with WindowsDRI extension (default: auto)]), [WINDOWSDRI=$enableval], [WINDOWSDRI=auto])
 AC_ARG_ENABLE(libdrm,         AS_HELP_STRING([--enable-libdrm], [Build Xorg with libdrm support (default: enabled)]), [DRM=$enableval],[DRM=yes])
 AC_ARG_ENABLE(clientids,      AS_HELP_STRING([--disable-clientids], [Build Xorg with client ID tracking (default: enabled)]), [CLIENTIDS=$enableval], [CLIENTIDS=yes])
@@ -738,7 +737,6 @@ DGAPROTO="xf86dgaproto >= 2.0.99.1"
 GLPROTO="glproto >= 1.4.17"
 DMXPROTO="dmxproto >= 2.2.99.1"
 VIDMODEPROTO="xf86vidmodeproto >= 2.2.99.1"
-WINDOWSWMPROTO="windowswmproto"
 APPLEWMPROTO="applewmproto >= 1.4"
 LIBXSHMFENCE="xshmfence >= 1.1"
 
@@ -2079,15 +2077,6 @@ if test "x$XWIN" = xyes; then
 
 	PKG_CHECK_MODULES([XWINMODULES],[x11 xdmcp xau xfixes x11-xcb xcb-aux xcb-image xcb-ewmh xcb-icccm])
 
-	if test "x$WINDOWSWM" = xauto; then
-		PKG_CHECK_EXISTS($WINDOWSWMPROTO, [WINDOWSWM=yes], [WINDOWSWM=no])
-	fi
-	if test "x$WINDOWSWM" = xyes ; then
-		PKG_CHECK_MODULES(WINDOWSWM, $WINDOWSWMPROTO)
-		XWINMODULES_CFLAGS="$XWINMODULES_CFLAGS $WINDOWSWM_CFLAGS"
-		AC_DEFINE(ROOTLESS,1,[Build Rootless code])
-	fi
-
 	if test "x$WINDOWSDRI" = xauto; then
 		PKG_CHECK_EXISTS([windowsdriproto], [WINDOWSDRI=yes], [WINDOWSDRI=no])
 	fi
@@ -2144,7 +2133,6 @@ dnl XWin requires OpenGL spec files in order to generate wrapper code for native
 
 fi
 AM_CONDITIONAL(XWIN, [test "x$XWIN" = xyes])
-AM_CONDITIONAL(XWIN_MULTIWINDOWEXTWM, [test "x$XWIN" = xyes && test "x$WINDOWSWM" = xyes])
 AM_CONDITIONAL(XWIN_GLX_WINDOWS, [test "x$XWIN" = xyes && test "x$GLX" = xyes])
 AM_CONDITIONAL(XWIN_WINDOWS_DRI, [test "x$XWIN" = xyes && test "x$WINDOWSDRI" = xyes])
 

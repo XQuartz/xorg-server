@@ -82,7 +82,6 @@ dri3proto_dep = dependency('dri3proto', version: '>= 1.2', required: get_option(
 xineramaproto_dep = dependency('xineramaproto')
 xf86bigfontproto_dep = dependency('xf86bigfontproto', version: '>= 1.2.0')
 xf86vidmodeproto_dep = dependency('xf86vidmodeproto', version: '>= 2.2.99.1')
-windowswmproto_dep = dependency('windowswmproto', required: false)
 applewmproto_dep = dependency('applewmproto', version: '>= 1.4', required: false)
 xshmfence_dep = dependency('xshmfence', version: '>= 1.1', required: false)
 
@@ -477,7 +476,6 @@ common_dep = [
     xf86bigfontproto_dep,
     xf86dgaproto_dep,
     xf86vidmodeproto_dep,
-    windowswmproto_dep,
     applewmproto_dep,
 
     pixman_dep,

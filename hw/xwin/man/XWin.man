@@ -176,6 +176,15 @@ Use Composite extension redirection to maintain a bitmap image of each top-level
 X window, so window contents which are occluded show correctly in task bar and
 task switcher previews.
 The default is enabled.
+.TP 8
+.B \-[no]compositealpha
+X windows with per-pixel alpha are composited into the \fIWindows\fP desktop
+(i.e. a \fIWindows\fP window can be seen through any transparency in an X window
+placed over it).
+
+This option has no effect on Windows 8 and 8.1.
+This option has no effect if \fB-compositewm\fP is disabled.
+The default is disabled.
 
 .SH OPTIONS CONTROLLING WINDOWS INTEGRATION
 .TP 8

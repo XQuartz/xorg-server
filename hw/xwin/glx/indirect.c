@@ -2249,7 +2249,7 @@ glxWinCreateConfigsExt(HDC hdc, glxWinScreen * screen)
 
             if (layers > 0) {
                 ErrorF
-                    ("pixelFormat %d: has %d overlay, %d underlays which aren't currently handled",
+                    ("pixelFormat %d: has %d overlay, %d underlays which aren't currently handled\n",
                      i, ATTR_VALUE(WGL_NUMBER_OVERLAYS_ARB, 0),
                      ATTR_VALUE(WGL_NUMBER_UNDERLAYS_ARB, 0));
                 // XXX: need to iterate over layers?

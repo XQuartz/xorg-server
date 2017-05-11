@@ -3415,7 +3415,6 @@ CloseDownClient(ClientPtr client)
         if (grabState != GrabNone && grabClient == client) {
             UngrabServer(client);
         }
-        mark_client_not_ready(client);
         BITCLEAR(grabWaiters, client->index);
         DeleteClientFromAnySelections(client);
         ReleaseActiveGrabs(client);
@@ -3444,8 +3443,9 @@ CloseDownClient(ClientPtr client)
         if (ClientIsAsleep(client))
             ClientSignal(client);
         ProcessWorkQueueZombies();
-        output_pending_clear(client);
         CloseDownConnection(client);
+        output_pending_clear(client);
+        mark_client_not_ready(client);
 
         /* If the client made it to the Running stage, nClients has
          * been incremented on its behalf, so we need to decrement it

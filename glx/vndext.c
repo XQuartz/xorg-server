@@ -139,8 +139,17 @@ GlxGetClientData(ClientPtr client)
 {
     GlxClientPriv *cl = xglvGetClientPrivate(client);
     if (cl == NULL) {
-        cl = calloc(1, sizeof(GlxClientPriv));
+        cl = calloc(1, sizeof(GlxClientPriv)
+                + screenInfo.numScreens * sizeof(GlxServerVendor *));
         if (cl != NULL) {
+            int i;
+
+            cl->vendors = (GlxServerVendor **) (cl + 1);
+            for (i=0; i<screenInfo.numScreens; i++)
+            {
+                cl->vendors[i] = GlxGetVendorForScreen(NULL, screenInfo.screens[i]);
+            }
+
             xglvSetClientPrivate(client, cl);
         }
     }

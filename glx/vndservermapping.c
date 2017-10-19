@@ -187,10 +187,21 @@ Bool GlxSetScreenVendor(ScreenPtr screen, GlxServerVendor *vendor)
 
 GlxServerVendor *GlxGetVendorForScreen(ClientPtr client, ScreenPtr screen)
 {
-    GlxScreenPriv *priv = GlxGetScreen(screen);
-    if (priv != NULL) {
-        return priv->vendor;
+    // Note that the client won't be sending GPU screen numbers, so we don't
+    // need per-client mappings for them.
+    if (client != NULL && !screen->isGPU) {
+        GlxClientPriv *cl = GlxGetClientData(client);
+        if (cl != NULL) {
+            return cl->vendors[screen->myNum];
+        } else {
+            return NULL;
+        }
     } else {
-        return NULL;
+        GlxScreenPriv *priv = GlxGetScreen(screen);
+        if (priv != NULL) {
+            return priv->vendor;
+        } else {
+            return NULL;
+        }
     }
 }

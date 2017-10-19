@@ -57,6 +57,11 @@ typedef struct GlxContextTagInfoRec {
 typedef struct GlxClientPrivRec {
     GlxContextTagInfo *contextTags;
     unsigned int contextTagCount;
+
+    /**
+     * The vendor handles for each screen.
+     */
+    GlxServerVendor **vendors;
 } GlxClientPriv;
 
 extern int GlxErrorBase;

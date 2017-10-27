@@ -43,6 +43,8 @@
 #include "mi.h"
 #include "assert.h"
 
+#define ARRAY_SIZE(a)  (sizeof((a)) / sizeof((a)[0]))
+
 /**
  * Init a device with axes.
  * Verify values set on the device.
@@ -1425,7 +1427,7 @@ include_bit_test_macros(void)
     uint8_t mask[9] = { 0 };
     int i;
 
-    for (i = 0; i < sizeof(mask) / sizeof(mask[0]); i++) {
+    for (i = 0; i < ARRAY_SIZE(mask); i++) {
         assert(BitIsOn(mask, i) == 0);
         SetBit(mask, i);
         assert(BitIsOn(mask, i) == 1);

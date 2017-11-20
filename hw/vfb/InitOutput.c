@@ -201,12 +201,6 @@ ddxGiveUp(enum ExitCode error)
     }
 }
 
-void
-AbortDDX(enum ExitCode error)
-{
-    ddxGiveUp(error);
-}
-
 #ifdef __APPLE__
 void
 DarwinHandleGUI(int argc, char *argv[])

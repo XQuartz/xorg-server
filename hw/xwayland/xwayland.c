@@ -49,12 +49,6 @@ ddxGiveUp(enum ExitCode error)
 }
 
 void
-AbortDDX(enum ExitCode error)
-{
-    ddxGiveUp(error);
-}
-
-void
 OsVendorInit(void)
 {
     if (serverGeneration == 1)

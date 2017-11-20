@@ -826,17 +826,3 @@ ddxGiveUp(enum ExitCode error)
 {
     LogClose(error);
 }
-
-/*
- * AbortDDX --
- *      DDX - specific abort routine.  Called by AbortServer(). The attempt is
- *      made to restore all original setting of the displays. Also all devices
- *      are closed.
- */
-_X_NORETURN
-void
-AbortDDX(enum ExitCode error)
-{
-    ErrorF("   AbortDDX\n");
-    OsAbort();
-}

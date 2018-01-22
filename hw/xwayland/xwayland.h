@@ -48,6 +48,7 @@
 #include "xwayland-keyboard-grab-unstable-v1-client-protocol.h"
 #include "xdg-output-unstable-v1-client-protocol.h"
 #include "linux-dmabuf-unstable-v1-client-protocol.h"
+#include "viewporter-client-protocol.h"
 
 struct xwl_format {
     uint32_t format;
@@ -148,6 +149,7 @@ struct xwl_screen {
     struct zwp_pointer_constraints_v1 *pointer_constraints;
     struct zwp_xwayland_keyboard_grab_manager_v1 *wp_grab;
     struct zxdg_output_manager_v1 *xdg_output_manager;
+    struct wp_viewporter *viewporter;
     uint32_t serial;
 
 #define XWL_FORMAT_ARGB8888 (1 << 0)

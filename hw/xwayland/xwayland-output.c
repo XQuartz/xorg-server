@@ -577,12 +577,80 @@ xwl_randr_get_info(ScreenPtr pScreen, Rotation * rotations)
     return TRUE;
 }
 
+#ifdef RANDR_10_INTERFACE
 static Bool
 xwl_randr_set_config(ScreenPtr pScreen,
                      Rotation rotation, int rate, RRScreenSizePtr pSize)
 {
     return FALSE;
 }
+#endif
+
+#if RANDR_12_INTERFACE
+static Bool
+xwl_randr_screen_set_size(ScreenPtr pScreen,
+                          CARD16 width,
+                          CARD16 height,
+                          CARD32 mmWidth, CARD32 mmHeight)
+{
+    return TRUE;
+}
+
+static Bool
+xwl_randr_crtc_set(ScreenPtr pScreen,
+                   RRCrtcPtr crtc,
+                   RRModePtr mode,
+                   int x,
+                   int y,
+                   Rotation rotation,
+                   int numOutputs, RROutputPtr * outputs)
+{
+    struct xwl_output *xwl_output = crtc->devPrivate;
+
+    if (!mode || (mode->mode.width  == xwl_output->width &&
+                  mode->mode.height == xwl_output->height)) {
+        RRCrtcChanged(crtc, TRUE);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static Bool
+xwl_randr_crtc_set_gamma(ScreenPtr pScreen, RRCrtcPtr crtc)
+{
+    return TRUE;
+}
+
+static Bool
+xwl_randr_crtc_get_gamma(ScreenPtr pScreen, RRCrtcPtr crtc)
+{
+    return TRUE;
+}
+
+static Bool
+xwl_randr_output_set_property(ScreenPtr pScreen,
+                              RROutputPtr output,
+                              Atom property,
+                              RRPropertyValuePtr value)
+{
+    return TRUE;
+}
+
+static Bool
+xwl_output_validate_mode(ScreenPtr pScreen,
+                         RROutputPtr output,
+                         RRModePtr mode)
+{
+    return TRUE;
+}
+
+static void
+xwl_randr_mode_destroy(ScreenPtr pScreen, RRModePtr mode)
+{
+    return;
+}
+#endif
 
 Bool
 xwl_screen_init_output(struct xwl_screen *xwl_screen)
@@ -596,7 +664,20 @@ xwl_screen_init_output(struct xwl_screen *xwl_screen)
 
     rp = rrGetScrPriv(xwl_screen->screen);
     rp->rrGetInfo = xwl_randr_get_info;
+
+#if RANDR_10_INTERFACE
     rp->rrSetConfig = xwl_randr_set_config;
+#endif
+
+#if RANDR_12_INTERFACE
+    rp->rrScreenSetSize = xwl_randr_screen_set_size;
+    rp->rrCrtcSet = xwl_randr_crtc_set;
+    rp->rrCrtcSetGamma = xwl_randr_crtc_set_gamma;
+    rp->rrCrtcGetGamma = xwl_randr_crtc_get_gamma;
+    rp->rrOutputSetProperty = xwl_randr_output_set_property;
+    rp->rrOutputValidateMode = xwl_output_validate_mode;
+    rp->rrModeDestroy = xwl_randr_mode_destroy;
+#endif
 
     return TRUE;
 }

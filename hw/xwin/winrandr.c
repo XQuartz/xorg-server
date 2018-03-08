@@ -276,6 +276,21 @@ winRandRInit(ScreenPtr pScreen)
 
         /* Set mode to current display size */
         winRandRUpdateMode(pScreen, output);
+
+        /* Make up some physical dimensions */
+        output->mmWidth = (pScreen->width * 25.4)/monitorResolution;
+        output->mmHeight = (pScreen->height * 25.4)/monitorResolution;
+
+        /* Allocate and make up a (fixed, linear) gamma ramp */
+        {
+            int i;
+            RRCrtcGammaSetSize(crtc, 256);
+            for (i = 0; i < crtc->gammaSize; i++) {
+                crtc->gammaRed[i] = i << 8;
+                crtc->gammaBlue[i] = i << 8;
+                crtc->gammaGreen[i] = i << 8;
+            }
+        }
     }
 
     /*

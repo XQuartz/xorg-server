@@ -332,7 +332,7 @@ TimerSet(OsTimerPtr timer, int flags, CARD32 millis,
         if ((int) (existing->expires - millis) > 0)
             break;
     /* This even works at the end of the list -- existing->list will be timers */
-    xorg_list_add(&timer->list, existing->list.prev);
+    xorg_list_append(&timer->list, &existing->list);
 
     /* Check to see if the timer is ready to run now */
     if ((int) (millis - now) <= 0)

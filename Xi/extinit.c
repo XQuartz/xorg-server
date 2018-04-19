@@ -129,13 +129,8 @@ SOFTWARE.
  * breaks down. The device needs the dev->button->motionMask. If DBMM is
  * the same as BMM, we can ensure that both core and device events can be
  * delivered, without the need for extra structures in the DeviceIntRec. */
-const Mask DeviceKeyPressMask = KeyPressMask;
-const Mask DeviceKeyReleaseMask = KeyReleaseMask;
-const Mask DeviceButtonPressMask = ButtonPressMask;
-const Mask DeviceButtonReleaseMask = ButtonReleaseMask;
 const Mask DeviceProximityMask = (1L << 4);
 const Mask DeviceStateNotifyMask = (1L << 5);
-const Mask DevicePointerMotionMask = PointerMotionMask;
 const Mask DevicePointerMotionHintMask = PointerMotionHintMask;
 const Mask DeviceButton1MotionMask = Button1MotionMask;
 const Mask DeviceButton2MotionMask = Button2MotionMask;
@@ -362,8 +357,6 @@ RESTYPE RT_INPUTCLIENT;
  */
 
 extern XExtensionVersion XIVersion;
-
-Mask PropagateMask[EMASKSIZE];
 
 /*****************************************************************
  *
@@ -916,22 +909,6 @@ XI2EventSwap(xGenericEvent *from, xGenericEvent *to)
 
 /**************************************************************************
  *
- * Allow the specified event to have its propagation suppressed.
- * The default is to not allow suppression of propagation.
- *
- */
-
-static void
-AllowPropagateSuppress(Mask mask)
-{
-    int i;
-
-    for (i = 0; i < MAXDEVICES; i++)
-        PropagateMask[i] |= mask;
-}
-
-/**************************************************************************
- *
  * Record an event mask where there is no unique corresponding event type.
  * We can't call SetMaskForEvent, since that would clobber the existing
  * mask for that event.  MotionHint and ButtonMotion are examples.
@@ -1011,20 +988,16 @@ FixExtensionEvents(ExtensionEntry * extEntry)
     DeviceBusy += extEntry->errorBase;
     BadClass += extEntry->errorBase;
 
-    SetMaskForExtEvent(DeviceKeyPressMask, DeviceKeyPress);
-    AllowPropagateSuppress(DeviceKeyPressMask);
+    SetMaskForExtEvent(KeyPressMask, DeviceKeyPress);
     SetCriticalEvent(DeviceKeyPress);
 
-    SetMaskForExtEvent(DeviceKeyReleaseMask, DeviceKeyRelease);
-    AllowPropagateSuppress(DeviceKeyReleaseMask);
+    SetMaskForExtEvent(KeyReleaseMask, DeviceKeyRelease);
     SetCriticalEvent(DeviceKeyRelease);
 
-    SetMaskForExtEvent(DeviceButtonPressMask, DeviceButtonPress);
-    AllowPropagateSuppress(DeviceButtonPressMask);
+    SetMaskForExtEvent(ButtonPressMask, DeviceButtonPress);
     SetCriticalEvent(DeviceButtonPress);
 
-    SetMaskForExtEvent(DeviceButtonReleaseMask, DeviceButtonRelease);
-    AllowPropagateSuppress(DeviceButtonReleaseMask);
+    SetMaskForExtEvent(ButtonReleaseMask, DeviceButtonRelease);
     SetCriticalEvent(DeviceButtonRelease);
 
     SetMaskForExtEvent(DeviceProximityMask, ProximityIn);
@@ -1032,8 +1005,7 @@ FixExtensionEvents(ExtensionEntry * extEntry)
 
     SetMaskForExtEvent(DeviceStateNotifyMask, DeviceStateNotify);
 
-    SetMaskForExtEvent(DevicePointerMotionMask, DeviceMotionNotify);
-    AllowPropagateSuppress(DevicePointerMotionMask);
+    SetMaskForExtEvent(PointerMotionMask, DeviceMotionNotify);
     SetCriticalEvent(DeviceMotionNotify);
 
     SetEventInfo(DevicePointerMotionHintMask, _devicePointerMotionHint);

@@ -153,7 +153,6 @@ const Mask DevicePropertyNotifyMask = (1L << 19);
 const Mask XIAllMasks = (1L << 20) - 1;
 
 int ExtEventIndex;
-Mask ExtExclusiveMasks[EMASKSIZE];
 
 static struct dev_type {
     Atom type;
@@ -953,23 +952,6 @@ SetEventInfo(Mask mask, int constant)
 
 /**************************************************************************
  *
- * Allow the specified event to be restricted to being selected by one
- * client at a time.
- * The default is to allow more than one client to select the event.
- *
- */
-
-static void
-SetExclusiveAccess(Mask mask)
-{
-    int i;
-
-    for (i = 0; i < MAXDEVICES; i++)
-        ExtExclusiveMasks[i] |= mask;
-}
-
-/**************************************************************************
- *
  * Assign the specified mask to the specified event.
  *
  */
@@ -1069,8 +1051,6 @@ FixExtensionEvents(ExtensionEntry * extEntry)
     SetMaskForExtEvent(ChangeDeviceNotifyMask, ChangeDeviceNotify);
 
     SetEventInfo(DeviceButtonGrabMask, _deviceButtonGrab);
-    SetExclusiveAccess(DeviceButtonGrabMask);
-
     SetEventInfo(DeviceOwnerGrabButtonMask, _deviceOwnerGrabButton);
     SetEventInfo(DevicePresenceNotifyMask, _devicePresence);
     SetMaskForExtEvent(DevicePropertyNotifyMask, DevicePropertyNotify);

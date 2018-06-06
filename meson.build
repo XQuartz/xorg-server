@@ -860,6 +860,13 @@ if build_xorg
     sdkconfig.set('symbol_visibility', '-fvisibility=hidden')
     sdkconfig.set('XORG_DRIVER_LIBS', '')
 
+    # On Windows, modules built with the SDK will need to link with server and
+    # module implibs to resolve symbols
+    if (host_machine.system() == 'cygwin' or
+        host_machine.system() == 'windows')
+        sdkconfig.set('XORG_DRIVER_LIBS', '-lXorg.exe -L\${moduledir} -lshadow -no-undefined')
+    endif
+
     configure_file(
         input: 'xorg-server.pc.in',
         output: 'xorg-server.pc',

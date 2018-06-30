@@ -42,6 +42,8 @@
 #define WIN_CLIPBOARD_RETRIES			40
 #define WIN_CLIPBOARD_DELAY			1
 
+extern xcb_auth_info_t *winGetXcbAuthInfo(void);
+
 /*
  * Local variables
  */
@@ -55,6 +57,7 @@ static void *
 winClipboardThreadProc(void *arg)
 {
   char szDisplay[512];
+  xcb_auth_info_t *auth_info;
   int clipboardRestarts = 0;
 
   while (1)
@@ -82,7 +85,10 @@ winClipboardThreadProc(void *arg)
       /* Flag that clipboard client has been launched */
       g_fClipboardStarted = TRUE;
 
-      fShutdown = winClipboardProc(szDisplay);
+      /* Use our generated cookie for authentication */
+      auth_info = winGetXcbAuthInfo();
+
+      fShutdown = winClipboardProc(szDisplay, auth_info);
 
       /* Flag that clipboard client has stopped */
       g_fClipboardStarted = FALSE;

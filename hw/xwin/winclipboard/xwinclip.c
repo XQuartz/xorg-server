@@ -35,26 +35,9 @@
 #include <xwin-config.h>
 #endif
 
-/*
- * Including any server header might define the macro _XSERVER64 on 64 bit machines.
- * That macro must _NOT_ be defined for Xlib client code, otherwise bad things happen.
- * So let's undef that macro if necessary.
- */
-#ifdef _XSERVER64
-#undef _XSERVER64
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-/* X headers */
-#include <X11/Xlib.h>
-#ifdef X_LOCALE
-#include <X11/Xlocale.h>
-#else /* X_LOCALE */
-#include <locale.h>
-#endif /* X_LOCALE */
 
 #include "winclipboard.h"
 
@@ -87,7 +70,7 @@ main (int argc, char *argv[])
       /* Look for -noprimary */
       if (!strcmp (argv[i], "-noprimary"))
 	{
-	  fPrimarySelection = False;
+	  fPrimarySelection = 0;
 	  continue;
 	}
 
@@ -96,21 +79,7 @@ main (int argc, char *argv[])
       exit (1);
     }
 
-  /* Apply locale specified in the LANG environment variable */
-  if (!setlocale (LC_ALL, ""))
-    {
-      printf ("setlocale() error\n");
-      exit (1);
-    }
-
-  /* See if X supports the current locale */
-  if (XSupportsLocale () == False)
-    {
-      printf ("Locale not supported by X, falling back to 'C' locale.\n");
-      setlocale(LC_ALL, "C");
-    }
-
-  winClipboardProc(pszDisplay);
+  winClipboardProc(pszDisplay, NULL /* Use XAUTHORITY for auth data */);
 
   return 0;
 }

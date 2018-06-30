@@ -36,20 +36,12 @@
 #include <xwin-config.h>
 #endif
 
-/*
- * Including any server header might define the macro _XSERVER64 on 64 bit machines.
- * That macro must _NOT_ be defined for Xlib client code, otherwise bad things happen.
- * So let's undef that macro if necessary.
- */
-#ifdef _XSERVER64
-#undef _XSERVER64
-#endif
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <limits.h>
 
-#include <X11/Xatom.h>
+#include <xcb/xproto.h>
+#include <xcb/xcb_aux.h>
 
 #include "internal.h"
 #include "winclipboard.h"
@@ -65,7 +57,7 @@
  */
 
 static int
-winProcessXEventsTimeout(HWND hwnd, Window iWindow, Display * pDisplay,
+winProcessXEventsTimeout(HWND hwnd, xcb_window_t iWindow, xcb_connection_t *conn,
                          ClipboardConversionData *data, ClipboardAtoms *atoms, int iTimeoutSec)
 {
     int iConnNumber;
@@ -76,7 +68,7 @@ winProcessXEventsTimeout(HWND hwnd, Window iWindow, Display * pDisplay,
              iTimeoutSec);
 
     /* Get our connection number */
-    iConnNumber = ConnectionNumber(pDisplay);
+    iConnNumber = xcb_get_file_descriptor(conn);
 
     /* Loop for X events */
     while (1) {
@@ -84,7 +76,7 @@ winProcessXEventsTimeout(HWND hwnd, Window iWindow, Display * pDisplay,
         long remainingTime;
 
         /* Process X events */
-        iReturn = winClipboardFlushXEvents(hwnd, iWindow, pDisplay, data, atoms);
+        iReturn = winClipboardFlushXEvents(hwnd, iWindow, conn, data, atoms);
 
         winDebug("winProcessXEventsTimeout () - winClipboardFlushXEvents returned %d\n", iReturn);
 
@@ -94,7 +86,7 @@ winProcessXEventsTimeout(HWND hwnd, Window iWindow, Display * pDisplay,
         }
 
         /* We need to ensure that all pending requests are sent */
-        XFlush(pDisplay);
+        xcb_flush(conn);
 
         /* Setup the file descriptor set */
         FD_ZERO(&fdsRead);
@@ -136,8 +128,8 @@ winProcessXEventsTimeout(HWND hwnd, Window iWindow, Display * pDisplay,
 LRESULT CALLBACK
 winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static Display *pDisplay;
-    static Window iWindow;
+    static xcb_connection_t *conn;
+    static xcb_window_t iWindow;
     static ClipboardAtoms *atoms;
     static Bool fRunning;
 
@@ -166,7 +158,7 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         winDebug("winClipboardWindowProc - WM_CREATE\n");
 
-        pDisplay = cwcp->pClipboardDisplay;
+        conn = cwcp->pClipboardDisplay;
         iWindow = cwcp->iClipboardWindow;
         atoms = cwcp->atoms;
         fRunning = TRUE;
@@ -177,7 +169,8 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
     case WM_CLIPBOARDUPDATE:
     {
-        int iReturn;
+        xcb_generic_error_t *error;
+        xcb_void_cookie_t cookie_set;
 
         winDebug("winClipboardWindowProc - WM_CLIPBOARDUPDATE: Enter\n");
 
@@ -211,6 +204,9 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (!IsClipboardFormatAvailable(CF_TEXT)
             && !IsClipboardFormatAvailable(CF_UNICODETEXT)) {
 
+            xcb_get_selection_owner_cookie_t cookie_get;
+            xcb_get_selection_owner_reply_t *reply;
+
             winDebug("winClipboardWindowProc - WM_CLIPBOARDUPDATE - "
                      "Clipboard does not contain CF_TEXT nor "
                      "CF_UNICODETEXT.\n");
@@ -219,33 +215,33 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
              * We need to make sure that the X Server has processed
              * previous XSetSelectionOwner messages.
              */
-            XSync(pDisplay, FALSE);
+            xcb_aux_sync(conn);
 
             winDebug("winClipboardWindowProc - XSync done.\n");
 
             /* Release PRIMARY selection if owned */
-            iReturn = XGetSelectionOwner(pDisplay, XA_PRIMARY);
-            if (iReturn == iWindow) {
-                winDebug("winClipboardWindowProc - WM_CLIPBOARDUPDATE - "
-                         "PRIMARY selection is owned by us.\n");
-                XSetSelectionOwner(pDisplay, XA_PRIMARY, None, CurrentTime);
+            cookie_get = xcb_get_selection_owner(conn, XCB_ATOM_PRIMARY);
+            reply = xcb_get_selection_owner_reply(conn, cookie_get, NULL);
+            if (reply) {
+                if (reply->owner == iWindow) {
+                    winDebug("winClipboardWindowProc - WM_CLIPBOARDUPDATE - "
+                             "PRIMARY selection is owned by us, releasing.\n");
+                    xcb_set_selection_owner(conn, XCB_NONE, XCB_ATOM_PRIMARY, XCB_CURRENT_TIME);
+                }
+                free(reply);
             }
-            else if (BadWindow == iReturn || BadAtom == iReturn)
-                ErrorF("winClipboardWindowProc - WM_CLIPBOARDUPDATE - "
-                       "XGetSelectionOwner failed for PRIMARY: %d\n",
-                       iReturn);
 
             /* Release CLIPBOARD selection if owned */
-            iReturn = XGetSelectionOwner(pDisplay, atoms->atomClipboard);
-            if (iReturn == iWindow) {
-                winDebug("winClipboardWindowProc - WM_CLIPBOARDUPDATE - "
-                         "CLIPBOARD selection is owned by us, releasing\n");
-                XSetSelectionOwner(pDisplay, atoms->atomClipboard, None, CurrentTime);
+            cookie_get = xcb_get_selection_owner(conn, atoms->atomClipboard);
+            reply = xcb_get_selection_owner_reply(conn, cookie_get, NULL);
+            if (reply) {
+                if (reply->owner == iWindow) {
+                    winDebug("winClipboardWindowProc - WM_CLIPBOARDUPDATE - "
+                             "CLIPBOARD selection is owned by us, releasing\n");
+                    xcb_set_selection_owner(conn, XCB_NONE, atoms->atomClipboard, XCB_CURRENT_TIME);
+                }
+                free(reply);
             }
-            else if (BadWindow == iReturn || BadAtom == iReturn)
-                ErrorF("winClipboardWindowProc - WM_CLIPBOARDUPDATE - "
-                       "XGetSelectionOwner failed for CLIPBOARD: %d\n",
-                       iReturn);
 
             winDebug("winClipboardWindowProc - WM_CLIPBOARDUPDATE: Exit\n");
 
@@ -253,26 +249,24 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         /* Reassert ownership of PRIMARY */
-        iReturn = XSetSelectionOwner(pDisplay,
-                                     XA_PRIMARY, iWindow, CurrentTime);
-        if (iReturn == BadAtom || iReturn == BadWindow ||
-            XGetSelectionOwner(pDisplay, XA_PRIMARY) != iWindow) {
+        cookie_set = xcb_set_selection_owner_checked(conn, iWindow, XCB_ATOM_PRIMARY, XCB_CURRENT_TIME);
+        error = xcb_request_check(conn, cookie_set);
+        if (error) {
             ErrorF("winClipboardWindowProc - WM_CLIPBOARDUPDATE - "
                    "Could not reassert ownership of PRIMARY\n");
-        }
-        else {
+            free(error);
+        } else {
             winDebug("winClipboardWindowProc - WM_CLIPBOARDUPDATE - "
                      "Reasserted ownership of PRIMARY\n");
         }
 
         /* Reassert ownership of the CLIPBOARD */
-        iReturn = XSetSelectionOwner(pDisplay,
-                                     atoms->atomClipboard, iWindow, CurrentTime);
-
-        if (iReturn == BadAtom || iReturn == BadWindow ||
-            XGetSelectionOwner(pDisplay, atoms->atomClipboard) != iWindow) {
+        cookie_set = xcb_set_selection_owner_checked(conn, iWindow, atoms->atomClipboard, XCB_CURRENT_TIME);
+        error = xcb_request_check(conn, cookie_set);
+        if (error) {
             ErrorF("winClipboardWindowProc - WM_CLIPBOARDUPDATE - "
                     "Could not reassert ownership of CLIPBOARD\n");
+            free(error);
         }
         else {
             winDebug("winClipboardWindowProc - WM_CLIPBOARDUPDATE - "
@@ -280,7 +274,7 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
 
         /* Flush the pending SetSelectionOwner event now */
-        XFlush(pDisplay);
+        xcb_flush(conn);
     }
         winDebug("winClipboardWindowProc - WM_CLIPBOARDUPDATE: Exit\n");
         return 0;
@@ -317,7 +311,7 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
         int iReturn;
         Bool pasted = FALSE;
-        Atom selection;
+        xcb_atom_t selection;
         ClipboardConversionData data;
         int best_target = 0;
 
@@ -325,7 +319,7 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                  (int)wParam);
 
         selection = winClipboardGetLastOwnedSelectionAtom(atoms);
-        if (selection == None) {
+        if (selection == XCB_NONE) {
             ErrorF("winClipboardWindowProc - no monitored selection is owned\n");
             goto fake_paste;
         }
@@ -333,11 +327,8 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         winDebug("winClipboardWindowProc - requesting targets for selection from owner\n");
 
         /* Request the selection's supported conversion targets */
-        XConvertSelection(pDisplay,
-                          selection,
-                          atoms->atomTargets,
-                          atoms->atomLocalProperty,
-                          iWindow, CurrentTime);
+        xcb_convert_selection(conn, iWindow, selection, atoms->atomTargets,
+                              atoms->atomLocalProperty, XCB_CURRENT_TIME);
 
         /* Process X events */
         data.incr = NULL;
@@ -345,7 +336,7 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         iReturn = winProcessXEventsTimeout(hwnd,
                                            iWindow,
-                                           pDisplay,
+                                           conn,
                                            &data,
                                            atoms,
                                            WIN_POLL_TIMEOUT);
@@ -360,17 +351,15 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             struct target_priority
             {
-                Atom target;
+                xcb_atom_t target;
                 unsigned int priority;
             };
 
             struct target_priority target_priority_table[] =
                 {
-#ifdef X_HAVE_UTF8_STRING
                     { atoms->atomUTF8String,   0 },
-#endif
-                    { atoms->atomCompoundText, 1 },
-                    { XA_STRING,               2 },
+                    // { atoms->atomCompoundText, 1 }, not implemented (yet?)
+                    { XCB_ATOM_STRING,         2 },
                 };
 
             int best_priority = INT_MAX;
@@ -402,16 +391,13 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
         winDebug("winClipboardWindowProc - requesting selection from owner\n");
 
         /* Request the selection contents */
-        XConvertSelection(pDisplay,
-                          selection,
-                          best_target,
-                          atoms->atomLocalProperty,
-                          iWindow, CurrentTime);
+        xcb_convert_selection(conn, iWindow, selection, best_target,
+                              atoms->atomLocalProperty, XCB_CURRENT_TIME);
 
         /* Process X events */
         iReturn = winProcessXEventsTimeout(hwnd,
                                            iWindow,
-                                           pDisplay,
+                                           conn,
                                            &data,
                                            atoms,
                                            WIN_POLL_TIMEOUT);

@@ -31,8 +31,9 @@
 #ifndef WINCLIPBOARD_INTERNAL_H
 #define WINCLIPBOARD_INTERNAL_H
 
-/* X headers */
-#include <X11/Xlib.h>
+#include <xcb/xproto.h>
+#include <X11/Xfuncproto.h> // for _X_ATTRIBUTE_PRINTF
+#include <X11/Xdefs.h> // for Bool type
 
 /* Windows headers */
 #include <X11/Xwindows.h>
@@ -67,15 +68,14 @@ void
  * winclipboardthread.c
  */
 
-
 typedef struct
 {
-    Atom atomClipboard;
-    Atom atomLocalProperty;
-    Atom atomUTF8String;
-    Atom atomCompoundText;
-    Atom atomTargets;
-    Atom atomIncr;
+    xcb_atom_t atomClipboard;
+    xcb_atom_t atomLocalProperty;
+    xcb_atom_t atomUTF8String;
+    xcb_atom_t atomCompoundText;
+    xcb_atom_t atomTargets;
+    xcb_atom_t atomIncr;
 } ClipboardAtoms;
 
 /*
@@ -89,8 +89,8 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 typedef struct
 {
-  Display *pClipboardDisplay;
-  Window iClipboardWindow;
+  xcb_connection_t *pClipboardDisplay;
+  xcb_window_t iClipboardWindow;
   ClipboardAtoms *atoms;
 } ClipboardWindowCreationParams;
 
@@ -100,17 +100,17 @@ typedef struct
 
 typedef struct
 {
-  Atom *targetList;
+  xcb_atom_t *targetList;
   unsigned char *incr;
   unsigned long int incrsize;
 } ClipboardConversionData;
 
 int
 winClipboardFlushXEvents(HWND hwnd,
-                         Window iWindow, Display * pDisplay, ClipboardConversionData *data, ClipboardAtoms *atom);
+                         xcb_window_t iWindow, xcb_connection_t * pDisplay,
+                         ClipboardConversionData *data, ClipboardAtoms *atoms);
 
-
-Atom
+xcb_atom_t
 winClipboardGetLastOwnedSelectionAtom(ClipboardAtoms *atoms);
 
 void

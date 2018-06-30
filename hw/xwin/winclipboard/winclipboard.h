@@ -27,7 +27,10 @@
 #ifndef WINCLIPBOARD_H
 #define WINCLIPBOARD_H
 
-Bool winClipboardProc(char *szDisplay);
+#include <X11/Xdefs.h> // for Bool type
+#include <xcb/xcb.h>
+
+Bool winClipboardProc(char *szDisplay, xcb_auth_info_t *auth_info);
 
 void winFixClipboardChain(void);
 

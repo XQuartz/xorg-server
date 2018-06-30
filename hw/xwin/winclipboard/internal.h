@@ -42,7 +42,6 @@
 #define WIN_XEVENTS_NOTIFY_DATA			3
 #define WIN_XEVENTS_NOTIFY_TARGETS		4
 
-#define WM_WM_REINIT                           (WM_USER + 1)
 #define WM_WM_QUIT                             (WM_USER + 2)
 
 #define ARRAY_SIZE(a)  (sizeof((a)) / sizeof((a)[0]))
@@ -78,14 +77,6 @@ typedef struct
     Atom atomTargets;
     Atom atomIncr;
 } ClipboardAtoms;
-
-/* Modern clipboard API functions */
-typedef wBOOL WINAPI (*ADDCLIPBOARDFORMATLISTENERPROC)(HWND hwnd);
-typedef wBOOL WINAPI (*REMOVECLIPBOARDFORMATLISTENERPROC)(HWND hwnd);
-
-extern Bool g_fHasModernClipboardApi;
-extern ADDCLIPBOARDFORMATLISTENERPROC g_fpAddClipboardFormatListener;
-extern REMOVECLIPBOARDFORMATLISTENERPROC g_fpRemoveClipboardFormatListener;
 
 /*
  * winclipboardwndproc.c

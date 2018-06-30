@@ -84,10 +84,6 @@ static pthread_t g_winClipboardProcThread;
 int xfixes_event_base;
 int xfixes_error_base;
 
-Bool g_fHasModernClipboardApi = FALSE;
-ADDCLIPBOARDFORMATLISTENERPROC g_fpAddClipboardFormatListener;
-REMOVECLIPBOARDFORMATLISTENERPROC g_fpRemoveClipboardFormatListener;
-
 /*
  * Local function prototypes
  */
@@ -141,11 +137,6 @@ winClipboardProc(Bool fUseUnicode, char *szDisplay)
     if (XSupportsLocale() == False) {
         ErrorF("winClipboardProc - Warning: Locale not supported by X.\n");
     }
-
-    g_fpAddClipboardFormatListener = (ADDCLIPBOARDFORMATLISTENERPROC)GetProcAddress(GetModuleHandle("user32"),"AddClipboardFormatListener");
-    g_fpRemoveClipboardFormatListener = (REMOVECLIPBOARDFORMATLISTENERPROC)GetProcAddress(GetModuleHandle("user32"),"RemoveClipboardFormatListener");
-    g_fHasModernClipboardApi = g_fpAddClipboardFormatListener && g_fpRemoveClipboardFormatListener;
-    ErrorF("OS maintains clipboard viewer chain: %s\n", g_fHasModernClipboardApi ? "yes" : "no");
 
     g_winClipboardProcThread = pthread_self();
 
@@ -504,13 +495,5 @@ winClipboardWindowDestroy(void)
 {
   if (g_hwndClipboard) {
     SendMessage(g_hwndClipboard, WM_WM_QUIT, 0, 0);
-  }
-}
-
-void
-winFixClipboardChain(void)
-{
-  if (g_hwndClipboard) {
-    PostMessage(g_hwndClipboard, WM_WM_REINIT, 0, 0);
   }
 }

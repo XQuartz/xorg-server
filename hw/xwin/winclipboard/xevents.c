@@ -200,7 +200,6 @@ winClipboardSelectionNotifyData(HWND hwnd, Window iWindow, Display *pDisplay, Cl
     char *pszReturnData = NULL;
     wchar_t *pwszUnicodeStr = NULL;
     HGLOBAL hGlobal = NULL;
-    char *pszConvertData = NULL;
     char *pszGlobalData = NULL;
 
     /* Retrieve the selection data and delete the property */
@@ -268,19 +267,13 @@ winClipboardSelectionNotifyData(HWND hwnd, Window iWindow, Display *pDisplay, Cl
         xtpText.nitems = nitems;
     }
 
-    if (data->fUseUnicode) {
 #ifdef X_HAVE_UTF8_STRING
-        /* Convert the text property to a text list */
-        iReturn = Xutf8TextPropertyToTextList(pDisplay,
-                                              &xtpText,
-                                              &ppszTextList, &iCount);
+    /* Convert the text property to a text list */
+    iReturn = Xutf8TextPropertyToTextList(pDisplay,
+                                          &xtpText,
+                                          &ppszTextList, &iCount);
 #endif
-    }
-    else {
-        iReturn = XmbTextPropertyToTextList(pDisplay,
-                                            &xtpText,
-                                            &ppszTextList, &iCount);
-    }
+
     if (iReturn == Success || iReturn > 0) {
         /* Conversion succeeded or some unconvertible characters */
         if (ppszTextList != NULL) {
@@ -343,40 +336,30 @@ winClipboardSelectionNotifyData(HWND hwnd, Window iWindow, Display *pDisplay, Cl
     /* Convert the X clipboard string to DOS format */
     winClipboardUNIXtoDOS(&pszReturnData, strlen(pszReturnData));
 
-    if (data->fUseUnicode) {
-        /* Find out how much space needed to convert MBCS to Unicode */
-        int iUnicodeLen = MultiByteToWideChar(CP_UTF8,
-                                              0,
-                                              pszReturnData, -1, NULL, 0);
+    /* Find out how much space needed to convert MBCS to Unicode */
+    int iUnicodeLen = MultiByteToWideChar(CP_UTF8,
+                                          0,
+                                          pszReturnData, -1, NULL, 0);
 
-        /* NOTE: iUnicodeLen includes space for null terminator */
-        pwszUnicodeStr = malloc(sizeof(wchar_t) * iUnicodeLen);
-        if (!pwszUnicodeStr) {
-            ErrorF("winClipboardFlushXEvents - SelectionNotify "
-                   "malloc failed for pwszUnicodeStr, aborting.\n");
+    /* NOTE: iUnicodeLen includes space for null terminator */
+    pwszUnicodeStr = malloc(sizeof(wchar_t) * iUnicodeLen);
+    if (!pwszUnicodeStr) {
+        ErrorF("winClipboardFlushXEvents - SelectionNotify "
+               "malloc failed for pwszUnicodeStr, aborting.\n");
 
-            /* Abort */
-            goto winClipboardFlushXEvents_SelectionNotify_Done;
-        }
-
-        /* Do the actual conversion */
-        MultiByteToWideChar(CP_UTF8,
-                            0,
-                            pszReturnData,
-                            -1, pwszUnicodeStr, iUnicodeLen);
-
-        /* Allocate global memory for the X clipboard data */
-        hGlobal = GlobalAlloc(GMEM_MOVEABLE,
-                              sizeof(wchar_t) * iUnicodeLen);
+        /* Abort */
+        goto winClipboardFlushXEvents_SelectionNotify_Done;
     }
-    else {
-        int iConvertDataLen = 0;
-        pszConvertData = strdup(pszReturnData);
-        iConvertDataLen = strlen(pszConvertData) + 1;
 
-        /* Allocate global memory for the X clipboard data */
-        hGlobal = GlobalAlloc(GMEM_MOVEABLE, iConvertDataLen);
-    }
+    /* Do the actual conversion */
+    MultiByteToWideChar(CP_UTF8,
+                        0,
+                        pszReturnData,
+                        -1, pwszUnicodeStr, iUnicodeLen);
+
+    /* Allocate global memory for the X clipboard data */
+    hGlobal = GlobalAlloc(GMEM_MOVEABLE, sizeof(wchar_t) * iUnicodeLen);
+
 
     free(pszReturnData);
 
@@ -400,26 +383,16 @@ winClipboardSelectionNotifyData(HWND hwnd, Window iWindow, Display *pDisplay, Cl
     }
 
     /* Copy the returned string into the global memory */
-    if (data->fUseUnicode) {
-        wcscpy((wchar_t *)pszGlobalData, pwszUnicodeStr);
-        free(pwszUnicodeStr);
-        pwszUnicodeStr = NULL;
-    }
-    else {
-        strcpy(pszGlobalData, pszConvertData);
-        free(pszConvertData);
-        pszConvertData = NULL;
-    }
+    wcscpy((wchar_t *)pszGlobalData, pwszUnicodeStr);
+    free(pwszUnicodeStr);
+    pwszUnicodeStr = NULL;
 
     /* Release the pointer to the global memory */
     GlobalUnlock(hGlobal);
     pszGlobalData = NULL;
 
     /* Push the selection data to the Windows clipboard */
-    if (data->fUseUnicode)
-        SetClipboardData(CF_UNICODETEXT, hGlobal);
-    else
-        SetClipboardData(CF_TEXT, hGlobal);
+    SetClipboardData(CF_UNICODETEXT, hGlobal);
 
     /* Flag that SetClipboardData has been called */
     fSetClipboardData = FALSE;
@@ -438,7 +411,6 @@ winClipboardSelectionNotifyData(HWND hwnd, Window iWindow, Display *pDisplay, Cl
         value = NULL;
         nitems = 0;
     }
-    free(pszConvertData);
     free(pwszUnicodeStr);
     if (hGlobal && pszGlobalData)
         GlobalUnlock(hGlobal);
@@ -577,7 +549,7 @@ winClipboardFlushXEvents(HWND hwnd,
             fCloseClipboard = TRUE;
 
             /* Check that clipboard format is available */
-            if (data->fUseUnicode && !IsClipboardFormatAvailable(CF_UNICODETEXT)) {
+            if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) {
                 static int count;       /* Hack to stop acroread spamming the log */
                 static HWND lasthwnd;   /* I've not seen any other client get here repeatedly? */
 
@@ -589,14 +561,6 @@ winClipboardFlushXEvents(HWND hwnd,
                            "available from Win32 clipboard.  Aborting %d.\n",
                            count);
                 lasthwnd = hwnd;
-
-                /* Abort */
-                fAbort = TRUE;
-                goto winClipboardFlushXEvents_SelectionRequest_Done;
-            }
-            else if (!data->fUseUnicode && !IsClipboardFormatAvailable(CF_TEXT)) {
-                ErrorF("winClipboardFlushXEvents - CF_TEXT is not "
-                       "available from Win32 clipboard.  Aborting.\n");
 
                 /* Abort */
                 fAbort = TRUE;
@@ -616,14 +580,9 @@ winClipboardFlushXEvents(HWND hwnd,
                 xiccesStyle = XStringStyle;
 
             /* Get a pointer to the clipboard text, in desired format */
-            if (data->fUseUnicode) {
-                /* Retrieve clipboard data */
-                hGlobal = GetClipboardData(CF_UNICODETEXT);
-            }
-            else {
-                /* Retrieve clipboard data */
-                hGlobal = GetClipboardData(CF_TEXT);
-            }
+            /* Retrieve clipboard data */
+            hGlobal = GetClipboardData(CF_UNICODETEXT);
+
             if (!hGlobal) {
                 ErrorF("winClipboardFlushXEvents - SelectionRequest - "
                        "GetClipboardData () failed: %08x\n", (unsigned int)GetLastError());
@@ -635,23 +594,18 @@ winClipboardFlushXEvents(HWND hwnd,
             pszGlobalData = (char *) GlobalLock(hGlobal);
 
             /* Convert the Unicode string to UTF8 (MBCS) */
-            if (data->fUseUnicode) {
-                int iConvertDataLen = WideCharToMultiByte(CP_UTF8,
+            int iConvertDataLen = WideCharToMultiByte(CP_UTF8,
                                                       0,
                                                       (LPCWSTR) pszGlobalData,
                                                       -1, NULL, 0, NULL, NULL);
-                /* NOTE: iConvertDataLen includes space for null terminator */
-                pszConvertData = malloc(iConvertDataLen);
-                WideCharToMultiByte(CP_UTF8,
-                                    0,
-                                    (LPCWSTR) pszGlobalData,
-                                    -1,
-                                    pszConvertData,
-                                    iConvertDataLen, NULL, NULL);
-            }
-            else {
-                pszConvertData = strdup(pszGlobalData);
-            }
+            /* NOTE: iConvertDataLen includes space for null terminator */
+            pszConvertData = malloc(iConvertDataLen);
+            WideCharToMultiByte(CP_UTF8,
+                                0,
+                                (LPCWSTR) pszGlobalData,
+                                -1,
+                                pszConvertData,
+                                iConvertDataLen, NULL, NULL);
 
             /* Convert DOS string to UNIX string */
             winClipboardDOStoUNIX(pszConvertData, strlen(pszConvertData));
@@ -665,18 +619,12 @@ winClipboardFlushXEvents(HWND hwnd,
             xtpText.nitems = 0;
 
             /* Create the text property from the text list */
-            if (data->fUseUnicode) {
 #ifdef X_HAVE_UTF8_STRING
-                iReturn = Xutf8TextListToTextProperty(pDisplay,
-                                                      pszTextList,
-                                                      1, xiccesStyle, &xtpText);
+            iReturn = Xutf8TextListToTextProperty(pDisplay,
+                                                  pszTextList,
+                                                  1, xiccesStyle, &xtpText);
 #endif
-            }
-            else {
-                iReturn = XmbTextListToTextProperty(pDisplay,
-                                                    pszTextList,
-                                                    1, xiccesStyle, &xtpText);
-            }
+
             if (iReturn == XNoMemory || iReturn == XLocaleNotSupported) {
                 ErrorF("winClipboardFlushXEvents - SelectionRequest - "
                        "X*TextListToTextProperty failed: %d\n", iReturn);

@@ -82,7 +82,7 @@ winClipboardThreadProc(void *arg)
       /* Flag that clipboard client has been launched */
       g_fClipboardStarted = TRUE;
 
-      fShutdown = winClipboardProc(g_fUnicodeClipboard, szDisplay);
+      fShutdown = winClipboardProc(szDisplay);
 
       /* Flag that clipboard client has stopped */
       g_fClipboardStarted = FALSE;

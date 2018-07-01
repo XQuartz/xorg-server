@@ -316,7 +316,6 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_RENDERFORMAT:
     {
         int iReturn;
-        Bool fConvertToUnicode;
         Bool pasted = FALSE;
         Atom selection;
         ClipboardConversionData data;
@@ -324,9 +323,6 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         winDebug("winClipboardWindowProc - WM_RENDERFORMAT %d - Hello.\n",
                  (int)wParam);
-
-        /* Flag whether to convert to Unicode or not */
-        fConvertToUnicode = (CF_UNICODETEXT == wParam);
 
         selection = winClipboardGetLastOwnedSelectionAtom(atoms);
         if (selection == None) {
@@ -344,7 +340,6 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
                           iWindow, CurrentTime);
 
         /* Process X events */
-        data.fUseUnicode = fConvertToUnicode;
         data.incr = NULL;
         data.incrsize = 0;
 

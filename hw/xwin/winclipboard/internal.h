@@ -100,7 +100,6 @@ typedef struct
 
 typedef struct
 {
-  Bool fUseUnicode;
   Atom *targetList;
   unsigned char *incr;
   unsigned long int incrsize;

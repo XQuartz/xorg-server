@@ -67,7 +67,6 @@ main (int argc, char *argv[])
 {
   int			i;
   char			*pszDisplay = NULL;
-  int			fUnicodeClipboard = 1;
 
   /* Parse command-line parameters */
   for (i = 1; i < argc; ++i)
@@ -85,13 +84,6 @@ main (int argc, char *argv[])
 	  continue;
 	}
 
-      /* Look for -nounicodeclipboard */
-      if (!strcmp (argv[i], "-nounicodeclipboard"))
-	{
-	  fUnicodeClipboard = 0;
-	  continue;
-	}
-
       /* Look for -noprimary */
       if (!strcmp (argv[i], "-noprimary"))
 	{
@@ -102,16 +94,6 @@ main (int argc, char *argv[])
       /* Yack when we find a parameter that we don't know about */
       printf ("Unknown parameter: %s\nExiting.\n", argv[i]);
       exit (1);
-    }
-
-  /* Do we have Unicode support? */
-  if (fUnicodeClipboard)
-    {
-      printf ("Unicode clipboard I/O\n");
-    }
-  else
-    {
-      printf ("Non Unicode clipboard I/O\n");
     }
 
   /* Apply locale specified in the LANG environment variable */
@@ -128,7 +110,7 @@ main (int argc, char *argv[])
       setlocale(LC_ALL, "C");
     }
 
-  winClipboardProc(fUnicodeClipboard, pszDisplay);
+  winClipboardProc(pszDisplay);
 
   return 0;
 }

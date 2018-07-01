@@ -66,6 +66,7 @@ typedef WINAPI HRESULT(*SHGETFOLDERPATHPROC) (HWND hwndOwner,
 #include "glx/glwindows.h"
 #include "dri/windowsdri.h"
 #endif
+#include "winauth.h"
 
 /*
  * References to external symbols

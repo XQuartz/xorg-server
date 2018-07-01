@@ -38,11 +38,10 @@
 #include "win.h"
 #include "winclipboard/winclipboard.h"
 #include "windisplay.h"
+#include "winauth.h"
 
 #define WIN_CLIPBOARD_RETRIES			40
 #define WIN_CLIPBOARD_DELAY			1
-
-extern xcb_auth_info_t *winGetXcbAuthInfo(void);
 
 /*
  * Local variables
@@ -65,9 +64,6 @@ winClipboardThreadProc(void *arg)
       Bool fShutdown;
 
       ++clipboardRestarts;
-
-      /* Use our generated cookie for authentication */
-      winSetAuthorization();
 
       /* Setup the display connection string */
       /*

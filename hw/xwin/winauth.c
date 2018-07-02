@@ -77,7 +77,7 @@ GenerateAuthorization(unsigned name_length,
  * Generate authorization cookie for internal server clients
  */
 
-Bool
+BOOL
 winGenerateAuthorization(void)
 {
 #ifdef XCSECURITY

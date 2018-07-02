@@ -59,7 +59,7 @@
  */
 
 extern int xfixes_event_base;
-Bool fPrimarySelection = TRUE;
+BOOL fPrimarySelection = TRUE;
 
 /*
  * Local variables
@@ -198,7 +198,7 @@ winClipboardSelectionNotifyData(HWND hwnd, xcb_window_t iWindow, xcb_connection_
     xcb_atom_t xtpText_encoding;
     int xtpText_nitems;
 
-    Bool fSetClipboardData = TRUE;
+    BOOL fSetClipboardData = TRUE;
     char *pszReturnData = NULL;
     UINT codepage;
     wchar_t *pwszUnicodeStr = NULL;
@@ -403,8 +403,8 @@ winClipboardFlushXEvents(HWND hwnd,
         const char *pszGlobalData = NULL;
         HGLOBAL hGlobal = NULL;
         char *pszConvertData = NULL;
-        Bool fAbort = FALSE;
-        Bool fCloseClipboard = FALSE;
+        BOOL fAbort = FALSE;
+        BOOL fCloseClipboard = FALSE;
 
         /* Branch on the event type */
         switch (event->response_type & ~0x80) {

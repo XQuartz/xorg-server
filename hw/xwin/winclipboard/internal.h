@@ -33,7 +33,7 @@
 
 #include <xcb/xproto.h>
 #include <X11/Xfuncproto.h> // for _X_ATTRIBUTE_PRINTF
-#include <X11/Xdefs.h> // for Bool type
+#include <X11/Xmd.h> // for BOOL
 
 /* Windows headers */
 #include <X11/Xwindows.h>
@@ -82,7 +82,7 @@ typedef struct
  * winclipboardwndproc.c
  */
 
-Bool winClipboardFlushWindowsMessageQueue(HWND hwnd);
+BOOL winClipboardFlushWindowsMessageQueue(HWND hwnd);
 
 LRESULT CALLBACK
 winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);

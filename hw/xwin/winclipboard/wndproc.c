@@ -131,7 +131,7 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     static xcb_connection_t *conn;
     static xcb_window_t iWindow;
     static ClipboardAtoms *atoms;
-    static Bool fRunning;
+    static BOOL fRunning;
 
     /* Branch on message type */
     switch (message) {
@@ -310,7 +310,7 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_RENDERFORMAT:
     {
         int iReturn;
-        Bool pasted = FALSE;
+        BOOL pasted = FALSE;
         xcb_atom_t selection;
         ClipboardConversionData data;
         int best_target = 0;
@@ -440,7 +440,7 @@ winClipboardWindowProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
  * Process any pending Windows messages
  */
 
-Bool
+BOOL
 winClipboardFlushWindowsMessageQueue(HWND hwnd)
 {
     MSG msg;

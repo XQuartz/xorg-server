@@ -20,7 +20,7 @@
  */
 
 #include <xcb/xcb.h>
-#include <X11/Xdefs.h> // for Bool
+#include <X11/Xmd.h> // for BOOL
 
-Bool winGenerateAuthorization(void);
+BOOL winGenerateAuthorization(void);
 xcb_auth_info_t * winGetXcbAuthInfo(void);

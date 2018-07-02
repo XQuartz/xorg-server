@@ -103,7 +103,7 @@ intern_atom(xcb_connection_t *conn, const char *atomName)
  * returns TRUE if shutdown was signalled to loop, FALSE if some error occurred
  */
 
-Bool
+BOOL
 winClipboardProc(char *szDisplay, xcb_auth_info_t *auth_info)
 {
     ClipboardAtoms atoms;
@@ -120,7 +120,7 @@ winClipboardProc(char *szDisplay, xcb_auth_info_t *auth_info)
     xcb_connection_t *conn;
     xcb_window_t iWindow = XCB_NONE;
     int iSelectError;
-    Bool fShutdown = FALSE;
+    BOOL fShutdown = FALSE;
     ClipboardConversionData data;
     int screen;
 

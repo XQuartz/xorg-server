@@ -58,7 +58,23 @@ conf_data.set('HAS_APERTURE_DRV', host_machine.system() == 'openbsd')
 # XXX: HAVE_LIBDISPATCH
 conf_data.set_quoted('OSNAME', 'Linux') # XXX
 conf_data.set('HAVE_INPUTTHREAD', '1') # XXX
-conf_data.set('HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID', '1') # XXX
+
+if cc.compiles('''
+    #define _GNU_SOURCE 1
+    #include <pthread.h>
+    void foo(int bar) { pthread_setname_np(pthread_self(), "example"); }
+''',
+    name: 'pthread_setname_np(tid, name)')
+    conf_data.set('HAVE_PTHREAD_SETNAME_NP_WITH_TID', 1)
+elif cc.compiles('''
+    #define _GNU_SOURCE 1
+    #include <pthread.h>
+    void foo(int bar) { pthread_setname_np("example"); }
+''',
+    name: 'pthread_setname_np(name)')
+    conf_data.set('HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID', 1)
+endif
+
 conf_data.set('HAVE_LIBBSD', libbsd_dep.found())
 # XXX: HAVE_SYSTEMD_DAEMON
 conf_data.set('CONFIG_UDEV', build_udev)

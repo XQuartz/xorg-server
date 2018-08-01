@@ -45,6 +45,8 @@ if host_machine.system() == 'linux'
         if build_acpi
             srcs_xorg_os_support += 'linux/lnx_acpi.c'
         endif
+    else
+        srcs_xorg_os_support += 'shared/pm_noop.c'
     endif
 
 elif host_machine.system() == 'solaris'
@@ -83,6 +85,7 @@ elif host_machine.system().endswith('bsd')
         'bsd/bsd_VTsw.c',
         'bsd/bsd_bell.c',
         'bsd/bsd_init.c',
+        'shared/pm_noop.c',
     ]
 
     # XXX: APM

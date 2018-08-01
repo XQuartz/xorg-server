@@ -156,8 +156,10 @@ conf_data.set('_XITYPEDEF_POINTER', '1')
 conf_data.set('LISTEN_TCP', get_option('listen_tcp'))
 conf_data.set('LISTEN_UNIX', get_option('listen_unix'))
 conf_data.set('LISTEN_LOCAL', get_option('listen_local'))
-# XXX: Configurable?
-conf_data.set('XTRANS_SEND_FDS', '1')
+
+if cc.has_header_symbol('sys/socket.h', 'SCM_RIGHTS')
+  conf_data.set('XTRANS_SEND_FDS', '1')
+endif
 
 conf_data.set('TCPCONN', '1')
 conf_data.set('UNIXCONN', '1')

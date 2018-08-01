@@ -859,7 +859,6 @@ fi
 PKG_CHECK_MODULES(UDEV, $LIBUDEV, [HAVE_LIBUDEV=yes], [HAVE_LIBUDEV=no])
 if test "x$CONFIG_UDEV" = xauto; then
 	CONFIG_UDEV="$HAVE_LIBUDEV"
-	AC_DEFINE(HAVE_LIBUDEV, 1, [Define to 1 if libudev is available.])
 fi
 AM_CONDITIONAL(CONFIG_UDEV, [test "x$CONFIG_UDEV" = xyes])
 if test "x$CONFIG_UDEV" = xyes; then

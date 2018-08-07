@@ -614,12 +614,6 @@ xwl_unrealize_window(WindowPtr window)
     return ret;
 }
 
-static Bool
-xwl_save_screen(ScreenPtr pScreen, int on)
-{
-    return TRUE;
-}
-
 static void
 frame_callback(void *data,
                struct wl_callback *callback,
@@ -1065,8 +1059,6 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     xwl_screen->wayland_fd = wl_display_get_fd(xwl_screen->display);
     SetNotifyFd(xwl_screen->wayland_fd, socket_handler, X_NOTIFY_READ, xwl_screen);
     RegisterBlockAndWakeupHandlers(block_handler, wakeup_handler, xwl_screen);
-
-    pScreen->SaveScreen = xwl_save_screen;
 
     pScreen->blackPixel = 0;
     pScreen->whitePixel = 1;

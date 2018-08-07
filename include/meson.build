@@ -45,7 +45,6 @@ if cc.sizeof('unsigned long') == 8
 endif
 
 conf_data.set('_GNU_SOURCE', '1')
-# XXX: NO_LOCAL_CLIENT_CRED
 
 # autoconf checks for /dev/xf86 here, but the test should be based on
 # the target, not the build system.  Could we get rid of this and just
@@ -171,6 +170,12 @@ conf_data.set('LISTEN_LOCAL', get_option('listen_local'))
 
 if cc.has_header_symbol('sys/socket.h', 'SCM_RIGHTS')
   conf_data.set('XTRANS_SEND_FDS', '1')
+endif
+
+if not conf_data.get('HAVE_GETPEEREID') and not conf_data.get('HAVE_GETPEERUCRED')
+    if not cc.has_header_symbol('sys/socket.h', 'SO_PEERCRED')
+        conf_data.set('NO_LOCAL_CLIENT_CRED', 1)
+    endif
 endif
 
 conf_data.set('TCPCONN', '1')

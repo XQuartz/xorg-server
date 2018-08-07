@@ -1782,18 +1782,6 @@ maintains the client's changes to it.
 The X protocol defines standard names to indicate the symbol(s)
 printed on each keycap. (See X11/keysym.h)
 </para>
-<para>
-Legal modifier keys must generate both up and down transitions.  When
-a client tries to change a modifier key (for instance, to make "A" the
-"Control" key), DIX calls the following routine, which should return
-TRUE if the key can be used as a modifier on the given device:
-<blockquote><programlisting>
-
-	Bool LegalModifier(key, pDev)
-	    unsigned int key;
-	    DevicePtr pDev;
-</programlisting></blockquote>
-</para>
 </section>
 </section>
 <section>
@@ -4998,7 +4986,6 @@ mi and fb implementations.</para>
 <row><entry><function>InstallColormap</function></entry><entry><literal>ddx</literal></entry><entry><para>Screen</para></entry></row>
 <row><entry><function>Intersect</function></entry><entry><literal>mi</literal></entry><entry><para>Screen</para></entry></row>
 <row><entry><function>Inverse</function></entry><entry><literal>mi</literal></entry><entry><para>Screen</para></entry></row>
-<row><entry><function>LegalModifier</function></entry><entry><literal>hd</literal></entry><entry><para></para></entry></row>
 <row><entry><function>LineHelper</function></entry><entry><literal>mi</literal></entry><entry><para>GC op</para></entry></row>
 <row><entry><function>ListInstalledColormaps</function></entry><entry><literal>ddx</literal></entry><entry><para>Screen</para></entry></row>
 <row><entry><function>LookupKeyboardDevice</function></entry><entry><literal>dix</literal></entry><entry><para></para></entry></row>

@@ -52,7 +52,6 @@ conf_data.set('_GNU_SOURCE', '1')
 # ifdef for openbsd?
 conf_data.set('HAS_APERTURE_DRV', host_machine.system() == 'openbsd')
 
-# XXX: FALLBACK_INPUT_DRIVER
 # XXX: BUNDLE_ID_PREFIX
 conf_data.set_quoted('OSNAME', 'Linux') # XXX
 conf_data.set('HAVE_INPUTTHREAD', '1') # XXX
@@ -329,7 +328,6 @@ xorg_data.set_quoted('DEFAULT_XDG_DATA_HOME', '.local/share')
 xorg_data.set_quoted('DEFAULT_XDG_DATA_HOME_LOGDIR', 'xorg')
 xorg_data.set_quoted('DEFAULT_LOGDIR', log_dir)
 xorg_data.set_quoted('DEFAULT_LOGPREFIX', 'Xorg.')
-xorg_data.set_quoted('FALLBACK_INPUT_DRIVER', 'libinput')
 xorg_data.set_quoted('DEFAULT_MODULE_PATH', join_paths(get_option('prefix'), module_dir))
 xorg_data.set_quoted('DEFAULT_LIBRARY_PATH', join_paths(get_option('prefix'), get_option('libdir')))
 xorg_data.set_quoted('__XSERVERNAME__', 'Xorg')

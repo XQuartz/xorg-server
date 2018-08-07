@@ -343,12 +343,10 @@ if host_machine.system() == 'freebsd' or host_machine.system() == 'dragonflybsd'
         xorg_data.set('USE_DEV_IO', true)
     endif
 elif host_machine.system() == 'netbsd'
-    # XXX: Add link to libi386
     if host_machine.cpu_family() == 'x86' or host_machine.cpu_family() == 'x86_64'
         xorg_data.set('USE_I386_IOPL', true)
     endif
 elif host_machine.system() == 'openbsd'
-    # XXX: Add link to libi386, libamd64
     if host_machine.cpu_family() == 'x86'
         xorg_data.set('USE_I386_IOPL', true)
     endif

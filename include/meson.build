@@ -182,8 +182,6 @@ conf_data.set('TCPCONN', '1')
 conf_data.set('UNIXCONN', '1')
 conf_data.set('IPv6', build_ipv6)
 
-conf_data.set('CLIENTIDS', '1') # XXX
-
 conf_data.set('BIGREQS', '1')
 conf_data.set('COMPOSITE', '1')
 conf_data.set('DAMAGE', '1')

@@ -52,7 +52,6 @@ conf_data.set('_GNU_SOURCE', '1')
 # ifdef for openbsd?
 conf_data.set('HAS_APERTURE_DRV', host_machine.system() == 'openbsd')
 
-# XXX: USE_ALPHA_PIO and other bsd bits
 # XXX: FALLBACK_INPUT_DRIVER
 # XXX: BUNDLE_ID_PREFIX
 # XXX: HAVE_LIBDISPATCH
@@ -344,9 +343,7 @@ if host_machine.system() == 'freebsd' or host_machine.system() == 'dragonflybsd'
     if host_machine.cpu_family() == 'x86' or host_machine.cpu_family() == 'x86_64'
         xorg_data.set('USE_DEV_IO', true)
     endif
-    # XXX: Add link to libio on alpha
 elif host_machine.system() == 'netbsd'
-    # XXX: USE_ALPHA_PIO
     # XXX: Add link to libi386
     if host_machine.cpu_family() == 'x86' or host_machine.cpu_family() == 'x86_64'
         xorg_data.set('USE_I386_IOPL', true)

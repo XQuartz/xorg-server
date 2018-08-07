@@ -72,7 +72,8 @@ elif cc.compiles('''
 endif
 
 conf_data.set('HAVE_LIBBSD', libbsd_dep.found())
-# XXX: HAVE_SYSTEMD_DAEMON
+# Note: this symbol is used by libXtrans.
+conf_data.set('HAVE_SYSTEMD_DAEMON', libsystemd_daemon_dep.found())
 conf_data.set('CONFIG_UDEV', build_udev)
 conf_data.set('CONFIG_UDEV_KMS', build_udev)
 conf_data.set('HAVE_DBUS', build_dbus)

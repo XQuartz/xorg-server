@@ -96,6 +96,12 @@ nettle_dep = dependency('nettle')
 dbus_required = get_option('systemd_logind') == 'true'
 dbus_dep = dependency('dbus-1', version: '>= 1.0', required: dbus_required)
 
+# libsystemd-daemon was moved into libsystemd in version 209
+libsystemd_daemon_dep = dependency('libsystemd', version: '>= 209', required: false)
+if not libsystemd_daemon_dep.found()
+    libsystemd_daemon_dep = dependency('libsystemd-daemon', required: false)
+endif
+
 build_hashtable = false
 
 # Resolve default values of some options
@@ -455,6 +461,7 @@ common_dep = [
     xcmiscproto_dep,
     bigreqsproto_dep,
     xtrans_dep,
+    libsystemd_daemon_dep,
 
     videoproto_dep,
     compositeproto_dep,

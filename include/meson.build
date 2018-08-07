@@ -54,7 +54,6 @@ conf_data.set('HAS_APERTURE_DRV', host_machine.system() == 'openbsd')
 
 # XXX: FALLBACK_INPUT_DRIVER
 # XXX: BUNDLE_ID_PREFIX
-# XXX: HAVE_LIBDISPATCH
 conf_data.set_quoted('OSNAME', 'Linux') # XXX
 conf_data.set('HAVE_INPUTTHREAD', '1') # XXX
 

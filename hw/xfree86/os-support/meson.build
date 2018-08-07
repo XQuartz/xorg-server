@@ -11,8 +11,6 @@ hdrs_xorg_os_support = [
     'xf86_OSproc.h'
 ]
 
-os_support_flags = ['-DUSESTDRES']
-
 if get_option('pciaccess')
     srcs_xorg_os_support += 'bus/Pci.c'
     if host_machine.system() != 'linux' and host_machine.system() != 'solaris'

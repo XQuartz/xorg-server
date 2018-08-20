@@ -721,11 +721,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
             FatalError("AddScreen/ScreenInit failed for driver %d\n", i);
         }
 
-        DebugF("InitOutput - xf86Screens[%d]->pScreen = %p\n",
-               i, xf86Screens[i]->pScreen);
-        DebugF("xf86Screens[%d]->pScreen->CreateWindow = %p\n",
-               i, xf86Screens[i]->pScreen->CreateWindow);
-
         if (PictureGetSubpixelOrder(xf86Screens[i]->pScreen) == SubPixelUnknown) {
             xf86MonPtr DDC = (xf86MonPtr) (xf86Screens[i]->monitor->DDC);
 

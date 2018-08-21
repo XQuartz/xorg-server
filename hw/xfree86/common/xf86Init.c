@@ -330,11 +330,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
     config_pre_init();
 
     if (serverGeneration == 1) {
-        if ((xf86ServerName = strrchr(argv[0], '/')) != 0)
-            xf86ServerName++;
-        else
-            xf86ServerName = argv[0];
-
         xf86PrintBanner();
         LogPrintMarkers();
         if (xf86LogFile) {

@@ -287,8 +287,6 @@ extern _X_EXPORT Gamma
 xf86GetGamma(void);
 extern _X_EXPORT Bool
 xf86GetFlipPixels(void);
-extern _X_EXPORT const char *
-xf86GetServerName(void);
 extern _X_EXPORT Bool
 xf86ServerIsExiting(void);
 extern _X_EXPORT Bool

@@ -680,11 +680,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
 #ifdef XFreeXDGA
         pScrn->SetDGAMode = xf86SetDGAMode;
 #endif
-        pScrn->DPMSSet = NULL;
-        pScrn->LoadPalette = NULL;
-        pScrn->SetOverscan = NULL;
-        pScrn->DriverFunc = NULL;
-        pScrn->pScreen = NULL;
         scr_index = AddGPUScreen(xf86ScreenInit, argc, argv);
         xf86VGAarbiterUnlock(pScrn);
         if (scr_index == i) {
@@ -708,11 +703,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
 #ifdef XFreeXDGA
         xf86Screens[i]->SetDGAMode = xf86SetDGAMode;
 #endif
-        xf86Screens[i]->DPMSSet = NULL;
-        xf86Screens[i]->LoadPalette = NULL;
-        xf86Screens[i]->SetOverscan = NULL;
-        xf86Screens[i]->DriverFunc = NULL;
-        xf86Screens[i]->pScreen = NULL;
         scr_index = AddScreen(xf86ScreenInit, argc, argv);
         xf86VGAarbiterUnlock(xf86Screens[i]);
         if (scr_index == i) {

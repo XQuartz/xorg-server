@@ -538,17 +538,6 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
             return;
         }
 
-        for (i = 0; i < xf86NumScreens; i++) {
-            if (xf86Screens[i]->name == NULL) {
-                char *tmp;
-                XNFasprintf(&tmp, "screen%d", i);
-                xf86Screens[i]->name = tmp;
-                xf86MsgVerb(X_WARNING, 0,
-                            "Screen driver %d has no name set, using `%s'.\n",
-                            i, xf86Screens[i]->name);
-            }
-        }
-
         /* Remove (unload) drivers that are not required */
         for (i = 0; i < xf86NumDrivers; i++)
             if (xf86DriverList[i] && xf86DriverList[i]->refCount <= 0)

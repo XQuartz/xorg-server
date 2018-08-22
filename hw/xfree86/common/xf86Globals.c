@@ -108,7 +108,6 @@ xf86InfoRec xf86Info = {
     .ShareVTs = FALSE,
     .dontZap = FALSE,
     .dontZoom = FALSE,
-    .notrapSignals = FALSE,
     .currentScreen = NULL,
 #ifdef CSRG_BASED
     .consType = -1,

@@ -619,7 +619,6 @@ configFiles(XF86ConfFilesPtr fileconf)
 }
 
 typedef enum {
-    FLAG_NOTRAPSIGNALS,
     FLAG_DONTVTSWITCH,
     FLAG_DONTZAP,
     FLAG_DONTZOOM,
@@ -653,8 +652,6 @@ typedef enum {
  * if the parser found the option in the config file.
  */
 static OptionInfoRec FlagOptions[] = {
-    {FLAG_NOTRAPSIGNALS, "NoTrapSignals", OPTV_BOOLEAN,
-     {0}, FALSE},
     {FLAG_DONTVTSWITCH, "DontVTSwitch", OPTV_BOOLEAN,
      {0}, FALSE},
     {FLAG_DONTZAP, "DontZap", OPTV_BOOLEAN,
@@ -737,7 +734,6 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
 
     xf86ProcessOptions(-1, optp, FlagOptions);
 
-    xf86GetOptValBool(FlagOptions, FLAG_NOTRAPSIGNALS, &xf86Info.notrapSignals);
     xf86GetOptValBool(FlagOptions, FLAG_DONTVTSWITCH, &xf86Info.dontVTSwitch);
     xf86GetOptValBool(FlagOptions, FLAG_DONTZAP, &xf86Info.dontZap);
     xf86GetOptValBool(FlagOptions, FLAG_DONTZOOM, &xf86Info.dontZoom);

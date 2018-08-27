@@ -155,8 +155,8 @@ extern _X_EXPORT EntityInfoPtr xf86GetEntityInfo(int entityIndex);
 extern _X_EXPORT Bool xf86IsEntityPrimary(int entityIndex);
 extern _X_EXPORT ScrnInfoPtr xf86FindScreenForEntity(int entityIndex);
 
-extern _X_EXPORT int xf86GetLastScrnFlag(int entityIndex);
-extern _X_EXPORT void xf86SetLastScrnFlag(int entityIndex, int scrnIndex);
+#define xf86SetLastScrnFlag(e, s) do { } while (0)
+
 extern _X_EXPORT Bool xf86IsEntityShared(int entityIndex);
 extern _X_EXPORT void xf86SetEntityShared(int entityIndex);
 extern _X_EXPORT Bool xf86IsEntitySharable(int entityIndex);

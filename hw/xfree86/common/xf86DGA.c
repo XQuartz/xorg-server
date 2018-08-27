@@ -268,16 +268,13 @@ DGACloseScreen(ScreenPtr pScreen)
     DGAScreenPtr pScreenPriv = DGA_GET_SCREEN_PRIV(pScreen);
 
     mieqSetHandler(ET_DGAEvent, NULL);
-
+    pScreenPriv->pScrn->SetDGAMode(pScreenPriv->pScrn, 0, NULL);
     FreeMarkedVisuals(pScreen);
 
     pScreen->CloseScreen = pScreenPriv->CloseScreen;
     pScreen->DestroyColormap = pScreenPriv->DestroyColormap;
     pScreen->InstallColormap = pScreenPriv->InstallColormap;
     pScreen->UninstallColormap = pScreenPriv->UninstallColormap;
-
-    /* DGAShutdown() should have ensured that no DGA
-       screen were active by here */
 
     free(pScreenPriv);
 
@@ -574,24 +571,6 @@ DGAActive(int index)
         return TRUE;
 
     return FALSE;
-}
-
-/* Called by the event code in case the server is abruptly terminated */
-
-void
-DGAShutdown(void)
-{
-    ScrnInfoPtr pScrn;
-    int i;
-
-    if (!DGAScreenKeyRegistered)
-        return;
-
-    for (i = 0; i < screenInfo.numScreens; i++) {
-        pScrn = xf86Screens[i];
-
-        (void) (*pScrn->SetDGAMode) (pScrn, 0, NULL);
-    }
 }
 
 /* Called by the extension to initialize a mode */

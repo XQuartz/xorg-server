@@ -57,9 +57,6 @@
 #include "systemd-logind.h"
 
 #include "loaderProcs.h"
-#ifdef XFreeXDGA
-#include "dgaproc.h"
-#endif
 
 #define XF86_OS_PRIVS
 #include "xf86.h"
@@ -883,10 +880,6 @@ ddxGiveUp(enum ExitCode error)
          */
         xf86Screens[i]->vtSema = FALSE;
     }
-
-#ifdef XFreeXDGA
-    DGAShutdown();
-#endif
 
     if (xorgHWOpenConsole)
         xf86CloseConsole();

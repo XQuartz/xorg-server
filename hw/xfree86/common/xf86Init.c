@@ -978,10 +978,6 @@ ddxProcessArgument(int argc, char **argv, int i)
         xf86ConfigDir = argv[i + 1];
         return 2;
     }
-    if (!strcmp(argv[i], "-flipPixels")) {
-        xf86FlipPixels = TRUE;
-        return 1;
-    }
 #ifdef XF86VIDMODE
     if (!strcmp(argv[i], "-disableVidMode")) {
         xf86VidModeDisabled = TRUE;
@@ -1257,7 +1253,6 @@ ddxUseMsg(void)
     ErrorF
         ("-pointer name          specify the core pointer InputDevice name\n");
     ErrorF("-nosilk                disable Silken Mouse\n");
-    ErrorF("-flipPixels            swap default black/white Pixel values\n");
 #ifdef XF86VIDMODE
     ErrorF("-disableVidMode        disable mode adjustments with xvidtune\n");
     ErrorF

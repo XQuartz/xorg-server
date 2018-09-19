@@ -9,12 +9,6 @@
 /* Builder address */
 #undef BUILDERADDR
 
-/* Operating System Name */
-#undef OSNAME
-
-/* Operating System Vendor */
-#undef OSVENDOR
-
 /* Builder string */
 #undef BUILDERSTRING
 

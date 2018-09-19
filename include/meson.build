@@ -52,7 +52,6 @@ conf_data.set('_GNU_SOURCE', '1')
 conf_data.set('HAS_APERTURE_DRV', host_machine.system() == 'openbsd')
 
 # XXX: BUNDLE_ID_PREFIX
-conf_data.set_quoted('OSNAME', 'Linux') # XXX
 
 if get_option('input_thread') == 'false'
   enable_input_thread = false
@@ -241,7 +240,6 @@ conf_data.set('DEBUG', enable_debugging)
 conf_data.set_quoted('XVENDORNAME', get_option('vendor_name'))
 conf_data.set_quoted('XVENDORNAMESHORT', get_option('vendor_name_short'))
 conf_data.set_quoted('__VENDORDWEBSUPPORT__', get_option('vendor_web'))
-conf_data.set_quoted('OSVENDOR', get_option('os_vendor'))
 conf_data.set_quoted('BUILDERADDR', get_option('builder_addr'))
 conf_data.set_quoted('BUILDERSTRING', get_option('builder_string'))
 

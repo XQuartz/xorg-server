@@ -70,11 +70,6 @@ conf_data.set('SYSTEMD_LOGIND', build_systemd_logind)
 conf_data.set('NEED_DBUS', build_systemd_logind or build_hal)
 conf_data.set('CONFIG_WSCONS', host_machine.system() == 'openbsd')
 
-# XXX: SHMDIR is weird in autoconf, probing the build system for
-# various tmp directories.  Could we replace it with C code at runtime
-# that just uses whatever directory works?
-conf_data.set_quoted('SHMDIR', '/tmp')
-
 conf_data.set('HAVE_XSHMFENCE', xshmfence_dep.found())
 conf_data.set('WITH_LIBDRM', libdrm_dep.found())
 conf_data.set('GLAMOR_HAS_EGL_QUERY_DMABUF',

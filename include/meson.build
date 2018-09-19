@@ -53,7 +53,17 @@ conf_data.set('HAS_APERTURE_DRV', host_machine.system() == 'openbsd')
 
 # XXX: BUNDLE_ID_PREFIX
 conf_data.set_quoted('OSNAME', 'Linux') # XXX
-conf_data.set('HAVE_INPUTTHREAD', '1') # XXX
+
+if get_option('input_thread') == 'false'
+  enable_input_thread = false
+else
+  enable_input_thread = cc.has_header_symbol('pthread.h',
+					     'PTHREAD_MUTEX_RECURSIVE')
+  if not enable_input_thread and get_option('input_thread') == 'true'
+    error('Input thread enabled and PTHREAD_MUTEX_RECURSIVE not found')
+  endif
+endif
+conf_data.set('HAVE_INPUTTHREAD', enable_input_thread)
 
 if cc.compiles('''
     #define _GNU_SOURCE 1

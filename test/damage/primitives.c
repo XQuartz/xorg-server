@@ -241,6 +241,18 @@ create_start_pixmap(struct test_setup *setup)
                       setup->start_drawable, setup->screen->root,
                       setup->width, setup->height);
 
+    /* Fill pixmap so it has defined contents */
+    xcb_gc_t fill = xcb_generate_id(setup->c);
+    uint32_t fill_values[]  = { setup->screen->white_pixel };
+    xcb_create_gc(setup->c, fill, setup->screen->root,
+                  XCB_GC_FOREGROUND, fill_values);
+
+    xcb_rectangle_t rect_all = { 0, 0, setup->width, setup->height};
+    xcb_poly_fill_rectangle(setup->c, setup->start_drawable,
+                            fill, 1, &rect_all);
+    xcb_free_gc(setup->c, fill);
+
+    /* Draw a rectangle */
     xcb_gc_t gc = xcb_generate_id(setup->c);
     uint32_t values[]  = { 0xaaaaaaaa };
     xcb_create_gc(setup->c, gc, setup->screen->root,

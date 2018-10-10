@@ -13,8 +13,7 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
     echo 'deb-src https://deb.debian.org/debian testing main' >/etc/apt/sources.list.d/deb-src.list && \
     apt-get update && \
     apt-get install -y meson git ca-certificates cmake automake autoconf libtool libwaffle-dev \
-        libxkbcommon-dev python-mako python-numpy python-six python3-mako python3-numpy python3-six \
-        x11-utils x11-xserver-utils xauth xvfb && \
+        libxkbcommon-dev python3-mako python3-numpy python3-six x11-utils x11-xserver-utils xauth xvfb && \
     apt-get build-dep -y xorg-server && \
     \
     cd /root && \
@@ -31,6 +30,6 @@ RUN export DEBIAN_FRONTEND=noninteractive; \
     find -name \*.a -o -name \*.o | xargs rm && \
     \
     apt-get purge -y git cmake automake autoconf libtool libwaffle-dev libxkbcommon-dev \
-        python3-mako python3-numpy python3-six x11-utils x11-xserver-utils xauth xvfb && \
+        x11-utils x11-xserver-utils xauth xvfb && \
     apt-get autoremove -y --purge && apt-get clean && \
     rm -f /var/lib/apt/lists/deb.debian.org_debian_dists_testing_*

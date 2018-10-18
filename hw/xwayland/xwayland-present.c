@@ -85,7 +85,8 @@ xwl_present_timer_callback(OsTimerPtr timer,
 static inline Bool
 xwl_present_has_events(struct xwl_present_window *xwl_present_window)
 {
-    return !xorg_list_is_empty(&xwl_present_window->event_list) ||
+    return !!xwl_present_window->sync_flip ||
+           !xorg_list_is_empty(&xwl_present_window->event_list) ||
            !xorg_list_is_empty(&xwl_present_window->release_queue);
 }
 
@@ -139,6 +140,16 @@ xwl_present_cleanup(WindowPtr window)
     }
 
     /* Clear remaining buffer releases and inform Present about free ressources */
+    event = xwl_present_window->sync_flip;
+    xwl_present_window->sync_flip = NULL;
+    if (event) {
+        if (event->buffer_released) {
+            free(event);
+        } else {
+            event->pending = FALSE;
+            event->abort = TRUE;
+        }
+    }
     xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->release_queue, list) {
         xorg_list_del(&event->list);
         event->abort = TRUE;
@@ -198,6 +209,24 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
     struct xwl_present_event    *event, *tmp;
 
     xwl_present_window->ust = GetTimeInMicros();
+
+    event = xwl_present_window->sync_flip;
+    xwl_present_window->sync_flip = NULL;
+    if (event) {
+        event->pending = FALSE;
+
+        present_wnmd_event_notify(xwl_present_window->window, event->event_id,
+                                  xwl_present_window->ust, msc);
+
+        if (event->buffer_released) {
+            /* If the buffer was already released, clean up now */
+            present_wnmd_event_notify(xwl_present_window->window, event->event_id,
+                                      xwl_present_window->ust, msc);
+            free(event);
+        } else {
+            xorg_list_add(&event->list, &xwl_present_window->release_queue);
+        }
+    }
 
     xorg_list_for_each_entry_safe(event, tmp,
                                   &xwl_present_window->event_list,
@@ -459,12 +488,17 @@ xwl_present_flip(WindowPtr present_window,
     event->event_id = event_id;
     event->xwl_present_window = xwl_present_window;
     event->buffer = buffer;
-    event->target_msc = xwl_present_window->msc;
+    event->target_msc = target_msc;
     event->pending = TRUE;
     event->abort = FALSE;
     event->buffer_released = FALSE;
 
-    xorg_list_add(&event->list, &xwl_present_window->release_queue);
+    if (sync_flip) {
+        xorg_list_init(&event->list);
+        xwl_present_window->sync_flip = event;
+    } else {
+        xorg_list_add(&event->list, &xwl_present_window->release_queue);
+    }
 
     if (buffer_created)
         wl_buffer_add_listener(buffer, &xwl_present_release_listener, NULL);
@@ -493,10 +527,13 @@ xwl_present_flip(WindowPtr present_window,
 
     wl_surface_commit(xwl_window->surface);
 
-    xwl_present_window->sync_callback = wl_display_sync(xwl_window->xwl_screen->display);
-    wl_callback_add_listener(xwl_present_window->sync_callback,
-                             &xwl_present_sync_listener,
-                             event);
+    if (!sync_flip) {
+        xwl_present_window->sync_callback =
+            wl_display_sync(xwl_window->xwl_screen->display);
+        wl_callback_add_listener(xwl_present_window->sync_callback,
+                                 &xwl_present_sync_listener,
+                                 event);
+    }
 
     wl_display_flush(xwl_window->xwl_screen->display);
     return TRUE;

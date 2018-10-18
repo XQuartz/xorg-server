@@ -192,10 +192,12 @@ static const struct wl_buffer_listener xwl_present_release_listener = {
 };
 
 static void
-xwl_present_events_notify(struct xwl_present_window *xwl_present_window)
+xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
 {
-    uint64_t                    msc = xwl_present_window->msc;
+    uint64_t msc = ++xwl_present_window->msc;
     struct xwl_present_event    *event, *tmp;
+
+    xwl_present_window->ust = GetTimeInMicros();
 
     xorg_list_for_each_entry_safe(event, tmp,
                                   &xwl_present_window->event_list,
@@ -218,10 +220,8 @@ xwl_present_timer_callback(OsTimerPtr timer,
     struct xwl_present_window *xwl_present_window = arg;
 
     xwl_present_window->frame_timer_firing = TRUE;
-    xwl_present_window->msc++;
-    xwl_present_window->ust = GetTimeInMicros();
 
-    xwl_present_events_notify(xwl_present_window);
+    xwl_present_msc_bump(xwl_present_window);
     xwl_present_reset_timer(xwl_present_window);
 
     return 0;
@@ -242,10 +242,7 @@ xwl_present_frame_callback(void *data,
         return;
     }
 
-    xwl_present_window->msc++;
-    xwl_present_window->ust = GetTimeInMicros();
-
-    xwl_present_events_notify(xwl_present_window);
+    xwl_present_msc_bump(xwl_present_window);
 
     /* we do not need the timer anymore for this frame,
      * reset it for potentially the next one

@@ -274,6 +274,9 @@ xwl_present_sync_callback(void *data,
     struct xwl_present_event *event = data;
     struct xwl_present_window *xwl_present_window = event->xwl_present_window;
 
+    wl_callback_destroy(xwl_present_window->sync_callback);
+    xwl_present_window->sync_callback = NULL;
+
     event->pending = FALSE;
 
     if (event->abort) {
@@ -289,12 +292,14 @@ xwl_present_sync_callback(void *data,
                               xwl_present_window->ust,
                               xwl_present_window->msc);
 
-    if (event->buffer_released)
+    if (event->buffer_released) {
         /* If the buffer was already released, send the event now again */
         present_wnmd_event_notify(xwl_present_window->window,
                                   event->event_id,
                                   xwl_present_window->ust,
                                   xwl_present_window->msc);
+        xwl_present_free_event(event);
+    }
 }
 
 static const struct wl_callback_listener xwl_present_sync_listener = {

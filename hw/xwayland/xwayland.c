@@ -984,15 +984,6 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     else
         xwl_screen->root_clip_mode = ROOT_CLIP_FULL;
 
-    if (listen_fd_count > 0) {
-        if (wm_fd >= 0) {
-            TimerSet(NULL, 0, 1, add_client_fd, NULL);
-            AddCallback(&SelectionCallback, wm_selection_callback, NULL);
-        } else {
-            listen_on_fds();
-        }
-    }
-
     xorg_list_init(&xwl_screen->output_list);
     xorg_list_init(&xwl_screen->seat_list);
     xorg_list_init(&xwl_screen->damage_window_list);
@@ -1161,4 +1152,13 @@ InitOutput(ScreenInfo * screen_info, int argc, char **argv)
     xorgGlxCreateVendor();
 
     LocalAccessScopeUser();
+
+    if (listen_fd_count > 0) {
+        if (wm_fd >= 0) {
+            TimerSet(NULL, 0, 1, add_client_fd, NULL);
+            AddCallback(&SelectionCallback, wm_selection_callback, NULL);
+        } else {
+            listen_on_fds();
+        }
+    }
 }

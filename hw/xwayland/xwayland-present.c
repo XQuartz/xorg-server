@@ -216,24 +216,15 @@ xwl_present_timer_callback(OsTimerPtr timer,
                            void *arg)
 {
     struct xwl_present_window *xwl_present_window = arg;
-    WindowPtr present_window = xwl_present_window->window;
-    struct xwl_window *xwl_window = xwl_window_from_window(present_window);
 
     xwl_present_window->frame_timer_firing = TRUE;
     xwl_present_window->msc++;
     xwl_present_window->ust = GetTimeInMicros();
 
     xwl_present_events_notify(xwl_present_window);
+    xwl_present_reset_timer(xwl_present_window);
 
-    if (xwl_present_has_events(xwl_present_window)) {
-        /* Still events, restart timer */
-        return xwl_present_is_flipping(present_window, xwl_window) ? TIMER_LEN_FLIP :
-                                                                     TIMER_LEN_COPY;
-    } else {
-        /* No more events, do not restart timer and delete it instead */
-        xwl_present_free_timer(xwl_present_window);
-        return 0;
-    }
+    return 0;
 }
 
 static void

@@ -182,7 +182,9 @@ struct xwl_window {
     struct xorg_list link_damage;
     struct wl_callback *frame_callback;
     Bool allow_commits;
-    WindowPtr present_window;
+#ifdef GLAMOR_HAS_GBM
+    Bool present_flipped;
+#endif
 };
 
 #ifdef GLAMOR_HAS_GBM

@@ -616,6 +616,11 @@ xwl_unrealize_window(WindowPtr window)
     xwl_screen->UnrealizeWindow = screen->UnrealizeWindow;
     screen->UnrealizeWindow = xwl_unrealize_window;
 
+#ifdef GLAMOR_HAS_GBM
+    if (xwl_screen->present)
+        xwl_present_unrealize_window(window);
+#endif
+
     xwl_window = xwl_window_get(window);
     if (!xwl_window)
         return ret;

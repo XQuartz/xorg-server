@@ -524,6 +524,22 @@ xwl_present_flips_stop(WindowPtr window)
     xwl_present_reset_timer(xwl_present_window);
 }
 
+void
+xwl_present_unrealize_window(WindowPtr window)
+{
+    struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
+
+    if (!xwl_present_window || !xwl_present_window->frame_callback)
+        return;
+
+    /* The pending frame callback may never be called, so drop it and shorten
+     * the frame timer interval.
+     */
+    wl_callback_destroy(xwl_present_window->frame_callback);
+    xwl_present_window->frame_callback = NULL;
+    xwl_present_reset_timer(xwl_present_window);
+}
+
 static present_wnmd_info_rec xwl_present_info = {
     .version = PRESENT_SCREEN_INFO_VERSION,
     .get_crtc = xwl_present_get_crtc,

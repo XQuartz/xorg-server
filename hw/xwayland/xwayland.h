@@ -454,6 +454,7 @@ void xwl_glamor_egl_make_current(struct xwl_screen *xwl_screen);
 #ifdef GLAMOR_HAS_GBM
 Bool xwl_present_init(ScreenPtr screen);
 void xwl_present_cleanup(WindowPtr window);
+void xwl_present_unrealize_window(WindowPtr window);
 #endif /* GLAMOR_HAS_GBM */
 
 #ifdef XV

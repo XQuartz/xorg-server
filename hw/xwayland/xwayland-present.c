@@ -350,12 +350,8 @@ xwl_present_queue_vblank(WindowPtr present_window,
                          uint64_t event_id,
                          uint64_t msc)
 {
-    struct xwl_window *xwl_window = xwl_window_from_window(present_window);
     struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(present_window);
     struct xwl_present_event *event;
-
-    if (!xwl_window)
-        return BadMatch;
 
     event = malloc(sizeof *event);
     if (!event)

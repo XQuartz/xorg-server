@@ -86,8 +86,7 @@ static inline Bool
 xwl_present_has_events(struct xwl_present_window *xwl_present_window)
 {
     return !!xwl_present_window->sync_flip ||
-           !xorg_list_is_empty(&xwl_present_window->event_list) ||
-           !xorg_list_is_empty(&xwl_present_window->release_queue);
+           !xorg_list_is_empty(&xwl_present_window->event_list);
 }
 
 static void

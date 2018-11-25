@@ -26,7 +26,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.20.3, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+AC_INIT([xorg-server], 1.20.3, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
 RELEASE_DATE="2018-10-25"
 RELEASE_NAME="Harissa Roasted Carrots"
 AC_CONFIG_SRCDIR([Makefile.am])

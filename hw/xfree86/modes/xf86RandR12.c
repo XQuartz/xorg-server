@@ -2019,7 +2019,7 @@ xf86RandR12ChangeGamma(ScrnInfoPtr pScrn, Gamma gamma)
     RRCrtcPtr randr_crtc = xf86CompatRRCrtc(pScrn);
     int size;
 
-    if (!randr_crtc)
+    if (!randr_crtc || pScrn->LoadPalette == xf86RandR12LoadPalette)
         return Success;
 
     size = max(0, randr_crtc->gammaSize);

@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# workaround for the docker image not being sufficiently python3 yet
+unset CI_COMMIT_TAG CI_COMMIT_MESSAGE CI_COMMIT_TITLE CI_COMMIT_DESCRIPTION
+
 set -e
 
 if test "x$XTEST_DIR" = "x"; then

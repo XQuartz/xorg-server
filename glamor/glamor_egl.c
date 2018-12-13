@@ -233,7 +233,7 @@ glamor_egl_create_textured_pixmap_from_gbm_bo(PixmapPtr pixmap,
     glamor_make_current(glamor_priv);
 
     image = eglCreateImageKHR(glamor_egl->display,
-                              glamor_egl->context,
+                              EGL_NO_CONTEXT,
                               EGL_NATIVE_PIXMAP_KHR, bo, NULL);
     if (image == EGL_NO_IMAGE_KHR) {
         glamor_set_pixmap_type(pixmap, GLAMOR_DRM_ONLY);

@@ -703,6 +703,7 @@ exaGetPixmapFirstPixel(PixmapPtr pPixmap)
 {
     switch (pPixmap->drawable.bitsPerPixel) {
     case 32:
+    case 24:
     {
         CARD32 pixel;
 

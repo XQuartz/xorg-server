@@ -780,15 +780,15 @@ glamor_render_format_is_supported(PicturePtr picture)
     storage_format = format_for_depth(picture->pDrawable->depth);
 
     switch (picture->format) {
-    case PICT_x2r10g10b10:
+    case PICT_a2r10g10b10:
         return storage_format == PICT_x2r10g10b10;
     case PICT_a8r8g8b8:
     case PICT_x8r8g8b8:
         return storage_format == PICT_a8r8g8b8 || storage_format == PICT_x8r8g8b8;
-    case PICT_a8:
-        return storage_format == PICT_a8;
+    case PICT_a1r5g5b5:
+        return storage_format == PICT_x1r5g5b5;
     default:
-        return FALSE;
+        return picture->format == storage_format;
     }
 }
 

@@ -700,6 +700,26 @@ xwl_save_screen(ScreenPtr pScreen, int on)
 }
 
 static void
+xwl_set_window_pixmap(WindowPtr window,
+                      PixmapPtr pixmap)
+{
+    ScreenPtr screen = window->drawable.pScreen;
+    struct xwl_screen *xwl_screen;
+
+    xwl_screen = xwl_screen_get(screen);
+
+    screen->SetWindowPixmap = xwl_screen->SetWindowPixmap;
+    (*screen->SetWindowPixmap) (window, pixmap);
+    xwl_screen->SetWindowPixmap = screen->SetWindowPixmap;
+    screen->SetWindowPixmap = xwl_set_window_pixmap;
+
+    if (!RegionNotEmpty(&window->winSize))
+        return;
+
+    ensure_surface_for_window(window);
+}
+
+static void
 frame_callback(void *data,
                struct wl_callback *callback,
                uint32_t time)
@@ -1184,6 +1204,11 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
 
     xwl_screen->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = xwl_close_screen;
+
+    if (xwl_screen->rootless) {
+        xwl_screen->SetWindowPixmap = pScreen->SetWindowPixmap;
+        pScreen->SetWindowPixmap = xwl_set_window_pixmap;
+    }
 
     pScreen->CursorWarpedTo = xwl_cursor_warped_to;
     pScreen->CursorConfinedTo = xwl_cursor_confined_to;

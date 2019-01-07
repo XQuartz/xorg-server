@@ -133,6 +133,7 @@ struct xwl_screen {
     UnrealizeWindowProcPtr UnrealizeWindow;
     DestroyWindowProcPtr DestroyWindow;
     XYToWindowProcPtr XYToWindow;
+    SetWindowPixmapProcPtr SetWindowPixmap;
 
     struct xorg_list output_list;
     struct xorg_list seat_list;

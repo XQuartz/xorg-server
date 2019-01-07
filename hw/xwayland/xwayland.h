@@ -175,7 +175,6 @@ struct xwl_window {
     struct wl_surface *surface;
     struct wl_shell_surface *shell_surface;
     WindowPtr window;
-    DamagePtr damage;
     struct xorg_list link_damage;
     struct wl_callback *frame_callback;
     Bool allow_commits;

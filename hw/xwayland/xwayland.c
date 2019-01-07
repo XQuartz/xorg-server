@@ -554,36 +554,25 @@ send_surface_id_event(struct xwl_window *xwl_window)
 }
 
 static Bool
-xwl_realize_window(WindowPtr window)
+ensure_surface_for_window(WindowPtr window)
 {
     ScreenPtr screen = window->drawable.pScreen;
     struct xwl_screen *xwl_screen;
     struct xwl_window *xwl_window;
     struct wl_region *region;
-    Bool ret;
+
+    if (xwl_window_get(window))
+        return TRUE;
 
     xwl_screen = xwl_screen_get(screen);
 
-    screen->RealizeWindow = xwl_screen->RealizeWindow;
-    ret = (*screen->RealizeWindow) (window);
-    xwl_screen->RealizeWindow = screen->RealizeWindow;
-    screen->RealizeWindow = xwl_realize_window;
-
-    if (xwl_screen->rootless && !window->parent) {
-        BoxRec box = { 0, 0, xwl_screen->width, xwl_screen->height };
-
-        RegionReset(&window->winSize, &box);
-        RegionNull(&window->clipList);
-        RegionNull(&window->borderClip);
-    }
-
     if (xwl_screen->rootless) {
         if (window->redirectDraw != RedirectDrawManual)
-            return ret;
+            return TRUE;
     }
     else {
         if (window->parent)
-            return ret;
+            return TRUE;
     }
 
     xwl_window = calloc(1, sizeof *xwl_window);
@@ -631,15 +620,12 @@ xwl_realize_window(WindowPtr window)
 
     compRedirectWindow(serverClient, window, CompositeRedirectManual);
 
-    if (!register_damage(window))
-        goto err_surf;
-
     dixSetPrivate(&window->devPrivates, &xwl_window_private_key, xwl_window);
     xorg_list_init(&xwl_window->link_damage);
 
     xwl_window_init_allow_commits(xwl_window);
 
-    return ret;
+    return TRUE;
 
 err_surf:
     if (xwl_window->shell_surface)
@@ -648,6 +634,42 @@ err_surf:
 err:
     free(xwl_window);
     return FALSE;
+}
+
+static Bool
+xwl_realize_window(WindowPtr window)
+{
+    ScreenPtr screen = window->drawable.pScreen;
+    struct xwl_screen *xwl_screen;
+    Bool ret;
+
+    xwl_screen = xwl_screen_get(screen);
+
+    screen->RealizeWindow = xwl_screen->RealizeWindow;
+    ret = (*screen->RealizeWindow) (window);
+    xwl_screen->RealizeWindow = screen->RealizeWindow;
+    screen->RealizeWindow = xwl_realize_window;
+
+    if (!ret)
+        return FALSE;
+
+    if (xwl_screen->rootless && !window->parent) {
+        BoxRec box = { 0, 0, xwl_screen->width, xwl_screen->height };
+
+        RegionReset(&window->winSize, &box);
+        RegionNull(&window->clipList);
+        RegionNull(&window->borderClip);
+    }
+
+    if (xwl_screen->rootless ?
+        (window->drawable.class == InputOutput &&
+         window->parent == window->drawable.pScreen->root) :
+        !window->parent) {
+        if (!register_damage(window))
+            return FALSE;
+    }
+
+    return ensure_surface_for_window(window);
 }
 
 static Bool

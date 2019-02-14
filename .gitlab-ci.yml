@@ -59,10 +59,19 @@ build-and-test:
         when: on_failure
         paths:
             - build/test/piglit-results/
+    cache:
+        paths:
+            - ccache/
     variables:
         LC_ALL: C.UTF-8
         PIGLIT_DIR: /root/piglit
         XTEST_DIR: /root/xts
+    before_script:
+        - export CCACHE_BASEDIR="$PWD"
+        - export CCACHE_DIR="$PWD/ccache"
+        - export CCACHE_COMPILERCHECK=content
+        - ccache --zero-stats
+        - ccache --show-stats
     script:
         - meson -Dprefix=/usr build/
         - |
@@ -74,3 +83,5 @@ build-and-test:
           cat build/meson-logs/testlog.txt
           cat build/test/piglit-results/xvfb/long-summary || :
           exit $status
+    after_script:
+        - CCACHE_DIR="$PWD/ccache" ccache --show-stats

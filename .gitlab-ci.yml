@@ -52,7 +52,7 @@ debian-testing:
           set -e
         - /kaniko/executor --context $CI_PROJECT_DIR/.gitlab-ci --destination $IMAGE_LOCAL
 
-build-and-test:
+.common-build-and-test:
     stage: build-and-test
     image: $IMAGE_LOCAL
     artifacts:
@@ -70,8 +70,29 @@ build-and-test:
         - export CCACHE_BASEDIR="$PWD"
         - export CCACHE_DIR="$PWD/ccache"
         - export CCACHE_COMPILERCHECK=content
+        - export PATH="/usr/lib/ccache:$PATH"
         - ccache --zero-stats
         - ccache --show-stats
+    after_script:
+        - CCACHE_DIR="$PWD/ccache" ccache --show-stats
+
+autotools-build-and-test:
+    extends: .common-build-and-test
+    script:
+        - mkdir build/
+        - cd build/
+        - |
+          ../autogen.sh --prefix=/usr
+          make -j$(nproc) install
+          set +e
+          set -x
+          make -j$(nproc) check
+          status=$?
+          cat test/piglit-results/xvfb/long-summary || :
+          exit $status
+
+meson-build-and-test:
+    extends: .common-build-and-test
     script:
         - meson -Dprefix=/usr build/
         - |
@@ -83,5 +104,3 @@ build-and-test:
           cat build/meson-logs/testlog.txt
           cat build/test/piglit-results/xvfb/long-summary || :
           exit $status
-    after_script:
-        - CCACHE_DIR="$PWD/ccache" ccache --show-stats

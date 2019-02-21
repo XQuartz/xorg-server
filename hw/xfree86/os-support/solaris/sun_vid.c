@@ -76,7 +76,11 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 void
 xf86OSInputThreadInit()
 {
-    return;
+    /*
+     * Need to enable in input thread as well, as Solaris kernel tracks
+     * IOPL per-thread and doesn't inherit when creating a new thread.
+     */
+    xf86EnableIO();
 }
 
 Bool

@@ -838,6 +838,15 @@ ddxGiveUp(enum ExitCode error)
     AbortDDX(error);
 }
 
+#if INPUTTHREAD
+/** This function is called in Xserver/os/inputthread.c when starting
+    the input thread. */
+void
+ddxInputThreadInit(void)
+{
+}
+#endif
+
 /** This function is called in Xserver/os/osinit.c from \a OsInit(). */
 void
 OsVendorInit(void)

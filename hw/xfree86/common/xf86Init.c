@@ -1451,5 +1451,6 @@ ddxBeforeReset(void)
 void
 ddxInputThreadInit(void)
 {
+    xf86OSInputThreadInit();
 }
 #endif

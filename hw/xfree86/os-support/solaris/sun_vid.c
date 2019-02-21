@@ -73,6 +73,12 @@ xf86OSInitVidMem(VidMemInfoPtr pVidMem)
 /* I/O Permissions section						   */
 /***************************************************************************/
 
+void
+xf86OSInputThreadInit()
+{
+    return;
+}
+
 Bool
 xf86EnableIO(void)
 {

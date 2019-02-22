@@ -13,7 +13,7 @@
 # container registry, so that the image from the main repository's registry
 # will be used there as well.
 variables:
-    IMAGE_TAG: "debian-testing-20181217"
+    IMAGE_TAG: "debian-testing-20190219"
     IMAGE_LOCAL: "$CI_REGISTRY_IMAGE:$IMAGE_TAG"
     IMAGE_MAIN: "registry.freedesktop.org/xorg/xserver:$IMAGE_TAG"
 

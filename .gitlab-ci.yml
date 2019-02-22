@@ -5,5 +5,23 @@ job:
         when: on_failure
         paths:
             - build/test/piglit-results/
+    variables:
+        PIGLIT_DIR: /root/piglit
+        XTEST_DIR: /root/xts
     script:
-        - ./test/scripts/build-travis-deps.sh
+        - |
+          cat > $PIGLIT_DIR/piglit.conf << _EOF_
+          [xts]
+          path=$XTEST_DIR
+          _EOF_
+        - cp test/tetexec.cfg $XTEST_DIR/xts5
+        - meson -Dprefix=/usr build/
+        - |
+          ninja -C build/ install
+          set +e
+          set -x
+          ninja -C build/ test
+          status=$?
+          cat build/meson-logs/testlog.txt
+          cat build/test/piglit-results/xvfb/long-summary || :
+          exit $status

@@ -15,8 +15,7 @@ cp test/tetexec.cfg $XTEST_DIR/xts5
 
 set -x
 
-meson setup build/
-meson configure -Dprefix=$PREFIX build/
+meson -Dprefix=$PREFIX build/
 ninja -C build/ install
 ninja -C build/ test
 

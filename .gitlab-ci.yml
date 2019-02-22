@@ -1,5 +1,9 @@
 image: nwnk/xserver-travis-rawhide:v5
 
 job:
+    artifacts:
+        when: on_failure
+        paths:
+            - build/test/piglit-results/
     script:
         - ./test/scripts/build-travis-deps.sh

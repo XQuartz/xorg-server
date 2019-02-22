@@ -56,6 +56,7 @@ build-and-test:
         paths:
             - build/test/piglit-results/
     variables:
+        LC_ALL: C.UTF-8
         PIGLIT_DIR: /root/piglit
         XTEST_DIR: /root/xts
     script:

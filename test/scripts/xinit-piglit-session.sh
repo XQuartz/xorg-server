@@ -32,4 +32,4 @@ PIGLIT_ARGS="$PIGLIT_ARGS -x xloadqueryfont@1"
 PIGLIT_ARGS="$PIGLIT_ARGS -x xqueryfont@1"
 PIGLIT_ARGS="$PIGLIT_ARGS -x xqueryfont@2"
 
-exec ./piglit-run.py xts-render $PIGLIT_ARGS $PIGLIT_RESULTS_DIR
+exec ./piglit run xts-render $PIGLIT_ARGS $PIGLIT_RESULTS_DIR

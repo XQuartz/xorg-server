@@ -26,7 +26,7 @@ dnl
 dnl Process this file with autoconf to create configure.
 
 AC_PREREQ(2.60)
-AC_INIT([xorg-server], 1.19.6, [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg], xorg-server)
+AC_INIT([xorg-server], 1.19.6, [https://gitlab.freedesktop.org/xorg/xserver/issues], xorg-server)
 RELEASE_DATE="2017-12-20"
 RELEASE_NAME="Lousiana Gumbo"
 AC_CONFIG_SRCDIR([Makefile.am])

@@ -88,10 +88,27 @@ glamor_prep_pixmap_box(PixmapPtr pixmap, glamor_access_t access, BoxPtr box)
 
             gl_usage = GL_STREAM_READ;
 
+            glamor_priv->suppress_gl_out_of_memory_logging = true;
+
             glBindBuffer(GL_PIXEL_PACK_BUFFER, priv->pbo);
             glBufferData(GL_PIXEL_PACK_BUFFER,
                          pixmap->devKind * pixmap->drawable.height, NULL,
                          gl_usage);
+
+            glamor_priv->suppress_gl_out_of_memory_logging = false;
+
+            if (glGetError() == GL_OUT_OF_MEMORY) {
+                if (!glamor_priv->logged_any_pbo_allocation_failure) {
+                    LogMessageVerb(X_WARNING, 0, "glamor: Failed to allocate %d "
+                                   "bytes PBO due to GL_OUT_OF_MEMORY.\n",
+                                   pixmap->devKind * pixmap->drawable.height);
+                    glamor_priv->logged_any_pbo_allocation_failure = true;
+                }
+                glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
+                glDeleteBuffers(1, &priv->pbo);
+                priv->pbo = 0;
+                return FALSE;
+            }
         } else {
             pixmap->devPrivate.ptr = xallocarray(pixmap->devKind,
                                                  pixmap->drawable.height);

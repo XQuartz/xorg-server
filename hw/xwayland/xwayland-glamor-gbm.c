@@ -183,11 +183,7 @@ xwl_glamor_gbm_create_pixmap_for_bo(ScreenPtr screen, struct gbm_bo *bo,
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    glamor_set_pixmap_texture(pixmap, xwl_pixmap->texture);
-    /* `set_pixmap_texture()` may fail silently if the FBO creation failed,
-     * so we check again the texture to be sure it worked.
-     */
-    if (!glamor_get_pixmap_texture(pixmap))
+    if (!glamor_set_pixmap_texture(pixmap, xwl_pixmap->texture))
       goto error;
 
     glamor_set_pixmap_type(pixmap, GLAMOR_TEXTURE_DRM);

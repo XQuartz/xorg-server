@@ -53,7 +53,7 @@ if build_xorg
         unit_defines += ['-DRES_TESTS']
     endif
 
-    if meson.version().version_compare('>=0.46.0') and meson.get_compiler('c').has_link_argument('-Wl,-wrap')
+    if meson.get_compiler('c').has_link_argument('-Wl,-wrap')
        unit_sources += [
         'xi1/protocol-xchangedevicecontrol.c',
         'xi2/protocol-common.c',

@@ -110,12 +110,10 @@ compCheckBackingStore(WindowPtr pWin)
 {
     if (pWin->backingStore != NotUseful) {
         compRedirectWindow(serverClient, pWin, CompositeRedirectAutomatic);
-        pWin->backStorage = TRUE;
     }
     else {
         compUnredirectWindow(serverClient, pWin,
                              CompositeRedirectAutomatic);
-        pWin->backStorage = FALSE;
     }
 }
 

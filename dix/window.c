@@ -1328,6 +1328,12 @@ ChangeWindowAttributes(WindowPtr pWin, Mask vmask, XID *vlist, ClientPtr client)
                 client->errorValue = val;
                 goto PatchUp;
             }
+            /* if we're not actually changing the window's state, hide
+             * CWBackingStore from vmaskCopy so it doesn't get passed to
+             * ->ChangeWindowAttributes below
+             */
+            if (pWin->backingStore == val)
+                continue;
             pWin->backingStore = val;
             break;
         case CWBackingPlanes:

@@ -184,9 +184,6 @@ def parse_fdi(fdi):
     # find all <match> leaf nodes
     num = 0
     for match_node in fdi.getElementsByTagName('match'):
-        children = set([n.tagName for n in match_node.childNodes
-                if n.nodeType == xml.dom.minidom.Node.ELEMENT_NODE])
-
         # see if there are any options at this level
         (driver, ignore, options) = parse_options(match_node)
         if not driver and not ignore and not options:

@@ -1352,8 +1352,7 @@ xf86ValidateModes(ScrnInfoPtr scrp, DisplayModePtr availModes,
     int saveType;
     PixmapFormatRec *BankFormat;
     ClockRangePtr cp;
-    int numTimings = 0;
-    range hsync[MAX_HSYNC];
+    const int numTimings = 0;
     range vrefresh[MAX_VREFRESH];
     Bool inferred_virtual = FALSE;
 
@@ -1394,18 +1393,9 @@ xf86ValidateModes(ScrnInfoPtr scrp, DisplayModePtr availModes,
         Bool specified = FALSE;
 
         if (scrp->monitor->nHsync <= 0) {
-            if (numTimings > 0) {
-                scrp->monitor->nHsync = numTimings;
-                for (i = 0; i < numTimings; i++) {
-                    scrp->monitor->hsync[i].lo = hsync[i].lo;
-                    scrp->monitor->hsync[i].hi = hsync[i].hi;
-                }
-            }
-            else {
-                scrp->monitor->hsync[0].lo = 31.5;
-                scrp->monitor->hsync[0].hi = 48.0;
-                scrp->monitor->nHsync = 1;
-            }
+            scrp->monitor->hsync[0].lo = 31.5;
+            scrp->monitor->hsync[0].hi = 48.0;
+            scrp->monitor->nHsync = 1;
             type = "default ";
         }
         else {

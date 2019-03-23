@@ -150,7 +150,7 @@ def parse_all_matches(node):
 
         # walk up to a parent match node
         node = node.parentNode
-        if node == None or not is_match_node(node):
+        if node is None or not is_match_node(node):
             break
 
         # leave if there other options at this level

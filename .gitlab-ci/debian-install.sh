@@ -5,8 +5,13 @@ set -o xtrace
 
 echo 'deb-src https://deb.debian.org/debian testing main' > /etc/apt/sources.list.d/deb-src.list
 apt-get update
-apt-get install -y meson git ca-certificates ccache cmake automake autoconf libtool libwaffle-dev \
-    libxkbcommon-dev python3-mako python3-numpy python3-six x11-utils x11-xserver-utils xauth xvfb
+apt-get install -y \
+	meson git ca-certificates ccache cmake automake \
+	autoconf libtool libwaffle-dev \
+	libxkbcommon-dev python3-mako python3-numpy python3-six \
+	x11-utils x11-xserver-utils xauth xvfb \
+        libgl1 libglx-mesa0
+
 apt-get build-dep -y xorg-server
 
 cd /root

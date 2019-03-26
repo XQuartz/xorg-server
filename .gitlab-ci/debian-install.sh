@@ -15,9 +15,9 @@ apt-get build-dep -y xorg-server
 
 cd /root
 
-git clone https://gitlab.freedesktop.org/mesa/piglit.git
+git clone https://gitlab.freedesktop.org/mesa/piglit.git --depth 1
 
-git clone https://gitlab.freedesktop.org/xorg/test/xts
+git clone https://gitlab.freedesktop.org/xorg/test/xts --depth 1
 cd xts
 ./autogen.sh
 xvfb-run make -j$(nproc)

@@ -78,7 +78,7 @@ meson-build-and-test:
         PIGLIT_DIR: /root/piglit
         XTEST_DIR: /root/xts
     script:
-        - meson -Dprefix=/usr build/
+        - meson -Dprefix=/usr -Dxephyr=true build/
         - |
           ninja -C build/ install
           ninja -C build/ test

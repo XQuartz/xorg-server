@@ -529,7 +529,7 @@ glamor_set_composite_texture(glamor_screen_private *glamor_priv, int unit,
      * sometimes get zero bits in the R channel, which is harmless.
      */
     glamor_bind_texture(glamor_priv, GL_TEXTURE0 + unit, fbo,
-                        glamor_fbo_red_is_alpha(glamor_priv, dest_priv->fbo));
+                        dest_priv->fbo->is_red);
     repeat_type = picture->repeatType;
     switch (picture->repeatType) {
     case RepeatNone:

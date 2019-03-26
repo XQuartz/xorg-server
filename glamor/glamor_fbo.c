@@ -95,7 +95,7 @@ glamor_pixmap_ensure_fb(glamor_screen_private *glamor_priv,
 
 glamor_pixmap_fbo *
 glamor_create_fbo_from_tex(glamor_screen_private *glamor_priv,
-                           int w, int h, GLenum format, GLint tex, int flag)
+                           int w, int h, Bool is_red, GLint tex, int flag)
 {
     glamor_pixmap_fbo *fbo;
 
@@ -106,7 +106,7 @@ glamor_create_fbo_from_tex(glamor_screen_private *glamor_priv,
     fbo->tex = tex;
     fbo->width = w;
     fbo->height = h;
-    fbo->format = format;
+    fbo->is_red = is_red;
 
     if (flag != GLAMOR_CREATE_FBO_NO_FBO) {
         if (glamor_pixmap_ensure_fb(glamor_priv, fbo) != 0) {
@@ -163,7 +163,8 @@ glamor_create_fbo(glamor_screen_private *glamor_priv,
     if (!tex) /* Texture creation failed due to GL_OUT_OF_MEMORY */
         return NULL;
 
-    return glamor_create_fbo_from_tex(glamor_priv, w, h, format, tex, flag);
+    return glamor_create_fbo_from_tex(glamor_priv, w, h, format == GL_RED,
+                                      tex, flag);
 }
 
 /**

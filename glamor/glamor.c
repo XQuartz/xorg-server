@@ -169,8 +169,7 @@ glamor_bind_texture(glamor_screen_private *glamor_priv, GLenum texture,
     /* Is the operand a GL_RED fbo?
      */
 
-    if (glamor_fbo_red_is_alpha(glamor_priv, fbo)) {
-
+    if (fbo->is_red) {
         /* If destination is also GL_RED, then preserve the bits in
          * the R channel */
 

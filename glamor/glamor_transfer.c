@@ -40,7 +40,7 @@ glamor_format_for_pixmap(PixmapPtr pixmap, GLenum *format, GLenum *type)
         break;
     case 16:
         if (priv->is_cbcr) {
-          *format = priv->fbo->format;
+          *format = GL_RG;
           *type = GL_UNSIGNED_BYTE;
         } else {
           *format = GL_RGB;

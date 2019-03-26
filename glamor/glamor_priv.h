@@ -311,8 +311,7 @@ typedef struct glamor_pixmap_fbo {
     GLuint fb; /**< GL FBO name */
     int width; /**< width in pixels */
     int height; /**< height in pixels */
-    GLenum format; /**< GL format used to create the texture. */
-    GLenum type; /**< GL type used to create the texture. */
+    Bool is_red;
 } glamor_pixmap_fbo;
 
 typedef struct glamor_pixmap_clipped_regions {
@@ -527,7 +526,7 @@ glamor_pixmap_fbo *glamor_pixmap_detach_fbo(glamor_pixmap_private *
 void glamor_pixmap_attach_fbo(PixmapPtr pixmap, glamor_pixmap_fbo *fbo);
 glamor_pixmap_fbo *glamor_create_fbo_from_tex(glamor_screen_private *
                                               glamor_priv, int w, int h,
-                                              GLenum format, GLint tex,
+                                              Bool is_red, GLint tex,
                                               int flag);
 glamor_pixmap_fbo *glamor_create_fbo(glamor_screen_private *glamor_priv, int w,
                                      int h, GLenum format, int flag);
@@ -540,14 +539,6 @@ Bool glamor_pixmap_fbo_fixup(ScreenPtr screen, PixmapPtr pixmap);
 static inline Bool glamor_picture_is_alpha(PicturePtr picture)
 {
     return picture->format == PICT_a1 || picture->format == PICT_a8;
-}
-
-/* Return whether 'fbo' is storing alpha bits in the red channel */
-static inline Bool
-glamor_fbo_red_is_alpha(glamor_screen_private *glamor_priv, glamor_pixmap_fbo *fbo)
-{
-    /* True when the format is GL_RED (that can only happen when our one channel format is GL_RED */
-    return fbo->format == GL_RED;
 }
 
 /* Return whether 'picture' is storing alpha bits in the red channel */

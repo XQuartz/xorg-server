@@ -23,6 +23,12 @@ cd xts
 xvfb-run make -j$(nproc)
 cd ..
 
+git clone https://gitlab.freedesktop.org/xorg/test/rendercheck --depth 1
+cd rendercheck
+meson build
+ninja -C build install
+cd ..
+
 rm -rf piglit/.git xts/.git
 
 echo '[xts]' > piglit/piglit.conf

@@ -154,11 +154,6 @@ enum gradient_shader {
 struct glamor_screen_private;
 struct glamor_pixmap_private;
 
-enum glamor_gl_flavor {
-    GLAMOR_GL_DESKTOP,          // OPENGL API
-    GLAMOR_GL_ES2               // OPENGL ES2.0 API
-};
-
 #define GLAMOR_COMPOSITE_VBO_VERT_CNT (64*1024)
 
 struct glamor_saved_procs {
@@ -184,7 +179,7 @@ struct glamor_saved_procs {
 };
 
 typedef struct glamor_screen_private {
-    enum glamor_gl_flavor gl_flavor;
+    Bool is_gles;
     int glsl_version;
     Bool has_pack_invert;
     Bool has_fbo_blit;

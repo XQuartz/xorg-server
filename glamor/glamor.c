@@ -495,10 +495,8 @@ glamor_init(ScreenPtr screen, unsigned int flags)
 
     glamor_make_current(glamor_priv);
 
-    if (epoxy_is_desktop_gl())
-        glamor_priv->gl_flavor = GLAMOR_GL_DESKTOP;
-    else
-        glamor_priv->gl_flavor = GLAMOR_GL_ES2;
+    if (!epoxy_is_desktop_gl())
+        glamor_priv->is_gles = TRUE;
 
     gl_version = epoxy_gl_version();
 
@@ -530,7 +528,7 @@ glamor_init(ScreenPtr screen, unsigned int flags)
     }
     glamor_priv->glsl_version = glsl_major * 100 + glsl_minor;
 
-    if (glamor_priv->gl_flavor == GLAMOR_GL_ES2) {
+    if (glamor_priv->is_gles) {
         /* Force us back to the base version of our programs on an ES
          * context, anyway.  Basically glamor only uses desktop 1.20
          * or 1.30 currently.  1.30's new features are also present in
@@ -554,7 +552,7 @@ glamor_init(ScreenPtr screen, unsigned int flags)
      * have support for it, with most of the ones lacking it being on
      * Windows with Intel 4-series (G45) graphics or older.
      */
-    if (glamor_priv->gl_flavor == GLAMOR_GL_DESKTOP) {
+    if (!glamor_priv->is_gles) {
         if (gl_version < 21) {
             ErrorF("Require OpenGL version 2.1 or later.\n");
             goto fail;
@@ -600,7 +598,7 @@ glamor_init(ScreenPtr screen, unsigned int flags)
     }
 
     glamor_priv->has_rw_pbo = FALSE;
-    if (glamor_priv->gl_flavor == GLAMOR_GL_DESKTOP)
+    if (!glamor_priv->is_gles)
         glamor_priv->has_rw_pbo = TRUE;
 
     glamor_priv->has_khr_debug = epoxy_has_gl_extension("GL_KHR_debug");
@@ -618,11 +616,11 @@ glamor_init(ScreenPtr screen, unsigned int flags)
     glamor_priv->has_nv_texture_barrier =
         epoxy_has_gl_extension("GL_NV_texture_barrier");
     glamor_priv->has_unpack_subimage =
-        glamor_priv->gl_flavor == GLAMOR_GL_DESKTOP ||
+        !glamor_priv->is_gles ||
         epoxy_gl_version() >= 30 ||
         epoxy_has_gl_extension("GL_EXT_unpack_subimage");
     glamor_priv->has_pack_subimage =
-        glamor_priv->gl_flavor == GLAMOR_GL_DESKTOP ||
+        !glamor_priv->is_gles ||
         epoxy_gl_version() >= 30 ||
         epoxy_has_gl_extension("GL_NV_pack_subimage");
     glamor_priv->has_dual_blend =
@@ -632,7 +630,7 @@ glamor_init(ScreenPtr screen, unsigned int flags)
 
     glamor_setup_debug_output(screen);
 
-    glamor_priv->use_quads = (glamor_priv->gl_flavor == GLAMOR_GL_DESKTOP) &&
+    glamor_priv->use_quads = !glamor_priv->is_gles &&
                              !glamor_priv->is_core_profile;
 
     /* Driver-specific hack: Avoid using GL_QUADS on VC4, where
@@ -654,7 +652,7 @@ glamor_init(ScreenPtr screen, unsigned int flags)
 
     glamor_priv->has_texture_swizzle =
         (epoxy_has_gl_extension("GL_ARB_texture_swizzle") ||
-         (glamor_priv->gl_flavor != GLAMOR_GL_DESKTOP && gl_version >= 30));
+         (glamor_priv->is_gles && gl_version >= 30));
 
     glamor_priv->one_channel_format = GL_ALPHA;
     if (epoxy_has_gl_extension("GL_ARB_texture_rg") &&

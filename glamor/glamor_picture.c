@@ -340,7 +340,7 @@ glamor_upload_picture_to_texture(PicturePtr picture)
     else
         iformat = format;
 
-    if (!glamor_pixmap_ensure_fbo(pixmap, iformat, GLAMOR_CREATE_FBO_NO_FBO)) {
+    if (!glamor_pixmap_ensure_fbo(pixmap, GLAMOR_CREATE_FBO_NO_FBO)) {
         ret = FALSE;
         goto fail;
     }

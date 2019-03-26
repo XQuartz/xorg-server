@@ -525,11 +525,11 @@ glamor_pixmap_fbo *glamor_pixmap_detach_fbo(glamor_pixmap_private *
                                             pixmap_priv);
 void glamor_pixmap_attach_fbo(PixmapPtr pixmap, glamor_pixmap_fbo *fbo);
 glamor_pixmap_fbo *glamor_create_fbo_from_tex(glamor_screen_private *
-                                              glamor_priv, int w, int h,
-                                              Bool is_red, GLint tex,
+                                              glamor_priv, PixmapPtr pixmap,
+                                              int w, int h, GLint tex,
                                               int flag);
-glamor_pixmap_fbo *glamor_create_fbo(glamor_screen_private *glamor_priv, int w,
-                                     int h, GLenum format, int flag);
+glamor_pixmap_fbo *glamor_create_fbo(glamor_screen_private *glamor_priv,
+                                     PixmapPtr pixmap, int w, int h, int flag);
 void glamor_destroy_fbo(glamor_screen_private *glamor_priv,
                         glamor_pixmap_fbo *fbo);
 void glamor_pixmap_destroy_fbo(PixmapPtr pixmap);
@@ -556,7 +556,7 @@ void glamor_bind_texture(glamor_screen_private *glamor_priv,
                          Bool destination_red);
 
 glamor_pixmap_fbo *glamor_create_fbo_array(glamor_screen_private *glamor_priv,
-                                           int w, int h, GLenum format,
+                                           PixmapPtr pixmap,
                                            int flag, int block_w, int block_h,
                                            glamor_pixmap_private *);
 
@@ -666,7 +666,7 @@ glamor_put_vbo_space(ScreenPtr screen);
  * the fbo has valid texture and attach to a valid fb.
  * If the fbo already has a valid glfbo then do nothing.
  */
-Bool glamor_pixmap_ensure_fbo(PixmapPtr pixmap, GLenum format, int flag);
+Bool glamor_pixmap_ensure_fbo(PixmapPtr pixmap, int flag);
 
 glamor_pixmap_clipped_regions *
 glamor_compute_clipped_regions(PixmapPtr pixmap,

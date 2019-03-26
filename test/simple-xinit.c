@@ -210,7 +210,13 @@ parse_args(int argc, char **argv,
             continue;
         }
 
-        *next_arg = argv[i];
+        /* A sort of escaped "--" argument so we can nest server
+         * invocations for testing.
+         */
+        if (strcmp(argv[i], "----") == 0)
+            *next_arg = (char *)"--";
+        else
+            *next_arg = argv[i];
         next_arg++;
     }
 

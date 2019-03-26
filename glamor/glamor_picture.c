@@ -83,7 +83,7 @@ glamor_get_tex_format_type_from_pictformat(ScreenPtr pScreen,
 
     switch (format) {
     case PICT_a1:
-        *tex_format = glamor_priv->one_channel_format;
+        *tex_format = glamor_priv->formats[1].format;
         *tex_type = GL_UNSIGNED_BYTE;
         *temp_format = PICT_a8;
         break;
@@ -195,7 +195,7 @@ glamor_get_tex_format_type_from_pictformat(ScreenPtr pScreen,
         break;
 
     case PICT_a8:
-        *tex_format = glamor_priv->one_channel_format;
+        *tex_format = glamor_priv->formats[8].format;
         *tex_type = GL_UNSIGNED_BYTE;
         break;
 
@@ -286,6 +286,7 @@ glamor_upload_picture_to_texture(PicturePtr picture)
     Bool ret = TRUE;
     Bool needs_swizzle;
     pixman_image_t *converted_image = NULL;
+    const struct glamor_format *f = glamor_format_for_pixmap(pixmap);
 
     assert(glamor_pixmap_is_memory(pixmap));
     assert(!pixmap_priv->fbo);
@@ -336,7 +337,7 @@ glamor_upload_picture_to_texture(PicturePtr picture)
     }
 
     if (!glamor_priv->is_gles)
-        iformat = gl_iformat_for_pixmap(pixmap);
+        iformat = f->internalformat;
     else
         iformat = format;
 

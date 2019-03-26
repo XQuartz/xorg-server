@@ -156,6 +156,21 @@ struct glamor_pixmap_private;
 
 #define GLAMOR_COMPOSITE_VBO_VERT_CNT (64*1024)
 
+struct glamor_format {
+    /** X Server's "depth" value */
+    int depth;
+    /** GL internalformat for creating textures of this type */
+    GLenum internalformat;
+    /** GL format transferring pixels in/out of textures of this type. */
+    GLenum format;
+    /** GL type transferring pixels in/out of textures of this type. */
+    GLenum type;
+    /* Render PICT_* matching GL's channel layout for pixels
+     * transferred using format/type.
+     */
+    CARD32 render_format;
+};
+
 struct glamor_saved_procs {
     CloseScreenProcPtr close_screen;
     CreateGCProcPtr create_gc;
@@ -198,7 +213,8 @@ typedef struct glamor_screen_private {
     Bool can_copyplane;
     int max_fbo_size;
 
-    GLuint one_channel_format;
+    struct glamor_format formats[33];
+    struct glamor_format cbcr_format;
 
     /* glamor point shader */
     glamor_program point_prog;
@@ -535,6 +551,8 @@ void glamor_destroy_fbo(glamor_screen_private *glamor_priv,
 void glamor_pixmap_destroy_fbo(PixmapPtr pixmap);
 Bool glamor_pixmap_fbo_fixup(ScreenPtr screen, PixmapPtr pixmap);
 
+const struct glamor_format *glamor_format_for_pixmap(PixmapPtr pixmap);
+
 /* Return whether 'picture' is alpha-only */
 static inline Bool glamor_picture_is_alpha(PicturePtr picture)
 {
@@ -547,7 +565,7 @@ glamor_picture_red_is_alpha(PicturePtr picture)
 {
     /* True when the picture is alpha only and the screen is using GL_RED for alpha pictures */
     return glamor_picture_is_alpha(picture) &&
-        glamor_get_screen_private(picture->pDrawable->pScreen)->one_channel_format == GL_RED;
+        glamor_get_screen_private(picture->pDrawable->pScreen)->formats[8].format == GL_RED;
 }
 
 void glamor_bind_texture(glamor_screen_private *glamor_priv,

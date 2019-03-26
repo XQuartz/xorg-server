@@ -97,7 +97,7 @@ glamor_pixmap_fbo *
 glamor_create_fbo_from_tex(glamor_screen_private *glamor_priv,
                            PixmapPtr pixmap, int w, int h, GLint tex, int flag)
 {
-    GLenum format = gl_iformat_for_pixmap(pixmap);
+    const struct glamor_format *f = glamor_format_for_pixmap(pixmap);
     glamor_pixmap_fbo *fbo;
 
     fbo = calloc(1, sizeof(*fbo));
@@ -107,7 +107,7 @@ glamor_create_fbo_from_tex(glamor_screen_private *glamor_priv,
     fbo->tex = tex;
     fbo->width = w;
     fbo->height = h;
-    fbo->is_red = format == GL_RED;
+    fbo->is_red = f->format == GL_RED;
 
     if (flag != GLAMOR_CREATE_FBO_NO_FBO) {
         if (glamor_pixmap_ensure_fb(glamor_priv, fbo) != 0) {
@@ -123,23 +123,19 @@ static int
 _glamor_create_tex(glamor_screen_private *glamor_priv,
                    PixmapPtr pixmap, int w, int h)
 {
-    GLenum iformat = gl_iformat_for_pixmap(pixmap);
-    GLenum format = iformat;
+    const struct glamor_format *f = glamor_format_for_pixmap(pixmap);
     unsigned int tex;
-
-    if (format == GL_RGB10_A2)
-        format = GL_RGBA;
 
     glamor_make_current(glamor_priv);
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    if (format == glamor_priv->one_channel_format && format == GL_RED)
+    if (f->format == GL_RED)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
     glamor_priv->suppress_gl_out_of_memory_logging = true;
-    glTexImage2D(GL_TEXTURE_2D, 0, iformat, w, h, 0,
-                 format, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, f->internalformat, w, h, 0,
+                 f->format, f->type, NULL);
     glamor_priv->suppress_gl_out_of_memory_logging = false;
 
     if (glGetError() == GL_OUT_OF_MEMORY) {

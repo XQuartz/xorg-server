@@ -197,7 +197,7 @@ glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
              w <= glamor_priv->glyph_max_dim &&
              h <= glamor_priv->glyph_max_dim)
          || (w == 0 && h == 0)
-         || !glamor_check_pixmap_fbo_depth(depth)))
+         || !glamor_priv->formats[depth].format))
         return fbCreatePixmap(screen, w, h, depth, usage);
     else
         pixmap = fbCreatePixmap(screen, 0, 0, depth, usage);
@@ -425,6 +425,165 @@ glamor_setup_debug_output(ScreenPtr screen)
         glEnable(GL_DEBUG_OUTPUT);
 }
 
+const struct glamor_format *
+glamor_format_for_pixmap(PixmapPtr pixmap)
+{
+    ScreenPtr pScreen = pixmap->drawable.pScreen;
+    glamor_screen_private *glamor_priv = glamor_get_screen_private(pScreen);
+    glamor_pixmap_private *pixmap_priv = glamor_get_pixmap_private(pixmap);
+
+    if (pixmap_priv->is_cbcr)
+        return &glamor_priv->cbcr_format;
+    else
+        return &glamor_priv->formats[pixmap->drawable.depth];
+}
+
+static void
+glamor_add_format(ScreenPtr screen, int depth, CARD32 render_format,
+                  GLenum internalformat, GLenum format, GLenum type)
+{
+    glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
+    struct glamor_format *f = &glamor_priv->formats[depth];
+
+    /* If we're trying to run on GLES, make sure that we get the read
+     * formats that we're expecting, since glamor_transfer relies on
+     * them matching to get data back out.  To avoid this limitation, we
+     * would need to have a more general glReadPixels() path in
+     * glamor_transfer that re-encoded the bits to the pixel format that
+     * we intended after.
+     *
+     * Note that we can't just create a pixmap because we're in
+     * screeninit.
+     */
+    if (glamor_priv->is_gles) {
+        unsigned fbo, tex;
+        int read_format, read_type;
+        GLenum status;
+
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 1, 1, 0,
+                     format, type, NULL);
+
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, tex, 0);
+        status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            ErrorF("glamor: Test fbo for depth %d incomplete.  "
+                   "Falling back to software.\n", depth);
+            glDeleteTextures(1, &tex);
+            glDeleteFramebuffers(1, &fbo);
+            return;
+        }
+
+        glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_FORMAT, &read_format);
+        glGetIntegerv(GL_IMPLEMENTATION_COLOR_READ_TYPE, &read_type);
+
+        glDeleteTextures(1, &tex);
+        glDeleteFramebuffers(1, &fbo);
+
+        if (format != read_format || type != read_type) {
+            ErrorF("glamor: Implementation returned 0x%x/0x%x read format/type "
+                   "for depth %d, expected 0x%x/0x%x.  "
+                   "Falling back to software.\n",
+                   read_format, read_type, depth, format, type);
+            return;
+        }
+    }
+
+    f->depth = depth;
+    f->render_format = render_format;
+    f->internalformat = internalformat;
+    f->format = format;
+    f->type = type;
+}
+
+/* Set up the GL format/types that glamor will use for the various depths
+ *
+ * X11's pixel data doesn't have channels, but to store our data in GL
+ * we have to pick some sort of format to move X11 pixel data in and
+ * out with in glamor_transfer.c.  For X11 core operations, other than
+ * GL logic ops (non-GXcopy GC ops) what the driver chooses internally
+ * doesn't matter as long as it doesn't drop any bits (we expect them
+ * to generally expand, if anything).  For Render, we can expect
+ * clients to tend to render with PictFormats matching our channel
+ * layouts here since ultimately X11 pixels tend to end up on the
+ * screen.  The render implementation will fall back to fb if the
+ * channels don't match.
+ *
+ * Note that these formats don't affect what glamor_egl.c or
+ * Xwayland's EGL layer choose for surfaces exposed through DRI or
+ * scanout.  For now, those layers need to match what we're choosing
+ * here, or channels will end up swizzled around.  Similarly, the
+ * driver's visual masks also need to match what we're doing here.
+ */
+static void
+glamor_setup_formats(ScreenPtr screen)
+{
+    glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
+
+    /* Prefer r8 textures since they're required by GLES3 and core,
+     * only falling back to a8 if we can't do them.
+     */
+    if (glamor_priv->is_gles || epoxy_has_gl_extension("GL_ARB_texture_rg")) {
+        glamor_add_format(screen, 8, PICT_a8,
+                          GL_R8, GL_RED, GL_UNSIGNED_BYTE);
+    } else {
+        glamor_add_format(screen, 8, PICT_a8,
+                          GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE);
+    }
+
+    if (glamor_priv->is_gles) {
+        /* For 15bpp, GLES supports format/type RGBA/5551, rather than
+         * bgra/1555_rev.  GL_EXT_bgra lets the impl say the color
+         * read format/type is bgra/1555 even if we had to create it
+         * with rgba/5551, with Mesa does.  That means we can't use
+         * the same format/type for TexSubImage and readpixels.
+         *
+         * Instead, just store 16 bits using the trusted 565 path, and
+         * disable render accel for now.
+         */
+        glamor_add_format(screen, 15, PICT_x1r5g5b5,
+                          GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1);
+    } else {
+        glamor_add_format(screen, 15, PICT_x1r5g5b5,
+                          GL_RGBA, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV);
+    }
+
+    glamor_add_format(screen, 16, PICT_r5g6b5,
+                      GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5);
+
+    if (glamor_priv->is_gles) {
+        assert(X_BYTE_ORDER == X_LITTLE_ENDIAN);
+        glamor_add_format(screen, 24, PICT_x8b8g8r8,
+                          GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+        glamor_add_format(screen, 32, PICT_a8b8g8r8,
+                          GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+    } else {
+        glamor_add_format(screen, 24, PICT_x8r8g8b8,
+                          GL_RGBA, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV);
+        glamor_add_format(screen, 32, PICT_a8r8g8b8,
+                          GL_RGBA, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV);
+    }
+
+    if (glamor_priv->is_gles) {
+        glamor_add_format(screen, 30, PICT_x2b10g10r10,
+                          GL_RGB10_A2, GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV);
+    } else {
+        glamor_add_format(screen, 30, PICT_x2r10g10b10,
+                          GL_RGB10_A2, GL_BGRA, GL_UNSIGNED_INT_2_10_10_10_REV);
+    }
+
+    glamor_priv->cbcr_format.depth = 16;
+    glamor_priv->cbcr_format.internalformat = GL_RG8;
+    glamor_priv->cbcr_format.format = GL_RG;
+    glamor_priv->cbcr_format.type = GL_UNSIGNED_BYTE;
+}
+
 /** Set up glamor for an already-configured GL context. */
 Bool
 glamor_init(ScreenPtr screen, unsigned int flags)
@@ -649,11 +808,7 @@ glamor_init(ScreenPtr screen, unsigned int flags)
         (epoxy_has_gl_extension("GL_ARB_texture_swizzle") ||
          (glamor_priv->is_gles && gl_version >= 30));
 
-    glamor_priv->one_channel_format = GL_ALPHA;
-    if (epoxy_has_gl_extension("GL_ARB_texture_rg") &&
-        glamor_priv->has_texture_swizzle) {
-        glamor_priv->one_channel_format = GL_RED;
-    }
+    glamor_setup_formats(screen);
 
     glamor_set_debug_level(&glamor_debug_level);
 

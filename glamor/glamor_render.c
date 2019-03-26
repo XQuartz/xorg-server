@@ -772,12 +772,15 @@ static Bool
 glamor_render_format_is_supported(PicturePtr picture)
 {
     PictFormatShort storage_format;
+    glamor_screen_private *glamor_priv;
 
     /* Source-only pictures should always work */
     if (!picture->pDrawable)
         return TRUE;
 
-    storage_format = format_for_depth(picture->pDrawable->depth);
+    glamor_priv = glamor_get_screen_private(picture->pDrawable->pScreen);
+    storage_format =
+        glamor_priv->formats[picture->pDrawable->depth].render_format;
 
     switch (picture->format) {
     case PICT_a2r10g10b10:
@@ -898,7 +901,7 @@ glamor_composite_choose_shader(CARD8 op,
     }
 
     if (dest_pixmap->drawable.bitsPerPixel <= 8 &&
-        glamor_priv->one_channel_format == GL_RED) {
+        glamor_priv->formats[8].format == GL_RED) {
         key.dest_swizzle = SHADER_DEST_SWIZZLE_ALPHA_TO_RED;
     } else {
         key.dest_swizzle = SHADER_DEST_SWIZZLE_DEFAULT;

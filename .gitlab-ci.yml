@@ -81,10 +81,4 @@ meson-build-and-test:
         - meson -Dprefix=/usr build/
         - |
           ninja -C build/ install
-          set +e
-          set -x
           ninja -C build/ test
-          status=$?
-          cat build/meson-logs/testlog.txt
-          cat build/test/piglit-results/xvfb/long-summary || :
-          exit $status

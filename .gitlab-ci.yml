@@ -11,7 +11,8 @@
 # After merging a change resulting in generating a new image to the main
 # repository, it's recommended to remove the image from the source repository's
 # container registry, so that the image from the main repository's registry
-# will be used there as well.
+# will be used there as well.  You can manage your images on your fork of:
+# https://gitlab.freedesktop.org/xorg/xserver/container_registry
 variables:
     UPSTREAM_REPO: xorg/xserver
     DEBIAN_VERSION: testing-slim

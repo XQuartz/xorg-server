@@ -63,14 +63,7 @@ autotools-build-and-test:
         - cd build/
         - ../autogen.sh --prefix=/usr
         - make -j$(nproc) distcheck
-        - |
-          export PIGLIT_DIR=/root/piglit XTEST_DIR=/root/xts
-          set +e
-          set -x
-          make -j$(nproc) check
-          status=$?
-          cat test/piglit-results/xvfb/long-summary || :
-          exit $status
+        - PIGLIT_DIR=/root/piglit XTEST_DIR=/root/xts make -j$(nproc) check
 
 meson-build-and-test:
     extends: .common-build-and-test

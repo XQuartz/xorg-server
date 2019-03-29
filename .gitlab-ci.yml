@@ -79,6 +79,5 @@ meson-build-and-test:
         XTEST_DIR: /root/xts
     script:
         - meson -Dprefix=/usr -Dxephyr=true build/
-        - |
-          ninja -C build/ install
-          ninja -C build/ test
+        - ninja -C build/ install
+        - ninja -C build/ test

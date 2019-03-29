@@ -716,18 +716,7 @@ present_scmd_pixmap(WindowPtr window,
             if (vblank->crtc != target_crtc || vblank->target_msc != target_msc)
                 continue;
 
-            DebugPresent(("\tx %" PRIu64 " %p %" PRIu64 ": %08" PRIx32 " -> %08" PRIx32 " (crtc %p)\n",
-                          vblank->event_id, vblank, vblank->target_msc,
-                          vblank->pixmap->drawable.id, vblank->window->drawable.id,
-                          vblank->crtc));
-
-            present_pixmap_idle(vblank->pixmap, vblank->window, vblank->serial, vblank->idle_fence);
-            present_fence_destroy(vblank->idle_fence);
-            dixDestroyPixmap(vblank->pixmap, vblank->pixmap->drawable.id);
-
-            vblank->pixmap = NULL;
-            vblank->idle_fence = NULL;
-            vblank->flip = FALSE;
+            present_vblank_scrap(vblank);
             if (vblank->flip_ready)
                 present_re_execute(vblank);
         }

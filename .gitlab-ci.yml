@@ -30,11 +30,20 @@ stages:
     - docker-image
     - build-and-test
 
+# Retry jobs after runner system failures
+.retry: &retry
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+
 debian-testing:
   extends: .debian@container-ifnot-exists
   stage: docker-image
+  <<: *retry
 
 .common-build-and-test:
+    <<: *retry
     stage: build-and-test
     image: $IMAGE_LOCAL
     artifacts:

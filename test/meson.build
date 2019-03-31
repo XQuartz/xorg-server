@@ -8,7 +8,7 @@ piglit_env = environment()
 piglit_env.set('XSERVER_DIR', meson.source_root())
 piglit_env.set('XSERVER_BUILDDIR', meson.build_root())
 
-some_ops = '-o clear,src,dst,over,xor,disjointover'
+some_ops = ' -o clear,src,dst,over,xor,disjointover'
 rendercheck_tests = [
     ['blend/All/a8r8g8b8', '-t blend -f a8r8g8b8'],
     ['blend/All/x8r8g8b8', '-t blend -f a8r8g8b8,x8r8g8b8'],
@@ -16,7 +16,7 @@ rendercheck_tests = [
     ['blend/Clear', '-t blend -o clear'],
     ['blend/Src', '-t blend -o src'],
     ['blend/Over', '-t blend -o over'],
-    ['composite/Some/a8r8g8b8', '-t composite -f a8r8g8b8 ' + some_ops],
+    ['composite/Some/a8r8g8b8', '-t composite -f a8r8g8b8' + some_ops],
     ['composite/Some/x8r8g8b8', '-t composite -f a8r8g8b8,x8r8g8b8' + some_ops],
     ['composite/Some/a2r10g10b10', '-t composite -f a8r8g8b8,a2r10g10b10' + some_ops],
     ['ca composite/Some/a8r8g8b8', '-t cacomposite -f a8r8g8b8' + some_ops],

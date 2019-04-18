@@ -76,6 +76,4 @@ test_script:
 - '%CYGWIN_ROOT%/bin/bash -lc "cd $APPVEYOR_BUILD_FOLDER; ninja -C build test"'
 after_test:
 - '%CYGWIN_ROOT%/bin/bash -lc "cd $APPVEYOR_BUILD_FOLDER; ninja -C build install"'
-artifacts:
-- path: staging
 deploy: off

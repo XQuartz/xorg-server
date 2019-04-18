@@ -857,3 +857,12 @@ AbortDDX(enum ExitCode error)
     ErrorF("   AbortDDX\n");
     OsAbort();
 }
+
+#if INPUTTHREAD
+/** This function is called in Xserver/os/inputthread.c when starting
+    the input thread. */
+void
+ddxInputThreadInit(void)
+{
+}
+#endif

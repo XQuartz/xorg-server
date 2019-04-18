@@ -6,7 +6,7 @@ project('xserver', 'c',
         version: '1.20.99.1',
         meson_version: '>= 0.46.0',
 )
-add_project_arguments('-DHAVE_DIX_CONFIG_H', language: 'c')
+add_project_arguments('-DHAVE_DIX_CONFIG_H', language: ['c', 'objc'])
 cc = meson.get_compiler('c')
 
 add_global_arguments('-fno-strict-aliasing', language : 'c')
@@ -56,7 +56,7 @@ foreach wflag: test_wflags
     endif
 endforeach
 
-add_global_arguments(common_wflags, language : 'c')
+add_global_arguments(common_wflags, language : ['c', 'objc'])
 
 xproto_dep = dependency('xproto', version: '>= 7.0.31')
 randrproto_dep = dependency('randrproto', version: '>= 1.6.0')
@@ -133,14 +133,21 @@ dfp = get_option('default_font_path')
 if dfp == ''
     fontutil_dep = dependency('fontutil')
     fontrootdir = fontutil_dep.get_pkgconfig_variable('fontrootdir')
-    default_font_path = ','.join([
+    dfp_elements = [
         join_paths(fontrootdir, 'misc'),
         join_paths(fontrootdir, 'TTF'),
         join_paths(fontrootdir, 'OTF'),
         join_paths(fontrootdir, 'Type1'),
         join_paths(fontrootdir, '100dpi'),
         join_paths(fontrootdir, '75dpi'),
-    ])
+    ]
+    if host_machine.system() == 'darwin'
+       dfp_elements += [
+       '/Library/Fonts',
+       '/System/Library/Fonts',
+    ]
+    endif
+    default_font_path = ','.join(dfp_elements)
 else
     default_font_path = dfp
 endif
@@ -149,7 +156,7 @@ hal_option = get_option('hal')
 glamor_option = get_option('glamor')
 
 build_udev = get_option('udev')
-if host_machine.system() == 'windows'
+if host_machine.system() == 'windows' or host_machine.system() == 'darwin'
     build_udev = false
     hal_option = 'false'
 endif
@@ -227,8 +234,14 @@ else
     build_xwin = get_option('xwin') == 'true'
 endif
 
-# XXX: Finish these.
 build_xquartz = false
+if get_option('xquartz') == 'auto'
+    if host_machine.system() == 'darwin'
+            build_xquartz = true
+    endif
+else
+    build_xquartz = get_option('xquartz') == 'true'
+endif
 
 build_rootless = false
 if build_xquartz

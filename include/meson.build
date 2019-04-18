@@ -52,8 +52,6 @@ conf_data.set('_GNU_SOURCE', '1')
 # ifdef for openbsd?
 conf_data.set('HAS_APERTURE_DRV', host_machine.system() == 'openbsd')
 
-# XXX: BUNDLE_ID_PREFIX
-
 if get_option('input_thread') == 'false'
   enable_input_thread = false
 else
@@ -286,6 +284,10 @@ endif
 if host_machine.system() == 'openbsd'
   supports_pcvt = true
   supports_wscons = true
+  csrg_based = true
+endif
+
+if host_machine.system() == 'darwin'
   csrg_based = true
 endif
 

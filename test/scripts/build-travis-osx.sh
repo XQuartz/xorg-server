@@ -30,14 +30,29 @@ export PATH="/usr/local/opt/ccache/libexec:$PATH"
 pushd $HOME
 git clone git://anongit.freedesktop.org/git/xorg/proto/xorgproto
 cd xorgproto
-autoreconf -fvi
-./configure --prefix=/opt/X11
-sudo make install
+if [[ "$1" == "autotools" ]]; then
+    autoreconf -fvi
+    ./configure --prefix=/opt/X11
+    sudo make install
+elif [[ "$1" == "meson" ]]; then
+    meson _build/ -Dprefix=/opt/X11
+    ninja -C _build/
+    sudo ninja -C _build/ install
+else
+    echo "Unknown build tool $1"
+    exit 1
+fi
 popd
 
 # build
-autoreconf -fvi
-./configure --prefix=/opt/X11 --disable-dependency-tracking --with-apple-application-name=XQuartz --with-bundle-id-prefix=org.macosforge.xquartz
-make
-make check
-make install DESTDIR=$(pwd)/staging
+if [[ "$1" == "autotools" ]]; then
+    autoreconf -fvi
+    ./configure --prefix=/opt/X11 --disable-dependency-tracking --with-apple-application-name=XQuartz --with-bundle-id-prefix=org.macosforge.xquartz
+    make
+    make check
+    make install DESTDIR=$(pwd)/staging
+elif [[ "$1" == "meson" ]]; then
+    meson _build/ -Dprefix=/opt/X11 -Dsecure-rpc=false
+    DESTDIR=$(pwd)/staging ninja -C _build/ install
+    ninja -C _build/ test
+fi

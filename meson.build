@@ -230,6 +230,11 @@ endif
 # XXX: Finish these.
 build_xquartz = false
 
+build_rootless = false
+if build_xquartz
+    build_rootless = true
+endif
+
 if get_option('ipv6') == 'auto'
     build_ipv6 = cc.has_function('getaddrinfo')
 else
@@ -590,6 +595,9 @@ subdir('dbe')
 subdir('miext/damage')
 subdir('miext/shadow')
 subdir('miext/sync')
+if build_rootless
+    subdir('miext/rootless')
+endif
 subdir('present')
 if build_xwin or build_xquartz
     subdir('pseudoramiX')

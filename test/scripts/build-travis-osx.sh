@@ -18,7 +18,7 @@ hdiutil detach /Volumes/XQuartz-${XQUARTZ_VERSION}
 export PATH="/opt/X11/bin:${PATH}"
 export PKG_CONFIG_PATH="/opt/X11/share/pkgconfig:/opt/X11/lib/pkgconfig:${PKG_CONFIG_PATH}"
 export ACLOCAL="aclocal -I /opt/X11/share/aclocal -I /usr/local/share/aclocal"
-export CFLAGS="-Wall -O2 -ggdb3 -arch i386 -arch x86_64 -pipe"
+export CFLAGS="-Wall -O2 -ggdb3 -arch x86_64 -pipe"
 export CXXFLAGS=$CFLAGS
 export OBJCFLAGS=$CFLAGS
 export LDFLAGS=$CFLAGS

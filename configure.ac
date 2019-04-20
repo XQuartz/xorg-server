@@ -2407,6 +2407,7 @@ if test "x$CONFIG_HAL" = xno && test "x$CONFIG_UDEV" = xno; then
 fi
 
 AC_CONFIG_FILES([
+buildDateTime.h
 Makefile
 glx/Makefile
 include/Makefile
@@ -2442,7 +2443,6 @@ hw/Makefile
 hw/xfree86/Makefile
 hw/xfree86/Xorg.sh
 hw/xfree86/common/Makefile
-hw/xfree86/common/xf86Build.h
 hw/xfree86/ddc/Makefile
 hw/xfree86/dixmods/Makefile
 hw/xfree86/doc/Makefile

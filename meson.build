@@ -531,7 +531,7 @@ endif
 
 glx_inc = include_directories('glx')
 
-top_srcdir_inc = include_directories('.')
+top_dir_inc = include_directories('.')
 
 serverconfigdir = join_paths(get_option('libdir'), 'xorg')
 
@@ -565,6 +565,12 @@ manpage_config.set('modulepath', module_dir)
 # manpage_config.set('suid_wrapper_dir', join_paths(get_option('prefix'), libexecdir))
 manpage_config.set('suid_wrapper_dir', join_paths(get_option('prefix'), 'libexec'))
 manpage_config.set('default_font_path', default_font_path)
+
+# generate header containing date & time build was configued
+build_date_time = configure_file(
+    output: 'buildDateTime.h',
+    command: ['sh', join_paths(meson.current_source_dir(), 'buildDateTime.sh'), '@OUTPUT@'],
+)
 
 # Include must come first, as it sets up dix-config.h
 subdir('include')

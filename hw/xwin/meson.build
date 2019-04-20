@@ -142,7 +142,7 @@ xwin_dep = [
 executable(
     server_name,
     srcs_windows,
-    include_directories: [inc, top_srcdir_inc],
+    include_directories: [inc, top_dir_inc],
     dependencies: xwin_dep,
     link_with: [
         xwin_windowsdri,

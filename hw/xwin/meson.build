@@ -24,6 +24,8 @@ srcs_windows = [
 ]
 subdir('winclipboard')
 
+xwin_glx = []
+xwin_windowsdri = []
 if build_glx
     if build_windowsdri
         xwin_c_args += '-DXWIN_WINDOWS_DRI'

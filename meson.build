@@ -525,6 +525,12 @@ if get_option('xselinux') != 'false'
     endif
 endif
 
+socket_dep = []
+if host_machine.system() == 'windows'
+    socket_dep = meson.get_compiler('c').find_library('ws2_32')
+    common_dep += socket_dep
+endif
+
 glx_inc = include_directories('glx')
 
 top_srcdir_inc = include_directories('.')

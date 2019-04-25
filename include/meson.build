@@ -185,7 +185,7 @@ if not conf_data.get('HAVE_GETPEEREID') and not conf_data.get('HAVE_GETPEERUCRED
 endif
 
 conf_data.set('TCPCONN', '1')
-conf_data.set('UNIXCONN', '1')
+conf_data.set('UNIXCONN', host_machine.system() != 'windows')
 conf_data.set('IPv6', build_ipv6)
 
 conf_data.set('BIGREQS', '1')

@@ -131,6 +131,7 @@ static const OptionInfoRec Options[] = {
     {OPTION_PAGEFLIP, "PageFlip", OPTV_BOOLEAN, {0}, FALSE},
     {OPTION_ZAPHOD_HEADS, "ZaphodHeads", OPTV_STRING, {0}, FALSE},
     {OPTION_DOUBLE_SHADOW, "DoubleShadow", OPTV_BOOLEAN, {0}, FALSE},
+    {OPTION_ATOMIC, "Atomic", OPTV_BOOLEAN, {0}, FALSE},
     {-1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
@@ -1038,8 +1039,12 @@ PreInit(ScrnInfoPtr pScrn, int flags)
 #endif
     }
 
-    ret = drmSetClientCap(ms->fd, DRM_CLIENT_CAP_ATOMIC, 1);
-    ms->atomic_modeset = (ret == 0);
+    if (xf86ReturnOptValBool(ms->drmmode.Options, OPTION_ATOMIC, FALSE)) {
+        ret = drmSetClientCap(ms->fd, DRM_CLIENT_CAP_ATOMIC, 1);
+        ms->atomic_modeset = (ret == 0);
+    } else {
+        ms->atomic_modeset = FALSE;
+    }
 
     ms->kms_has_modifiers = FALSE;
     ret = drmGetCap(ms->fd, DRM_CAP_ADDFB2_MODIFIERS, &value);

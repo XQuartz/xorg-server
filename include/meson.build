@@ -20,7 +20,8 @@ conf_data.set('HAVE_TYPEOF', cc.compiles('''
 ''',
     name: 'typeof()'))
 
-conf_data.set('MONOTONIC_CLOCK', cc.compiles('''
+conf_data.set('MONOTONIC_CLOCK', cc.has_function('clock_gettime') and
+cc.compiles('''
     #define _POSIX_C_SOURCE 200112L
     #include <time.h>
     #include <unistd.h>

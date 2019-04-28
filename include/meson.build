@@ -10,7 +10,7 @@ endif
 
 release = major * 10000000 + minor * 100000 + patch * 1000 + subpatch
 
-dri_dep = dependency('dri', required: build_dri2 or build_dri3)
+dri_dep = dependency('dri', required: build_glx)
 
 conf_data = configuration_data()
 conf_data.set('_DIX_CONFIG_H_', '1')
@@ -196,7 +196,9 @@ conf_data.set('DGA', build_dga)
 conf_data.set('DPMSExtension', build_dpms)
 conf_data.set('DRI2', build_dri2)
 conf_data.set('DRI3', build_dri3)
-conf_data.set_quoted('DRI_DRIVER_PATH', dri_dep.get_pkgconfig_variable('dridriverdir'))
+if build_glx
+    conf_data.set_quoted('DRI_DRIVER_PATH', dri_dep.get_pkgconfig_variable('dridriverdir'))
+endif
 conf_data.set('HAS_SHM', build_mitshm)
 conf_data.set('MITSHM', build_mitshm)
 conf_data.set('PANORAMIX', build_xinerama)

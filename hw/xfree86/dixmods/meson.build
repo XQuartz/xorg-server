@@ -34,7 +34,7 @@ shared_module(
     c_args: xorg_c_args,
     dependencies: common_dep,
     link_whole: libxserver_miext_shadow,
-    link_with: [fb, e],
+    link_with: e,
 
     install: true,
     install_dir: module_dir,

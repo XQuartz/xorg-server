@@ -324,6 +324,7 @@ _X_EXPORT const GlxServerExports glxServer = {
     .getContextTagPrivate = GlxGetContextTagPrivate,
     .getVendorForScreen = GlxGetVendorForScreen,
     .forwardRequest =  GlxForwardRequest,
+    .setClientScreenVendor = GlxSetClientScreenVendor,
 };
 
 const GlxServerExports *

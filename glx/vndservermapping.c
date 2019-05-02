@@ -189,6 +189,27 @@ Bool GlxSetScreenVendor(ScreenPtr screen, GlxServerVendor *vendor)
     return TRUE;
 }
 
+Bool GlxSetClientScreenVendor(ClientPtr client, ScreenPtr screen, GlxServerVendor *vendor)
+{
+    GlxClientPriv *cl;
+
+    if (screen == NULL || screen->isGPU) {
+        return FALSE;
+    }
+
+    cl = GlxGetClientData(client);
+    if (cl == NULL) {
+        return FALSE;
+    }
+
+    if (vendor != NULL) {
+        cl->vendors[screen->myNum] = vendor;
+    } else {
+        cl->vendors[screen->myNum] = GlxGetVendorForScreen(NULL, screen);
+    }
+    return TRUE;
+}
+
 GlxServerVendor *GlxGetVendorForScreen(ClientPtr client, ScreenPtr screen)
 {
     // Note that the client won't be sending GPU screen numbers, so we don't

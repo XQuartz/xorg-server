@@ -107,6 +107,7 @@ GlxContextTagInfo *GlxLookupContextTag(ClientPtr client, GLXContextTag tag);
 void GlxFreeContextTag(GlxContextTagInfo *tagInfo);
 
 Bool GlxSetScreenVendor(ScreenPtr screen, GlxServerVendor *vendor);
+Bool GlxSetClientScreenVendor(ClientPtr client, ScreenPtr screen, GlxServerVendor *vendor);
 GlxScreenPriv *GlxGetScreen(ScreenPtr pScreen);
 GlxServerVendor *GlxGetVendorForScreen(ClientPtr client, ScreenPtr screen);
 

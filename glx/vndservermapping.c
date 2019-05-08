@@ -33,6 +33,13 @@
 
 #include "vndservervendor.h"
 
+static ClientPtr requestClient = NULL;
+
+void GlxSetRequestClient(ClientPtr client)
+{
+    requestClient = client;
+}
+
 static GlxServerVendor *LookupXIDMapResource(XID id)
 {
     void *ptr = NULL;
@@ -59,10 +66,7 @@ GlxServerVendor *GlxGetXIDMap(XID id)
                                          DixGetAttrAccess);
         if (rv == Success && ptr != NULL) {
             DrawablePtr draw = (DrawablePtr) ptr;
-            GlxScreenPriv *screenPriv = GlxGetScreen(draw->pScreen);
-            if (screenPriv != NULL) {
-                vendor = screenPriv->vendor;
-            }
+            vendor = GlxGetVendorForScreen(requestClient, draw->pScreen);
         }
     }
     return vendor;

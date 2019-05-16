@@ -1870,7 +1870,7 @@ drmmode_shadow_create(xf86CrtcPtr crtc, void *data, int width, int height)
     }
 
     pPixData = drmmode_bo_map(drmmode, &drmmode_crtc->rotate_bo);
-    rotate_pitch = drmmode_bo_get_pitch(&drmmode_crtc->rotate_bo),
+    rotate_pitch = drmmode_bo_get_pitch(&drmmode_crtc->rotate_bo);
 
     rotate_pixmap = drmmode_create_pixmap_header(scrn->pScreen,
                                                  width, height,

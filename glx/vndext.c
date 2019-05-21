@@ -304,8 +304,8 @@ GlxFreeServerImports(GlxServerImports *imports)
 }
 
 _X_EXPORT const GlxServerExports glxServer = {
-    .majorVersion = 0,
-    .minorVersion = 0,
+    .majorVersion = GLXSERVER_VENDOR_ABI_MAJOR_VERSION,
+    .minorVersion = GLXSERVER_VENDOR_ABI_MINOR_VERSION,
 
     .extensionInitCallback = &vndInitCallbackListPtr,
 

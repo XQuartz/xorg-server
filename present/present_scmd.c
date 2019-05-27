@@ -690,11 +690,11 @@ present_scmd_pixmap(WindowPtr window,
         window_priv->msc = crtc_msc;
     }
 
-    target_msc = present_get_target_msc(options,
+    target_msc = present_get_target_msc(target_msc,
                                         crtc_msc,
-                                        target_msc,
                                         divisor,
-                                        remainder);
+                                        remainder,
+                                        options);
 
     /*
      * Look for a matching presentation already on the list and

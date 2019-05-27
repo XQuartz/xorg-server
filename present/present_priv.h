@@ -280,11 +280,11 @@ present_set_tree_pixmap(WindowPtr window,
                         PixmapPtr pixmap);
 
 uint64_t
-present_get_target_msc(uint32_t options,
+present_get_target_msc(uint64_t target_msc_arg,
                        uint64_t crtc_msc,
-                       uint64_t target_msc,
                        uint64_t divisor,
-                       uint64_t remainder);
+                       uint64_t remainder,
+                       uint32_t options);
 
 int
 present_pixmap(WindowPtr window,

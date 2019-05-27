@@ -222,30 +222,28 @@ present_queue_vblank(ScreenPtr screen,
     return ret;
 }
 
-static uint64_t
-present_window_to_crtc_msc(WindowPtr window, RRCrtcPtr crtc, uint64_t window_msc, uint64_t new_msc)
+static void
+present_scmd_update_window_crtc(WindowPtr window, RRCrtcPtr crtc, uint64_t new_msc)
 {
-    present_window_priv_ptr     window_priv = present_get_window_priv(window, TRUE);
+    present_window_priv_ptr window_priv = present_get_window_priv(window, TRUE);
+    uint64_t                old_ust, old_msc;
 
-    if (crtc != window_priv->crtc) {
-        uint64_t        old_ust, old_msc;
+    /* Crtc unchanged, no offset. */
+    if (crtc == window_priv->crtc)
+        return;
 
-        if (window_priv->crtc == PresentCrtcNeverSet) {
-            window_priv->msc_offset = 0;
-        } else {
-            /* The old CRTC may have been turned off, in which case
-             * we'll just use whatever previous MSC we'd seen from this CRTC
-             */
-
-            if (present_get_ust_msc(window->drawable.pScreen, window_priv->crtc, &old_ust, &old_msc) != Success)
-                old_msc = window_priv->msc;
-
-            window_priv->msc_offset += new_msc - old_msc;
-        }
+    /* No crtc earlier to offset against, just set the crtc first time. */
+    if (window_priv->crtc == PresentCrtcNeverSet) {
         window_priv->crtc = crtc;
+        return;
     }
 
-    return window_msc + window_priv->msc_offset;
+    /* Crtc may have been turned off, just use whatever previous MSC we'd seen from this CRTC. */
+    if (present_get_ust_msc(window->drawable.pScreen, window_priv->crtc, &old_ust, &old_msc) != Success)
+        old_msc = window_priv->msc;
+
+    window_priv->msc_offset += new_msc - old_msc;
+    window_priv->crtc = crtc;
 }
 
 /*
@@ -682,7 +680,7 @@ present_scmd_pixmap(WindowPtr window,
 
     ret = present_get_ust_msc(screen, target_crtc, &ust, &crtc_msc);
 
-    target_msc = present_window_to_crtc_msc(window, target_crtc, window_msc, crtc_msc);
+    present_scmd_update_window_crtc(window, target_crtc, crtc_msc);
 
     if (ret == Success) {
         /* Stash the current MSC away in case we need it later
@@ -690,7 +688,7 @@ present_scmd_pixmap(WindowPtr window,
         window_priv->msc = crtc_msc;
     }
 
-    target_msc = present_get_target_msc(target_msc,
+    target_msc = present_get_target_msc(window_msc + window_priv->msc_offset,
                                         crtc_msc,
                                         divisor,
                                         remainder,

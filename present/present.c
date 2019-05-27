@@ -157,31 +157,32 @@ present_can_window_flip(WindowPtr window)
     return screen_priv->can_window_flip(window);
 }
 
-void
-present_adjust_timings(uint32_t options,
-                       uint64_t *crtc_msc,
-                       uint64_t *target_msc,
+uint64_t
+present_get_target_msc(uint32_t options,
+                       uint64_t crtc_msc,
+                       uint64_t target_msc,
                        uint64_t divisor,
                        uint64_t remainder)
 {
     /* Adjust target_msc to match modulus
      */
-    if (msc_is_equal_or_after(*crtc_msc, *target_msc)) {
+    if (msc_is_equal_or_after(crtc_msc, target_msc)) {
         if (divisor != 0) {
-            *target_msc = *crtc_msc - (*crtc_msc % divisor) + remainder;
+            target_msc = crtc_msc - (crtc_msc % divisor) + remainder;
             if (options & PresentOptionAsync) {
-                if (msc_is_after(*crtc_msc, *target_msc))
-                    *target_msc += divisor;
+                if (msc_is_after(crtc_msc, target_msc))
+                    target_msc += divisor;
             } else {
-                if (msc_is_equal_or_after(*crtc_msc, *target_msc))
-                    *target_msc += divisor;
+                if (msc_is_equal_or_after(crtc_msc, target_msc))
+                    target_msc += divisor;
             }
         } else {
-            *target_msc = *crtc_msc;
+            target_msc = crtc_msc;
             if (!(options & PresentOptionAsync))
-                (*target_msc)++;
+                (target_msc)++;
         }
     }
+    return target_msc;
 }
 
 int

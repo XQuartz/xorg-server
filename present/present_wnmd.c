@@ -582,11 +582,11 @@ present_wnmd_pixmap(WindowPtr window,
         window_priv->msc = crtc_msc;
     }
 
-    present_adjust_timings(options,
-                           &crtc_msc,
-                           &target_msc,
-                           divisor,
-                           remainder);
+    target_msc = present_get_target_msc(options,
+                                        crtc_msc,
+                                        target_msc,
+                                        divisor,
+                                        remainder);
 
     /*
      * Look for a matching presentation already on the list...

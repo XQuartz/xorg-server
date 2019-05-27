@@ -555,7 +555,7 @@ present_wnmd_pixmap(WindowPtr window,
                     SyncFence *wait_fence,
                     SyncFence *idle_fence,
                     uint32_t options,
-                    uint64_t window_msc,
+                    uint64_t target_window_msc,
                     uint64_t divisor,
                     uint64_t remainder,
                     present_notify_ptr notifies,
@@ -585,7 +585,7 @@ present_wnmd_pixmap(WindowPtr window,
         window_priv->msc = crtc_msc;
     }
 
-    target_msc = present_get_target_msc(window_msc + window_priv->msc_offset,
+    target_msc = present_get_target_msc(target_window_msc + window_priv->msc_offset,
                                         crtc_msc,
                                         divisor,
                                         remainder,

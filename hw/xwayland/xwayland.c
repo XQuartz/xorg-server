@@ -115,6 +115,10 @@ ddxProcessArgument(int argc, char *argv[], int i)
     else if (strcmp(argv[i], "-listen") == 0) {
         CHECK_FOR_REQUIRED_ARGUMENTS(1);
 
+        /* Not an FD */
+        if (!isdigit(*argv[i + 1]))
+            return 0;
+
         NoListenAll = TRUE;
         if (listen_fd_count == ARRAY_SIZE(listen_fds))
             FatalError("Too many -listen arguments given, max is %zu\n",

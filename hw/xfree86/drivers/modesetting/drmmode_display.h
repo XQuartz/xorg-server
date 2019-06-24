@@ -236,10 +236,6 @@ typedef struct _msPixmapPriv {
     Bool notify_on_damage; /* if sink has requested damage notification */
 } msPixmapPrivRec, *msPixmapPrivPtr;
 
-extern DevPrivateKeyRec msPixmapPrivateKeyRec;
-
-#define msPixmapPrivateKey (&msPixmapPrivateKeyRec)
-
 #define msGetPixmapPriv(drmmode, p) ((msPixmapPrivPtr)dixGetPrivateAddr(&(p)->devPrivates, &(drmmode)->pixmapPrivateKeyRec))
 
 Bool drmmode_is_format_supported(ScrnInfoPtr scrn, uint32_t format,

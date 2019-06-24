@@ -96,6 +96,7 @@ typedef struct _modesettingRec {
 
     CreateScreenResourcesProcPtr createScreenResources;
     ScreenBlockHandlerProcPtr BlockHandler;
+    miPointerSpriteFuncPtr SpriteFuncs;
     void *driver;
 
     drmmode_rec drmmode;

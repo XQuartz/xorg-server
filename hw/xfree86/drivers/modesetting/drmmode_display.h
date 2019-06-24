@@ -111,6 +111,9 @@ typedef struct {
     void *shadow_fb2;
 
     DevPrivateKeyRec pixmapPrivateKeyRec;
+    DevScreenPrivateKeyRec spritePrivateKeyRec;
+    /* Number of SW cursors currently visible on this screen */
+    int sprites_visible;
 
     Bool reverse_prime_offload_mode;
 
@@ -237,6 +240,15 @@ typedef struct _msPixmapPriv {
 } msPixmapPrivRec, *msPixmapPrivPtr;
 
 #define msGetPixmapPriv(drmmode, p) ((msPixmapPrivPtr)dixGetPrivateAddr(&(p)->devPrivates, &(drmmode)->pixmapPrivateKeyRec))
+
+typedef struct _msSpritePriv {
+    CursorPtr cursor;
+    Bool sprite_visible;
+} msSpritePrivRec, *msSpritePrivPtr;
+
+#define msGetSpritePriv(dev, ms, screen) dixLookupScreenPrivate(&(dev)->devPrivates, &(ms)->drmmode.spritePrivateKeyRec, screen)
+
+extern miPointerSpriteFuncRec drmmode_sprite_funcs;
 
 Bool drmmode_is_format_supported(ScrnInfoPtr scrn, uint32_t format,
                                  uint64_t modifier);

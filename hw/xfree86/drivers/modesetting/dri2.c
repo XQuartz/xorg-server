@@ -586,6 +586,7 @@ can_flip(ScrnInfoPtr scrn, DrawablePtr draw,
 
     return draw->type == DRAWABLE_WINDOW &&
         ms->drmmode.pageflip &&
+        !ms->drmmode.sprites_visible &&
         !ms->drmmode.present_flipping &&
         scrn->vtSema &&
         DRI2CanFlip(draw) && can_exchange(scrn, draw, front, back);

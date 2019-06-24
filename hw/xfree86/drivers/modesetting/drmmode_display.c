@@ -1008,6 +1008,10 @@ drmmode_create_bo(drmmode_ptr drmmode, drmmode_bo *bo,
 
 #ifdef GLAMOR_HAS_GBM
     if (drmmode->glamor) {
+#ifdef GBM_BO_WITH_MODIFIERS
+        uint32_t num_modifiers;
+        uint64_t *modifiers = NULL;
+#endif
         uint32_t format;
 
         if (drmmode->scrn->depth == 30)
@@ -1016,9 +1020,6 @@ drmmode_create_bo(drmmode_ptr drmmode, drmmode_bo *bo,
             format = GBM_FORMAT_ARGB8888;
 
 #ifdef GBM_BO_WITH_MODIFIERS
-        uint32_t num_modifiers;
-        uint64_t *modifiers = NULL;
-
         num_modifiers = get_modifiers_set(drmmode->scrn, format, &modifiers,
                                           FALSE, TRUE);
         if (num_modifiers > 0 &&

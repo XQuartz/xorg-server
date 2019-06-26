@@ -245,14 +245,110 @@ update_screen_size(struct xwl_output *xwl_output, int width, int height)
     update_desktop_dimensions();
 }
 
+/* From hw/xfree86/common/xf86DefModeSet.c with some obscure modes dropped */
+const int32_t xwl_output_fake_modes[][2] = {
+    /* 4:3 (1.33) */
+    { 2048, 1536 },
+    { 1920, 1440 },
+    { 1600, 1200 },
+    { 1440, 1080 },
+    { 1400, 1050 },
+    { 1280, 1024 }, /* 5:4 (1.25) */
+    { 1280,  960 },
+    { 1152,  864 },
+    { 1024,  768 },
+    {  800,  600 },
+    {  640,  480 },
+    {  320,  240 },
+    /* 16:10 (1.6) */
+    { 2560, 1600 },
+    { 1920, 1200 },
+    { 1680, 1050 },
+    { 1440,  900 },
+    { 1280,  800 },
+    {  720,  480 }, /* 3:2 (1.5) */
+    {  640,  400 },
+    {  320,  200 },
+    /* 16:9 (1.77) */
+    { 5120, 2880 },
+    { 4096, 2304 },
+    { 3840, 2160 },
+    { 3200, 1800 },
+    { 2880, 1620 },
+    { 2560, 1440 },
+    { 2048, 1152 },
+    { 1920, 1080 },
+    { 1600,  900 },
+    { 1368,  768 },
+    { 1280,  720 },
+    { 1024,  576 },
+    {  864,  486 },
+    {  720,  400 },
+    {  640,  350 },
+};
+
+/* Build an array with RRModes the first mode is the actual output mode, the
+ * rest are fake modes from the xwl_output_fake_modes list. We do this for apps
+ * which want to change resolution when they go fullscreen.
+ * When an app requests a mode-change, we fake it using WPviewport.
+ */
+static RRModePtr *
+output_get_rr_modes(struct xwl_output *xwl_output,
+                    int32_t width, int32_t height,
+                    int *count)
+{
+    struct xwl_screen *xwl_screen = xwl_output->xwl_screen;
+    RRModePtr *rr_modes;
+    int i;
+
+    rr_modes = xallocarray(ARRAY_SIZE(xwl_output_fake_modes) + 1, sizeof(RRModePtr));
+    if (!rr_modes)
+        goto err;
+
+    /* Add actual output mode */
+    rr_modes[0] = xwayland_cvt(width, height, xwl_output->refresh / 1000.0, 0, 0);
+    if (!rr_modes[0])
+        goto err;
+
+    *count = 1;
+
+    if (!xwl_screen_has_resolution_change_emulation(xwl_screen))
+        return rr_modes;
+
+    /* Add fake modes */
+    for (i = 0; i < ARRAY_SIZE(xwl_output_fake_modes); i++) {
+        /* Skip actual output mode, already added */
+        if (xwl_output_fake_modes[i][0] == width &&
+            xwl_output_fake_modes[i][1] == height)
+            continue;
+
+        /* Skip modes which are too big, avoid downscaling */
+        if (xwl_output_fake_modes[i][0] > width ||
+            xwl_output_fake_modes[i][1] > height)
+            continue;
+
+        rr_modes[*count] = xwayland_cvt(xwl_output_fake_modes[i][0],
+                                        xwl_output_fake_modes[i][1],
+                                        xwl_output->refresh / 1000.0, 0, 0);
+        if (!rr_modes[*count])
+            goto err;
+
+        (*count)++;
+    }
+
+    return rr_modes;
+err:
+    FatalError("Failed to allocate memory for list of RR modes");
+}
+
 static void
 apply_output_change(struct xwl_output *xwl_output)
 {
     struct xwl_screen *xwl_screen = xwl_output->xwl_screen;
     struct xwl_output *it;
-    int mode_width, mode_height;
+    int mode_width, mode_height, count;
     int width = 0, height = 0, has_this_output = 0;
-    RRModePtr randr_mode;
+    RRModePtr *randr_modes;
     Bool need_rotate;
 
     /* Clear out the "done" received flags */
@@ -271,12 +367,16 @@ apply_output_change(struct xwl_output *xwl_output)
         mode_height = xwl_output->width;
     }
 
-    randr_mode = xwayland_cvt(mode_width, mode_height,
-                              xwl_output->refresh / 1000.0, 0, 0);
-    RROutputSetModes(xwl_output->randr_output, &randr_mode, 1, 1);
-    RRCrtcNotify(xwl_output->randr_crtc, randr_mode,
+    /* Build a fresh modes array using the current refresh rate */
+    randr_modes = output_get_rr_modes(xwl_output, mode_width, mode_height, &count);
+    RROutputSetModes(xwl_output->randr_output, randr_modes, count, 1);
+    RRCrtcNotify(xwl_output->randr_crtc, randr_modes[0],
                  xwl_output->x, xwl_output->y,
                  xwl_output->rotation, NULL, 1, &xwl_output->randr_output);
+    /* RROutputSetModes takes ownership of the passed in modes, so we only
+     * have to free the pointer array.
+     */
+    free(randr_modes);
 
     xorg_list_for_each_entry(it, &xwl_screen->output_list, link) {
         /* output done event is sent even when some property

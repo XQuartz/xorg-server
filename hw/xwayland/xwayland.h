@@ -385,6 +385,7 @@ void xwl_surface_damage(struct xwl_screen *xwl_screen,
 Bool xwl_screen_init_cursor(struct xwl_screen *xwl_screen);
 
 struct xwl_screen *xwl_screen_get(ScreenPtr screen);
+Bool xwl_screen_has_resolution_change_emulation(struct xwl_screen *xwl_screen);
 
 void xwl_tablet_tool_set_cursor(struct xwl_tablet_tool *tool);
 void xwl_seat_set_cursor(struct xwl_seat *xwl_seat);

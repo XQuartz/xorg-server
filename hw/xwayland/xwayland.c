@@ -182,6 +182,23 @@ xwl_screen_get(ScreenPtr screen)
     return dixLookupPrivate(&screen->devPrivates, &xwl_screen_private_key);
 }
 
+static Bool
+xwl_screen_has_viewport_support(struct xwl_screen *xwl_screen)
+{
+    return wl_compositor_get_version(xwl_screen->compositor) >=
+                            WL_SURFACE_DAMAGE_BUFFER_SINCE_VERSION &&
+           xwl_screen->viewporter != NULL;
+}
+
+Bool
+xwl_screen_has_resolution_change_emulation(struct xwl_screen *xwl_screen)
+{
+    /* Resolution change emulation is only supported in rootless mode and
+     * it requires viewport support.
+     */
+    return xwl_screen->rootless && xwl_screen_has_viewport_support(xwl_screen);
+}
+
 static void
 xwl_window_set_allow_commits(struct xwl_window *xwl_window, Bool allow,
                              const char *debug_msg)

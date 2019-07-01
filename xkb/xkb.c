@@ -2383,6 +2383,9 @@ _XkbSetMapChecks(ClientPtr client, DeviceIntPtr dev, xkbSetMapReq * req,
     XkbSymMapPtr map;
     int i;
 
+    if (!dev->key)
+        return 0;
+
     xkbi = dev->key->xkbInfo;
     xkb = xkbi->desc;
 
@@ -2494,6 +2497,9 @@ _XkbSetMap(ClientPtr client, DeviceIntPtr dev, xkbSetMapReq * req, char *values)
     Bool sentNKN;
     XkbSrvInfoPtr xkbi;
     XkbDescPtr xkb;
+
+    if (!dev->key)
+        return Success;
 
     xkbi = dev->key->xkbInfo;
     xkb = xkbi->desc;

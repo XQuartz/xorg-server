@@ -2110,6 +2110,9 @@ SetKeySyms(ClientPtr client,
                 }
             }
         }
+        if (XkbKeyHasActions(xkb, i + req->firstKeySym))
+            XkbResizeKeyActions(xkb, i + req->firstKeySym,
+                                XkbNumGroups(wire->groupInfo) * wire->width);
         oldMap->kt_index[0] = wire->ktIndex[0];
         oldMap->kt_index[1] = wire->ktIndex[1];
         oldMap->kt_index[2] = wire->ktIndex[2];

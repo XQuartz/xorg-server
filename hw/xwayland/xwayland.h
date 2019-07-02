@@ -378,6 +378,9 @@ struct xwl_output {
 };
 
 void xwl_sync_events (struct xwl_screen *xwl_screen);
+void xwl_surface_damage(struct xwl_screen *xwl_screen,
+                        struct wl_surface *surface,
+                        int32_t x, int32_t y, int32_t width, int32_t height);
 
 Bool xwl_screen_init_cursor(struct xwl_screen *xwl_screen);
 

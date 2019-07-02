@@ -796,6 +796,16 @@ xwl_destroy_window(WindowPtr window)
     return ret;
 }
 
+void xwl_surface_damage(struct xwl_screen *xwl_screen,
+                        struct wl_surface *surface,
+                        int32_t x, int32_t y, int32_t width, int32_t height)
+{
+    if (wl_surface_get_version(surface) >= WL_SURFACE_DAMAGE_BUFFER_SINCE_VERSION)
+        wl_surface_damage_buffer(surface, x, y, width, height);
+    else
+        wl_surface_damage(surface, x, y, width, height);
+}
+
 static void
 xwl_window_post_damage(struct xwl_window *xwl_window)
 {
@@ -832,13 +842,15 @@ xwl_window_post_damage(struct xwl_window *xwl_window)
      */
     if (RegionNumRects(region) > 256) {
         box = RegionExtents(region);
-        wl_surface_damage(xwl_window->surface, box->x1, box->y1,
-                          box->x2 - box->x1, box->y2 - box->y1);
+        xwl_surface_damage(xwl_screen, xwl_window->surface, box->x1, box->y1,
+                           box->x2 - box->x1, box->y2 - box->y1);
     } else {
         box = RegionRects(region);
-        for (i = 0; i < RegionNumRects(region); i++, box++)
-            wl_surface_damage(xwl_window->surface, box->x1, box->y1,
-                              box->x2 - box->x1, box->y2 - box->y1);
+        for (i = 0; i < RegionNumRects(region); i++, box++) {
+            xwl_surface_damage(xwl_screen, xwl_window->surface,
+                               box->x1, box->y1,
+                               box->x2 - box->x1, box->y2 - box->y1);
+        }
     }
 
     xwl_window->frame_callback = wl_surface_frame(xwl_window->surface);
@@ -881,8 +893,13 @@ registry_global(void *data, struct wl_registry *registry, uint32_t id,
     struct xwl_screen *xwl_screen = data;
 
     if (strcmp(interface, "wl_compositor") == 0) {
+        uint32_t request_version = 1;
+
+        if (version >= WL_SURFACE_DAMAGE_BUFFER_SINCE_VERSION)
+            request_version = WL_SURFACE_DAMAGE_BUFFER_SINCE_VERSION;
+
         xwl_screen->compositor =
-            wl_registry_bind(registry, id, &wl_compositor_interface, 1);
+            wl_registry_bind(registry, id, &wl_compositor_interface, request_version);
     }
     else if (strcmp(interface, "wl_shm") == 0) {
         xwl_screen->shm = wl_registry_bind(registry, id, &wl_shm_interface, 1);

@@ -408,6 +408,42 @@ err:
     FatalError("Failed to allocate memory for list of RR modes");
 }
 
+RRModePtr
+xwl_output_find_mode(struct xwl_output *xwl_output,
+                     int32_t width, int32_t height)
+{
+    RROutputPtr output = xwl_output->randr_output;
+    int i;
+
+    /* width & height -1 means we want the actual output mode, which is idx 0 */
+    if (width == -1 && height == -1 && output->modes)
+        return output->modes[0];
+
+    for (i = 0; i < output->numModes; i++) {
+        if (output->modes[i]->mode.width == width && output->modes[i]->mode.height == height)
+            return output->modes[i];
+    }
+
+    ErrorF("XWAYLAND: mode %dx%d is not available\n", width, height);
+    return NULL;
+}
+
+void
+xwl_output_set_emulated_mode(struct xwl_output *xwl_output, ClientPtr client,
+                             RRModePtr mode, Bool from_vidmode)
+{
+    DebugF("XWAYLAND: xwl_output_set_emulated_mode from %s: %dx%d\n",
+           from_vidmode ? "vidmode" : "randr",
+           mode->mode.width, mode->mode.height);
+
+    if (mode->mode.width == xwl_output->width && mode->mode.height == xwl_output->height)
+        xwl_output_remove_emulated_mode_for_client(xwl_output, client);
+    else
+        xwl_output_add_emulated_mode_for_client(xwl_output, client, mode, from_vidmode);
+
+    xwl_screen_check_resolution_change_emulation(xwl_output->xwl_screen);
+}
+
 static void
 apply_output_change(struct xwl_output *xwl_output)
 {
@@ -666,21 +702,36 @@ xwl_randr_screen_set_size(ScreenPtr pScreen,
 static Bool
 xwl_randr_crtc_set(ScreenPtr pScreen,
                    RRCrtcPtr crtc,
-                   RRModePtr mode,
+                   RRModePtr new_mode,
                    int x,
                    int y,
                    Rotation rotation,
                    int numOutputs, RROutputPtr * outputs)
 {
     struct xwl_output *xwl_output = crtc->devPrivate;
+    RRModePtr mode;
 
-    if (!mode || (mode->mode.width  == xwl_output->width &&
-                  mode->mode.height == xwl_output->height)) {
-        RRCrtcChanged(crtc, TRUE);
-        return TRUE;
+    if (new_mode) {
+        mode = xwl_output_find_mode(xwl_output,
+                                    new_mode->mode.width,
+                                    new_mode->mode.height);
+    } else {
+        mode = xwl_output_find_mode(xwl_output, -1, -1);
     }
+    if (!mode)
+        return FALSE;
 
-    return FALSE;
+    xwl_output_set_emulated_mode(xwl_output, GetCurrentClient(), mode, FALSE);
+
+    /* A real randr implementation would call:
+     * RRCrtcNotify(xwl_output->randr_crtc, mode, xwl_output->x, xwl_output->y,
+     *              xwl_output->rotation, NULL, 1, &xwl_output->randr_output);
+     * here to update the mode reported to clients querying the randr settings
+     * but that influences *all* clients and we do randr mode change emulation
+     * on a per client basis. So we just return success here.
+     */
+
+    return TRUE;
 }
 
 static Bool

@@ -132,10 +132,12 @@ struct xwl_screen {
     DestroyWindowProcPtr DestroyWindow;
     XYToWindowProcPtr XYToWindow;
     SetWindowPixmapProcPtr SetWindowPixmap;
+    ResizeWindowProcPtr ResizeWindow;
 
     struct xorg_list output_list;
     struct xorg_list seat_list;
     struct xorg_list damage_window_list;
+    struct xorg_list window_list;
 
     int wayland_fd;
     struct wl_display *display;
@@ -176,9 +178,13 @@ struct xwl_screen {
 struct xwl_window {
     struct xwl_screen *xwl_screen;
     struct wl_surface *surface;
+    struct wp_viewport *viewport;
+    int32_t x, y, width, height;
+    float scale_x, scale_y;
     struct wl_shell_surface *shell_surface;
     WindowPtr window;
     struct xorg_list link_damage;
+    struct xorg_list link_window;
     struct wl_callback *frame_callback;
     Bool allow_commits;
 #ifdef GLAMOR_HAS_GBM
@@ -405,6 +411,9 @@ Bool xwl_screen_init_cursor(struct xwl_screen *xwl_screen);
 
 struct xwl_screen *xwl_screen_get(ScreenPtr screen);
 Bool xwl_screen_has_resolution_change_emulation(struct xwl_screen *xwl_screen);
+struct xwl_output *xwl_screen_get_first_output(struct xwl_screen *xwl_screen);
+void xwl_screen_check_resolution_change_emulation(struct xwl_screen *xwl_screen);
+Bool xwl_window_has_viewport_enabled(struct xwl_window *xwl_window);
 
 void xwl_tablet_tool_set_cursor(struct xwl_tablet_tool *tool);
 void xwl_seat_set_cursor(struct xwl_seat *xwl_seat);
@@ -437,6 +446,12 @@ void xwl_output_remove(struct xwl_output *xwl_output);
 
 struct xwl_emulated_mode *xwl_output_get_emulated_mode_for_client(
                             struct xwl_output *xwl_output, ClientPtr client);
+
+RRModePtr xwl_output_find_mode(struct xwl_output *xwl_output,
+                               int32_t width, int32_t height);
+void xwl_output_set_emulated_mode(struct xwl_output *xwl_output,
+                                  ClientPtr client, RRModePtr mode,
+                                  Bool from_vidmode);
 
 RRModePtr xwayland_cvt(int HDisplay, int VDisplay,
                        float VRefresh, Bool Reduced, Bool Interlaced);

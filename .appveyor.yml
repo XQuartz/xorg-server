@@ -69,6 +69,7 @@ xkbcomp-devel,\
 xkeyboard-config,\
 xtrans"
 - echo Install done
+- "%CYGWIN_ROOT%\\%SETUP% -qnNdO -R %CYGWIN_ROOT% -s %CYGWIN_MIRROR% -l %CACHE% -g"
 cache:
 - C:\cache
 - '%CYGWIN_ROOT%\home\%USERNAME%\.ccache'

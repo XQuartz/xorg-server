@@ -78,13 +78,37 @@ mode_refresh(const xRRModeInfo *mode_info)
     return rate;
 }
 
+static void
+xwlRRModeToDisplayMode(RRModePtr rrmode, DisplayModePtr mode)
+{
+    const xRRModeInfo *mode_info = &rrmode->mode;
+
+    mode->next = mode;
+    mode->prev = mode;
+    mode->name = "";
+    mode->VScan = 1;
+    mode->Private = NULL;
+    mode->HDisplay = mode_info->width;
+    mode->HSyncStart = mode_info->hSyncStart;
+    mode->HSyncEnd = mode_info->hSyncEnd;
+    mode->HTotal = mode_info->hTotal;
+    mode->HSkew = mode_info->hSkew;
+    mode->VDisplay = mode_info->height;
+    mode->VSyncStart = mode_info->vSyncStart;
+    mode->VSyncEnd = mode_info->vSyncEnd;
+    mode->VTotal = mode_info->vTotal;
+    mode->Flags = mode_info->modeFlags;
+    mode->Clock = mode_info->dotClock / 1000.0;
+    mode->VRefresh = mode_refresh(mode_info); /* Or RRVerticalRefresh() */
+    mode->HSync = mode_hsync(mode_info);
+}
+
 static Bool
 xwlVidModeGetCurrentModeline(ScreenPtr pScreen, DisplayModePtr *mode, int *dotClock)
 {
     DisplayModePtr pMod;
     RROutputPtr output;
     RRCrtcPtr crtc;
-    xRRModeInfo rrmode;
 
     pMod = dixLookupPrivate(&pScreen->devPrivates, xwlVidModePrivateKey);
     if (pMod == NULL)
@@ -98,30 +122,11 @@ xwlVidModeGetCurrentModeline(ScreenPtr pScreen, DisplayModePtr *mode, int *dotCl
     if (crtc == NULL)
         return FALSE;
 
-    rrmode = crtc->mode->mode;
+    xwlRRModeToDisplayMode(crtc->mode, pMod);
 
-    pMod->next = pMod;
-    pMod->prev = pMod;
-    pMod->name = "";
-    pMod->VScan = 1;
-    pMod->Private = NULL;
-    pMod->HDisplay = rrmode.width;
-    pMod->HSyncStart = rrmode.hSyncStart;
-    pMod->HSyncEnd = rrmode.hSyncEnd;
-    pMod->HTotal = rrmode.hTotal;
-    pMod->HSkew = rrmode.hSkew;
-    pMod->VDisplay = rrmode.height;
-    pMod->VSyncStart = rrmode.vSyncStart;
-    pMod->VSyncEnd = rrmode.vSyncEnd;
-    pMod->VTotal = rrmode.vTotal;
-    pMod->Flags = rrmode.modeFlags;
-    pMod->Clock = rrmode.dotClock / 1000.0;
-    pMod->VRefresh = mode_refresh(&rrmode); /* Or RRVerticalRefresh() */
-    pMod->HSync = mode_hsync(&rrmode);
     *mode = pMod;
-
     if (dotClock != NULL)
-        *dotClock = rrmode.dotClock / 1000.0;
+        *dotClock = pMod->Clock;
 
     return TRUE;
 }

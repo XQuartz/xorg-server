@@ -103,26 +103,56 @@ xwlRRModeToDisplayMode(RRModePtr rrmode, DisplayModePtr mode)
     mode->HSync = mode_hsync(mode_info);
 }
 
+static RRModePtr
+xwlVidModeGetRRMode(ScreenPtr pScreen, int32_t width, int32_t height)
+{
+    RROutputPtr output = RRFirstOutput(pScreen);
+
+    if (output == NULL)
+        return NULL;
+
+    return xwl_output_find_mode(output->devPrivate, width, height);
+}
+
+static RRModePtr
+xwlVidModeGetCurrentRRMode(ScreenPtr pScreen)
+{
+    struct xwl_emulated_mode *emulated_mode;
+    struct xwl_output *xwl_output;
+    RROutputPtr output;
+
+    output = RRFirstOutput(pScreen);
+    if (output == NULL)
+        return NULL;
+
+    xwl_output = output->devPrivate;
+    emulated_mode =
+        xwl_output_get_emulated_mode_for_client(xwl_output, GetCurrentClient());
+
+    if (emulated_mode) {
+        return xwl_output_find_mode(xwl_output,
+                                    emulated_mode->width,
+                                    emulated_mode->height);
+    } else {
+        return xwl_output_find_mode(xwl_output, -1, -1);
+    }
+}
+
 static Bool
 xwlVidModeGetCurrentModeline(ScreenPtr pScreen, DisplayModePtr *mode, int *dotClock)
 {
     DisplayModePtr pMod;
-    RROutputPtr output;
-    RRCrtcPtr crtc;
+    RRModePtr rrmode;
 
     pMod = dixLookupPrivate(&pScreen->devPrivates, xwlVidModePrivateKey);
     if (pMod == NULL)
         return FALSE;
 
-    output = RRFirstOutput(pScreen);
-    if (output == NULL)
+    rrmode = xwlVidModeGetCurrentRRMode(pScreen);
+    if (rrmode == NULL)
         return FALSE;
 
-    crtc = output->crtc;
-    if (crtc == NULL)
-        return FALSE;
-
-    xwlRRModeToDisplayMode(crtc->mode, pMod);
+    xwlRRModeToDisplayMode(rrmode, pMod);
 
     *mode = pMod;
     if (dotClock != NULL)
@@ -135,9 +165,10 @@ static vidMonitorValue
 xwlVidModeGetMonitorValue(ScreenPtr pScreen, int valtyp, int indx)
 {
     vidMonitorValue ret = { NULL, };
-    DisplayModePtr pMod;
+    RRModePtr rrmode;
 
-    if (!xwlVidModeGetCurrentModeline(pScreen, &pMod, NULL))
+    rrmode = xwlVidModeGetCurrentRRMode(pScreen);
+    if (rrmode == NULL)
         return ret;
 
     switch (valtyp) {
@@ -155,11 +186,11 @@ xwlVidModeGetMonitorValue(ScreenPtr pScreen, int valtyp, int indx)
         break;
     case VIDMODE_MON_HSYNC_LO:
     case VIDMODE_MON_HSYNC_HI:
-        ret.f = 100.0 * pMod->HSync;
+        ret.f = mode_hsync(&rrmode->mode) * 100.0;
         break;
     case VIDMODE_MON_VREFRESH_LO:
     case VIDMODE_MON_VREFRESH_HI:
-        ret.f = 100.0 * pMod->VRefresh;
+        ret.f = mode_refresh(&rrmode->mode) * 100.0;
         break;
     }
     return ret;
@@ -168,13 +199,13 @@ xwlVidModeGetMonitorValue(ScreenPtr pScreen, int valtyp, int indx)
 static int
 xwlVidModeGetDotClock(ScreenPtr pScreen, int Clock)
 {
-    DisplayModePtr pMod;
+    RRModePtr rrmode;
 
-    if (!xwlVidModeGetCurrentModeline(pScreen, &pMod, NULL))
+    rrmode = xwlVidModeGetCurrentRRMode(pScreen);
+    if (rrmode == NULL)
         return 0;
 
-    return pMod->Clock;
-
+    return rrmode->mode.dotClock / 1000.0;
 }
 
 static int
@@ -272,14 +303,15 @@ xwlVidModeLockZoom(ScreenPtr pScreen, Bool lock)
 static ModeStatus
 xwlVidModeCheckModeForMonitor(ScreenPtr pScreen, DisplayModePtr mode)
 {
-    DisplayModePtr pMod;
+    RRModePtr rrmode;
 
-    /* This should not happen */
-    if (!xwlVidModeGetCurrentModeline(pScreen, &pMod, NULL))
+    rrmode = xwlVidModeGetRRMode(pScreen, mode->HDisplay, mode->VDisplay);
+    if (rrmode == NULL)
         return MODE_ERROR;
 
     /* Only support mode with the same HSync/VRefresh as we advertise */
-    if (mode->HSync == pMod->HSync && mode->VRefresh == pMod->VRefresh)
+    if (mode->HSync == mode_hsync(&rrmode->mode) &&
+        mode->VRefresh == mode_refresh(&rrmode->mode))
         return MODE_OK;
 
     /* All the rest is unsupported - If we want to succeed, return MODE_OK instead */
@@ -289,20 +321,10 @@ xwlVidModeCheckModeForMonitor(ScreenPtr pScreen, DisplayModePtr mode)
 static ModeStatus
 xwlVidModeCheckModeForDriver(ScreenPtr pScreen, DisplayModePtr mode)
 {
-    DisplayModePtr pMod;
+    RRModePtr rrmode;
 
-    /* This should not happen */
-    if (!xwlVidModeGetCurrentModeline(pScreen, &pMod, NULL))
-        return MODE_ERROR;
-
-    if (mode->HTotal != pMod->HTotal)
-        return MODE_BAD_HVALUE;
-
-    if (mode->VTotal != pMod->VTotal)
-        return MODE_BAD_VVALUE;
-
-    /* Unsupported for now, but pretend it works */
-    return MODE_OK;
+    rrmode = xwlVidModeGetRRMode(pScreen, mode->HDisplay, mode->VDisplay);
+    return rrmode ? MODE_OK : MODE_ERROR;
 }
 
 static void

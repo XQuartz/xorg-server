@@ -212,9 +212,9 @@ xwl_glamor_gbm_create_pixmap(ScreenPtr screen,
     PixmapPtr pixmap = NULL;
 
     if (width > 0 && height > 0 && depth >= 15 &&
-        (hint == 0 ||
-         hint == CREATE_PIXMAP_USAGE_BACKING_PIXMAP ||
-         hint == CREATE_PIXMAP_USAGE_SHARED)) {
+        (hint == CREATE_PIXMAP_USAGE_BACKING_PIXMAP ||
+         hint == CREATE_PIXMAP_USAGE_SHARED ||
+         (xwl_screen->rootless && hint == 0))) {
         uint32_t format = gbm_format_for_depth(depth);
 
 #ifdef GBM_BO_WITH_MODIFIERS

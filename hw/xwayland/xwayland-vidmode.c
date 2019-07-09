@@ -106,26 +106,25 @@ xwlRRModeToDisplayMode(RRModePtr rrmode, DisplayModePtr mode)
 static RRModePtr
 xwlVidModeGetRRMode(ScreenPtr pScreen, int32_t width, int32_t height)
 {
-    RROutputPtr output = RRFirstOutput(pScreen);
+    struct xwl_screen *xwl_screen = xwl_screen_get(pScreen);
+    struct xwl_output *xwl_output = xwl_screen_get_first_output(xwl_screen);
 
-    if (output == NULL)
+    if (!xwl_output)
         return NULL;
 
-    return xwl_output_find_mode(output->devPrivate, width, height);
+    return xwl_output_find_mode(xwl_output, width, height);
 }
 
 static RRModePtr
 xwlVidModeGetCurrentRRMode(ScreenPtr pScreen)
 {
+    struct xwl_screen *xwl_screen = xwl_screen_get(pScreen);
+    struct xwl_output *xwl_output = xwl_screen_get_first_output(xwl_screen);
     struct xwl_emulated_mode *emulated_mode;
-    struct xwl_output *xwl_output;
-    RROutputPtr output;
 
-    output = RRFirstOutput(pScreen);
-    if (output == NULL)
+    if (!xwl_output)
         return NULL;
 
-    xwl_output = output->devPrivate;
     emulated_mode =
         xwl_output_get_emulated_mode_for_client(xwl_output, GetCurrentClient());
 
@@ -199,39 +198,79 @@ xwlVidModeGetMonitorValue(ScreenPtr pScreen, int valtyp, int indx)
 static int
 xwlVidModeGetDotClock(ScreenPtr pScreen, int Clock)
 {
-    RRModePtr rrmode;
-
-    rrmode = xwlVidModeGetCurrentRRMode(pScreen);
-    if (rrmode == NULL)
-        return 0;
-
-    return rrmode->mode.dotClock / 1000.0;
+    return Clock;
 }
 
 static int
 xwlVidModeGetNumOfClocks(ScreenPtr pScreen, Bool *progClock)
 {
-    return 1;
+    /* We emulate a programmable clock, rather then a fixed set of clocks */
+    *progClock = TRUE;
+    return 0;
 }
 
 static Bool
 xwlVidModeGetClocks(ScreenPtr pScreen, int *Clocks)
 {
-    *Clocks = xwlVidModeGetDotClock(pScreen, 0);
+    return FALSE; /* Programmable clock, no clock list */
+}
+
+/* GetFirstModeline and GetNextModeline are used from Xext/vidmode.c like this:
+ *  if (pVidMode->GetFirstModeline(pScreen, &mode, &dotClock)) {
+ *      do {
+ *          ...
+ *          if (...)
+ *              break;
+ *      } while (pVidMode->GetNextModeline(pScreen, &mode, &dotClock));
+ *  }
+ * IOW our caller basically always loops over all the modes. There never is a
+ * return to the mainloop between GetFirstModeline and NextModeline calls where
+ * other parts of the server may change our state so we do not need to worry
+ * about xwl_output->randr_output->modes changing underneath us.
+ * Thus we can simply implement these two callbacks by storing the enumeration
+ * index in pVidMode->Next.
+ */
+
+static Bool
+xwlVidModeGetNextModeline(ScreenPtr pScreen, DisplayModePtr *mode, int *dotClock)
+{
+    struct xwl_screen *xwl_screen = xwl_screen_get(pScreen);
+    struct xwl_output *xwl_output = xwl_screen_get_first_output(xwl_screen);
+    VidModePtr pVidMode;
+    DisplayModePtr pMod;
+    intptr_t index;
+
+    pMod = dixLookupPrivate(&pScreen->devPrivates, xwlVidModePrivateKey);
+    pVidMode = VidModeGetPtr(pScreen);
+    if (xwl_output == NULL || pMod == NULL || pVidMode == NULL)
+        return FALSE;
+
+    index = (intptr_t)pVidMode->Next;
+    if (index >= xwl_output->randr_output->numModes)
+        return FALSE;
+    xwlRRModeToDisplayMode(xwl_output->randr_output->modes[index], pMod);
+    index++;
+    pVidMode->Next = (void *)index;
+
+    *mode = pMod;
+    if (dotClock != NULL)
+        *dotClock = pMod->Clock;
 
     return TRUE;
 }
 
 static Bool
-xwlVidModeGetNextModeline(ScreenPtr pScreen, DisplayModePtr *mode, int *dotClock)
-{
-    return FALSE;
-}
-
-static Bool
 xwlVidModeGetFirstModeline(ScreenPtr pScreen, DisplayModePtr *mode, int *dotClock)
 {
-    return xwlVidModeGetCurrentModeline(pScreen, mode, dotClock);
+    VidModePtr pVidMode;
+    intptr_t index = 0;
+
+    pVidMode = VidModeGetPtr(pScreen);
+    if (pVidMode == NULL)
+        return FALSE;
+
+    pVidMode->Next = (void *)index; /* 0 */
+    return xwlVidModeGetNextModeline(pScreen, mode, dotClock);
 }
 
 static Bool
@@ -251,37 +290,27 @@ xwlVidModeZoomViewport(ScreenPtr pScreen, int zoom)
 static Bool
 xwlVidModeSetViewPort(ScreenPtr pScreen, int x, int y)
 {
-    RROutputPtr output;
-    RRCrtcPtr crtc;
+    struct xwl_screen *xwl_screen = xwl_screen_get(pScreen);
+    struct xwl_output *xwl_output = xwl_screen_get_first_output(xwl_screen);
 
-    output = RRFirstOutput(pScreen);
-    if (output == NULL)
-        return FALSE;
-
-    crtc = output->crtc;
-    if (crtc == NULL)
+    if (!xwl_output)
         return FALSE;
 
     /* Support only default viewport */
-    return (x == crtc->x && y == crtc->y);
+    return (x == xwl_output->x && y == xwl_output->y);
 }
 
 static Bool
 xwlVidModeGetViewPort(ScreenPtr pScreen, int *x, int *y)
 {
-    RROutputPtr output;
-    RRCrtcPtr crtc;
+    struct xwl_screen *xwl_screen = xwl_screen_get(pScreen);
+    struct xwl_output *xwl_output = xwl_screen_get_first_output(xwl_screen);
 
-    output = RRFirstOutput(pScreen);
-    if (output == NULL)
+    if (!xwl_output)
         return FALSE;
 
-    crtc = output->crtc;
-    if (crtc == NULL)
-        return FALSE;
-
-    *x = crtc->x;
-    *y = crtc->y;
+    *x = xwl_output->x;
+    *y = xwl_output->y;
 
     return TRUE;
 }
@@ -289,8 +318,19 @@ xwlVidModeGetViewPort(ScreenPtr pScreen, int *x, int *y)
 static Bool
 xwlVidModeSwitchMode(ScreenPtr pScreen, DisplayModePtr mode)
 {
-    /* Unsupported for now */
-    return FALSE;
+    struct xwl_screen *xwl_screen = xwl_screen_get(pScreen);
+    struct xwl_output *xwl_output = xwl_screen_get_first_output(xwl_screen);
+    RRModePtr rrmode;
+
+    if (!xwl_output)
+        return FALSE;
+
+    rrmode = xwl_output_find_mode(xwl_output, mode->HDisplay, mode->VDisplay);
+    if (rrmode == NULL)
+        return FALSE;
+
+    xwl_output_set_emulated_mode(xwl_output, GetCurrentClient(), rrmode, TRUE);
+    return TRUE;
 }
 
 static Bool
@@ -344,8 +384,10 @@ xwlVidModeAddModeline(ScreenPtr pScreen, DisplayModePtr mode)
 static int
 xwlVidModeGetNumOfModes(ScreenPtr pScreen)
 {
-    /* We have only one mode */
-    return 1;
+    struct xwl_screen *xwl_screen = xwl_screen_get(pScreen);
+    struct xwl_output *xwl_output = xwl_screen_get_first_output(xwl_screen);
+
+    return xwl_output ? xwl_output->randr_output->numModes : 0;
 }
 
 static Bool

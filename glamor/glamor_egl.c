@@ -146,13 +146,12 @@ glamor_egl_get_gbm_device(ScreenPtr screen)
 Bool
 glamor_egl_create_textured_screen(ScreenPtr screen, int handle, int stride)
 {
-    ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     PixmapPtr screen_pixmap;
 
     screen_pixmap = screen->GetScreenPixmap(screen);
 
     if (!glamor_egl_create_textured_pixmap(screen_pixmap, handle, stride)) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+        LogMessage(X_ERROR,
                    "Failed to create textured screen.");
         return FALSE;
     }
@@ -193,7 +192,7 @@ glamor_egl_create_textured_pixmap(PixmapPtr pixmap, int handle, int stride)
      */
     ret = drmPrimeHandleToFD(glamor_egl->fd, handle, O_CLOEXEC, &fd);
     if (ret) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+        LogMessage(X_ERROR,
                    "Failed to make prime FD for handle: %d\n", errno);
         return FALSE;
     }
@@ -204,7 +203,7 @@ glamor_egl_create_textured_pixmap(PixmapPtr pixmap, int handle, int stride)
                                     stride,
                                     pixmap->drawable.depth,
                                     pixmap->drawable.bitsPerPixel)) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+        LogMessage(X_ERROR,
                    "Failed to make import prime FD as pixmap: %d\n", errno);
         close(fd);
         return FALSE;
@@ -298,7 +297,7 @@ glamor_make_pixmap_exportable(PixmapPtr pixmap, Bool modifiers_ok)
         format = GBM_FORMAT_R8;
         break;
     default:
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+        LogMessage(X_ERROR,
                    "Failed to make %d depth, %dbpp pixmap exportable\n",
                    pixmap->drawable.depth, pixmap->drawable.bitsPerPixel);
         return FALSE;
@@ -330,7 +329,7 @@ glamor_make_pixmap_exportable(PixmapPtr pixmap, Bool modifiers_ok)
     }
 
     if (!bo) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+        LogMessage(X_ERROR,
                    "Failed to make %dx%dx%dbpp GBM bo\n",
                    width, height, pixmap->drawable.bitsPerPixel);
         return FALSE;
@@ -341,7 +340,7 @@ glamor_make_pixmap_exportable(PixmapPtr pixmap, Bool modifiers_ok)
                                gbm_bo_get_stride(bo), NULL);
     if (!glamor_egl_create_textured_pixmap_from_gbm_bo(exported, bo,
                                                        used_modifiers)) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+        LogMessage(X_ERROR,
                    "Failed to make %dx%dx%dbpp pixmap from GBM bo\n",
                    width, height, pixmap->drawable.bitsPerPixel);
         screen->DestroyPixmap(exported);
@@ -871,7 +870,7 @@ glamor_egl_screen_init(ScreenPtr screen, struct glamor_context *glamor_ctx)
         glamor_egl->device_path = drmGetDeviceNameFromFd2(glamor_egl->fd);
 
         if (!dri3_screen_init(screen, &glamor_dri3_info)) {
-            xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+            LogMessage(X_ERROR,
                        "Failed to initialize DRI3.\n");
         }
     }
@@ -934,12 +933,12 @@ glamor_egl_init(ScrnInfoPtr scrn, int fd)
     glamor_egl->display = glamor_egl_get_display(EGL_PLATFORM_GBM_MESA,
                                                  glamor_egl->gbm);
     if (!glamor_egl->display) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR, "eglGetDisplay() failed\n");
+        LogMessage(X_ERROR, "eglGetDisplay() failed\n");
         goto error;
     }
 
     if (!eglInitialize(glamor_egl->display, NULL, NULL)) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR, "eglInitialize() failed\n");
+        LogMessage(X_ERROR, "eglInitialize() failed\n");
         glamor_egl->display = EGL_NO_DISPLAY;
         goto error;
     }
@@ -989,13 +988,13 @@ glamor_egl_init(ScrnInfoPtr scrn, int fd)
             EGL_NONE
         };
         if (!eglBindAPI(EGL_OPENGL_ES_API)) {
-            xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+            LogMessage(X_ERROR,
                        "glamor: Failed to bind either GL or GLES APIs.\n");
             goto error;
         }
 
         if (!eglChooseConfig(glamor_egl->display, NULL, &egl_config, 1, &n)) {
-            xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+            LogMessage(X_ERROR,
                        "glamor: No acceptable EGL configs found\n");
             goto error;
         }
@@ -1005,26 +1004,26 @@ glamor_egl_init(ScrnInfoPtr scrn, int fd)
                                                config_attribs);
     }
     if (glamor_egl->context == EGL_NO_CONTEXT) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+        LogMessage(X_ERROR,
                    "glamor: Failed to create GL or GLES2 contexts\n");
         goto error;
     }
 
     if (!eglMakeCurrent(glamor_egl->display,
                         EGL_NO_SURFACE, EGL_NO_SURFACE, glamor_egl->context)) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+        LogMessage(X_ERROR,
                    "Failed to make EGL context current\n");
         goto error;
     }
 
     renderer = glGetString(GL_RENDERER);
     if (!renderer) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+        LogMessage(X_ERROR,
                    "glGetString() returned NULL, your GL is broken\n");
         goto error;
     }
     if (strstr((const char *)renderer, "llvmpipe")) {
-        xf86DrvMsg(scrn->scrnIndex, X_INFO,
+        LogMessage(X_INFO,
                    "Refusing to try glamor on llvmpipe\n");
         goto error;
     }
@@ -1036,13 +1035,12 @@ glamor_egl_init(ScrnInfoPtr scrn, int fd)
     lastGLContext = NULL;
 
     if (!epoxy_has_gl_extension("GL_OES_EGL_image")) {
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR,
+        LogMessage(X_ERROR,
                    "glamor acceleration requires GL_OES_EGL_image\n");
         goto error;
     }
 
-    xf86DrvMsg(scrn->scrnIndex, X_INFO, "glamor X acceleration enabled on %s\n",
-               renderer);
+    LogMessage(X_INFO, "glamor X acceleration enabled on %s\n", renderer);
 
 #ifdef GBM_BO_WITH_MODIFIERS
     if (epoxy_has_egl_extension(glamor_egl->display,

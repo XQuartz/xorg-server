@@ -922,11 +922,11 @@ vfbScreenInit(ScreenPtr pScreen, int argc, char **argv)
 
     ret = fbScreenInit(pScreen, pbits, pvfb->width, pvfb->height,
                        dpix, dpiy, pvfb->paddedWidth, pvfb->bitsPerPixel);
-    if (ret && Render)
-        fbPictureInit(pScreen, 0, 0);
-
     if (!ret)
         return FALSE;
+
+    if (Render)
+        fbPictureInit(pScreen, 0, 0);
 
     if (!vfbRandRInit(pScreen))
        return FALSE;

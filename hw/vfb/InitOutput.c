@@ -68,6 +68,14 @@ from The Open Group.
 #include "glx_extinit.h"
 #include "randrstr.h"
 
+#ifdef GLAMOR_HAS_GBM
+#include <glamor.h>
+#include <gbm.h>
+
+#include <unistd.h>
+#include <fcntl.h>
+#endif
+
 #define VFB_DEFAULT_WIDTH      1280
 #define VFB_DEFAULT_HEIGHT     1024
 #define VFB_DEFAULT_DEPTH        24
@@ -100,6 +108,12 @@ typedef struct {
 
 #ifdef HAS_SHM
     int shmid;
+#endif
+#ifdef GLAMOR_HAS_GBM
+    int fd;
+    CreateScreenResourcesProcPtr createScreenResources;
+    struct gbm_device *gbm;
+    struct gbm_bo *front_bo;
 #endif
 } vfbScreenInfo, *vfbScreenInfoPtr;
 
@@ -726,9 +740,109 @@ vfbCloseScreen(ScreenPtr pScreen)
     if (pScreen->devPrivate)
         (*pScreen->DestroyPixmap) (pScreen->devPrivate);
     pScreen->devPrivate = NULL;
+#ifdef GLAMOR_HAS_GBM
+    if (pvfb->fd >= 0) {
+        if (pvfb->front_bo) {
+            gbm_bo_destroy(pvfb->front_bo);
+            pvfb->front_bo = NULL;
+        }
+        close(pvfb->fd);
+        pvfb->fd = -1;
+    }
+#endif
+    /*
+     * XXX: There is an existing vfbScreens leak. Should we free() it directly
+     * or otherwise - input welcome.
+     */
 
     return pScreen->CloseScreen(pScreen);
 }
+
+#ifdef GLAMOR_HAS_GBM
+static Bool
+vfbCreateScreenResources(ScreenPtr pScreen)
+{
+    vfbScreenInfoPtr pvfb = &vfbScreens[pScreen->myNum];
+    PixmapPtr pixmap;
+    Bool ret;
+
+    pScreen->CreateScreenResources = pvfb->createScreenResources;
+    ret = pScreen->CreateScreenResources(pScreen);
+    pScreen->CreateScreenResources = vfbCreateScreenResources;
+
+    if (!ret)
+        return FALSE;
+
+    pixmap = pScreen->GetScreenPixmap(pScreen);
+    /* TODO: add support for modifiers at some point */
+    if (!glamor_egl_create_textured_pixmap_from_gbm_bo(pixmap, pvfb->front_bo,
+        FALSE)) {
+        LogMessage(X_ERROR, "glamor_egl_create_textured_pixmap() failed\n");
+        /* TODO: plug the leak, aka undo the CreateScreenResources() call above. */
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+static void
+vfbDRIInit(ScreenPtr pScreen)
+{
+    vfbScreenInfoPtr pvfb = &vfbScreens[pScreen->myNum];
+    /* TODO: don't hardcode the node name */
+    const char *node_name = "/dev/dri/renderD128";
+    const char *error_msg;
+
+    pvfb->fd = open(node_name, O_RDWR | O_CLOEXEC);
+    if (pvfb->fd < 0) {
+        error_msg = "Failed to open device node";
+        goto out;
+    }
+
+    if (!glamor_egl_init(pScreen, pvfb->fd)) {
+        error_msg = "Failed to initialize glamor";
+        goto close_fd;
+    }
+
+    pvfb->gbm = glamor_egl_get_gbm_device(pScreen);
+    if (!pvfb->gbm) {
+        error_msg = "Failed to get gbm device";
+        goto egl_fini;
+    }
+    pvfb->front_bo = gbm_bo_create(pvfb->gbm,
+                                   pScreen->width, pScreen->height,
+                                   GBM_FORMAT_ARGB8888,
+                                   GBM_BO_USE_RENDERING);
+    if (!pvfb->front_bo) {
+        error_msg = "Failed to create front buffer";
+        goto egl_fini;
+    }
+
+    if (!glamor_init(pScreen, GLAMOR_USE_EGL_SCREEN)) {
+        error_msg = "Failed to initialize glamor at ScreenInit() time";
+        goto destroy_bo;
+    }
+
+    pvfb->createScreenResources = pScreen->CreateScreenResources;
+    pScreen->CreateScreenResources = vfbCreateScreenResources;
+    return;
+
+destroy_bo:
+    gbm_bo_destroy(pvfb->front_bo);
+egl_fini:
+    /* TODO: There's no glamor_egl_fini just yet */
+close_fd:
+    close(pvfb->fd);
+out:
+    LogMessage(X_ERROR, "%s. Disabling GLAMOR/DRI3.\n", error_msg);
+    return;
+}
+#else
+static void
+vfbDRIInit(ScreenPtr pScreen)
+{
+}
+#endif
 
 static Bool
 vfbRROutputValidateMode(ScreenPtr           pScreen,
@@ -925,8 +1039,10 @@ vfbScreenInit(ScreenPtr pScreen, int argc, char **argv)
     if (!ret)
         return FALSE;
 
-    if (Render)
+    if (Render) {
         fbPictureInit(pScreen, 0, 0);
+        vfbDRIInit(pScreen);
+    }
 
     if (!vfbRandRInit(pScreen))
        return FALSE;

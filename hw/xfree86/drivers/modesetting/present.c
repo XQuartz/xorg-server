@@ -336,10 +336,9 @@ ms_present_flip(RRCrtcPtr crtc,
     event->unflip = FALSE;
 
     ret = ms_do_pageflip(screen, pixmap, event, drmmode_crtc->vblank_pipe, !sync_flip,
-                         ms_present_flip_handler, ms_present_flip_abort);
-    if (!ret)
-        xf86DrvMsg(scrn->scrnIndex, X_ERROR, "present flip failed\n");
-    else
+                         ms_present_flip_handler, ms_present_flip_abort,
+                         "Present-flip");
+    if (ret)
         ms->drmmode.present_flipping = TRUE;
 
     return ret;
@@ -367,7 +366,8 @@ ms_present_unflip(ScreenPtr screen, uint64_t event_id)
 
     if (ms_present_check_unflip(NULL, screen->root, pixmap, TRUE, NULL) &&
         ms_do_pageflip(screen, pixmap, event, -1, FALSE,
-                       ms_present_flip_handler, ms_present_flip_abort)) {
+                       ms_present_flip_handler, ms_present_flip_abort,
+                       "Present-unflip")) {
         return;
     }
 

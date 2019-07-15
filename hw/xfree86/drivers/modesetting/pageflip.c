@@ -231,7 +231,8 @@ ms_do_pageflip(ScreenPtr screen,
                int ref_crtc_vblank_pipe,
                Bool async,
                ms_pageflip_handler_proc pageflip_handler,
-               ms_pageflip_abort_proc pageflip_abort)
+               ms_pageflip_abort_proc pageflip_abort,
+               const char *log_prefix)
 {
 #ifndef GLAMOR_HAS_GBM
     return FALSE;
@@ -250,7 +251,8 @@ ms_do_pageflip(ScreenPtr screen,
 
     if (!new_front_bo.gbm) {
         xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-                   "Failed to get GBM bo for flip to new front.\n");
+                   "%s: Failed to get GBM BO for flip to new front.\n",
+                   log_prefix);
         return FALSE;
     }
 
@@ -258,7 +260,7 @@ ms_do_pageflip(ScreenPtr screen,
     if (!flipdata) {
         drmmode_bo_destroy(&ms->drmmode, &new_front_bo);
         xf86DrvMsg(scrn->scrnIndex, X_ERROR,
-                   "Failed to allocate flipdata.\n");
+                   "%s: Failed to allocate flipdata.\n", log_prefix);
         return FALSE;
     }
 
@@ -336,8 +338,8 @@ error_undo:
     }
 
 error_out:
-    xf86DrvMsg(scrn->scrnIndex, X_WARNING, "Page flip failed: %s\n",
-               strerror(errno));
+    xf86DrvMsg(scrn->scrnIndex, X_WARNING, "%s: Page flip failed: %s\n",
+               log_prefix, strerror(errno));
     drmmode_bo_destroy(&ms->drmmode, &new_front_bo);
     /* if only the local reference - free the structure,
      * else drop the local reference and return */

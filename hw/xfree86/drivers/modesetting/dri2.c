@@ -496,7 +496,8 @@ ms_dri2_schedule_flip(ms_dri2_frame_event_ptr info)
     if (ms_do_pageflip(screen, back_priv->pixmap, event,
                        drmmode_crtc->vblank_pipe, FALSE,
                        ms_dri2_flip_handler,
-                       ms_dri2_flip_abort)) {
+                       ms_dri2_flip_abort,
+                       "DRI2-flip")) {
         ms->drmmode.dri2_flipping = TRUE;
         return TRUE;
     }

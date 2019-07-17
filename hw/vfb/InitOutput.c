@@ -833,6 +833,9 @@ vfbRandRInit(ScreenPtr pScreen)
     if (!crtc)
        return FALSE;
 
+    /* This is to avoid xrandr to complain about the gamma missing */
+    RRCrtcGammaSetSize (crtc, 256);
+
     output = RROutputCreate (pScreen, "screen", 6, NULL);
     if (!output)
        return FALSE;

@@ -768,7 +768,7 @@ try_enable_glamor(ScrnInfoPtr pScrn)
     }
 
     if (xf86LoadSubModule(pScrn, GLAMOR_EGL_MODULE_NAME)) {
-        if (glamor_egl_init(pScrn, ms->fd)) {
+        if (glamor_egl_init(xf86ScrnToScreen(pScrn), ms->fd)) {
             xf86DrvMsg(pScrn->scrnIndex, X_INFO, "glamor initialized\n");
             ms->drmmode.glamor = TRUE;
         } else {

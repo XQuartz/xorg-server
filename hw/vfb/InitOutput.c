@@ -156,22 +156,16 @@ vfbBitsPerPixel(int depth)
         return 32;
 }
 
-void
-ddxGiveUp(enum ExitCode error)
+static void
+freeScreenInfo(vfbScreenInfoPtr pvfb)
 {
-    int i;
-
-    /* clean up the framebuffers */
-
     switch (fbmemtype) {
 #ifdef HAVE_MMAP
     case MMAPPED_FILE_FB:
-        for (i = 0; i < vfbNumScreens; i++) {
-            if (-1 == unlink(vfbScreens[i].mmap_file)) {
-                perror("unlink");
-                ErrorF("unlink %s failed, %s",
-                       vfbScreens[i].mmap_file, strerror(errno));
-            }
+        if (-1 == unlink(pvfb->mmap_file)) {
+            perror("unlink");
+            ErrorF("unlink %s failed, %s",
+                   pvfb->mmap_file, strerror(errno));
         }
         break;
 #else                           /* HAVE_MMAP */
@@ -181,11 +175,9 @@ ddxGiveUp(enum ExitCode error)
 
 #ifdef HAS_SHM
     case SHARED_MEMORY_FB:
-        for (i = 0; i < vfbNumScreens; i++) {
-            if (-1 == shmdt((char *) vfbScreens[i].pXWDHeader)) {
-                perror("shmdt");
-                ErrorF("shmdt failed, %s", strerror(errno));
-            }
+        if (-1 == shmdt((char *) pvfb->pXWDHeader)) {
+            perror("shmdt");
+            ErrorF("shmdt failed, %s", strerror(errno));
         }
         break;
 #else                           /* HAS_SHM */
@@ -194,10 +186,19 @@ ddxGiveUp(enum ExitCode error)
 #endif                          /* HAS_SHM */
 
     case NORMAL_MEMORY_FB:
-        for (i = 0; i < vfbNumScreens; i++) {
-            free(vfbScreens[i].pXWDHeader);
-        }
+        free(pvfb->pXWDHeader);
         break;
+    }
+}
+
+void
+ddxGiveUp(enum ExitCode error)
+{
+    int i;
+
+    /* clean up the framebuffers */
+    for (i = 0; i < vfbNumScreens; i++) {
+        freeScreenInfo(&vfbScreens[i]);
     }
 }
 

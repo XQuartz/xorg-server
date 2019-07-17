@@ -627,8 +627,8 @@ vfbAllocateFramebufferMemory(vfbScreenInfoPtr pvfb)
 
         return pvfb->pfbMemory;
     }
-    else
-        return NULL;
+
+    return NULL;
 }
 
 static void

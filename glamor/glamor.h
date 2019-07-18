@@ -334,8 +334,6 @@ extern _X_EXPORT Bool glamor_get_drawable_modifiers(DrawablePtr draw,
 extern _X_EXPORT void glamor_set_drawable_modifiers_func(ScreenPtr screen,
                                                          GetDrawableModifiersFuncPtr func);
 
-#ifdef GLAMOR_FOR_XORG
-
 #define GLAMOR_EGL_MODULE_NAME  "glamoregl"
 
 /* @glamor_egl_init: Initialize EGL environment.
@@ -397,8 +395,6 @@ extern _X_EXPORT Bool
  glamor_egl_create_textured_pixmap_from_gbm_bo(PixmapPtr pixmap,
                                                struct gbm_bo *bo,
                                                Bool used_modifiers);
-
-#endif
 
 extern _X_EXPORT void glamor_egl_screen_init(ScreenPtr screen,
                                              struct glamor_context *glamor_ctx);

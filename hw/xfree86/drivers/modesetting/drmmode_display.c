@@ -36,6 +36,7 @@
 #include "dumb_bo.h"
 #include "inputstr.h"
 #include "xf86str.h"
+#include "xf86Priv.h"
 #include "X11/Xatom.h"
 #include "micmap.h"
 #include "xf86cmap.h"
@@ -3412,7 +3413,12 @@ drmmode_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
     ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
 
     if (drmmode->glamor) {
-        if (!glamor_init(pScreen, GLAMOR_USE_EGL_SCREEN)) {
+        unsigned int flags = GLAMOR_USE_EGL_SCREEN;
+
+        if (xf86Info.debug != NULL && !strstr(xf86Info.debug, "dmabuf_capable"))
+            flags |= GLAMOR_NO_MODIFIERS;
+
+        if (!glamor_init(pScreen, flags)) {
             return FALSE;
         }
 #ifdef GBM_BO_WITH_MODIFIERS

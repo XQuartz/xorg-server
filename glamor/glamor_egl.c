@@ -870,6 +870,9 @@ glamor_egl_screen_init(ScreenPtr screen, struct glamor_context *glamor_ctx)
      */
     glamor_enable_dri3(screen);
 
+    if (glamor_priv->flags & GLAMOR_NO_MODIFIERS)
+        glamor_egl->dmabuf_capable = FALSE;
+
     /* If the driver wants to do its own auth dance (e.g. Xwayland
      * on pre-3.15 kernels that don't have render nodes and thus
      * has the wayland compositor as a master), then it needs us
@@ -1034,10 +1037,6 @@ glamor_egl_init(ScreenPtr screen, int fd)
                                 "EGL_EXT_image_dma_buf_import") &&
         epoxy_has_egl_extension(glamor_egl->display,
                                 "EGL_EXT_image_dma_buf_import_modifiers")) {
-       if (xf86Info.debug != NULL)
-           glamor_egl->dmabuf_capable = !!strstr(xf86Info.debug,
-                                                "dmabuf_capable");
-       else
            glamor_egl->dmabuf_capable = TRUE;
     }
 #endif

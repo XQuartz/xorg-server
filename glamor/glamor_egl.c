@@ -745,6 +745,24 @@ glamor_egl_exchange_buffers(PixmapPtr front, PixmapPtr back)
     glamor_set_pixmap_type(back, GLAMOR_TEXTURE_DRM);
 }
 
+static void glamor_egl_cleanup(struct glamor_egl_screen_private *glamor_egl)
+{
+    if (glamor_egl->display != EGL_NO_DISPLAY) {
+        eglMakeCurrent(glamor_egl->display,
+                       EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        /*
+         * Force the next glamor_make_current call to update the context
+         * (on hot unplug another GPU may still be using glamor)
+         */
+        lastGLContext = NULL;
+        eglTerminate(glamor_egl->display);
+    }
+    if (glamor_egl->gbm)
+        gbm_device_destroy(glamor_egl->gbm);
+    free(glamor_egl->device_path);
+    free(glamor_egl);
+}
+
 static Bool
 glamor_egl_close_screen(ScreenPtr screen)
 {
@@ -873,24 +891,6 @@ glamor_egl_screen_init(ScreenPtr screen, struct glamor_context *glamor_ctx)
         }
     }
 #endif
-}
-
-static void glamor_egl_cleanup(struct glamor_egl_screen_private *glamor_egl)
-{
-    if (glamor_egl->display != EGL_NO_DISPLAY) {
-        eglMakeCurrent(glamor_egl->display,
-                       EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-        /*
-         * Force the next glamor_make_current call to update the context
-         * (on hot unplug another GPU may still be using glamor)
-         */
-        lastGLContext = NULL;
-        eglTerminate(glamor_egl->display);
-    }
-    if (glamor_egl->gbm)
-        gbm_device_destroy(glamor_egl->gbm);
-    free(glamor_egl->device_path);
-    free(glamor_egl);
 }
 
 static void

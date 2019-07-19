@@ -850,12 +850,6 @@ glamor_egl_screen_init(ScreenPtr screen, struct glamor_context *glamor_ctx)
     glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
 #endif
 
-    glamor_egl->saved_close_screen = screen->CloseScreen;
-    screen->CloseScreen = glamor_egl_close_screen;
-
-    glamor_egl->saved_destroy_pixmap = screen->DestroyPixmap;
-    screen->DestroyPixmap = glamor_egl_destroy_pixmap;
-
     glamor_ctx->ctx = glamor_egl->context;
     glamor_ctx->display = glamor_egl->display;
 
@@ -909,6 +903,12 @@ glamor_egl_init(ScreenPtr screen, int fd)
     }
 
     dixSetPrivate(&screen->devPrivates, &glamor_egl_screen_private_key, glamor_egl);
+
+    glamor_egl->saved_close_screen = screen->CloseScreen;
+    screen->CloseScreen = glamor_egl_close_screen;
+
+    glamor_egl->saved_destroy_pixmap = screen->DestroyPixmap;
+    screen->DestroyPixmap = glamor_egl_destroy_pixmap;
 
     glamor_egl->fd = fd;
     glamor_egl->gbm = gbm_create_device(glamor_egl->fd);

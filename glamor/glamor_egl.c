@@ -770,8 +770,13 @@ glamor_egl_close_screen(ScreenPtr screen)
     screen_pixmap = screen->GetScreenPixmap(screen);
     pixmap_priv = glamor_get_pixmap_private(screen_pixmap);
 
-    eglDestroyImageKHR(glamor_egl->display, pixmap_priv->image);
-    pixmap_priv->image = NULL;
+    /* For DDX like Xwayland and Xorg, the pixmap is not destroyed so
+     * we should do so here.
+     */
+    if (pixmap_priv) {
+        eglDestroyImageKHR(glamor_egl->display, pixmap_priv->image);
+        pixmap_priv->image = NULL;
+    }
 
     screen->CloseScreen = glamor_egl->saved_close_screen;
     glamor_egl_cleanup(screen);

@@ -927,7 +927,11 @@ glamor_close_screen(ScreenPtr screen)
     ps->Glyphs = glamor_priv->saved_procs.glyphs;
 
     screen_pixmap = screen->GetScreenPixmap(screen);
-    glamor_pixmap_destroy_fbo(screen_pixmap);
+    /* For DDX like Xwayland and Xorg, the pixmap is not destroyed so
+     * we should do so here.
+     */
+    if (screen_pixmap)
+        glamor_pixmap_destroy_fbo(screen_pixmap);
 
     glamor_release_screen_priv(screen);
 

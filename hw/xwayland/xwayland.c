@@ -98,11 +98,13 @@ ddxUseMsg(void)
 {
     ErrorF("-rootless              run rootless, requires wm support\n");
     ErrorF("-wm fd                 create X client for wm on given fd\n");
-    ErrorF("-listenfd fd           add give fd as a listen socket\n");
+    ErrorF("-initfd fd             add given fd as a listen socket for initialization clients\n");
+    ErrorF("-listenfd fd           add given fd as a listen socket\n");
     ErrorF("-listen fd             deprecated, use \"-listenfd\" instead\n");
     ErrorF("-eglstream             use eglstream backend for nvidia GPUs\n");
 }
 
+static int init_fd = -1;
 static int wm_fd = -1;
 static int listen_fds[5] = { -1, -1, -1, -1, -1 };
 static int listen_fd_count = 0;
@@ -146,6 +148,11 @@ ddxProcessArgument(int argc, char *argv[], int i)
     else if (strcmp(argv[i], "-wm") == 0) {
         CHECK_FOR_REQUIRED_ARGUMENTS(1);
         wm_fd = atoi(argv[i + 1]);
+        return 2;
+    }
+    else if (strcmp(argv[i], "-initfd") == 0) {
+        CHECK_FOR_REQUIRED_ARGUMENTS(1);
+        init_fd = atoi(argv[i + 1]);
         return 2;
     }
     else if (strcmp(argv[i], "-shm") == 0) {
@@ -1287,10 +1294,14 @@ InitOutput(ScreenInfo * screen_info, int argc, char **argv)
 
     LocalAccessScopeUser();
 
-    if (wm_fd >= 0) {
-        TimerSet(NULL, 0, 1, add_client_fd, NULL);
+    if (wm_fd >= 0 || init_fd >= 0) {
+        if (wm_fd >= 0)
+            TimerSet(NULL, 0, 1, add_client_fd, NULL);
+        if (init_fd >= 0)
+            ListenOnOpenFD(init_fd, FALSE);
         AddCallback(&SelectionCallback, wm_selection_callback, NULL);
-    } else if (listen_fd_count > 0) {
+    }
+    else if (listen_fd_count > 0) {
         listen_on_fds();
     }
 }

@@ -786,6 +786,9 @@ vfbRRCrtcSet(ScreenPtr pScreen,
 static Bool
 vfbRRGetInfo(ScreenPtr pScreen, Rotation *rotations)
 {
+    /* Don't support rotations */
+    *rotations = RR_Rotate_0;
+
     return TRUE;
 }
 

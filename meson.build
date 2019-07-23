@@ -394,17 +394,6 @@ endif
 
 build_modesetting = libdrm_dep.found()
 
-build_vbe = false
-if get_option('vbe') == 'auto'
-    if (host_machine.system() != 'darwin' and
-        host_machine.system() != 'windows' and
-        host_machine.system() != 'cygwin')
-        build_vbe = true
-    endif
-else
-    build_vbe = get_option('vbe') == 'true'
-endif
-
 build_vgahw = false
 if get_option('vgahw') == 'auto'
     if (host_machine.system() != 'darwin' and

@@ -71,6 +71,8 @@ cat > sdksyms.c << EOF
 /* hw/xfree86/int10/Makefile.am -- module */
 /*
 #include "xf86int10.h"
+#include "vbe.h"
+#include "vbeModes.h"
  */
 
 
@@ -179,13 +181,6 @@ cat > sdksyms.c << EOF
 /* hw/xfree86/parser/Makefile.am */
 #include "xf86Parser.h"
 #include "xf86Optrec.h"
-
-
-/* hw/xfree86/vbe/Makefile.am -- module */
-/*
-#include "vbe.h"
-#include "vbeModes.h"
- */
 
 
 /* hw/xfree86/dri/Makefile.am -- module */

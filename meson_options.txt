@@ -72,8 +72,6 @@ option('hal', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
        description: 'Enable HAL integration')
 option('systemd_logind', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
        description: 'Enable systemd-logind integration')
-option('vbe', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
-       description: 'Xorg VBE module')
 option('vgahw', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
        description: 'Xorg VGA access module')
 option('dpms', type: 'boolean', value: true,

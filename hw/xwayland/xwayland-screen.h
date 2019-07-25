@@ -36,6 +36,7 @@
 #include "xwayland-types.h"
 #include "xwayland-output.h"
 #include "xwayland-glamor.h"
+#include "xwayland-drm-lease.h"
 
 struct xwl_format {
     uint32_t format;
@@ -87,6 +88,9 @@ struct xwl_screen {
     struct zwp_linux_dmabuf_v1 *dmabuf;
     struct zxdg_output_manager_v1 *xdg_output_manager;
     struct wp_viewporter *viewporter;
+    struct xorg_list drm_lease_devices;
+    struct xorg_list queued_drm_lease_devices;
+    struct xorg_list drm_leases;
     uint32_t serial;
 
 #define XWL_FORMAT_ARGB8888 (1 << 0)

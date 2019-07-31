@@ -977,7 +977,9 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     struct xwl_screen *xwl_screen;
     Pixel red_mask, blue_mask, green_mask;
     int ret, bpc, green_bpc, i;
+#ifdef XWL_HAS_GLAMOR
     Bool use_eglstreams = FALSE;
+#endif
 
     xwl_screen = calloc(1, sizeof *xwl_screen);
     if (xwl_screen == NULL)

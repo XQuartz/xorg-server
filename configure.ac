@@ -2297,9 +2297,15 @@ AM_CONDITIONAL(XEPHYR, [test "x$KDRIVE" = xyes && test "x$XEPHYR" = xyes])
 
 dnl Xwayland DDX
 
-XWAYLANDMODULES="wayland-client >= 1.3.0 wayland-protocols >= 1.10 $LIBDRM epoxy"
+XWAYLANDMODULES="wayland-client >= 1.3.0 wayland-protocols >= 1.10"
 if test "x$XF86VIDMODE" = xyes; then
 	XWAYLANDMODULES="$XWAYLANDMODULES $VIDMODEPROTO"
+fi
+if test "x$DRM" = xyes; then
+	XWAYLANDMODULES="$XWAYLANDMODULES $LIBDRM"
+fi
+if test "x$GLAMOR" = xyes; then
+	XWAYLANDMODULES="$XWAYLANDMODULES epoxy"
 fi
 PKG_CHECK_MODULES(XWAYLANDMODULES, [$XWAYLANDMODULES], [have_xwayland=yes], [have_xwayland=no])
 AC_MSG_CHECKING([whether to build Xwayland DDX])

@@ -58,6 +58,14 @@ endforeach
 
 add_global_arguments(common_wflags, language : ['c', 'objc'])
 
+libdrm_req = '>= 2.4.89'
+libselinux_req = '>= 2.0.86'
+xext_req = '>= 1.0.99.4'
+wayland_req = '>= 1.3.0'
+wayland_protocols_req = '>= 1.10'
+gbm_req = '>= 10.2'
+xf86dgaproto_req = '>= 2.0.99.1'
+
 xproto_dep = dependency('xproto', version: '>= 7.0.31')
 randrproto_dep = dependency('randrproto', version: '>= 1.6.0')
 renderproto_dep = dependency('renderproto', version: '>= 0.11')
@@ -186,9 +194,9 @@ if (host_machine.system() != 'darwin' and
         xwayland_required = get_option('xwayland') == 'true'
 
         xwayland_dep = [
-            dependency('wayland-client', version: '>= 1.3.0', required: xwayland_required),
-            dependency('wayland-protocols', version: '>= 1.10', required: xwayland_required),
-            dependency('libdrm', version: '>= 2.4.89', required: xwayland_required),
+            dependency('wayland-client', version: wayland_req, required: xwayland_required),
+            dependency('wayland-protocols', version: wayland_protocols_req, required: xwayland_required),
+            dependency('libdrm', version: libdrm_req, required: xwayland_required),
             dependency('epoxy', required: xwayland_required),
         ]
 
@@ -209,7 +217,7 @@ if (host_machine.system() != 'darwin' and
         xnest_required = get_option('xnest') == 'true'
 
         xnest_dep = [
-            dependency('xext', version: '>= 1.0.99.4', required: xnest_required),
+            dependency('xext', version: xext_req, required: xnest_required),
             dependency('x11', required: xnest_required),
             dependency('xau', required: xnest_required),
         ]
@@ -307,7 +315,7 @@ endif
 gbm_dep = dependency('', required: false)
 epoxy_dep = dependency('', required: false)
 if build_glamor
-    gbm_dep = dependency('gbm', version: '>= 10.2', required: false)
+    gbm_dep = dependency('gbm', version: gbm_req, required: false)
     epoxy_dep = dependency('epoxy', required: false)
 endif
 
@@ -345,7 +353,7 @@ if build_glx
     build_hashtable = true
 endif
 
-libdrm_dep = dependency('libdrm', version: '>= 2.4.89', required: false)
+libdrm_dep = dependency('libdrm', version: libdrm_req, required: false)
 
 if get_option('dri1') == 'auto'
     build_dri1 = xf86driproto_dep.found() and libdrm_dep.found()
@@ -430,12 +438,12 @@ endif
 build_dga = false
 xf86dgaproto_dep = dependency('', required: false)
 if get_option('dga') == 'auto'
-    xf86dgaproto_dep = dependency('xf86dgaproto', version: '>= 2.0.99.1', required: false)
+    xf86dgaproto_dep = dependency('xf86dgaproto', version: xf86dgaproto_req, required: false)
     if xf86dgaproto_dep.found()
         build_dga = true
     endif
 elif get_option('dga') == 'true'
-    xf86dgaproto_dep = dependency('xf86dgaproto', version: '>= 2.0.99.1', required: true)
+    xf86dgaproto_dep = dependency('xf86dgaproto', version: xf86dgaproto_req, required: true)
     build_dga = true
 endif
 
@@ -526,7 +534,7 @@ inc = include_directories(
 
 build_xselinux = false
 if get_option('xselinux') != 'false'
-    dep_selinux = dependency('libselinux', version: '>= 2.0.86',
+    dep_selinux = dependency('libselinux', version: libselinux_req,
 			     required: get_option('xselinux') == 'true')
     dep_audit = dependency('audit', required: get_option('xselinux') == 'true')
     if get_option('xselinux') == 'true'

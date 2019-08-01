@@ -192,13 +192,17 @@ if (host_machine.system() != 'darwin' and
     host_machine.system() != 'windows')
     if get_option('xwayland') != 'false'
         xwayland_required = get_option('xwayland') == 'true'
+        build_glamor = glamor_option == 'true' or glamor_option == 'auto'
 
         xwayland_dep = [
             dependency('wayland-client', version: wayland_req, required: xwayland_required),
             dependency('wayland-protocols', version: wayland_protocols_req, required: xwayland_required),
-            dependency('libdrm', version: libdrm_req, required: xwayland_required),
-            dependency('epoxy', required: xwayland_required),
         ]
+
+        if build_glamor
+            xwayland_dep += dependency('libdrm', version: libdrm_req, required: xwayland_required)
+            xwayland_dep += dependency('epoxy', required: xwayland_required)
+        endif
 
         build_xwayland = true
         # check for all the deps being found, to handle 'auto' mode.
@@ -309,7 +313,7 @@ module_dir = join_paths(get_option('libdir'), get_option('module_dir'))
 if glamor_option == 'auto'
     build_glamor = build_xorg or build_xwayland
 else
-    build_glamor = get_option('glamor') == 'true'
+    build_glamor = glamor_option == 'true'
 endif
 
 gbm_dep = dependency('', required: false)

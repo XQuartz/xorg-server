@@ -94,7 +94,7 @@ conf_data.set('NEED_DBUS', build_systemd_logind or build_hal)
 conf_data.set('CONFIG_WSCONS', host_machine.system() == 'openbsd')
 
 conf_data.set('HAVE_XSHMFENCE', xshmfence_dep.found())
-conf_data.set('WITH_LIBDRM', libdrm_dep.found())
+conf_data.set('WITH_LIBDRM', libdrm_required)
 conf_data.set('GLAMOR_HAS_EGL_QUERY_DMABUF',
               epoxy_dep.found() and epoxy_dep.version().version_compare('>= 1.4.4'))
 conf_data.set('GLXEXT', build_glx)

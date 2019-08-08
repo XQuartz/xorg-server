@@ -284,8 +284,11 @@ ms_do_pageflip(ScreenPtr screen,
     new_front_bo.width = new_front->drawable.width;
     new_front_bo.height = new_front->drawable.height;
     if (drmmode_bo_import(&ms->drmmode, &new_front_bo,
-                          &ms->drmmode.fb_id))
+                          &ms->drmmode.fb_id)) {
+        xf86DrvMsg(scrn->scrnIndex, X_WARNING, "%s: Import BO failed: %s\n",
+                   log_prefix, strerror(errno));
         goto error_out;
+    }
 
     flags = DRM_MODE_PAGE_FLIP_EVENT;
     if (async)
@@ -309,6 +312,9 @@ ms_do_pageflip(ScreenPtr screen,
         if (!queue_flip_on_crtc(screen, crtc, flipdata,
                                 ref_crtc_vblank_pipe,
                                 flags)) {
+            xf86DrvMsg(scrn->scrnIndex, X_WARNING,
+                       "%s: Queue flip on CRTC %d failed: %s\n",
+                       log_prefix, i, strerror(errno));
             goto error_undo;
         }
     }
@@ -338,8 +344,6 @@ error_undo:
     }
 
 error_out:
-    xf86DrvMsg(scrn->scrnIndex, X_WARNING, "%s: Page flip failed: %s\n",
-               log_prefix, strerror(errno));
     drmmode_bo_destroy(&ms->drmmode, &new_front_bo);
     /* if only the local reference - free the structure,
      * else drop the local reference and return */

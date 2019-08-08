@@ -123,6 +123,7 @@ typedef struct {
 
     Bool dri2_flipping;
     Bool present_flipping;
+    Bool flip_bo_import_failed;
 
     Bool dri2_enable;
     Bool present_enable;

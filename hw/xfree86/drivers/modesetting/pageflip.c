@@ -285,9 +285,16 @@ ms_do_pageflip(ScreenPtr screen,
     new_front_bo.height = new_front->drawable.height;
     if (drmmode_bo_import(&ms->drmmode, &new_front_bo,
                           &ms->drmmode.fb_id)) {
-        xf86DrvMsg(scrn->scrnIndex, X_WARNING, "%s: Import BO failed: %s\n",
-                   log_prefix, strerror(errno));
+        if (!ms->drmmode.flip_bo_import_failed) {
+            xf86DrvMsg(scrn->scrnIndex, X_WARNING, "%s: Import BO failed: %s\n",
+                       log_prefix, strerror(errno));
+            ms->drmmode.flip_bo_import_failed = TRUE;
+        }
         goto error_out;
+    } else {
+        if (ms->drmmode.flip_bo_import_failed &&
+            new_front != screen->GetScreenPixmap(screen))
+            ms->drmmode.flip_bo_import_failed = FALSE;
     }
 
     flags = DRM_MODE_PAGE_FLIP_EVENT;

@@ -2383,16 +2383,6 @@ AC_DEFINE_DIR(PROJECTROOT, prefix, [Overall prefix])
 AC_DEFINE_DIR(SYSCONFDIR, sysconfdir, [sysconfdir])
 
 AC_SUBST([RELEASE_DATE])
-DATE_FMT="%Y%m%d"
-TIME_FMT="1%H%M%S"
-BUILD_DATE="`date "+$DATE_FMT"`"
-BUILD_TIME="`date "+$TIME_FMT"`"
-if test "x$SOURCE_DATE_EPOCH" != "x"; then
-	BUILD_DATE="`date -u -d "@$SOURCE_DATE_EPOCH" "+$DATE_FMT" 2>/dev/null || date -u -r "$SOURCE_DATE_EPOCH" "+$DATE_FMT" 2>/dev/null || date -u "+$DATE_FMT"`"
-	BUILD_TIME="`date -u -d "@$SOURCE_DATE_EPOCH" "+$TIME_FMT" 2>/dev/null || date -u -r "$SOURCE_DATE_EPOCH" "+$TIME_FMT" 2>/dev/null || date -u "+$TIME_FMT"`"
-fi
-AC_SUBST([BUILD_DATE])
-AC_SUBST([BUILD_TIME])
 
 DIX_CFLAGS="-DHAVE_DIX_CONFIG_H $XSERVER_CFLAGS"
 
@@ -2413,7 +2403,6 @@ if test "x$CONFIG_HAL" = xno && test "x$CONFIG_UDEV" = xno; then
 fi
 
 AC_CONFIG_FILES([
-buildDateTime.h
 Makefile
 glx/Makefile
 include/Makefile

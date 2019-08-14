@@ -65,7 +65,6 @@
 #include "xf86_OSlib.h"
 #include "xf86cmap.h"
 #include "xorgVersion.h"
-#include "buildDateTime.h"
 #include "mipointer.h"
 #include <X11/extensions/XI.h>
 #include <X11/extensions/XIproto.h>
@@ -186,28 +185,6 @@ xf86PrintBanner(void)
             } while (0);
 #endif
         }
-    }
-#endif
-#if defined(BUILD_DATE) && (BUILD_DATE > 19000000)
-    {
-        struct tm t;
-        char buf[100];
-
-        memset(&t, 0, sizeof(t));
-        memset(buf, 0, sizeof(buf));
-        t.tm_mday = BUILD_DATE % 100;
-        t.tm_mon = (BUILD_DATE / 100) % 100 - 1;
-        t.tm_year = BUILD_DATE / 10000 - 1900;
-#if defined(BUILD_TIME)
-        t.tm_sec = BUILD_TIME % 100;
-        t.tm_min = (BUILD_TIME / 100) % 100;
-        t.tm_hour = (BUILD_TIME / 10000) % 100;
-        if (strftime(buf, sizeof(buf), "%d %B %Y  %I:%M:%S%p", &t))
-            xf86ErrorFVerb(0, "Build Date: %s\n", buf);
-#else
-        if (strftime(buf, sizeof(buf), "%d %B %Y", &t))
-            xf86ErrorFVerb(0, "Build Date: %s\n", buf);
-#endif
     }
 #endif
 #if defined(BUILDERSTRING)

@@ -3003,8 +3003,14 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, drmModeResPtr mode_r
                                 "DPMS");
     }
 
-    if (dynamic)
+    if (dynamic) {
         output->randr_output = RROutputCreate(xf86ScrnToScreen(pScrn), output->name, strlen(output->name), output);
+        if (output->randr_output) {
+            drmmode_output_create_resources(output);
+            RRPostPendingProperties(output->randr_output);
+        }
+    }
+
     return 1;
 
  out_free_encoders:

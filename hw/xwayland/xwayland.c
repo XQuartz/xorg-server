@@ -679,6 +679,23 @@ xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
         }
     }
 
+    /* 2. Test if the window uses override-redirect + vidmode
+     * and matches (fully covers) the entire screen.
+     * This path gets hit by: allegro4, ClanLib-1.0.
+     */
+    xwl_output = xwl_screen_get_first_output(xwl_screen);
+    emulated_mode = xwl_output_get_emulated_mode_for_client(xwl_output, owner);
+    if (xwl_output && xwl_window->window->overrideRedirect &&
+        emulated_mode && emulated_mode->from_vidmode &&
+        xwl_window->x == 0 && xwl_window->y == 0 &&
+        xwl_window->width  == xwl_screen->width &&
+        xwl_window->height == xwl_screen->height) {
+
+        *emulated_mode_ret = emulated_mode;
+        *xwl_output_ret = xwl_output;
+        return TRUE;
+    }
+
     return FALSE;
 }
 

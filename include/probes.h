@@ -30,7 +30,7 @@
 
 /* definitions needed to include Dtrace probes in a source file */
 
-#if XSERVER_DTRACE
+#ifdef XSERVER_DTRACE
 #include <sys/types.h>
 typedef const char *string;
 typedef const uint8_t *const_uint8_p;

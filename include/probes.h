@@ -35,7 +35,7 @@
 typedef const char *string;
 typedef const uint8_t *const_uint8_p;
 typedef const double *const_double_p;
-#include "../dix/Xserver-dtrace.h"
+#include "Xserver-dtrace.h"
 #endif
 
 #endif /* XORG_PROBES_H */

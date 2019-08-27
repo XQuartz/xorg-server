@@ -42,7 +42,7 @@ libdix_la_SOURCES = 	\
 	touch.c		\
 	window.c
 
-EXTRA_DIST = buildatoms BuiltInAtoms Xserver.d Xserver-dtrace.h.in
+EXTRA_DIST = buildatoms BuiltInAtoms Xserver.d
 
 # Install list of protocol names
 miscconfigdir = $(SERVER_MISC_CONFIG_PATH)
@@ -53,9 +53,7 @@ if XSERVER_DTRACE
 BUILT_SOURCES = Xserver-dtrace.h
 
 Xserver-dtrace.h: $(srcdir)/Xserver.d
-	$(AM_V_GEN)$(DTRACE) -C -h -o $@ -s $(srcdir)/Xserver.d \
-		|| cp Xserver-dtrace.h.in $@
-
+	$(AM_V_GEN)$(DTRACE) -C -h -o $@ -s $(srcdir)/Xserver.d
 endif
 
 if SPECIAL_DTRACE_OBJECTS

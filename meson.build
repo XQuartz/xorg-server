@@ -175,6 +175,11 @@ else
     build_systemd_logind = get_option('systemd_logind') == 'true'
 endif
 
+with_dtrace = get_option('dtrace')
+if with_dtrace
+    dtrace = find_program('dtrace', required: true)
+endif
+
 build_xorg = false
 if (host_machine.system() != 'darwin' and
     host_machine.system() != 'windows')

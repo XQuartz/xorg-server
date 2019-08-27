@@ -31,7 +31,7 @@ cc.compiles('''
 ''',
     name: 'CLOCK_MONOTONIC'))
 
-#conf_data.set('XSERVER_DTRACE', '1') # XXX
+conf_data.set('XSERVER_DTRACE', with_dtrace)
 
 if host_machine.endian() == 'little'
     conf_data.set('X_BYTE_ORDER', 'X_LITTLE_ENDIAN')
@@ -401,6 +401,17 @@ xwayland_data.set('XWL_HAS_EGLSTREAM', build_eglstream)
 configure_file(output : 'xwayland-config.h',
                input : 'xwayland-config.h.meson.in',
                configuration : xwayland_data)
+
+dtrace_hdr = []
+dtrace_tmpl = files('Xserver.d')
+if with_dtrace
+    dtrace_header = generator(dtrace,
+        output: '@BASENAME@-dtrace.h',
+        arguments: ['-h', '-s', '@INPUT@', '-o', '@OUTPUT@']
+    )
+
+    dtrace_hdr += dtrace_header.process(dtrace_tmpl)
+endif
 
 if build_xorg
     install_data(

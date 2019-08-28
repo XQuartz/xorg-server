@@ -91,6 +91,39 @@ ms_crtc_on(xf86CrtcPtr crtc)
 }
 
 /*
+ * Return the first output which is connected to an active CRTC on this screen.
+ *
+ * RRFirstOutput() will return an output from a slave screen if it is primary,
+ * which is not the behavior that ms_covering_crtc() wants.
+ */
+
+static RROutputPtr ms_first_output(ScreenPtr pScreen)
+{
+    rrScrPriv(pScreen);
+    RROutputPtr output;
+    int i, j;
+
+    if (!pScrPriv)
+        return NULL;
+
+    if (pScrPriv->primaryOutput && pScrPriv->primaryOutput->crtc &&
+        (pScrPriv->primaryOutput->pScreen == pScreen)) {
+        return pScrPriv->primaryOutput;
+    }
+
+    for (i = 0; i < pScrPriv->numCrtcs; i++) {
+        RRCrtcPtr crtc = pScrPriv->crtcs[i];
+
+        for (j = 0; j < pScrPriv->numOutputs; j++) {
+            output = pScrPriv->outputs[j];
+            if (output->crtc == crtc)
+                return output;
+        }
+    }
+    return NULL;
+}
+
+/*
  * Return the crtc covering 'box'. If two crtcs cover a portion of
  * 'box', then prefer the crtc with greater coverage.
  */
@@ -135,7 +168,7 @@ ms_covering_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
         ScreenPtr slave;
 
         if (dixPrivateKeyRegistered(rrPrivKey))
-            primary_output = RRFirstOutput(scrn->pScreen);
+            primary_output = ms_first_output(scrn->pScreen);
         if (!primary_output || !primary_output->crtc)
             return NULL;
 

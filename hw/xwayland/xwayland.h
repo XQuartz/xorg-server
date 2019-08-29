@@ -377,6 +377,11 @@ struct xwl_output {
     Bool xdg_output_done;
 };
 
+struct xwl_client {
+};
+
+struct xwl_client *xwl_client_get(ClientPtr client);
+
 void xwl_sync_events (struct xwl_screen *xwl_screen);
 void xwl_surface_damage(struct xwl_screen *xwl_screen,
                         struct wl_surface *surface,

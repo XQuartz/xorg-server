@@ -165,10 +165,17 @@ ddxProcessArgument(int argc, char *argv[], int i)
     return 0;
 }
 
+static DevPrivateKeyRec xwl_client_private_key;
 static DevPrivateKeyRec xwl_window_private_key;
 static DevPrivateKeyRec xwl_screen_private_key;
 static DevPrivateKeyRec xwl_pixmap_private_key;
 static DevPrivateKeyRec xwl_damage_private_key;
+
+struct xwl_client *
+xwl_client_get(ClientPtr client)
+{
+    return dixLookupPrivate(&client->devPrivates, &xwl_client_private_key);
+}
 
 static struct xwl_window *
 xwl_window_get(WindowPtr window)
@@ -1120,6 +1127,13 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     if (!dixRegisterPrivateKey(&xwl_pixmap_private_key, PRIVATE_PIXMAP, 0))
         return FALSE;
     if (!dixRegisterPrivateKey(&xwl_damage_private_key, PRIVATE_WINDOW, 0))
+        return FALSE;
+    /* There are no easy to use new / delete client hooks, we could use a
+     * ClientStateCallback, but it is easier to let the dix code manage the
+     * memory for us. This will zero fill the initial xwl_client data.
+     */
+    if (!dixRegisterPrivateKey(&xwl_client_private_key, PRIVATE_CLIENT,
+                               sizeof(struct xwl_client)))
         return FALSE;
 
     dixSetPrivate(&pScreen->devPrivates, &xwl_screen_private_key, xwl_screen);

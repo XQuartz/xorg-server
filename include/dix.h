@@ -148,6 +148,7 @@ typedef struct _TimeStamp {
 } TimeStamp;
 
 /* dispatch.c */
+extern _X_EXPORT ClientPtr GetCurrentClient(void);
 
 extern _X_EXPORT void SetInputCheck(HWEventQueuePtr /*c0 */ ,
                                     HWEventQueuePtr /*c1 */ );

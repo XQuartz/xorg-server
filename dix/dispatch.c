@@ -148,6 +148,7 @@ xConnSetupPrefix connSetupPrefix;
 PaddingInfo PixmapWidthPaddingInfo[33];
 
 static ClientPtr grabClient;
+static ClientPtr currentClient; /* Client for the request currently being dispatched */
 
 #define GrabNone 0
 #define GrabActive 1
@@ -175,6 +176,23 @@ volatile char isItTimeToYield;
 
 #define SAME_SCREENS(a, b) (\
     (a.pScreen == b.pScreen))
+
+ClientPtr
+GetCurrentClient(void)
+{
+    if (in_input_thread()) {
+        static Bool warned;
+
+        if (!warned) {
+            ErrorF("[dix] Error GetCurrentClient called from input-thread\n");
+            warned = TRUE;
+        }
+
+        return NULL;
+    }
+
+    return currentClient;
+}
 
 void
 SetInputCheck(HWEventQueuePtr c0, HWEventQueuePtr c1)
@@ -474,9 +492,12 @@ Dispatch(void)
                     result = BadLength;
                 else {
                     result = XaceHookDispatch(client, client->majorOp);
-                    if (result == Success)
+                    if (result == Success) {
+                        currentClient = client;
                         result =
                             (*client->requestVector[client->majorOp]) (client);
+                        currentClient = NULL;
+                    }
                 }
                 if (!SmartScheduleSignalEnable)
                     SmartScheduleTime = GetTimeInMillis();

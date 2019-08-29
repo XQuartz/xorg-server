@@ -377,7 +377,21 @@ struct xwl_output {
     Bool xdg_output_done;
 };
 
+/* Per client per output emulated randr/vidmode resolution info. */
+struct xwl_emulated_mode {
+    uint32_t server_output_id;
+    int32_t width;
+    int32_t height;
+    Bool from_vidmode;
+};
+
+/* Apps which use randr/vidmode to change the mode when going fullscreen,
+ * usually change the mode of only a single monitor, so this should be plenty.
+ */
+#define XWL_CLIENT_MAX_EMULATED_MODES 16
+
 struct xwl_client {
+    struct xwl_emulated_mode emulated_modes[XWL_CLIENT_MAX_EMULATED_MODES];
 };
 
 struct xwl_client *xwl_client_get(ClientPtr client);
@@ -420,6 +434,9 @@ struct xwl_output *xwl_output_create(struct xwl_screen *xwl_screen,
 void xwl_output_destroy(struct xwl_output *xwl_output);
 
 void xwl_output_remove(struct xwl_output *xwl_output);
+
+struct xwl_emulated_mode *xwl_output_get_emulated_mode_for_client(
+                            struct xwl_output *xwl_output, ClientPtr client);
 
 RRModePtr xwayland_cvt(int HDisplay, int VDisplay,
                        float VRefresh, Bool Reduced, Bool Interlaced);

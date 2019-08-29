@@ -245,6 +245,73 @@ update_screen_size(struct xwl_output *xwl_output, int width, int height)
     update_desktop_dimensions();
 }
 
+struct xwl_emulated_mode *
+xwl_output_get_emulated_mode_for_client(struct xwl_output *xwl_output,
+                                        ClientPtr client)
+{
+    struct xwl_client *xwl_client = xwl_client_get(client);
+    int i;
+
+    if (!xwl_output)
+        return NULL;
+
+    for (i = 0; i < XWL_CLIENT_MAX_EMULATED_MODES; i++) {
+        if (xwl_client->emulated_modes[i].server_output_id ==
+            xwl_output->server_output_id)
+            return &xwl_client->emulated_modes[i];
+    }
+
+    return NULL;
+}
+
+static void
+xwl_output_add_emulated_mode_for_client(struct xwl_output *xwl_output,
+                                        ClientPtr client,
+                                        RRModePtr mode,
+                                        Bool from_vidmode)
+{
+    struct xwl_client *xwl_client = xwl_client_get(client);
+    struct xwl_emulated_mode *emulated_mode;
+    int i;
+
+    emulated_mode = xwl_output_get_emulated_mode_for_client(xwl_output, client);
+    if (!emulated_mode) {
+        /* Find a free spot in the emulated modes array */
+        for (i = 0; i < XWL_CLIENT_MAX_EMULATED_MODES; i++) {
+            if (xwl_client->emulated_modes[i].server_output_id == 0) {
+                emulated_mode = &xwl_client->emulated_modes[i];
+                break;
+            }
+        }
+    }
+    if (!emulated_mode) {
+        static Bool warned;
+
+        if (!warned) {
+            ErrorF("Ran out of space for emulated-modes, not adding mode");
+            warned = TRUE;
+        }
+
+        return;
+    }
+
+    emulated_mode->server_output_id = xwl_output->server_output_id;
+    emulated_mode->width  = mode->mode.width;
+    emulated_mode->height = mode->mode.height;
+    emulated_mode->from_vidmode = from_vidmode;
+}
+
+static void
+xwl_output_remove_emulated_mode_for_client(struct xwl_output *xwl_output,
+                                           ClientPtr client)
+{
+    struct xwl_emulated_mode *emulated_mode;
+
+    emulated_mode = xwl_output_get_emulated_mode_for_client(xwl_output, client);
+    if (emulated_mode)
+        memset(emulated_mode, 0, sizeof(*emulated_mode));
+}
+
 /* From hw/xfree86/common/xf86DefModeSet.c with some obscure modes dropped */
 const int32_t xwl_output_fake_modes[][2] = {
     /* 4:3 (1.33) */

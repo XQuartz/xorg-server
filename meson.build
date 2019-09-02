@@ -62,7 +62,7 @@ libdrm_req = '>= 2.4.89'
 libselinux_req = '>= 2.0.86'
 xext_req = '>= 1.0.99.4'
 wayland_req = '>= 1.3.0'
-wayland_protocols_req = '>= 1.10'
+wayland_protocols_req = '>= 1.18'
 gbm_req = '>= 10.2'
 xf86dgaproto_req = '>= 2.0.99.1'
 

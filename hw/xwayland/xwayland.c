@@ -807,8 +807,10 @@ registry_global(void *data, struct wl_registry *registry, uint32_t id,
             xwl_screen->expecting_event++;
     }
     else if (strcmp(interface, "zxdg_output_manager_v1") == 0) {
+        /* We support xdg-output from version 1 to version 3 */
+        version = min(version, 3);
         xwl_screen->xdg_output_manager =
-            wl_registry_bind(registry, id, &zxdg_output_manager_v1_interface, 1);
+            wl_registry_bind(registry, id, &zxdg_output_manager_v1_interface, version);
         xwl_screen_init_xdg_output(xwl_screen);
     }
 #ifdef XWL_HAS_GLAMOR

@@ -414,6 +414,7 @@ Bool xwl_screen_has_resolution_change_emulation(struct xwl_screen *xwl_screen);
 struct xwl_output *xwl_screen_get_first_output(struct xwl_screen *xwl_screen);
 void xwl_screen_check_resolution_change_emulation(struct xwl_screen *xwl_screen);
 Bool xwl_window_has_viewport_enabled(struct xwl_window *xwl_window);
+Bool xwl_window_is_toplevel(WindowPtr window);
 
 void xwl_tablet_tool_set_cursor(struct xwl_tablet_tool *tool);
 void xwl_seat_set_cursor(struct xwl_seat *xwl_seat);
@@ -452,6 +453,8 @@ RRModePtr xwl_output_find_mode(struct xwl_output *xwl_output,
 void xwl_output_set_emulated_mode(struct xwl_output *xwl_output,
                                   ClientPtr client, RRModePtr mode,
                                   Bool from_vidmode);
+void xwl_output_set_window_randr_emu_props(struct xwl_screen *xwl_screen,
+                                           WindowPtr window);
 
 RRModePtr xwayland_cvt(int HDisplay, int VDisplay,
                        float VRefresh, Bool Reduced, Bool Interlaced);

@@ -29,6 +29,7 @@
 
 #include "xwayland.h"
 #include <randrstr.h>
+#include <X11/Xatom.h>
 
 #define DEFAULT_DPI 96
 #define ALL_ROTATIONS (RR_Rotate_0   | \
@@ -428,6 +429,80 @@ xwl_output_find_mode(struct xwl_output *xwl_output,
     return NULL;
 }
 
+struct xwl_output_randr_emu_prop {
+    Atom atom;
+    uint32_t rects[XWL_CLIENT_MAX_EMULATED_MODES][4];
+    int rect_count;
+};
+
+static void
+xwl_output_randr_emu_prop(struct xwl_screen *xwl_screen, ClientPtr client,
+                          struct xwl_output_randr_emu_prop *prop)
+{
+    static const char atom_name[] = "_XWAYLAND_RANDR_EMU_MONITOR_RECTS";
+    struct xwl_emulated_mode *emulated_mode;
+    struct xwl_output *xwl_output;
+    int index = 0;
+
+    prop->atom = MakeAtom(atom_name, strlen(atom_name), TRUE);
+
+    xorg_list_for_each_entry(xwl_output, &xwl_screen->output_list, link) {
+        emulated_mode = xwl_output_get_emulated_mode_for_client(xwl_output, client);
+        if (!emulated_mode)
+            continue;
+
+        prop->rects[index][0] = xwl_output->x;
+        prop->rects[index][1] = xwl_output->y;
+        prop->rects[index][2] = emulated_mode->width;
+        prop->rects[index][3] = emulated_mode->height;
+        index++;
+    }
+
+    prop->rect_count = index;
+}
+
+static void
+xwl_output_set_randr_emu_prop(WindowPtr window,
+                              struct xwl_output_randr_emu_prop *prop)
+{
+    if (!xwl_window_is_toplevel(window))
+        return;
+
+    if (prop->rect_count) {
+        dixChangeWindowProperty(serverClient, window, prop->atom,
+                                XA_CARDINAL, 32, PropModeReplace,
+                                prop->rect_count * 4, prop->rects, TRUE);
+    } else {
+        DeleteProperty(serverClient, window, prop->atom);
+    }
+}
+
+static void
+xwl_output_set_randr_emu_prop_callback(void *resource, XID id, void *user_data)
+{
+    xwl_output_set_randr_emu_prop(resource, user_data);
+}
+
+static void
+xwl_output_set_randr_emu_props(struct xwl_screen *xwl_screen, ClientPtr client)
+{
+    struct xwl_output_randr_emu_prop prop = {};
+
+    xwl_output_randr_emu_prop(xwl_screen, client, &prop);
+    FindClientResourcesByType(client, RT_WINDOW,
+                              xwl_output_set_randr_emu_prop_callback, &prop);
+}
+
+void
+xwl_output_set_window_randr_emu_props(struct xwl_screen *xwl_screen,
+                                      WindowPtr window)
+{
+    struct xwl_output_randr_emu_prop prop = {};
+
+    xwl_output_randr_emu_prop(xwl_screen, wClient(window), &prop);
+    xwl_output_set_randr_emu_prop(window, &prop);
+}
+
 void
 xwl_output_set_emulated_mode(struct xwl_output *xwl_output, ClientPtr client,
                              RRModePtr mode, Bool from_vidmode)
@@ -442,6 +517,8 @@ xwl_output_set_emulated_mode(struct xwl_output *xwl_output, ClientPtr client,
         xwl_output_add_emulated_mode_for_client(xwl_output, client, mode, from_vidmode);
 
     xwl_screen_check_resolution_change_emulation(xwl_output->xwl_screen);
+
+    xwl_output_set_randr_emu_props(xwl_output->xwl_screen, client);
 }
 
 static void

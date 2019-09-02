@@ -720,6 +720,27 @@ xwl_screen_check_resolution_change_emulation(struct xwl_screen *xwl_screen)
         xwl_window_check_resolution_change_emulation(xwl_window);
 }
 
+/* This checks if the passed in Window is a toplevel client window, note this
+ * returns false for window-manager decoration windows and returns true for
+ * the actual client top-level window even if it has been reparented to
+ * a window-manager decoration window.
+ */
+Bool
+xwl_window_is_toplevel(WindowPtr window)
+{
+    struct xwl_screen *xwl_screen = xwl_screen_get(window->drawable.pScreen);
+
+    if (xwl_screen_client_is_window_manager(xwl_screen, wClient(window)))
+        return FALSE;
+
+    /* CSD and override-redirect toplevel windows */
+    if (window_get_damage(window))
+        return TRUE;
+
+    /* Normal toplevel client windows, reparented to decoration window */
+    return (window->parent && window_get_damage(window->parent));
+}
+
 static void
 xwl_window_init_allow_commits(struct xwl_window *xwl_window)
 {
@@ -880,6 +901,8 @@ xwl_realize_window(WindowPtr window)
         if (!register_damage(window))
             return FALSE;
     }
+
+    xwl_output_set_window_randr_emu_props(xwl_screen, window);
 
     return ensure_surface_for_window(window);
 }

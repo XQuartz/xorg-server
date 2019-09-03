@@ -2997,9 +2997,9 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, drmModeResPtr mode_r
     output->driver_private = drmmode_output;
     output->non_desktop = nonDesktop;
 
-    output->possible_crtcs = 0x7f;
+    output->possible_crtcs = 0;
     for (i = 0; i < koutput->count_encoders; i++) {
-        output->possible_crtcs &= kencoders[i]->possible_crtcs >> crtcshift;
+        output->possible_crtcs |= (kencoders[i]->possible_crtcs >> crtcshift) & 0x7f;
     }
     /* work out the possible clones later */
     output->possible_clones = 0;

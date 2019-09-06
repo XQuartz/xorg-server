@@ -2226,6 +2226,7 @@ xf86CrtcLeaseTerminated(RRLeasePtr lease)
 {
     int c;
     int o;
+    ScrnInfoPtr scrn = xf86ScreenToScrn(lease->screen);
 
     RRLeaseTerminated(lease);
     /*
@@ -2256,6 +2257,10 @@ xf86CrtcLeaseTerminated(RRLeasePtr lease)
             xf86CrtcCheckReset(crtc);
         }
     }
+
+    /* Power off if necessary */
+    xf86DisableUnusedFunctions(scrn);
+
     RRLeaseFree(lease);
 }
 

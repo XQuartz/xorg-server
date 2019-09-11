@@ -88,7 +88,7 @@ xf86driproto_dep = dependency('xf86driproto', version: '>= 2.1.0', required: get
 dri2proto_dep = dependency('dri2proto', version: '>= 2.8', required: get_option('dri2') == 'true')
 dri3proto_dep = dependency('dri3proto', version: '>= 1.2', required: get_option('dri3') == 'true')
 xineramaproto_dep = dependency('xineramaproto')
-xf86bigfontproto_dep = dependency('xf86bigfontproto', version: '>= 1.2.0')
+xf86bigfontproto_dep = dependency('xf86bigfontproto', version: '>= 1.2.0', required: get_option('xf86bigfont'))
 xf86vidmodeproto_dep = dependency('xf86vidmodeproto', version: '>= 2.2.99.1')
 applewmproto_dep = dependency('applewmproto', version: '>= 1.4', required: false)
 xshmfence_dep = dependency('xshmfence', version: '>= 1.1', required: false)

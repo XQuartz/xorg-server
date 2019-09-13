@@ -789,6 +789,10 @@ xwl_dmabuf_handle_modifier(void *data, struct zwp_linux_dmabuf_v1 *dmabuf,
     struct xwl_format *xwl_format = NULL;
     int i;
 
+    if (modifier_hi == (DRM_FORMAT_MOD_INVALID >> 32) &&
+        modifier_lo == (DRM_FORMAT_MOD_INVALID & 0xffffffff))
+        return;
+
     for (i = 0; i < xwl_screen->num_formats; i++) {
         if (xwl_screen->formats[i].format == format) {
             xwl_format = &xwl_screen->formats[i];

@@ -141,6 +141,10 @@ ms_covering_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
 
     best_crtc = NULL;
     best_coverage = 0;
+
+    if (!xf86_config)
+        return NULL;
+
     for (c = 0; c < xf86_config->num_crtc; c++) {
         crtc = xf86_config->crtc[c];
 

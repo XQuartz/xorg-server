@@ -59,8 +59,7 @@ struct ms_present_vblank_event {
 static RRCrtcPtr
 ms_present_get_crtc(WindowPtr window)
 {
-    xf86CrtcPtr xf86_crtc = ms_dri2_crtc_covering_drawable(&window->drawable);
-    return xf86_crtc ? xf86_crtc->randr_crtc : NULL;
+    return ms_randr_crtc_covering_drawable(&window->drawable);
 }
 
 static int

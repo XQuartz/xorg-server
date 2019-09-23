@@ -124,7 +124,6 @@ conf_data.set('HAVE_LINUX_AGPGART_H', cc.has_header('linux/agpgart.h'))
 conf_data.set('HAVE_STDLIB_H', cc.has_header('stdlib.h'))
 conf_data.set('HAVE_STRING_H', cc.has_header('string.h'))
 conf_data.set('HAVE_STRINGS_H', cc.has_header('strings.h'))
-conf_data.set('HAVE_STROPTS_H', cc.has_header('stropts.h'))
 conf_data.set('HAVE_SYS_AGPGART_H', cc.has_header('sys/agpgart.h'))
 conf_data.set('HAVE_SYS_AGPIO_H', cc.has_header('sys/agpio.h'))
 conf_data.set('HAVE_SYS_UTSNAME_H', cc.has_header('sys/utsname.h'))
@@ -358,6 +357,9 @@ xorg_data.set('XSERVER_LIBPCIACCESS', get_option('pciaccess'))
 xorg_data.set_quoted('PCI_TXT_IDS_PATH', '')
 xorg_data.set('XSERVER_PLATFORM_BUS', build_udev)
 xorg_data.set('WSCONS_SUPPORT', host_machine.system() == 'netbsd' or host_machine.system() == 'openbsd')
+xorg_data.set('HAVE_STROPTS_H', cc.has_header('stropts.h'))
+xorg_data.set('HAVE_SYS_KD_H', cc.has_header('sys/kd.h'))
+xorg_data.set('HAVE_SYS_VT_H', cc.has_header('sys/vt.h'))
 
 if host_machine.system() == 'freebsd' or host_machine.system() == 'dragonflybsd'
     if host_machine.cpu_family() == 'x86' or host_machine.cpu_family() == 'x86_64'

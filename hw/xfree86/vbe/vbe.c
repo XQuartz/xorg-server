@@ -309,7 +309,7 @@ vbeReadEDID(vbeInfoPtr pVbe)
         xf86DrvMsgVerb(screen, X_INFO, 3, "VESA VBE DDC read failed\n");
         break;
     default:
-        xf86DrvMsgVerb(screen, X_INFO, 3, "VESA VBE DDC unkown failure %i\n",
+        xf86DrvMsgVerb(screen, X_INFO, 3, "VESA VBE DDC unknown failure %i\n",
                        pVbe->pInt10->ax & 0xff00);
         break;
     }

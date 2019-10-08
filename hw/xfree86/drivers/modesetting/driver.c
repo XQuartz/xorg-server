@@ -50,7 +50,6 @@
 #include "xf86Crtc.h"
 #include "miscstruct.h"
 #include "dixstruct.h"
-#include "shadow.h"
 #include "xf86xv.h"
 #include <X11/extensions/Xv.h>
 #include <xorg-config.h>
@@ -60,7 +59,6 @@
 #ifdef XSERVER_LIBPCIACCESS
 #include <pciaccess.h>
 #endif
-
 #include "driver.h"
 
 static void AdjustFrame(ScrnInfoPtr pScrn, int x, int y);
@@ -1084,9 +1082,16 @@ PreInit(ScrnInfoPtr pScrn, int flags)
     }
 
     if (ms->drmmode.shadow_enable) {
-        if (!xf86LoadSubModule(pScrn, "shadow")) {
+        void *mod = xf86LoadSubModule(pScrn, "shadow");
+
+        if (!mod)
             return FALSE;
-        }
+
+        ms->shadow.Setup        = LoaderSymbolFromModule(mod, "shadowSetup");
+        ms->shadow.Add          = LoaderSymbolFromModule(mod, "shadowAdd");
+        ms->shadow.Remove       = LoaderSymbolFromModule(mod, "shadowRemove");
+        ms->shadow.Update32to24 = LoaderSymbolFromModule(mod, "shadowUpdate32to24");
+        ms->shadow.UpdatePacked = LoaderSymbolFromModule(mod, "shadowUpdatePacked");
     }
 
     return TRUE;
@@ -1191,9 +1196,9 @@ msUpdatePacked(ScreenPtr pScreen, shadowBufPtr pBuf)
     } while (0);
 
     if (use_3224)
-        shadowUpdate32to24(pScreen, pBuf);
+        ms->shadow.Update32to24(pScreen, pBuf);
     else
-        shadowUpdatePacked(pScreen, pBuf);
+        ms->shadow.UpdatePacked(pScreen, pBuf);
 }
 
 static Bool
@@ -1381,8 +1386,8 @@ CreateScreenResources(ScreenPtr pScreen)
         FatalError("Couldn't adjust screen pixmap\n");
 
     if (ms->drmmode.shadow_enable) {
-        if (!shadowAdd(pScreen, rootPixmap, msUpdatePacked, msShadowWindow,
-                       0, 0))
+        if (!ms->shadow.Add(pScreen, rootPixmap, msUpdatePacked, msShadowWindow,
+                            0, 0))
             return FALSE;
     }
 
@@ -1410,15 +1415,6 @@ CreateScreenResources(ScreenPtr pScreen)
     pScrPriv->rrStartFlippingPixmapTracking = msStartFlippingPixmapTracking;
 
     return ret;
-}
-
-static Bool
-msShadowInit(ScreenPtr pScreen)
-{
-    if (!shadowSetup(pScreen)) {
-        return FALSE;
-    }
-    return TRUE;
 }
 
 static Bool
@@ -1640,7 +1636,7 @@ ScreenInit(ScreenPtr pScreen, int argc, char **argv)
         return FALSE;
     }
 
-    if (ms->drmmode.shadow_enable && !msShadowInit(pScreen)) {
+    if (ms->drmmode.shadow_enable && !ms->shadow.Setup(pScreen)) {
         xf86DrvMsg(pScrn->scrnIndex, X_ERROR, "shadow fb init failed\n");
         return FALSE;
     }
@@ -1854,7 +1850,7 @@ CloseScreen(ScreenPtr pScreen)
     }
 
     if (ms->drmmode.shadow_enable) {
-        shadowRemove(pScreen, pScreen->GetScreenPixmap(pScreen));
+        ms->shadow.Remove(pScreen, pScreen->GetScreenPixmap(pScreen));
         free(ms->drmmode.shadow_fb);
         ms->drmmode.shadow_fb = NULL;
         free(ms->drmmode.shadow_fb2);

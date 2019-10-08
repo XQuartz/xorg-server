@@ -33,7 +33,7 @@
 #include <xf86Crtc.h>
 #include <damage.h>
 #include <X11/extensions/dpmsconst.h>
-
+#include <shadow.h>
 #ifdef GLAMOR_HAS_GBM
 #define GLAMOR_FOR_XORG 1
 #include "glamor.h"
@@ -121,6 +121,16 @@ typedef struct _modesettingRec {
     Bool tried_queue_sequence;
 
     Bool kms_has_modifiers;
+
+    /* shadow API */
+    struct {
+        Bool (*Setup)(ScreenPtr);
+        Bool (*Add)(ScreenPtr, PixmapPtr, ShadowUpdateProc, ShadowWindowProc,
+                    int, void *);
+        void (*Remove)(ScreenPtr, PixmapPtr);
+        void (*Update32to24)(ScreenPtr, shadowBufPtr);
+        void (*UpdatePacked)(ScreenPtr, shadowBufPtr);
+    } shadow;
 
 } modesettingRec, *modesettingPtr;
 

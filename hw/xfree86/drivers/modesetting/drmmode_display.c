@@ -1378,6 +1378,7 @@ create_pixmap_for_fbcon(drmmode_ptr drmmode, ScrnInfoPtr pScrn, int fbcon_id)
     PixmapPtr pixmap = drmmode->fbcon_pixmap;
     drmModeFBPtr fbcon;
     ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
+    modesettingPtr ms = modesettingPTR(pScrn);
     Bool ret;
 
     if (pixmap)
@@ -1398,7 +1399,8 @@ create_pixmap_for_fbcon(drmmode_ptr drmmode, ScrnInfoPtr pScrn, int fbcon_id)
     if (!pixmap)
         goto out_free_fb;
 
-    ret = glamor_egl_create_textured_pixmap(pixmap, fbcon->handle, fbcon->pitch);
+    ret = ms->glamor.egl_create_textured_pixmap(pixmap, fbcon->handle,
+                                                fbcon->pitch);
     if (!ret) {
       FreePixmap(pixmap);
       pixmap = NULL;
@@ -1417,6 +1419,7 @@ drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 #ifdef GLAMOR_HAS_GBM
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
+    modesettingPtr ms = modesettingPTR(pScrn);
     PixmapPtr src, dst;
     int fbcon_id = 0;
     GCPtr gc;
@@ -1454,7 +1457,7 @@ drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 
     FreeScratchGC(gc);
 
-    glamor_finish(pScreen);
+    ms->glamor.finish(pScreen);
 
     pScreen->canDoBGNoneRoot = TRUE;
 
@@ -3090,12 +3093,13 @@ drmmode_set_pixmap_bo(drmmode_ptr drmmode, PixmapPtr pixmap, drmmode_bo *bo)
 {
 #ifdef GLAMOR_HAS_GBM
     ScrnInfoPtr scrn = drmmode->scrn;
+    modesettingPtr ms = modesettingPTR(scrn);
 
     if (!drmmode->glamor)
         return TRUE;
 
-    if (!glamor_egl_create_textured_pixmap_from_gbm_bo(pixmap, bo->gbm,
-                                                       bo->used_modifiers)) {
+    if (!ms->glamor.egl_create_textured_pixmap_from_gbm_bo(pixmap, bo->gbm,
+                                                           bo->used_modifiers)) {
         xf86DrvMsg(scrn->scrnIndex, X_ERROR, "Failed to create pixmap\n");
         return FALSE;
     }
@@ -3410,13 +3414,14 @@ drmmode_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 {
 #ifdef GLAMOR_HAS_GBM
     ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
+    modesettingPtr ms = modesettingPTR(pScrn);
 
     if (drmmode->glamor) {
-        if (!glamor_init(pScreen, GLAMOR_USE_EGL_SCREEN)) {
+        if (!ms->glamor.init(pScreen, GLAMOR_USE_EGL_SCREEN)) {
             return FALSE;
         }
 #ifdef GBM_BO_WITH_MODIFIERS
-        glamor_set_drawable_modifiers_func(pScreen, get_drawable_modifiers);
+        ms->glamor.set_drawable_modifiers_func(pScreen, get_drawable_modifiers);
 #endif
     }
 #endif

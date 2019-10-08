@@ -166,7 +166,7 @@ ms_present_flush(WindowPtr window)
     modesettingPtr ms = modesettingPTR(scrn);
 
     if (ms->drmmode.glamor)
-        glamor_block_handler(screen);
+        ms->glamor.block_handler(screen);
 #endif
 }
 
@@ -259,7 +259,7 @@ ms_present_check_unflip(RRCrtcPtr crtc,
 
 #ifdef GBM_BO_WITH_MODIFIERS
     /* Check if buffer format/modifier is supported by all active CRTCs */
-    gbm = glamor_gbm_bo_from_pixmap(screen, pixmap);
+    gbm = ms->glamor.gbm_bo_from_pixmap(screen, pixmap);
     if (gbm) {
         uint32_t format;
         uint64_t modifier;

@@ -123,6 +123,7 @@ ms_dri2_create_buffer2(ScreenPtr screen, DrawablePtr drawable,
                        unsigned int attachment, unsigned int format)
 {
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
+    modesettingPtr ms = modesettingPTR(scrn);
     DRI2Buffer2Ptr buffer;
     PixmapPtr pixmap;
     CARD32 size;
@@ -200,7 +201,7 @@ ms_dri2_create_buffer2(ScreenPtr screen, DrawablePtr drawable,
      */
     buffer->flags = 0;
 
-    buffer->name = glamor_name_from_pixmap(pixmap, &pitch, &size);
+    buffer->name = ms->glamor.name_from_pixmap(pixmap, &pitch, &size);
     buffer->pitch = pitch;
     if (buffer->name == -1) {
         xf86DrvMsg(scrn->scrnIndex, X_ERROR,
@@ -510,11 +511,12 @@ update_front(DrawablePtr draw, DRI2BufferPtr front)
     ScreenPtr screen = draw->pScreen;
     PixmapPtr pixmap = get_drawable_pixmap(draw);
     ms_dri2_buffer_private_ptr priv = front->driverPrivate;
+    modesettingPtr ms = modesettingPTR(xf86ScreenToScrn(screen));
     CARD32 size;
     CARD16 pitch;
     int name;
 
-    name = glamor_name_from_pixmap(pixmap, &pitch, &size);
+    name = ms->glamor.name_from_pixmap(pixmap, &pitch, &size);
     if (name < 0)
         return FALSE;
 
@@ -618,7 +620,7 @@ ms_dri2_exchange_buffers(DrawablePtr draw, DRI2BufferPtr front,
     *front_pix = *back_pix;
     *back_pix = tmp_pix;
 
-    glamor_egl_exchange_buffers(front_priv->pixmap, back_priv->pixmap);
+    ms->glamor.egl_exchange_buffers(front_priv->pixmap, back_priv->pixmap);
 
     /* Post damage on the front buffer so that listeners, such
      * as DisplayLink know take a copy and shove it over the USB.
@@ -1036,7 +1038,7 @@ ms_dri2_screen_init(ScreenPtr screen)
     modesettingPtr ms = modesettingPTR(scrn);
     DRI2InfoRec info;
 
-    if (!glamor_supports_pixmap_import_export(screen)) {
+    if (!ms->glamor.supports_pixmap_import_export(screen)) {
         xf86DrvMsg(scrn->scrnIndex, X_WARNING,
                    "DRI2: glamor lacks support for pixmap import/export\n");
     }

@@ -2196,8 +2196,11 @@ DoGetImage(ClientPtr client, int format, Drawable drawable,
         return BadAlloc;
     WriteReplyToClient(client, sizeof(xGetImageReply), &xgi);
 
-    if (pDraw->type == DRAWABLE_WINDOW)
+    if (pDraw->type == DRAWABLE_WINDOW) {
         pVisibleRegion = &((WindowPtr) pDraw)->borderClip;
+        pDraw->pScreen->SourceValidate(pDraw, x, y, width, height,
+                                       IncludeInferiors);
+    }
 
     if (linesPerBuf == 0) {
         /* nothing to do */

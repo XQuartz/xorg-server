@@ -180,9 +180,8 @@ compSourceValidate(DrawablePtr pDrawable,
     pScreen->SourceValidate = cs->SourceValidate;
     if (pDrawable->type == DRAWABLE_WINDOW && subWindowMode == IncludeInferiors)
         compPaintChildrenToWindow((WindowPtr) pDrawable);
-    if (pScreen->SourceValidate)
-        (*pScreen->SourceValidate) (pDrawable, x, y, width, height,
-                                    subWindowMode);
+    (*pScreen->SourceValidate) (pDrawable, x, y, width, height,
+                                subWindowMode);
     cs->SourceValidate = pScreen->SourceValidate;
     pScreen->SourceValidate = compSourceValidate;
 }

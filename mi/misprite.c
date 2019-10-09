@@ -478,9 +478,8 @@ miSpriteSourceValidate(DrawablePtr pDrawable, int x, int y, int width,
         }
     }
 
-    if (pScreen->SourceValidate)
-        (*pScreen->SourceValidate) (pDrawable, x, y, width, height,
-                                    subWindowMode);
+    (*pScreen->SourceValidate) (pDrawable, x, y, width, height,
+                                subWindowMode);
 
     SCREEN_EPILOGUE(pPriv, pScreen, SourceValidate);
 }

@@ -32,6 +32,7 @@ from The Open Group.
 
 #include <X11/X.h>
 #include "scrnintstr.h"
+#include "mi.h"
 #include "misc.h"
 #include "os.h"
 #include "windowstr.h"
@@ -395,7 +396,7 @@ Bool PixmapSyncDirtyHelper(PixmapDirtyUpdatePtr dirty)
      * leaves the software cursor in place
      */
     SourceValidate = pScreen->SourceValidate;
-    pScreen->SourceValidate = NULL;
+    pScreen->SourceValidate = miSourceValidate;
 
     RegionTranslate(&pixregion, dirty->x, dirty->y);
     RegionIntersect(&pixregion, &pixregion, region);

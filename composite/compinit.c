@@ -76,9 +76,6 @@ compCloseScreen(ScreenPtr pScreen)
     pScreen->CreateWindow = cs->CreateWindow;
     pScreen->CopyWindow = cs->CopyWindow;
     pScreen->PositionWindow = cs->PositionWindow;
-
-    pScreen->GetImage = cs->GetImage;
-    pScreen->GetSpans = cs->GetSpans;
     pScreen->SourceValidate = cs->SourceValidate;
 
     free(cs);
@@ -135,38 +132,6 @@ compChangeWindowAttributes(WindowPtr pWin, unsigned long mask)
     pScreen->ChangeWindowAttributes = compChangeWindowAttributes;
 
     return ret;
-}
-
-static void
-compGetImage(DrawablePtr pDrawable,
-             int sx, int sy,
-             int w, int h,
-             unsigned int format, unsigned long planemask, char *pdstLine)
-{
-    ScreenPtr pScreen = pDrawable->pScreen;
-    CompScreenPtr cs = GetCompScreen(pScreen);
-
-    pScreen->GetImage = cs->GetImage;
-    if (pDrawable->type == DRAWABLE_WINDOW)
-        compPaintChildrenToWindow((WindowPtr) pDrawable);
-    (*pScreen->GetImage) (pDrawable, sx, sy, w, h, format, planemask, pdstLine);
-    cs->GetImage = pScreen->GetImage;
-    pScreen->GetImage = compGetImage;
-}
-
-static void
-compGetSpans(DrawablePtr pDrawable, int wMax, DDXPointPtr ppt, int *pwidth,
-             int nspans, char *pdstStart)
-{
-    ScreenPtr pScreen = pDrawable->pScreen;
-    CompScreenPtr cs = GetCompScreen(pScreen);
-
-    pScreen->GetSpans = cs->GetSpans;
-    if (pDrawable->type == DRAWABLE_WINDOW)
-        compPaintChildrenToWindow((WindowPtr) pDrawable);
-    (*pScreen->GetSpans) (pDrawable, wMax, ppt, pwidth, nspans, pdstStart);
-    cs->GetSpans = pScreen->GetSpans;
-    pScreen->GetSpans = compGetSpans;
 }
 
 static void
@@ -443,12 +408,6 @@ compScreenInit(ScreenPtr pScreen)
 
     cs->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = compCloseScreen;
-
-    cs->GetImage = pScreen->GetImage;
-    pScreen->GetImage = compGetImage;
-
-    cs->GetSpans = pScreen->GetSpans;
-    pScreen->GetSpans = compGetSpans;
 
     cs->SourceValidate = pScreen->SourceValidate;
     pScreen->SourceValidate = compSourceValidate;

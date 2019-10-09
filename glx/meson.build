@@ -74,7 +74,7 @@ if build_glx
             common_dep,
             dl_dep,
             dependency('glproto', version: '>= 1.4.17'),
-            dependency('gl', version: '>= 9.2.0'),
+            dependency('gl', version: '>= 1.2.0'),
         ],
     )
 

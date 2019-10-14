@@ -4,27 +4,12 @@ srcs = [
     '../../mi/miinitext.c',
 ]
 
-vfb_dep = []
-vfb_glamor = []
-if build_glamor
-    srcs += '../../glamor/glamor_egl.c'
-    vfb_dep += [
-        libdrm_dep,
-        gbm_dep,
-    ]
-    vfb_glamor += glamor
-endif
-
 xvfb_server = executable(
     'Xvfb',
     srcs,
     include_directories: inc,
-    dependencies: [
-        common_dep,
-        vfb_dep,
-    ],
+    dependencies: common_dep,
     link_with: [
-        vfb_glamor,
         libxserver_main,
         libxserver_fb,
         libxserver,

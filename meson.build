@@ -324,8 +324,8 @@ endif
 gbm_dep = dependency('', required: false)
 epoxy_dep = dependency('', required: false)
 if build_glamor
-    gbm_dep = dependency('gbm', version: gbm_req, required: true)
-    epoxy_dep = dependency('epoxy', required: true)
+    gbm_dep = dependency('gbm', version: gbm_req, required: false)
+    epoxy_dep = dependency('epoxy', required: false)
 endif
 
 eglstream_option = get_option('xwayland_eglstream')

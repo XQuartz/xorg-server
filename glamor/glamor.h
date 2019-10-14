@@ -68,10 +68,8 @@ typedef Bool (*GetDrawableModifiersFuncPtr) (DrawablePtr draw,
 #define GLAMOR_EGL_EXTERNAL_BUFFER 3
 #define GLAMOR_USE_EGL_SCREEN		(1 << 0)
 #define GLAMOR_NO_DRI3			(1 << 1)
-#define GLAMOR_NO_MODIFIERS		(1 << 2)
 #define GLAMOR_VALID_FLAGS      (GLAMOR_USE_EGL_SCREEN                \
-                                 | GLAMOR_NO_DRI3                     \
-				 | GLAMOR_NO_MODIFIERS)
+                                 | GLAMOR_NO_DRI3)
 
 /* until we need geometry shaders GL3.1 should suffice. */
 #define GLAMOR_GL_CORE_VER_MAJOR 3
@@ -334,18 +332,20 @@ extern _X_EXPORT Bool glamor_get_drawable_modifiers(DrawablePtr draw,
 extern _X_EXPORT void glamor_set_drawable_modifiers_func(ScreenPtr screen,
                                                          GetDrawableModifiersFuncPtr func);
 
+#ifdef GLAMOR_FOR_XORG
+
 #define GLAMOR_EGL_MODULE_NAME  "glamoregl"
 
 /* @glamor_egl_init: Initialize EGL environment.
  *
- * @screen: Current screen pointer.
+ * @scrn: Current screen info pointer.
  * @fd:   Current drm fd.
  *
  * This function creates and intialize EGL contexts.
  * Should be called from DDX's preInit function.
  * Return TRUE if success, otherwise return FALSE.
  * */
-extern _X_EXPORT Bool glamor_egl_init(ScreenPtr screen, int fd);
+extern _X_EXPORT Bool glamor_egl_init(ScrnInfoPtr scrn, int fd);
 
 extern _X_EXPORT Bool glamor_egl_init_textured_pixmap(ScreenPtr screen);
 
@@ -395,6 +395,8 @@ extern _X_EXPORT Bool
  glamor_egl_create_textured_pixmap_from_gbm_bo(PixmapPtr pixmap,
                                                struct gbm_bo *bo,
                                                Bool used_modifiers);
+
+#endif
 
 extern _X_EXPORT void glamor_egl_screen_init(ScreenPtr screen,
                                              struct glamor_context *glamor_ctx);

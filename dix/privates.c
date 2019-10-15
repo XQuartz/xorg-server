@@ -447,7 +447,8 @@ _dixInitPrivates(PrivatePtr *privates, void *addr, DevPrivateType type)
     if (global_keys[type].offset == 0)
         addr = 0;
     *privates = addr;
-    memset(addr, '\0', global_keys[type].offset);
+    if (addr)
+        memset(addr, '\0', global_keys[type].offset);
 }
 
 /*

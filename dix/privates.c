@@ -684,7 +684,8 @@ _dixInitScreenPrivates(ScreenPtr pScreen, PrivatePtr *privates, void *addr, DevP
     if (privates_size == 0)
         addr = 0;
     *privates = addr;
-    memset(addr, '\0', privates_size);
+    if (addr)
+        memset(addr, '\0', privates_size);
 }
 
 void *

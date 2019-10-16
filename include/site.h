@@ -46,13 +46,6 @@ SOFTWARE.
 
 #ifndef SITE_H
 #define SITE_H
-/*
- * The vendor string identifies the vendor responsible for the
- * server executable.
- */
-#ifndef VENDOR_STRING
-#define VENDOR_STRING "The X.Org Foundation"
-#endif
 
 /*
  * The vendor release number identifies, for the purpose of submitting

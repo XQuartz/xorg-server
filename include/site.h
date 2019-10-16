@@ -48,15 +48,6 @@ SOFTWARE.
 #define SITE_H
 
 /*
- * The vendor release number identifies, for the purpose of submitting
- * traceable bug reports, the release number of software produced
- * by the vendor.
- */
-#ifndef VENDOR_RELEASE
-#define VENDOR_RELEASE	6600
-#endif
-
-/*
  * The following constants are provided solely as a last line of defense.  The
  * normal build ALWAYS overrides them using a special rule given in
  * server/dix/Imakefile.  If you want to change either of these constants,

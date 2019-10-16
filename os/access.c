@@ -228,7 +228,7 @@ typedef struct _host {
 #define FreeHost(h)	free(h)
 static HOST *selfhosts = NULL;
 static HOST *validhosts = NULL;
-static int AccessEnabled = DEFAULT_ACCESS_CONTROL;
+static int AccessEnabled = TRUE;
 static int LocalHostEnabled = FALSE;
 static int LocalHostRequested = FALSE;
 static int UsingXdmcp = FALSE;
@@ -951,7 +951,7 @@ ResetHosts(const char *display)
     int len;
 
     siTypesInitialize();
-    AccessEnabled = defeatAccessControl ? FALSE : DEFAULT_ACCESS_CONTROL;
+    AccessEnabled = !defeatAccessControl;
     LocalHostEnabled = FALSE;
     while ((host = validhosts) != 0) {
         validhosts = host->next;

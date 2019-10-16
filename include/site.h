@@ -81,8 +81,5 @@ SOFTWARE.
 #define DEFAULT_SCREEN_SAVER_INTERVAL (10 * (60 * 1000))
 #define DEFAULT_SCREEN_SAVER_BLANKING PreferBlanking
 #define DEFAULT_SCREEN_SAVER_EXPOSURES AllowExposures
-#ifndef DEFAULT_ACCESS_CONTROL
-#define DEFAULT_ACCESS_CONTROL TRUE
-#endif
 
 #endif                          /* SITE_H */

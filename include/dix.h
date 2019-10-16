@@ -304,9 +304,6 @@ InitAtoms(void);
 extern _X_EXPORT void
 SetVendorRelease(int release);
 
-extern _X_EXPORT void
-SetVendorString(const char *string);
-
 int
 dix_main(int argc, char *argv[], char *envp[]);
 

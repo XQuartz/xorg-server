@@ -536,18 +536,11 @@ Dispatch(void)
 }
 
 static int VendorRelease = VENDOR_RELEASE;
-static const char *VendorString = VENDOR_NAME;
 
 void
 SetVendorRelease(int release)
 {
     VendorRelease = release;
-}
-
-void
-SetVendorString(const char *vendor)
-{
-    VendorString = vendor;
 }
 
 Bool
@@ -561,6 +554,7 @@ CreateConnectionBlock(void)
     unsigned long vid;
     int i, j, k, lenofblock, sizesofar = 0;
     char *pBuf;
+    const char VendorString[] = VENDOR_NAME;
 
     memset(&setup, 0, sizeof(xConnSetup));
     /* Leave off the ridBase and ridMask, these must be sent with

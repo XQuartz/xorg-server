@@ -42,7 +42,6 @@ extern _X_EXPORT volatile char dispatchException;
 #define DE_TERMINATE 2
 #define DE_PRIORITYCHANGE 4     /* set when a client's priority changes */
 
-extern _X_EXPORT CARD32 TimeOutValue;
 extern _X_EXPORT int ScreenSaverBlanking;
 extern _X_EXPORT int ScreenSaverAllowExposures;
 extern _X_EXPORT int defaultScreenSaverBlanking;

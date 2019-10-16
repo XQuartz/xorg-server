@@ -51,7 +51,6 @@ SOFTWARE.
  * The following constants contain default values for all of the variables
  * that can be initialized on the server command line or in the environment.
  */
-#define DEFAULT_TIMEOUT		60      /* seconds */
 #define DEFAULT_KEYBOARD_CLICK 	0
 #define DEFAULT_BELL		50
 #define DEFAULT_BELL_PITCH	400

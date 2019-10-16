@@ -269,9 +269,6 @@ This overrides a previous
 .B \-noreset
 command line option.
 .TP 8
-.B \-to \fIseconds\fP
-sets default connection timeout in seconds.
-.TP 8
 .B \-tst
 disables all testing extensions (e.g., XTEST, XTrap, XTestExtension1, RECORD).
 .TP 8

@@ -62,7 +62,7 @@
 #define X_INCLUDE_NETDB_H
 #include <X11/Xos_r.h>
 
-static const char *defaultDisplayClass = COMPILEDDISPLAYCLASS;
+static const char *defaultDisplayClass = "MIT-unspecified";
 
 static int xdmcpSocket, sessionSocket;
 static xdmcp_states state;

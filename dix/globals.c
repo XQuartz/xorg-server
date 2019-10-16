@@ -103,8 +103,6 @@ Bool screenSaverSuspended = FALSE;
 #endif
 
 const char *defaultFontPath = COMPILEDDEFAULTFONTPATH;
-const char *defaultTextFont = COMPILEDDEFAULTFONT;
-const char *defaultCursorFont = COMPILEDCURSORFONT;
 FontPtr defaultFont;            /* not declared in dix.h to avoid including font.h in
                                    every compilation of dix code */
 CursorPtr rootCursor;

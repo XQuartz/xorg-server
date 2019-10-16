@@ -164,12 +164,6 @@ a list of accepted extension names is printed.
 .B \-f \fIvolume\fP
 sets beep (bell) volume (allowable range: 0-100).
 .TP 8
-.B \-fc \fIcursorFont\fP
-sets default cursor font.
-.TP 8
-.B \-fn \fIfont\fP
-sets the default font.
-.TP 8
 .B \-fp \fIfontPath\fP
 sets the search path for fonts.  This path is a comma separated list
 of directories which the X server searches for font databases.

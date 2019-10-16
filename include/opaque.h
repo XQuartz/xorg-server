@@ -33,8 +33,6 @@ from The Open Group.
 
 #include "globals.h"
 
-extern _X_EXPORT const char *defaultTextFont;
-extern _X_EXPORT const char *defaultCursorFont;
 extern _X_EXPORT int LimitClients;
 extern _X_EXPORT volatile char isItTimeToYield;
 extern _X_EXPORT volatile char dispatchException;

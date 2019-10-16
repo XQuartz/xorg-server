@@ -526,8 +526,6 @@ UseMsg(void)
     ErrorF
         ("-deferglyphs [none|all|16] defer loading of [no|all|16-bit] glyphs\n");
     ErrorF("-f #                   bell base (0-100)\n");
-    ErrorF("-fc string             cursor font\n");
-    ErrorF("-fn string             default font name\n");
     ErrorF("-fp string             default font path\n");
     ErrorF("-help                  prints message with these options\n");
     ErrorF("+iglx                  Allow creating indirect GLX contexts\n");
@@ -772,18 +770,6 @@ ProcessCommandLine(int argc, char *argv[])
         else if (strcmp(argv[i], "-f") == 0) {
             if (++i < argc)
                 defaultKeyboardControl.bell = atoi(argv[i]);
-            else
-                UseMsg();
-        }
-        else if (strcmp(argv[i], "-fc") == 0) {
-            if (++i < argc)
-                defaultCursorFont = argv[i];
-            else
-                UseMsg();
-        }
-        else if (strcmp(argv[i], "-fn") == 0) {
-            if (++i < argc)
-                defaultTextFont = argv[i];
             else
                 UseMsg();
         }

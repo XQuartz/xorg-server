@@ -51,8 +51,6 @@ SOFTWARE.
  * The following constants contain default values for all of the variables
  * that can be initialized on the server command line or in the environment.
  */
-#define COMPILEDDEFAULTFONT	"fixed"
-#define COMPILEDCURSORFONT	"cursor"
 #ifndef COMPILEDDISPLAYCLASS
 #define COMPILEDDISPLAYCLASS	"MIT-unspecified"
 #endif

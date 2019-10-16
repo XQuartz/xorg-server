@@ -48,18 +48,6 @@ SOFTWARE.
 #define SITE_H
 
 /*
- * The following constants are provided solely as a last line of defense.  The
- * normal build ALWAYS overrides them using a special rule given in
- * server/dix/Imakefile.  If you want to change either of these constants,
- * you should set the DefaultFontPath or DefaultRGBDatabase configuration
- * parameters.
- * DO NOT CHANGE THESE VALUES OR THE DIX IMAKEFILE!
- */
-#ifndef COMPILEDDEFAULTFONTPATH
-#define COMPILEDDEFAULTFONTPATH	"/usr/share/fonts/X11/misc/"
-#endif
-
-/*
  * The following constants contain default values for all of the variables
  * that can be initialized on the server command line or in the environment.
  */

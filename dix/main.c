@@ -100,7 +100,6 @@ Equipment Corporation.
 #include "opaque.h"
 #include "servermd.h"
 #include "hotplug.h"
-#include "site.h"
 #include "dixfont.h"
 #include "extnsionst.h"
 #include "privates.h"

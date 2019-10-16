@@ -127,7 +127,6 @@ int ProcInitialConnection();
 #include "xace.h"
 #include "inputstr.h"
 #include "xkbsrv.h"
-#include "site.h"
 #include "client.h"
 
 #ifdef XSERVER_DTRACE

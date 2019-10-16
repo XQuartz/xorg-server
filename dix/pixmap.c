@@ -39,7 +39,6 @@ from The Open Group.
 #include "dixstruct.h"
 #include "gcstruct.h"
 #include "servermd.h"
-#include "site.h"
 #include "X11/extensions/render.h"
 #include "picturestr.h"
 #include "randrstr.h"

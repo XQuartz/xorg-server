@@ -470,7 +470,6 @@ if build_xorg
             'scrnintstr.h',
             'selection.h',
             'servermd.h',
-            'site.h',
             'validate.h',
             'displaymode.h',
             'window.h',

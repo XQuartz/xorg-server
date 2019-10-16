@@ -59,7 +59,6 @@ SOFTWARE.
 #include "cursorstr.h"
 #include "dixstruct.h"
 #include "ptrveloc.h"
-#include "site.h"
 #include "xkbsrv.h"
 #include "privates.h"
 #include "xace.h"

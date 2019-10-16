@@ -278,7 +278,6 @@ cat > sdksyms.c << EOF
 #include "scrnintstr.h"
 #include "selection.h"
 #include "servermd.h"
-#include "site.h"
 #include "validate.h"
 #include "window.h"
 #include "windowstr.h"

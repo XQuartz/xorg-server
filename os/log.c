@@ -88,7 +88,6 @@ OR PERFORMANCE OF THIS SOFTWARE.
 #include <errno.h>
 
 #include "input.h"
-#include "site.h"
 #include "opaque.h"
 
 #ifdef WIN32

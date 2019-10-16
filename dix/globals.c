@@ -55,7 +55,6 @@ SOFTWARE.
 #include "scrnintstr.h"
 #include "input.h"
 #include "dixfont.h"
-#include "site.h"
 #include "dixstruct.h"
 #include "os.h"
 

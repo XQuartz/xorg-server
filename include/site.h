@@ -51,9 +51,5 @@ SOFTWARE.
  * The following constants contain default values for all of the variables
  * that can be initialized on the server command line or in the environment.
  */
-#define DEFAULT_SCREEN_SAVER_TIME (10 * (60 * 1000))
-#define DEFAULT_SCREEN_SAVER_INTERVAL (10 * (60 * 1000))
-#define DEFAULT_SCREEN_SAVER_BLANKING PreferBlanking
-#define DEFAULT_SCREEN_SAVER_EXPOSURES AllowExposures
 
 #endif                          /* SITE_H */

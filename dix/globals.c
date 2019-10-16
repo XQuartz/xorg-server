@@ -93,10 +93,11 @@ CARD32 ScreenSaverInterval;
 int ScreenSaverBlanking;
 int ScreenSaverAllowExposures;
 
-CARD32 defaultScreenSaverTime = DEFAULT_SCREEN_SAVER_TIME;
-CARD32 defaultScreenSaverInterval = DEFAULT_SCREEN_SAVER_INTERVAL;
-int defaultScreenSaverBlanking = DEFAULT_SCREEN_SAVER_BLANKING;
-int defaultScreenSaverAllowExposures = DEFAULT_SCREEN_SAVER_EXPOSURES;
+/* default time of 10 minutes */
+CARD32 defaultScreenSaverTime = (10 * (60 * 1000));
+CARD32 defaultScreenSaverInterval = (10 * (60 * 1000));
+int defaultScreenSaverBlanking = PreferBlanking;
+int defaultScreenSaverAllowExposures = AllowExposures;
 
 #ifdef SCREENSAVER
 Bool screenSaverSuspended = FALSE;

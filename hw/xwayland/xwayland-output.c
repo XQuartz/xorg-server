@@ -539,7 +539,7 @@ apply_output_change(struct xwl_output *xwl_output)
     need_rotate = (xwl_output->xdg_output == NULL);
 
     /* We need to rotate back the logical size for the mode */
-    if (need_rotate || xwl_output->rotation & (RR_Rotate_0 | RR_Rotate_180)) {
+    if (!need_rotate || xwl_output->rotation & (RR_Rotate_0 | RR_Rotate_180)) {
         mode_width = xwl_output->width;
         mode_height = xwl_output->height;
     } else {

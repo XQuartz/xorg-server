@@ -108,6 +108,14 @@ OR PERFORMANCE OF THIS SOFTWARE.
 void (*OsVendorVErrorFProc) (const char *, va_list args) = NULL;
 #endif
 
+/* Default logging parameters. */
+#ifndef DEFAULT_LOG_VERBOSITY
+#define DEFAULT_LOG_VERBOSITY		0
+#endif
+#ifndef DEFAULT_LOG_FILE_VERBOSITY
+#define DEFAULT_LOG_FILE_VERBOSITY	3
+#endif
+
 static FILE *logFile = NULL;
 static int logFileFd = -1;
 static Bool logFlush = FALSE;

@@ -87,12 +87,4 @@ SOFTWARE.
 #define DEFAULT_ACCESS_CONTROL TRUE
 #endif
 
-/* Default logging parameters. */
-#ifndef DEFAULT_LOG_VERBOSITY
-#define DEFAULT_LOG_VERBOSITY		0
-#endif
-#ifndef DEFAULT_LOG_FILE_VERBOSITY
-#define DEFAULT_LOG_FILE_VERBOSITY	3
-#endif
-
 #endif                          /* SITE_H */

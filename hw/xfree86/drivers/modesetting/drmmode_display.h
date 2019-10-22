@@ -141,6 +141,7 @@ typedef struct {
 typedef struct {
     const char *name;
     uint32_t prop_id;
+    uint64_t value;
     unsigned int num_enum_values;
     drmmode_prop_enum_info_rec *enum_values;
 } drmmode_prop_info_rec, *drmmode_prop_info_ptr;

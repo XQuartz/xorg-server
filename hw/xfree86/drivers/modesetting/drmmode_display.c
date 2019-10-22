@@ -321,6 +321,7 @@ drmmode_prop_info_update(drmmode_ptr drmmode,
         }
 
         info[j].prop_id = props->props[i];
+        info[j].value = props->prop_values[i];
         valid_mask |= 1U << j;
 
         if (info[j].num_enum_values == 0) {

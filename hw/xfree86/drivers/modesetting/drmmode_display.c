@@ -1670,14 +1670,47 @@ drmmode_show_cursor(xf86CrtcPtr crtc)
 }
 
 static void
+drmmode_set_gamma_lut(drmmode_crtc_private_ptr drmmode_crtc,
+                      uint16_t * red, uint16_t * green, uint16_t * blue,
+                      int size)
+{
+    drmmode_ptr drmmode = drmmode_crtc->drmmode;
+    drmmode_prop_info_ptr gamma_lut_info =
+        &drmmode_crtc->props[DRMMODE_CRTC_GAMMA_LUT];
+    const uint32_t crtc_id = drmmode_crtc->mode_crtc->crtc_id;
+    uint32_t blob_id;
+    struct drm_color_lut lut[size];
+
+    assert(gamma_lut_info->prop_id != 0);
+
+    for (int i = 0; i < size; i++) {
+        lut[i].red = red[i];
+        lut[i].green = green[i];
+        lut[i].blue = blue[i];
+    }
+
+    if (drmModeCreatePropertyBlob(drmmode->fd, lut, sizeof(lut), &blob_id))
+        return;
+
+    drmModeObjectSetProperty(drmmode->fd, crtc_id, DRM_MODE_OBJECT_CRTC,
+                             gamma_lut_info->prop_id, blob_id);
+
+    drmModeDestroyPropertyBlob(drmmode->fd, blob_id);
+}
+
+static void
 drmmode_crtc_gamma_set(xf86CrtcPtr crtc, uint16_t * red, uint16_t * green,
                        uint16_t * blue, int size)
 {
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
     drmmode_ptr drmmode = drmmode_crtc->drmmode;
 
-    drmModeCrtcSetGamma(drmmode->fd, drmmode_crtc->mode_crtc->crtc_id,
-                        size, red, green, blue);
+    if (drmmode_crtc->use_gamma_lut) {
+        drmmode_set_gamma_lut(drmmode_crtc, red, green, blue, size);
+    } else {
+        drmModeCrtcSetGamma(drmmode->fd, drmmode_crtc->mode_crtc->crtc_id,
+                            size, red, green, blue);
+    }
 }
 
 static Bool
@@ -2266,6 +2299,8 @@ drmmode_crtc_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, drmModeResPtr mode_res
     static const drmmode_prop_info_rec crtc_props[] = {
         [DRMMODE_CRTC_ACTIVE] = { .name = "ACTIVE" },
         [DRMMODE_CRTC_MODE_ID] = { .name = "MODE_ID" },
+        [DRMMODE_CRTC_GAMMA_LUT] = { .name = "GAMMA_LUT" },
+        [DRMMODE_CRTC_GAMMA_LUT_SIZE] = { .name = "GAMMA_LUT_SIZE" },
     };
 
     crtc = xf86CrtcCreate(pScrn, &drmmode_crtc_funcs);
@@ -2301,6 +2336,39 @@ drmmode_crtc_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, drmModeResPtr mode_res
     ms_ent->assigned_crtcs |= (1 << num);
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, MS_LOGLEVEL_DEBUG,
                    "Allocated crtc nr. %d to this screen.\n", num);
+
+    /* If the GAMMA_LUT property is available, replace the server's default
+     * gamma ramps with ones of the appropriate size. */
+    if (drmmode_crtc->props[DRMMODE_CRTC_GAMMA_LUT_SIZE].prop_id) {
+        Bool try_gamma_lut =
+            xf86ReturnOptValBool(drmmode->Options, OPTION_USE_GAMMA_LUT, TRUE);
+        uint64_t size = drmmode_crtc->props[DRMMODE_CRTC_GAMMA_LUT_SIZE].value;
+
+        if (try_gamma_lut && size != crtc->gamma_size) {
+            uint16_t *gamma = malloc(3 * size * sizeof(uint16_t));
+
+            if (gamma) {
+                free(crtc->gamma_red);
+
+                crtc->gamma_size = size;
+                crtc->gamma_red = gamma;
+                crtc->gamma_green = gamma + size;
+                crtc->gamma_blue = gamma + size * 2;
+
+                drmmode_crtc->use_gamma_lut = TRUE;
+
+                xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, MS_LOGLEVEL_DEBUG,
+                               "Gamma ramp set to %ld entries on CRTC %d\n",
+                               size, num);
+            } else {
+                xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
+                           "Failed to allocate memory for %ld gamma ramp "
+                           "entries on CRTC %d. Falling back to legacy "
+                           "%d-entry mode.\n",
+                           size, num, crtc->gamma_size);
+            }
+        }
+    }
 
     return 1;
 }

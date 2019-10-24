@@ -2262,7 +2262,6 @@ drmmode_crtc_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, drmModeResPtr mode_res
     xf86CrtcPtr crtc;
     drmmode_crtc_private_ptr drmmode_crtc;
     modesettingEntPtr ms_ent = ms_ent_priv(pScrn);
-    modesettingPtr ms = modesettingPTR(pScrn);
     drmModeObjectPropertiesPtr props;
     static const drmmode_prop_info_rec crtc_props[] = {
         [DRMMODE_CRTC_ACTIVE] = { .name = "ACTIVE" },
@@ -2280,20 +2279,18 @@ drmmode_crtc_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, drmModeResPtr mode_res
     drmmode_crtc->vblank_pipe = drmmode_crtc_vblank_pipe(num);
     xorg_list_init(&drmmode_crtc->mode_list);
 
-    if (ms->atomic_modeset) {
-        props = drmModeObjectGetProperties(drmmode->fd, mode_res->crtcs[num],
-                                           DRM_MODE_OBJECT_CRTC);
-        if (!props || !drmmode_prop_info_copy(drmmode_crtc->props, crtc_props,
-                                              DRMMODE_CRTC__COUNT, 0)) {
-            xf86CrtcDestroy(crtc);
-            return 0;
-        }
-
-        drmmode_prop_info_update(drmmode, drmmode_crtc->props,
-                                 DRMMODE_CRTC__COUNT, props);
-        drmModeFreeObjectProperties(props);
-        drmmode_crtc_create_planes(crtc, num);
+    props = drmModeObjectGetProperties(drmmode->fd, mode_res->crtcs[num],
+                                       DRM_MODE_OBJECT_CRTC);
+    if (!props || !drmmode_prop_info_copy(drmmode_crtc->props, crtc_props,
+                                          DRMMODE_CRTC__COUNT, 0)) {
+        xf86CrtcDestroy(crtc);
+        return 0;
     }
+
+    drmmode_prop_info_update(drmmode, drmmode_crtc->props,
+                             DRMMODE_CRTC__COUNT, props);
+    drmModeFreeObjectProperties(props);
+    drmmode_crtc_create_planes(crtc, num);
 
     /* Hide any cursors which may be active from previous users */
     drmModeSetCursor(drmmode->fd, drmmode_crtc->mode_crtc->crtc_id, 0, 0, 0);

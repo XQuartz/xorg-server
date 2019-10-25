@@ -24,6 +24,7 @@
  */
 
 #include "xwayland.h"
+#include "xwayland-window-buffers.h"
 
 #include <stdio.h>
 
@@ -902,6 +903,8 @@ ensure_surface_for_window(WindowPtr window)
     xorg_list_init(&xwl_window->link_damage);
     xorg_list_add(&xwl_window->link_window, &xwl_screen->window_list);
 
+    xwl_window_buffers_init(xwl_window);
+
     xwl_window_init_allow_commits(xwl_window);
 
     return TRUE;
@@ -1005,6 +1008,8 @@ xwl_unrealize_window(WindowPtr window)
     xorg_list_del(&xwl_window->link_window);
     unregister_damage(window);
 
+    xwl_window_buffers_dispose(xwl_window);
+
     if (xwl_window->frame_callback)
         wl_callback_destroy(xwl_window->frame_callback);
 
@@ -1053,6 +1058,7 @@ xwl_resize_window(WindowPtr window,
     screen->ResizeWindow = xwl_resize_window;
 
     if (xwl_window) {
+        xwl_window_buffers_recycle(xwl_window);
         xwl_window->x = x;
         xwl_window->y = y;
         xwl_window->width = width;
@@ -1124,7 +1130,7 @@ xwl_window_post_damage(struct xwl_window *xwl_window)
     assert(!xwl_window->frame_callback);
 
     region = DamageRegion(window_get_damage(xwl_window->window));
-    pixmap = (*xwl_screen->screen->GetWindowPixmap) (xwl_window->window);
+    pixmap = xwl_window_buffers_get_pixmap(xwl_window, region);
 
 #ifdef XWL_HAS_GLAMOR
     if (xwl_screen->glamor)

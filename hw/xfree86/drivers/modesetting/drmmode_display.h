@@ -69,6 +69,7 @@ enum drmmode_crtc_property {
     DRMMODE_CRTC_MODE_ID,
     DRMMODE_CRTC_GAMMA_LUT,
     DRMMODE_CRTC_GAMMA_LUT_SIZE,
+    DRMMODE_CRTC_CTM,
     DRMMODE_CRTC__COUNT
 };
 
@@ -132,6 +133,7 @@ typedef struct {
     Bool present_enable;
 
     uint32_t vrr_prop_id;
+    Bool use_ctm;
 } drmmode_rec, *drmmode_ptr;
 
 typedef struct {
@@ -226,6 +228,8 @@ typedef struct {
     int enc_mask;
     int enc_clone_mask;
     xf86CrtcPtr current_crtc;
+    Atom ctm_atom;
+    struct drm_color_ctm ctm;
 } drmmode_output_private_rec, *drmmode_output_private_ptr;
 
 typedef struct {

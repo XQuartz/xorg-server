@@ -149,7 +149,7 @@ xwl_glamor_gbm_create_pixmap_for_bo(ScreenPtr screen, struct gbm_bo *bo,
     struct xwl_pixmap *xwl_pixmap;
     struct xwl_screen *xwl_screen = xwl_screen_get(screen);
 
-    xwl_pixmap = malloc(sizeof *xwl_pixmap);
+    xwl_pixmap = calloc(1, sizeof(*xwl_pixmap));
     if (xwl_pixmap == NULL)
         return NULL;
 

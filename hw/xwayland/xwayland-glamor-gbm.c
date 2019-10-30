@@ -948,6 +948,21 @@ xwl_glamor_gbm_init_egl(struct xwl_screen *xwl_screen)
             xwl_screen->egl_display, NULL, EGL_NO_CONTEXT, NULL);
     }
 
+    /* glamor needs either big-GL 2.1 or GLES2 */
+    if (xwl_screen->egl_context && epoxy_gl_version() < 21) {
+        const EGLint gles_attribs[] = {
+            EGL_CONTEXT_CLIENT_VERSION,
+            2,
+            EGL_NONE,
+        };
+
+        eglDestroyContext(xwl_screen->egl_display, xwl_screen->egl_context);
+        eglBindAPI(EGL_OPENGL_ES_API);
+        xwl_screen->egl_context = eglCreateContext(xwl_screen->egl_display,
+                                                   NULL, EGL_NO_CONTEXT,
+                                                   gles_attribs);
+    }
+
     if (xwl_screen->egl_context == EGL_NO_CONTEXT) {
         ErrorF("Failed to create EGL context\n");
         goto error;

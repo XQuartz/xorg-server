@@ -189,6 +189,10 @@ shm_format_for_depth(int depth)
     }
 }
 
+static const struct wl_buffer_listener xwl_shm_buffer_listener = {
+    xwl_pixmap_buffer_release_cb,
+};
+
 PixmapPtr
 xwl_shm_create_pixmap(ScreenPtr screen,
                       int width, int height, int depth, unsigned int hint)
@@ -241,6 +245,9 @@ xwl_shm_create_pixmap(ScreenPtr screen,
     wl_shm_pool_destroy(pool);
     close(fd);
 
+    wl_buffer_add_listener(xwl_pixmap->buffer,
+                           &xwl_shm_buffer_listener, pixmap);
+
     xwl_pixmap_set_private(pixmap, xwl_pixmap);
 
     return pixmap;
@@ -263,6 +270,7 @@ xwl_shm_destroy_pixmap(PixmapPtr pixmap)
     struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
 
     if (xwl_pixmap && pixmap->refcnt == 1) {
+        xwl_pixmap_del_buffer_release_cb(pixmap);
         if (xwl_pixmap->buffer)
             wl_buffer_destroy(xwl_pixmap->buffer);
         munmap(xwl_pixmap->data, xwl_pixmap->size);

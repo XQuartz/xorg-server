@@ -169,13 +169,14 @@ xwl_present_free_event(struct xwl_present_event *event)
 }
 
 static void
-xwl_present_buffer_release(void *data, struct wl_buffer *buffer)
+xwl_present_buffer_release(PixmapPtr pixmap, void *data)
 {
     struct xwl_present_event *event = data;
+
     if (!event)
         return;
 
-    wl_buffer_set_user_data(buffer, NULL);
+    xwl_pixmap_del_buffer_release_cb(pixmap);
     event->buffer_released = TRUE;
 
     if (event->abort) {
@@ -192,10 +193,6 @@ xwl_present_buffer_release(void *data, struct wl_buffer *buffer)
         xwl_present_free_event(event);
     }
 }
-
-static const struct wl_buffer_listener xwl_present_release_listener = {
-    xwl_present_buffer_release
-};
 
 static void
 xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
@@ -452,7 +449,6 @@ xwl_present_flip(WindowPtr present_window,
     struct xwl_window           *xwl_window = xwl_window_from_window(present_window);
     struct xwl_present_window   *xwl_present_window = xwl_present_window_priv(present_window);
     BoxPtr                      damage_box;
-    Bool                        buffer_created;
     struct wl_buffer            *buffer;
     struct xwl_present_event    *event;
 
@@ -465,7 +461,7 @@ xwl_present_flip(WindowPtr present_window,
     if (!event)
         return FALSE;
 
-    buffer = xwl_glamor_pixmap_get_wl_buffer(pixmap, &buffer_created);
+    buffer = xwl_glamor_pixmap_get_wl_buffer(pixmap, NULL);
 
     event->event_id = event_id;
     event->xwl_present_window = xwl_present_window;
@@ -482,9 +478,7 @@ xwl_present_flip(WindowPtr present_window,
         xorg_list_add(&event->list, &xwl_present_window->release_queue);
     }
 
-    if (buffer_created)
-        wl_buffer_add_listener(buffer, &xwl_present_release_listener, NULL);
-    wl_buffer_set_user_data(buffer, event);
+    xwl_pixmap_set_buffer_release_cb(pixmap, xwl_present_buffer_release, event);
 
     /* We can flip directly to the main surface (full screen window without clips) */
     wl_surface_attach(xwl_window->surface, buffer, 0, 0);

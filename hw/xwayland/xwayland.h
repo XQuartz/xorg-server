@@ -60,6 +60,8 @@ struct xwl_pixmap;
 struct xwl_window;
 struct xwl_screen;
 
+typedef void (*xwl_pixmap_cb) (PixmapPtr pixmap, void *data);
+
 struct xwl_egl_backend {
     /* Set by the backend if available */
     Bool is_available;
@@ -461,6 +463,10 @@ RRModePtr xwayland_cvt(int HDisplay, int VDisplay,
 
 void xwl_pixmap_set_private(PixmapPtr pixmap, struct xwl_pixmap *xwl_pixmap);
 struct xwl_pixmap *xwl_pixmap_get(PixmapPtr pixmap);
+Bool xwl_pixmap_set_buffer_release_cb(PixmapPtr pixmap,
+                                      xwl_pixmap_cb func, void *data);
+void xwl_pixmap_del_buffer_release_cb(PixmapPtr pixmap);
+void xwl_pixmap_buffer_release_cb(void *data, struct wl_buffer *wl_buffer);
 
 struct xwl_window *xwl_window_from_window(WindowPtr window);
 

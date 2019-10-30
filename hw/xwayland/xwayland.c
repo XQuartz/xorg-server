@@ -169,6 +169,7 @@ static DevPrivateKeyRec xwl_client_private_key;
 static DevPrivateKeyRec xwl_window_private_key;
 static DevPrivateKeyRec xwl_screen_private_key;
 static DevPrivateKeyRec xwl_pixmap_private_key;
+static DevPrivateKeyRec xwl_pixmap_cb_private_key;
 static DevPrivateKeyRec xwl_damage_private_key;
 
 struct xwl_client *
@@ -296,6 +297,64 @@ xwl_property_callback(CallbackListPtr *pcbl, void *closure,
 
     if (rec->prop->propertyName == xwl_screen->allow_commits_prop)
         xwl_window_property_allow_commits(xwl_window, rec);
+}
+
+struct xwl_pixmap_buffer_release_cb {
+    xwl_pixmap_cb callback;
+    void *data;
+};
+
+Bool
+xwl_pixmap_set_buffer_release_cb(PixmapPtr pixmap,
+                                 xwl_pixmap_cb func, void *data)
+{
+    struct xwl_pixmap_buffer_release_cb *xwl_pixmap_buffer_release_cb;
+
+    xwl_pixmap_buffer_release_cb = dixLookupPrivate(&pixmap->devPrivates,
+                                                    &xwl_pixmap_cb_private_key);
+
+    if (xwl_pixmap_buffer_release_cb == NULL) {
+        xwl_pixmap_buffer_release_cb =
+            calloc(1, sizeof (struct xwl_pixmap_buffer_release_cb));
+
+        if (xwl_pixmap_buffer_release_cb == NULL) {
+            ErrorF("Failed to allocate pixmap callback data\n");
+            return FALSE;
+        }
+        dixSetPrivate(&pixmap->devPrivates, &xwl_pixmap_cb_private_key,
+                      xwl_pixmap_buffer_release_cb);
+    }
+
+    xwl_pixmap_buffer_release_cb->callback = func;
+    xwl_pixmap_buffer_release_cb->data = data;
+
+    return TRUE;
+}
+
+void
+xwl_pixmap_del_buffer_release_cb(PixmapPtr pixmap)
+{
+    struct xwl_pixmap_buffer_release_cb *xwl_pixmap_buffer_release_cb;
+
+    xwl_pixmap_buffer_release_cb = dixLookupPrivate(&pixmap->devPrivates,
+                                                    &xwl_pixmap_cb_private_key);
+    if (xwl_pixmap_buffer_release_cb) {
+        dixSetPrivate(&pixmap->devPrivates, &xwl_pixmap_cb_private_key, NULL);
+        free(xwl_pixmap_buffer_release_cb);
+    }
+}
+
+void
+xwl_pixmap_buffer_release_cb(void *data, struct wl_buffer *wl_buffer)
+{
+    PixmapPtr pixmap = data;
+    struct xwl_pixmap_buffer_release_cb *xwl_pixmap_buffer_release_cb;
+
+    xwl_pixmap_buffer_release_cb = dixLookupPrivate(&pixmap->devPrivates,
+                                                    &xwl_pixmap_cb_private_key);
+    if (xwl_pixmap_buffer_release_cb)
+        (*xwl_pixmap_buffer_release_cb->callback)
+            (pixmap, xwl_pixmap_buffer_release_cb->data);
 }
 
 static Bool
@@ -1347,6 +1406,8 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     if (!dixRegisterPrivateKey(&xwl_window_private_key, PRIVATE_WINDOW, 0))
         return FALSE;
     if (!dixRegisterPrivateKey(&xwl_pixmap_private_key, PRIVATE_PIXMAP, 0))
+        return FALSE;
+    if (!dixRegisterPrivateKey(&xwl_pixmap_cb_private_key, PRIVATE_PIXMAP, 0))
         return FALSE;
     if (!dixRegisterPrivateKey(&xwl_damage_private_key, PRIVATE_WINDOW, 0))
         return FALSE;

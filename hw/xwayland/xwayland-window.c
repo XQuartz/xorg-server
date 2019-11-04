@@ -432,6 +432,7 @@ ensure_surface_for_window(WindowPtr window)
     struct xwl_screen *xwl_screen;
     struct xwl_window *xwl_window;
     struct wl_region *region;
+    WindowPtr toplevel;
 
     if (xwl_window_get(window))
         return TRUE;
@@ -504,7 +505,14 @@ ensure_surface_for_window(WindowPtr window)
 
     xwl_window_init_allow_commits(xwl_window);
 
-    if (!window_is_wm_window(window)) {
+    /* When a new window-manager window is realized, then the randr emulation
+     * props may have not been set on the managed client window yet.
+     */
+    if (window_is_wm_window(window)) {
+        toplevel = window_get_client_toplevel(window);
+        if (toplevel)
+            xwl_output_set_window_randr_emu_props(xwl_screen, toplevel);
+    } else {
         /* CSD or O-R toplevel window, check viewport on creation */
         xwl_window_check_resolution_change_emulation(xwl_window);
     }
@@ -552,8 +560,6 @@ xwl_realize_window(WindowPtr window)
         if (!register_damage(window))
             return FALSE;
     }
-
-    xwl_output_set_window_randr_emu_props(xwl_screen, window);
 
     return ensure_surface_for_window(window);
 }

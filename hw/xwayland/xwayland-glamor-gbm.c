@@ -36,6 +36,7 @@
 #include <drm_fourcc.h>
 
 #define MESA_EGL_NO_X11_HEADERS
+#define EGL_NO_X11
 #include <gbm.h>
 #include <glamor_egl.h>
 

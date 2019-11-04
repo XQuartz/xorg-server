@@ -504,6 +504,11 @@ ensure_surface_for_window(WindowPtr window)
 
     xwl_window_init_allow_commits(xwl_window);
 
+    if (!window_is_wm_window(window)) {
+        /* CSD or O-R toplevel window, check viewport on creation */
+        xwl_window_check_resolution_change_emulation(xwl_window);
+    }
+
     return TRUE;
 
 err_surf:

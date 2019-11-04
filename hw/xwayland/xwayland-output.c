@@ -472,9 +472,6 @@ static void
 xwl_output_set_randr_emu_prop(WindowPtr window,
                               struct xwl_output_randr_emu_prop *prop)
 {
-    if (!xwl_window_is_toplevel(window))
-        return;
-
     if (prop->rect_count) {
         dixChangeWindowProperty(serverClient, window, prop->atom,
                                 XA_CARDINAL, 32, PropModeReplace,
@@ -487,7 +484,8 @@ xwl_output_set_randr_emu_prop(WindowPtr window,
 static void
 xwl_output_set_randr_emu_prop_callback(void *resource, XID id, void *user_data)
 {
-    xwl_output_set_randr_emu_prop(resource, user_data);
+    if (xwl_window_is_toplevel(resource))
+        xwl_output_set_randr_emu_prop(resource, user_data);
 }
 
 static void

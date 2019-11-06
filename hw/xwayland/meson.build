@@ -6,6 +6,8 @@ srcs = [
     'xwayland-output.c',
     'xwayland-cvt.c',
     'xwayland-vidmode.c',
+    'xwayland-window-buffers.c',
+    'xwayland-window-buffers.h',
     '../../mi/miinitext.c',
 ]
 

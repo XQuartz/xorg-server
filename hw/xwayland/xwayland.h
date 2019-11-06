@@ -189,6 +189,9 @@ struct xwl_window {
     struct xorg_list link_window;
     struct wl_callback *frame_callback;
     Bool allow_commits;
+    struct xorg_list window_buffers_available;
+    struct xorg_list window_buffers_unavailable;
+    OsTimerPtr window_buffers_timer;
 #ifdef GLAMOR_HAS_GBM
     Bool present_flipped;
 #endif

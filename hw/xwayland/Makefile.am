@@ -17,6 +17,8 @@ Xwayland_SOURCES =				\
 	xwayland-output.c			\
 	xwayland-cvt.c				\
 	xwayland-vidmode.c			\
+	xwayland-window-buffers.c		\
+	xwayland-window-buffers.h		\
 	xwayland.h				\
 	$(top_srcdir)/Xi/stubs.c		\
 	$(top_srcdir)/mi/miinitext.c

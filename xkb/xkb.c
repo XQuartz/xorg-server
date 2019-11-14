@@ -2419,6 +2419,9 @@ _XkbSetMapChecks(ClientPtr client, DeviceIntPtr dev, xkbSetMapReq * req,
         client->errorValue = nTypes;
         return BadValue;
     }
+    else {
+        nTypes = xkb->map->num_types;
+    }
 
     /* symsPerKey/mapWidths must be filled regardless of client-side flags */
     map = &xkb->map->key_sym_map[xkb->min_key_code];
@@ -2429,7 +2432,7 @@ _XkbSetMapChecks(ClientPtr client, DeviceIntPtr dev, xkbSetMapReq * req,
         for (w = g = 0; g < ng; g++) {
             if (map->kt_index[g] >= (unsigned) nTypes) {
                 client->errorValue = _XkbErrCode4(0x13, i, g, map->kt_index[g]);
-                return 0;
+                return BadValue;
             }
             if (mapWidths[map->kt_index[g]] > w)
                 w = mapWidths[map->kt_index[g]];

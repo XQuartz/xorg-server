@@ -132,30 +132,6 @@ typedef struct _modesettingRec {
         void (*UpdatePacked)(ScreenPtr, shadowBufPtr);
     } shadow;
 
-    /* glamor API */
-    struct {
-        Bool (*back_pixmap_from_fd)(PixmapPtr, int, CARD16, CARD16, CARD16,
-                                    CARD8, CARD8);
-        void (*block_handler)(ScreenPtr);
-        Bool (*egl_create_textured_pixmap)(PixmapPtr, int, int);
-        Bool (*egl_create_textured_pixmap_from_gbm_bo)(PixmapPtr,
-                                                       struct gbm_bo *,
-                                                       Bool);
-        void (*egl_exchange_buffers)(PixmapPtr, PixmapPtr);
-        struct gbm_device *(*egl_get_gbm_device)(ScreenPtr);
-        Bool (*egl_init)(ScrnInfoPtr, int);
-        void (*finish)(ScreenPtr);
-        struct gbm_bo *(*gbm_bo_from_pixmap)(ScreenPtr, PixmapPtr);
-        Bool (*init)(ScreenPtr, unsigned int);
-        int (*name_from_pixmap)(PixmapPtr, CARD16 *, CARD32 *);
-        void (*set_drawable_modifiers_func)(ScreenPtr,
-                                            GetDrawableModifiersFuncPtr);
-        int (*shareable_fd_from_pixmap)(ScreenPtr, PixmapPtr, CARD16 *,
-                                        CARD32 *);
-        Bool (*supports_pixmap_import_export)(ScreenPtr);
-        XF86VideoAdaptorPtr (*xv_init)(ScreenPtr, int);
-    } glamor;
-
 } modesettingRec, *modesettingPtr;
 
 #define modesettingPTR(p) ((modesettingPtr)((p)->driverPrivate))

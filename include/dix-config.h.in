@@ -515,4 +515,7 @@
 /* Have epoll_create1() */
 #undef HAVE_EPOLL_CREATE1
 
+/* Have isastream */
+#undef HAVE_ISASTREAM
+
 #endif /* _DIX_CONFIG_H_ */

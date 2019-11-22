@@ -1457,7 +1457,7 @@ drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 
     FreeScratchGC(gc);
 
-    ms->glamor.finish(pScreen);
+    glamor_finish(pScreen);
 
     pScreen->canDoBGNoneRoot = TRUE;
 

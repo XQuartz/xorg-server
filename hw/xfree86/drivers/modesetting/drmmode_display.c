@@ -755,6 +755,7 @@ drmmode_crtc_set_mode(xf86CrtcPtr crtc, Bool test_only)
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(crtc->scrn);
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
     drmmode_ptr drmmode = drmmode_crtc->drmmode;
+    ScreenPtr screen = crtc->scrn->pScreen;
     drmModeModeInfo kmode;
     int output_count = 0;
     uint32_t *output_ids = NULL;
@@ -764,6 +765,12 @@ drmmode_crtc_set_mode(xf86CrtcPtr crtc, Bool test_only)
 
     if (!drmmode_crtc_get_fb_id(crtc, &fb_id, &x, &y))
         return 1;
+
+#ifdef GLAMOR_HAS_GBM
+    /* Make sure any pending drawing will be visible in a new scanout buffer */
+    if (drmmode->glamor)
+        glamor_finish(screen);
+#endif
 
     if (ms->atomic_modeset) {
         drmModeAtomicReq *req = drmModeAtomicAlloc();
@@ -1419,7 +1426,6 @@ drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 #ifdef GLAMOR_HAS_GBM
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(pScrn);
     ScreenPtr pScreen = xf86ScrnToScreen(pScrn);
-    modesettingPtr ms = modesettingPTR(pScrn);
     PixmapPtr src, dst;
     int fbcon_id = 0;
     GCPtr gc;
@@ -1456,8 +1462,6 @@ drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
                          pScrn->virtualX, pScrn->virtualY, 0, 0);
 
     FreeScratchGC(gc);
-
-    glamor_finish(pScreen);
 
     pScreen->canDoBGNoneRoot = TRUE;
 

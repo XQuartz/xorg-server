@@ -74,6 +74,8 @@ conf_data.set('HAVE_XSHMFENCE', xshmfence_dep.found())
 conf_data.set('WITH_LIBDRM', libdrm_dep.found())
 conf_data.set('GLAMOR_HAS_EGL_QUERY_DMABUF',
               epoxy_dep.found() and epoxy_dep.version().version_compare('>= 1.4.4'))
+conf_data.set('GLAMOR_HAS_EGL_QUERY_DRIVER',
+              epoxy_dep.found() and epoxy_dep.version().version_compare('>= 1.5.4'))
 conf_data.set('GLXEXT', build_glx)
 conf_data.set('GLAMOR', build_glamor)
 conf_data.set('GLAMOR_HAS_GBM', gbm_dep.found())

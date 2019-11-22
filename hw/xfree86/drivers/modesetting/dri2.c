@@ -1033,6 +1033,7 @@ ms_dri2_screen_init(ScreenPtr screen)
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     modesettingPtr ms = modesettingPTR(scrn);
     DRI2InfoRec info;
+    const char *driver_names[2] = { NULL, NULL };
 
     if (!glamor_supports_pixmap_import_export(screen)) {
         xf86DrvMsg(scrn->scrnIndex, X_WARNING,
@@ -1071,9 +1072,30 @@ ms_dri2_screen_init(ScreenPtr screen)
     info.DestroyBuffer2 = ms_dri2_destroy_buffer2;
     info.CopyRegion2 = ms_dri2_copy_region2;
 
-    /* These two will be filled in by dri2.c */
-    info.numDrivers = 0;
-    info.driverNames = NULL;
+    /* Ask Glamor to obtain the DRI driver name via EGL_MESA_query_driver. */
+    driver_names[0] = glamor_egl_get_driver_name(screen);
+
+    if (driver_names[0]) {
+        /* There is no VDPAU driver for Intel, fallback to the generic
+         * OpenGL/VAAPI va_gl backend to emulate VDPAU.  Otherwise,
+         * guess that the DRI and VDPAU drivers have the same name.
+         */
+        if (strcmp(driver_names[0], "i965") == 0 ||
+            strcmp(driver_names[0], "iris") == 0) {
+            driver_names[1] = "va_gl";
+        } else {
+            driver_names[1] = driver_names[0];
+        }
+
+        info.numDrivers = 2;
+        info.driverNames = driver_names;
+    } else {
+        /* EGL_MESA_query_driver was unavailable; let dri2.c select the
+         * driver and fill in these fields for us.
+         */
+        info.numDrivers = 0;
+        info.driverNames = NULL;
+    }
 
     return DRI2ScreenInit(screen, &info);
 }

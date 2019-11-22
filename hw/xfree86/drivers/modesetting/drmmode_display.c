@@ -1804,6 +1804,14 @@ drmmode_clear_pixmap(PixmapPtr pixmap)
 {
     ScreenPtr screen = pixmap->drawable.pScreen;
     GCPtr gc;
+#ifdef GLAMOR_HAS_GBM
+    modesettingPtr ms = modesettingPTR(xf86ScreenToScrn(screen));
+
+    if (ms->drmmode.glamor) {
+        ms->glamor.clear_pixmap(pixmap);
+        return;
+    }
+#endif
 
     gc = GetScratchGC(pixmap->drawable.depth, screen);
     if (gc) {

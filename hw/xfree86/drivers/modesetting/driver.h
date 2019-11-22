@@ -137,6 +137,7 @@ typedef struct _modesettingRec {
         Bool (*back_pixmap_from_fd)(PixmapPtr, int, CARD16, CARD16, CARD16,
                                     CARD8, CARD8);
         void (*block_handler)(ScreenPtr);
+        void (*clear_pixmap)(PixmapPtr);
         Bool (*egl_create_textured_pixmap)(PixmapPtr, int, int);
         Bool (*egl_create_textured_pixmap_from_gbm_bo)(PixmapPtr,
                                                        struct gbm_bo *,

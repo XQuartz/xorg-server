@@ -762,6 +762,7 @@ bind_glamor_api(void *mod, modesettingPtr ms)
     ms->glamor.shareable_fd_from_pixmap = LoaderSymbolFromModule(mod, "glamor_shareable_fd_from_pixmap");
     ms->glamor.supports_pixmap_import_export = LoaderSymbolFromModule(mod, "glamor_supports_pixmap_import_export");
     ms->glamor.xv_init = LoaderSymbolFromModule(mod, "glamor_xv_init");
+    ms->glamor.egl_get_driver_name = LoaderSymbolFromModule(mod, "glamor_egl_get_driver_name");
 }
 
 static void

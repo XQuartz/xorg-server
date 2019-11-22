@@ -155,6 +155,7 @@ typedef struct _modesettingRec {
                                         CARD32 *);
         Bool (*supports_pixmap_import_export)(ScreenPtr);
         XF86VideoAdaptorPtr (*xv_init)(ScreenPtr, int);
+        const char *(*egl_get_driver_name)(ScreenPtr);
     } glamor;
 
 } modesettingRec, *modesettingPtr;

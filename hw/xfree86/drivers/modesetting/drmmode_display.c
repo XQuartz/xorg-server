@@ -1795,6 +1795,19 @@ drmmode_set_scanout_pixmap(xf86CrtcPtr crtc, PixmapPtr ppix)
                                              &drmmode_crtc->prime_pixmap);
 }
 
+static void
+drmmode_clear_pixmap(PixmapPtr pixmap)
+{
+    ScreenPtr screen = pixmap->drawable.pScreen;
+    GCPtr gc;
+
+    gc = GetScratchGC(pixmap->drawable.depth, screen);
+    if (gc) {
+        miClearDrawable(&pixmap->drawable, gc);
+        FreeScratchGC(gc);
+    }
+}
+
 static void *
 drmmode_shadow_allocate(xf86CrtcPtr crtc, int width, int height)
 {
@@ -3178,6 +3191,8 @@ drmmode_xf86crtc_resize(ScrnInfoPtr scrn, int width, int height)
 
     if (!drmmode_glamor_handle_new_screen_pixmap(drmmode))
         goto fail;
+
+    drmmode_clear_pixmap(ppix);
 
     for (i = 0; i < xf86_config->num_crtc; i++) {
         xf86CrtcPtr crtc = xf86_config->crtc[i];

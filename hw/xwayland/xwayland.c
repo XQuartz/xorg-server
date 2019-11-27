@@ -903,6 +903,10 @@ ensure_surface_for_window(WindowPtr window)
     xorg_list_init(&xwl_window->link_damage);
     xorg_list_add(&xwl_window->link_window, &xwl_screen->window_list);
 
+#ifdef GLAMOR_HAS_GBM
+    xorg_list_init(&xwl_window->frame_callback_list);
+#endif
+
     xwl_window_buffers_init(xwl_window);
 
     xwl_window_init_allow_commits(xwl_window);
@@ -991,11 +995,6 @@ xwl_unrealize_window(WindowPtr window)
     xwl_screen->UnrealizeWindow = screen->UnrealizeWindow;
     screen->UnrealizeWindow = xwl_unrealize_window;
 
-#ifdef GLAMOR_HAS_GBM
-    if (xwl_screen->present)
-        xwl_present_unrealize_window(window);
-#endif
-
     xwl_window = xwl_window_get(window);
     if (!xwl_window)
         return ret;
@@ -1012,6 +1011,11 @@ xwl_unrealize_window(WindowPtr window)
 
     if (xwl_window->frame_callback)
         wl_callback_destroy(xwl_window->frame_callback);
+
+#ifdef GLAMOR_HAS_GBM
+    if (xwl_screen->present)
+        xwl_present_unrealize_window(window);
+#endif
 
     free(xwl_window);
     dixSetPrivate(&window->devPrivates, &xwl_window_private_key, NULL);
@@ -1086,6 +1090,18 @@ frame_callback(void *data,
 
     wl_callback_destroy (xwl_window->frame_callback);
     xwl_window->frame_callback = NULL;
+
+#ifdef GLAMOR_HAS_GBM
+    if (xwl_window->xwl_screen->present) {
+        struct xwl_present_window *xwl_present_window, *tmp;
+
+        xorg_list_for_each_entry_safe(xwl_present_window, tmp,
+                                      &xwl_window->frame_callback_list,
+                                      frame_callback_list) {
+            xwl_present_frame_callback(xwl_present_window);
+        }
+    }
+#endif
 }
 
 static const struct wl_callback_listener frame_listener = {

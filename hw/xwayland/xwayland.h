@@ -183,6 +183,7 @@ struct xwl_window {
     struct wl_callback *frame_callback;
     Bool allow_commits;
 #ifdef GLAMOR_HAS_GBM
+    struct xorg_list frame_callback_list;
     Bool present_flipped;
 #endif
 };
@@ -192,7 +193,7 @@ struct xwl_present_window {
     struct xwl_screen *xwl_screen;
     struct xwl_present_event *sync_flip;
     WindowPtr window;
-    struct xorg_list link;
+    struct xorg_list frame_callback_list;
 
     uint64_t msc;
     uint64_t ust;
@@ -454,6 +455,7 @@ Bool xwl_glamor_allow_commits(struct xwl_window *xwl_window);
 void xwl_glamor_egl_make_current(struct xwl_screen *xwl_screen);
 
 #ifdef GLAMOR_HAS_GBM
+void xwl_present_frame_callback(struct xwl_present_window *xwl_present_window);
 Bool xwl_present_init(ScreenPtr screen);
 void xwl_present_cleanup(WindowPtr window);
 void xwl_present_unrealize_window(WindowPtr window);

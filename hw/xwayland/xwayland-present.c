@@ -239,7 +239,10 @@ xwl_present_timer_callback(OsTimerPtr timer,
 {
     struct xwl_present_window *xwl_present_window = arg;
 
-    xwl_present_window->frame_timer_firing = TRUE;
+    /* If we were expecting a frame callback for this window, it didn't arrive
+     * in a second. Stop listening to it to avoid double-bumping the MSC
+     */
+    xorg_list_del(&xwl_present_window->frame_callback_list);
 
     xwl_present_msc_bump(xwl_present_window);
     xwl_present_reset_timer(xwl_present_window);
@@ -251,11 +254,6 @@ void
 xwl_present_frame_callback(struct xwl_present_window *xwl_present_window)
 {
     xorg_list_del(&xwl_present_window->frame_callback_list);
-
-    if (xwl_present_window->frame_timer_firing) {
-        /* If the timer is firing, this frame callback is too late */
-        return;
-    }
 
     xwl_present_msc_bump(xwl_present_window);
 
@@ -346,6 +344,7 @@ xwl_present_queue_vblank(WindowPtr present_window,
                          uint64_t msc)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(present_window);
+    struct xwl_window *xwl_window = xwl_window_from_window(present_window);
     struct xwl_present_event *event;
 
     event = malloc(sizeof *event);
@@ -358,7 +357,15 @@ xwl_present_queue_vblank(WindowPtr present_window,
 
     xorg_list_append(&event->list, &xwl_present_window->event_list);
 
-    if (!xwl_present_window->frame_timer)
+    /* If there's a pending frame callback, use that */
+    if (xwl_window && xwl_window->frame_callback &&
+        xorg_list_is_empty(&xwl_present_window->frame_callback_list)) {
+        xorg_list_add(&xwl_present_window->frame_callback_list,
+                      &xwl_window->frame_callback_list);
+    }
+
+    if ((xwl_window && xwl_window->frame_callback) ||
+        !xwl_present_window->frame_timer)
         xwl_present_reset_timer(xwl_present_window);
 
     return Success;
@@ -480,7 +487,6 @@ xwl_present_flip(WindowPtr present_window,
     }
 
     /* Realign timer */
-    xwl_present_window->frame_timer_firing = FALSE;
     xwl_present_reset_timer(xwl_present_window);
 
     xwl_surface_damage(xwl_window->xwl_screen, xwl_window->surface, 0, 0,

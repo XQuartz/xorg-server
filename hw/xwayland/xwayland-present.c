@@ -24,6 +24,7 @@
  */
 
 #include "xwayland.h"
+#include "glamor.h"
 
 #include <present.h>
 
@@ -412,9 +413,7 @@ xwl_present_abort_vblank(WindowPtr present_window,
 static void
 xwl_present_flush(WindowPtr window)
 {
-    /* Only called when a Pixmap is copied instead of flipped,
-     * but in this case we wait on the next block_handler.
-     */
+    glamor_block_handler(window->drawable.pScreen);
 }
 
 static Bool

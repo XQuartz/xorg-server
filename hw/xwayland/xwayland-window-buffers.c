@@ -286,8 +286,10 @@ xwl_window_buffers_get_pixmap(struct xwl_window *xwl_window,
         while (nBox--) {
             if (!copy_pixmap_area(window_pixmap,
                                   xwl_window_buffer->pixmap,
-                                  pBox->x1, pBox->y1,
-                                  pBox->x2 - pBox->x1, pBox->y2 - pBox->y1))
+                                  pBox->x1 + xwl_window->window->borderWidth,
+                                  pBox->y1 + xwl_window->window->borderWidth,
+                                  pBox->x2 - pBox->x1,
+                                  pBox->y2 - pBox->y1))
                 return window_pixmap;
 
             pBox++;

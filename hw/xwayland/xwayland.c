@@ -1163,13 +1163,16 @@ xwl_window_post_damage(struct xwl_window *xwl_window)
      */
     if (RegionNumRects(region) > 256) {
         box = RegionExtents(region);
-        xwl_surface_damage(xwl_screen, xwl_window->surface, box->x1, box->y1,
+        xwl_surface_damage(xwl_screen, xwl_window->surface,
+                           box->x1 + xwl_window->window->borderWidth,
+                           box->y1 + xwl_window->window->borderWidth,
                            box->x2 - box->x1, box->y2 - box->y1);
     } else {
         box = RegionRects(region);
         for (i = 0; i < RegionNumRects(region); i++, box++) {
             xwl_surface_damage(xwl_screen, xwl_window->surface,
-                               box->x1, box->y1,
+                               box->x1 + xwl_window->window->borderWidth,
+                               box->y1 + xwl_window->window->borderWidth,
                                box->x2 - box->x1, box->y2 - box->y1);
         }
     }

@@ -1025,7 +1025,10 @@ xwl_set_window_pixmap(WindowPtr window,
 {
     ScreenPtr screen = window->drawable.pScreen;
     struct xwl_screen *xwl_screen;
+    struct xwl_window *xwl_window;
+    PixmapPtr old_pixmap;
 
+    old_pixmap = (*screen->GetWindowPixmap) (window);
     xwl_screen = xwl_screen_get(screen);
 
     screen->SetWindowPixmap = xwl_screen->SetWindowPixmap;
@@ -1037,6 +1040,14 @@ xwl_set_window_pixmap(WindowPtr window,
         return;
 
     ensure_surface_for_window(window);
+
+    if (old_pixmap->drawable.width == pixmap->drawable.width &&
+        old_pixmap->drawable.height == pixmap->drawable.height)
+       return;
+
+    xwl_window = xwl_window_get(window);
+    if (xwl_window)
+            xwl_window_buffers_recycle(xwl_window);
 }
 
 static void
@@ -1058,7 +1069,6 @@ xwl_resize_window(WindowPtr window,
     screen->ResizeWindow = xwl_resize_window;
 
     if (xwl_window) {
-        xwl_window_buffers_recycle(xwl_window);
         xwl_window->x = x;
         xwl_window->y = y;
         xwl_window->width = width;

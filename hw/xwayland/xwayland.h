@@ -418,6 +418,7 @@ struct xwl_screen *xwl_screen_get(ScreenPtr screen);
 Bool xwl_screen_has_resolution_change_emulation(struct xwl_screen *xwl_screen);
 struct xwl_output *xwl_screen_get_first_output(struct xwl_screen *xwl_screen);
 void xwl_screen_check_resolution_change_emulation(struct xwl_screen *xwl_screen);
+void xwl_window_create_frame_callback(struct xwl_window *xwl_window);
 Bool xwl_window_has_viewport_enabled(struct xwl_window *xwl_window);
 Bool xwl_window_is_toplevel(WindowPtr window);
 

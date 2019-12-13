@@ -1092,6 +1092,14 @@ static const struct wl_callback_listener frame_listener = {
     frame_callback
 };
 
+void
+xwl_window_create_frame_callback(struct xwl_window *xwl_window)
+{
+    xwl_window->frame_callback = wl_surface_frame(xwl_window->surface);
+    wl_callback_add_listener(xwl_window->frame_callback, &frame_listener,
+                             xwl_window);
+}
+
 static Bool
 xwl_destroy_window(WindowPtr window)
 {
@@ -1177,9 +1185,7 @@ xwl_window_post_damage(struct xwl_window *xwl_window)
         }
     }
 
-    xwl_window->frame_callback = wl_surface_frame(xwl_window->surface);
-    wl_callback_add_listener(xwl_window->frame_callback, &frame_listener, xwl_window);
-
+    xwl_window_create_frame_callback(xwl_window);
     wl_surface_commit(xwl_window->surface);
     DamageEmpty(window_get_damage(xwl_window->window));
 

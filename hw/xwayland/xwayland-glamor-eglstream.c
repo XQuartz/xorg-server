@@ -27,10 +27,7 @@
  *
  */
 
-#include "xwayland.h"
-
-#include "wayland-eglstream-client-protocol.h"
-#include "wayland-eglstream-controller-client-protocol.h"
+#include <xwayland-config.h>
 
 #define MESA_EGL_NO_X11_HEADERS
 #define EGL_NO_X11
@@ -42,6 +39,12 @@
 #include <xf86drm.h>
 
 #include <epoxy/egl.h>
+
+#include "xwayland.h"
+#include "xwayland-glamor.h"
+
+#include "wayland-eglstream-client-protocol.h"
+#include "wayland-eglstream-controller-client-protocol.h"
 
 struct xwl_eglstream_pending_stream {
     PixmapPtr pixmap;

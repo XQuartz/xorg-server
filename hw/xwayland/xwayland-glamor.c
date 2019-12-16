@@ -23,7 +23,9 @@
  * SOFTWARE.
  */
 
-#include "xwayland.h"
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
+#endif
 
 #define MESA_EGL_NO_X11_HEADERS
 #define EGL_NO_X11
@@ -34,6 +36,9 @@
 #ifdef GLXEXT
 #include "glx_extinit.h"
 #endif
+
+#include "xwayland.h"
+#include "xwayland-glamor.h"
 
 static void
 glamor_egl_make_current(struct glamor_context *glamor_ctx)

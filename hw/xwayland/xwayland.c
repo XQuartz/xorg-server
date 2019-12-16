@@ -23,6 +23,7 @@
  * SOFTWARE.
  */
 
+
 #include <stdio.h>
 
 #include <X11/Xatom.h>
@@ -37,6 +38,7 @@
 #include <propertyst.h>
 
 #include "xwayland.h"
+#include "xwayland-glamor.h"
 #include "xwayland-shm.h"
 #include "xwayland-window-buffers.h"
 

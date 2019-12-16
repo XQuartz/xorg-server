@@ -2,6 +2,7 @@ srcs = [
     'xwayland.c',
     'xwayland-input.c',
     'xwayland-cursor.c',
+    'xwayland-glamor.h',
     'xwayland-shm.c',
     'xwayland-shm.h',
     'xwayland-types.h',

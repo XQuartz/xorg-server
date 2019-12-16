@@ -30,10 +30,14 @@
  * implementations
  */
 
-#include "xwayland.h"
+#include <xwayland-config.h>
+
 #include "glamor_priv.h"
 
 #include <X11/extensions/Xv.h>
+
+#include "xwayland.h"
+#include "xwayland-glamor.h"
 
 #define NUM_FORMATS    3
 #define NUM_PORTS      16

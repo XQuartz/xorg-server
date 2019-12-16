@@ -28,9 +28,10 @@
  *
  */
 
-#include "xwayland.h"
+#include <xwayland-config.h>
 
 #include <fcntl.h>
+#include <errno.h>
 #include <sys/stat.h>
 #include <xf86drm.h>
 #include <drm_fourcc.h>
@@ -44,6 +45,11 @@
 #include <glamor_context.h>
 #include <dri3.h>
 #include "drm-client-protocol.h"
+
+#include "xwayland.h"
+#include "xwayland-glamor.h"
+
+#include "linux-dmabuf-unstable-v1-client-protocol.h"
 
 struct xwl_gbm_private {
     char *device_name;

@@ -23,9 +23,6 @@
  * SOFTWARE.
  */
 
-#include "xwayland.h"
-#include "xwayland-window-buffers.h"
-
 #include <stdio.h>
 
 #include <X11/Xatom.h>
@@ -38,6 +35,10 @@
 #include <os.h>
 #include <xserver_poll.h>
 #include <propertyst.h>
+
+#include "xwayland.h"
+#include "xwayland-shm.h"
+#include "xwayland-window-buffers.h"
 
 #ifdef XF86VIDMODE
 #include <X11/extensions/xf86vmproto.h>

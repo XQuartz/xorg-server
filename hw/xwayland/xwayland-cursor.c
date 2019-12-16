@@ -24,9 +24,19 @@
  * SOFTWARE.
  */
 
-#include "xwayland.h"
+#include <xwayland-config.h>
 
-#include <mipointer.h>
+#include "scrnintstr.h"
+#include "servermd.h"
+#include "cursorstr.h"
+#include "inputstr.h"
+#include "mipointer.h"
+
+#include "xwayland.h"
+#include "xwayland-shm.h"
+#include "xwayland-types.h"
+
+#include "tablet-unstable-v2-client-protocol.h"
 
 static DevPrivateKeyRec xwl_cursor_private_key;
 

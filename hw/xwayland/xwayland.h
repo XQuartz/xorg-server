@@ -471,12 +471,6 @@ void xwl_pixmap_buffer_release_cb(void *data, struct wl_buffer *wl_buffer);
 
 struct xwl_window *xwl_window_from_window(WindowPtr window);
 
-Bool xwl_shm_create_screen_resources(ScreenPtr screen);
-PixmapPtr xwl_shm_create_pixmap(ScreenPtr screen, int width, int height,
-                                int depth, unsigned int hint);
-Bool xwl_shm_destroy_pixmap(PixmapPtr pixmap);
-struct wl_buffer *xwl_shm_pixmap_get_wl_buffer(PixmapPtr pixmap);
-
 #ifdef XWL_HAS_GLAMOR
 void xwl_glamor_init_backends(struct xwl_screen *xwl_screen,
                               Bool use_eglstream);

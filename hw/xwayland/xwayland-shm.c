@@ -24,13 +24,7 @@
  * SOFTWARE.
  */
 
-#ifdef HAVE_DIX_CONFIG_H
-#include <dix-config.h>
-#endif
-
-#include "os.h"
-
-#include "xwayland.h"
+#include <xwayland-config.h>
 
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -39,6 +33,13 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
+
+#include "fb.h"
+#include "os.h"
+#include "pixmapstr.h"
+
+#include "xwayland.h"
+#include "xwayland-shm.h"
 
 struct xwl_pixmap {
     struct wl_buffer *buffer;

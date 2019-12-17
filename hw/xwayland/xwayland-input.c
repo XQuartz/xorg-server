@@ -40,6 +40,7 @@
 #include <misc.h>
 
 #include "xwayland.h"
+#include "xwayland-input.h"
 #include "xwayland-window.h"
 
 #include "pointer-constraints-unstable-v1-client-protocol.h"

@@ -12,6 +12,7 @@ Xwayland_CFLAGS =				\
 Xwayland_SOURCES =				\
 	xwayland.c				\
 	xwayland-input.c			\
+	xwayland-input.h			\
 	xwayland-cursor.c			\
 	xwayland-glamor.h			\
 	xwayland-pixmap.c			\

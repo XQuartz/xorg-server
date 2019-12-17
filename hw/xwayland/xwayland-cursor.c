@@ -33,6 +33,7 @@
 #include "mipointer.h"
 
 #include "xwayland.h"
+#include "xwayland-input.h"
 #include "xwayland-shm.h"
 #include "xwayland-types.h"
 

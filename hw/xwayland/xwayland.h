@@ -59,8 +59,6 @@ struct xwl_format {
     uint64_t *modifiers;
 };
 
-typedef void (*xwl_pixmap_cb) (PixmapPtr pixmap, void *data);
-
 struct xwl_screen {
     int width;
     int height;
@@ -385,13 +383,6 @@ void xwl_output_set_window_randr_emu_props(struct xwl_screen *xwl_screen,
 
 RRModePtr xwayland_cvt(int HDisplay, int VDisplay,
                        float VRefresh, Bool Reduced, Bool Interlaced);
-
-void xwl_pixmap_set_private(PixmapPtr pixmap, struct xwl_pixmap *xwl_pixmap);
-struct xwl_pixmap *xwl_pixmap_get(PixmapPtr pixmap);
-Bool xwl_pixmap_set_buffer_release_cb(PixmapPtr pixmap,
-                                      xwl_pixmap_cb func, void *data);
-void xwl_pixmap_del_buffer_release_cb(PixmapPtr pixmap);
-void xwl_pixmap_buffer_release_cb(void *data, struct wl_buffer *wl_buffer);
 
 #ifdef XWL_HAS_GLAMOR
 

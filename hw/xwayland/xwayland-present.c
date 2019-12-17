@@ -32,6 +32,7 @@
 
 #include "xwayland.h"
 #include "xwayland-window.h"
+#include "xwayland-pixmap.h"
 #include "glamor.h"
 
 /*

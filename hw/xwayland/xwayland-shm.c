@@ -26,6 +26,8 @@
 
 #include <xwayland-config.h>
 
+#include "os.h"
+
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -39,6 +41,7 @@
 #include "pixmapstr.h"
 
 #include "xwayland.h"
+#include "xwayland-pixmap.h"
 #include "xwayland-shm.h"
 
 struct xwl_pixmap {

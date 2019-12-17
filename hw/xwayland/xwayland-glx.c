@@ -303,7 +303,7 @@ egl_mirror_configs(ScreenPtr pScreen, struct egl_screen *screen)
      */
     for (i = nconfigs - 1; i > 0; i--)
         for (j = 0; j < 2; j++) /* direct_color */
-            for (k = 0; k < 2; k++) /* direct_color */
+            for (k = 0; k < 2; k++) /* double_buffer */
                 c = translate_eglconfig(screen, host_configs[i], c,
                                         /* direct_color */ offon[j],
                                         /* double_buffer */ offon[k]

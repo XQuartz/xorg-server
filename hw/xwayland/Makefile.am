@@ -20,6 +20,8 @@ Xwayland_SOURCES =				\
 	xwayland-output.c			\
 	xwayland-cvt.c				\
 	xwayland-vidmode.c			\
+	xwayland-window.c			\
+	xwayland-window.h			\
 	xwayland-window-buffers.c		\
 	xwayland-window-buffers.h		\
 	xwayland.h				\

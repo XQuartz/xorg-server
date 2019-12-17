@@ -23,13 +23,15 @@
  * SOFTWARE.
  */
 
-#ifdef HAVE_DIX_CONFIG_H
-#include <dix-config.h>
-#endif
+#include <xwayland-config.h>
 
-#include "xwayland.h"
 #include <randrstr.h>
 #include <X11/Xatom.h>
+
+#include "xwayland.h"
+#include "xwayland-window.h"
+
+#include "xdg-output-unstable-v1-client-protocol.h"
 
 #define DEFAULT_DPI 96
 #define ALL_ROTATIONS (RR_Rotate_0   | \

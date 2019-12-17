@@ -23,10 +23,16 @@
  * SOFTWARE.
  */
 
-#include "xwayland.h"
-#include "glamor.h"
+#ifdef HAVE_DIX_CONFIG_H
+#include <dix-config.h>
+#endif
 
+#include <windowstr.h>
 #include <present.h>
+
+#include "xwayland.h"
+#include "xwayland-window.h"
+#include "glamor.h"
 
 /*
  * When not flipping let Present copy with 60fps.

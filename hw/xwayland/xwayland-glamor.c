@@ -39,6 +39,7 @@
 
 #include "xwayland.h"
 #include "xwayland-glamor.h"
+#include "xwayland-window.h"
 
 static void
 glamor_egl_make_current(struct glamor_context *glamor_ctx)

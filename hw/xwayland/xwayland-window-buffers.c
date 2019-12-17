@@ -24,6 +24,11 @@
  *      Olivier Fourdan <ofourdan@redhat.com>
  */
 
+#include <xwayland-config.h>
+
+#include "gcstruct.h"
+
+#include "xwayland-window.h"
 #include "xwayland-window-buffers.h"
 
 #define BUFFER_TIMEOUT 1 * 1000 /* ms */

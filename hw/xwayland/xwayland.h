@@ -123,27 +123,6 @@ struct xwl_screen {
     Atom allow_commits_prop;
 };
 
-struct xwl_window {
-    struct xwl_screen *xwl_screen;
-    struct wl_surface *surface;
-    struct wp_viewport *viewport;
-    int32_t x, y, width, height;
-    float scale_x, scale_y;
-    struct wl_shell_surface *shell_surface;
-    WindowPtr window;
-    struct xorg_list link_damage;
-    struct xorg_list link_window;
-    struct wl_callback *frame_callback;
-    Bool allow_commits;
-    struct xorg_list window_buffers_available;
-    struct xorg_list window_buffers_unavailable;
-    OsTimerPtr window_buffers_timer;
-#ifdef GLAMOR_HAS_GBM
-    struct xorg_list frame_callback_list;
-    Bool present_flipped;
-#endif
-};
-
 #ifdef GLAMOR_HAS_GBM
 struct xwl_present_window {
     struct xwl_screen *xwl_screen;
@@ -363,9 +342,6 @@ struct xwl_screen *xwl_screen_get(ScreenPtr screen);
 Bool xwl_screen_has_resolution_change_emulation(struct xwl_screen *xwl_screen);
 struct xwl_output *xwl_screen_get_first_output(struct xwl_screen *xwl_screen);
 void xwl_screen_check_resolution_change_emulation(struct xwl_screen *xwl_screen);
-void xwl_window_create_frame_callback(struct xwl_window *xwl_window);
-Bool xwl_window_has_viewport_enabled(struct xwl_window *xwl_window);
-Bool xwl_window_is_toplevel(WindowPtr window);
 
 void xwl_tablet_tool_set_cursor(struct xwl_tablet_tool *tool);
 void xwl_seat_set_cursor(struct xwl_seat *xwl_seat);
@@ -416,8 +392,6 @@ Bool xwl_pixmap_set_buffer_release_cb(PixmapPtr pixmap,
                                       xwl_pixmap_cb func, void *data);
 void xwl_pixmap_del_buffer_release_cb(PixmapPtr pixmap);
 void xwl_pixmap_buffer_release_cb(void *data, struct wl_buffer *wl_buffer);
-
-struct xwl_window *xwl_window_from_window(WindowPtr window);
 
 #ifdef XWL_HAS_GLAMOR
 

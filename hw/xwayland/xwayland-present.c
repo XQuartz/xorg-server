@@ -31,6 +31,7 @@
 #include <present.h>
 
 #include "xwayland.h"
+#include "xwayland-present.h"
 #include "xwayland-window.h"
 #include "xwayland-pixmap.h"
 #include "glamor.h"

@@ -16,6 +16,7 @@ Xwayland_SOURCES =				\
 	xwayland-glamor.h			\
 	xwayland-pixmap.c			\
 	xwayland-pixmap.h			\
+	xwayland-present.h			\
 	xwayland-shm.c				\
 	xwayland-shm.h				\
 	xwayland-types.h			\

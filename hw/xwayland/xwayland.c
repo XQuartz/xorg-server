@@ -39,6 +39,7 @@
 #include "xwayland.h"
 #include "xwayland-glamor.h"
 #include "xwayland-pixmap.h"
+#include "xwayland-present.h"
 #include "xwayland-shm.h"
 #include "xwayland-window-buffers.h"
 #include "xwayland-window.h"

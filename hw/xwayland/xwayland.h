@@ -121,39 +121,6 @@ struct xwl_screen {
     Atom allow_commits_prop;
 };
 
-#ifdef GLAMOR_HAS_GBM
-struct xwl_present_window {
-    struct xwl_screen *xwl_screen;
-    struct xwl_present_event *sync_flip;
-    WindowPtr window;
-    struct xorg_list frame_callback_list;
-
-    uint64_t msc;
-    uint64_t ust;
-
-    OsTimerPtr frame_timer;
-
-    struct wl_callback *sync_callback;
-
-    struct xorg_list event_list;
-    struct xorg_list release_queue;
-};
-
-struct xwl_present_event {
-    uint64_t event_id;
-    uint64_t target_msc;
-
-    Bool abort;
-    Bool pending;
-    Bool buffer_released;
-
-    struct xwl_present_window *xwl_present_window;
-    struct wl_buffer *buffer;
-
-    struct xorg_list list;
-};
-#endif
-
 #define MODIFIER_META 0x01
 
 struct xwl_touch {
@@ -383,17 +350,6 @@ void xwl_output_set_window_randr_emu_props(struct xwl_screen *xwl_screen,
 
 RRModePtr xwayland_cvt(int HDisplay, int VDisplay,
                        float VRefresh, Bool Reduced, Bool Interlaced);
-
-#ifdef XWL_HAS_GLAMOR
-
-#ifdef GLAMOR_HAS_GBM
-void xwl_present_frame_callback(struct xwl_present_window *xwl_present_window);
-Bool xwl_present_init(ScreenPtr screen);
-void xwl_present_cleanup(WindowPtr window);
-void xwl_present_unrealize_window(WindowPtr window);
-#endif /* GLAMOR_HAS_GBM */
-
-#endif /* XWL_HAS_GLAMOR */
 
 void xwl_screen_release_tablet_manager(struct xwl_screen *xwl_screen);
 

@@ -14,6 +14,7 @@ Xwayland_SOURCES =				\
 	xwayland-input.c			\
 	xwayland-cursor.c			\
 	xwayland-shm.c				\
+	xwayland-types.h			\
 	xwayland-output.c			\
 	xwayland-cvt.c				\
 	xwayland-vidmode.c			\

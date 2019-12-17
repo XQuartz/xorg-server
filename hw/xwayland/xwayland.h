@@ -50,15 +50,13 @@
 #include "linux-dmabuf-unstable-v1-client-protocol.h"
 #include "viewporter-client-protocol.h"
 
+#include "xwayland-types.h"
+
 struct xwl_format {
     uint32_t format;
     int num_modifiers;
     uint64_t *modifiers;
 };
-
-struct xwl_pixmap;
-struct xwl_window;
-struct xwl_screen;
 
 typedef void (*xwl_pixmap_cb) (PixmapPtr pixmap, void *data);
 

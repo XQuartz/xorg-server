@@ -50,6 +50,7 @@
 #include "viewporter-client-protocol.h"
 
 #include "xwayland-types.h"
+#include "xwayland-output.h"
 #include "xwayland-glamor.h"
 
 struct xwl_format {
@@ -122,28 +123,6 @@ struct xwl_screen {
 
 #define MODIFIER_META 0x01
 
-struct xwl_output {
-    struct xorg_list link;
-    struct wl_output *output;
-    struct zxdg_output_v1 *xdg_output;
-    uint32_t server_output_id;
-    struct xwl_screen *xwl_screen;
-    RROutputPtr randr_output;
-    RRCrtcPtr randr_crtc;
-    int32_t x, y, width, height, refresh;
-    Rotation rotation;
-    Bool wl_output_done;
-    Bool xdg_output_done;
-};
-
-/* Per client per output emulated randr/vidmode resolution info. */
-struct xwl_emulated_mode {
-    uint32_t server_output_id;
-    int32_t width;
-    int32_t height;
-    Bool from_vidmode;
-};
-
 /* Apps which use randr/vidmode to change the mode when going fullscreen,
  * usually change the mode of only a single monitor, so this should be plenty.
  */
@@ -167,30 +146,8 @@ Bool xwl_screen_has_resolution_change_emulation(struct xwl_screen *xwl_screen);
 struct xwl_output *xwl_screen_get_first_output(struct xwl_screen *xwl_screen);
 void xwl_screen_check_resolution_change_emulation(struct xwl_screen *xwl_screen);
 
-Bool xwl_screen_init_output(struct xwl_screen *xwl_screen);
-
-struct xwl_output *xwl_output_create(struct xwl_screen *xwl_screen,
-                                     uint32_t id);
-
-void xwl_output_destroy(struct xwl_output *xwl_output);
-
-void xwl_output_remove(struct xwl_output *xwl_output);
-
-struct xwl_emulated_mode *xwl_output_get_emulated_mode_for_client(
-                            struct xwl_output *xwl_output, ClientPtr client);
-
-RRModePtr xwl_output_find_mode(struct xwl_output *xwl_output,
-                               int32_t width, int32_t height);
-void xwl_output_set_emulated_mode(struct xwl_output *xwl_output,
-                                  ClientPtr client, RRModePtr mode,
-                                  Bool from_vidmode);
-void xwl_output_set_window_randr_emu_props(struct xwl_screen *xwl_screen,
-                                           WindowPtr window);
-
 RRModePtr xwayland_cvt(int HDisplay, int VDisplay,
                        float VRefresh, Bool Reduced, Bool Interlaced);
-
-void xwl_screen_init_xdg_output(struct xwl_screen *xwl_screen);
 
 #ifdef XF86VIDMODE
 void xwlVidModeExtensionInit(void);

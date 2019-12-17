@@ -22,6 +22,7 @@ Xwayland_SOURCES =				\
 	xwayland-shm.h				\
 	xwayland-types.h			\
 	xwayland-output.c			\
+	xwayland-output.h			\
 	xwayland-cvt.c				\
 	xwayland-vidmode.c			\
 	xwayland-window.c			\

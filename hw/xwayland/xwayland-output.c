@@ -29,6 +29,7 @@
 #include <X11/Xatom.h>
 
 #include "xwayland.h"
+#include "xwayland-output.h"
 #include "xwayland-window.h"
 
 #include "xdg-output-unstable-v1-client-protocol.h"

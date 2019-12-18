@@ -42,6 +42,7 @@
 
 #include "xwayland.h"
 #include "xwayland-pixmap.h"
+#include "xwayland-screen.h"
 #include "xwayland-shm.h"
 
 struct xwl_pixmap {

@@ -38,6 +38,7 @@
 #include "xwayland-types.h"
 #include "xwayland-input.h"
 #include "xwayland-present.h"
+#include "xwayland-screen.h"
 #include "xwayland-window.h"
 #include "xwayland-window-buffers.h"
 #include "xwayland-shm.h"

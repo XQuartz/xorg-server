@@ -43,6 +43,7 @@
 #include "xwayland-cursor.h"
 #include "xwayland-input.h"
 #include "xwayland-window.h"
+#include "xwayland-screen.h"
 
 #include "pointer-constraints-unstable-v1-client-protocol.h"
 #include "relative-pointer-unstable-v1-client-protocol.h"

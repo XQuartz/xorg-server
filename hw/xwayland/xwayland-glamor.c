@@ -39,6 +39,7 @@
 
 #include "xwayland.h"
 #include "xwayland-glamor.h"
+#include "xwayland-screen.h"
 #include "xwayland-window.h"
 
 static void

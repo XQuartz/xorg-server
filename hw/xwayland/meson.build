@@ -8,6 +8,8 @@ srcs = [
     'xwayland-pixmap.c',
     'xwayland-pixmap.h',
     'xwayland-present.h',
+    'xwayland-screen.c',
+    'xwayland-screen.h',
     'xwayland-shm.c',
     'xwayland-shm.h',
     'xwayland-types.h',

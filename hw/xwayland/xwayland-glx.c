@@ -43,6 +43,8 @@
 #include "glamor_context.h"
 #include "glamor.h"
 
+#include "xwayland-screen.h"
+
 /* Can't get these from <GL/glx.h> since it pulls in client headers */
 #define GLX_RGBA_BIT		0x00000001
 #define GLX_WINDOW_BIT		0x00000001

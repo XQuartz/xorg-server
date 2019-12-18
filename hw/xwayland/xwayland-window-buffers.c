@@ -30,6 +30,7 @@
 
 #include "xwayland-window.h"
 #include "xwayland-pixmap.h"
+#include "xwayland-screen.h"
 #include "xwayland-window-buffers.h"
 
 #define BUFFER_TIMEOUT 1 * 1000 /* ms */

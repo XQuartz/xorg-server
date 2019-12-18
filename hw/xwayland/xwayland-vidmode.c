@@ -39,6 +39,8 @@
 #include "randrstr.h"
 #include "vidmodestr.h"
 
+#include "xwayland-screen.h"
+
 static DevPrivateKeyRec xwlVidModePrivateKeyRec;
 #define xwlVidModePrivateKey (&xwlVidModePrivateKeyRec)
 

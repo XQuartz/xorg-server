@@ -50,9 +50,4 @@
 
 #define MODIFIER_META 0x01
 
-#ifdef GLXEXT
-#include "glx_extinit.h"
-extern __GLXprovider glamor_provider;
-#endif
-
 #endif

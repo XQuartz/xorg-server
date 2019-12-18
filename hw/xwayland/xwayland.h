@@ -38,7 +38,6 @@
 
 #include <fb.h>
 #include <dix.h>
-#include <randrstr.h>
 #include <exevents.h>
 
 #include "relative-pointer-unstable-v1-client-protocol.h"
@@ -50,9 +49,6 @@
 #include "xwayland-types.h"
 
 #define MODIFIER_META 0x01
-
-RRModePtr xwayland_cvt(int HDisplay, int VDisplay,
-                       float VRefresh, Bool Reduced, Bool Interlaced);
 
 #ifdef XF86VIDMODE
 void xwlVidModeExtensionInit(void);

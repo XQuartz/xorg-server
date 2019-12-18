@@ -29,6 +29,7 @@
 #include <X11/Xatom.h>
 
 #include "xwayland.h"
+#include "xwayland-cvt.h"
 #include "xwayland-output.h"
 #include "xwayland-screen.h"
 #include "xwayland-window.h"

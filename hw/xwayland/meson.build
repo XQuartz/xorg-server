@@ -16,6 +16,7 @@ srcs = [
     'xwayland-output.c',
     'xwayland-output.h',
     'xwayland-cvt.c',
+    'xwayland-cvt.h',
     'xwayland-vidmode.c',
     'xwayland-window.c',
     'xwayland-window.h',

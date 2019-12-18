@@ -173,9 +173,6 @@ struct xwl_tablet_pad {
     struct xorg_list pad_group_list;
 };
 
-void xwl_tablet_tool_set_cursor(struct xwl_tablet_tool *tool);
-void xwl_seat_set_cursor(struct xwl_seat *xwl_seat);
-
 void xwl_seat_destroy(struct xwl_seat *xwl_seat);
 
 void xwl_seat_clear_touch(struct xwl_seat *xwl_seat, WindowPtr window);

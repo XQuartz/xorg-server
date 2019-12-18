@@ -139,8 +139,6 @@ void xwl_surface_damage(struct xwl_screen *xwl_screen,
                         struct wl_surface *surface,
                         int32_t x, int32_t y, int32_t width, int32_t height);
 
-Bool xwl_screen_init_cursor(struct xwl_screen *xwl_screen);
-
 struct xwl_screen *xwl_screen_get(ScreenPtr screen);
 Bool xwl_screen_has_resolution_change_emulation(struct xwl_screen *xwl_screen);
 struct xwl_output *xwl_screen_get_first_output(struct xwl_screen *xwl_screen);

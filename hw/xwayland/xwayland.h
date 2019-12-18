@@ -48,6 +48,4 @@
 
 #include "xwayland-types.h"
 
-#define MODIFIER_META 0x01
-
 #endif

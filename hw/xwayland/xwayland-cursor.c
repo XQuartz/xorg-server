@@ -32,7 +32,6 @@
 #include "inputstr.h"
 #include "mipointer.h"
 
-#include "xwayland.h"
 #include "xwayland-cursor.h"
 #include "xwayland-input.h"
 #include "xwayland-screen.h"

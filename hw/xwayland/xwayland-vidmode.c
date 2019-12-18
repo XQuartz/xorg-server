@@ -35,7 +35,7 @@
 #include "extinit.h"
 
 #ifdef XF86VIDMODE
-#include "xwayland.h"
+
 #include "randrstr.h"
 #include "vidmodestr.h"
 

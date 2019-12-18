@@ -23,14 +23,11 @@
  * SOFTWARE.
  */
 
-#ifdef HAVE_DIX_CONFIG_H
-#include <dix-config.h>
-#endif
+#include <xwayland-config.h>
 
 #include <windowstr.h>
 #include <present.h>
 
-#include "xwayland.h"
 #include "xwayland-present.h"
 #include "xwayland-screen.h"
 #include "xwayland-window.h"

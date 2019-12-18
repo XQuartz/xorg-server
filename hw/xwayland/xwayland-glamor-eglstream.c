@@ -40,7 +40,6 @@
 
 #include <epoxy/egl.h>
 
-#include "xwayland.h"
 #include "xwayland-glamor.h"
 #include "xwayland-pixmap.h"
 #include "xwayland-screen.h"

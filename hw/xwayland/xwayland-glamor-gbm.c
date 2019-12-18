@@ -46,7 +46,6 @@
 #include <dri3.h>
 #include "drm-client-protocol.h"
 
-#include "xwayland.h"
 #include "xwayland-glamor.h"
 #include "xwayland-pixmap.h"
 #include "xwayland-screen.h"

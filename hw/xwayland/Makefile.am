@@ -35,7 +35,6 @@ Xwayland_SOURCES =				\
 	xwayland-window.h			\
 	xwayland-window-buffers.c		\
 	xwayland-window-buffers.h		\
-	xwayland.h				\
 	$(top_srcdir)/Xi/stubs.c		\
 	$(top_srcdir)/mi/miinitext.c
 

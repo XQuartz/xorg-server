@@ -47,7 +47,6 @@
 #include "xwayland-pixmap.h"
 #include "xwayland-present.h"
 #include "xwayland-shm.h"
-#include "xwayland.h"
 
 #include "xdg-output-unstable-v1-client-protocol.h"
 #include "viewporter-client-protocol.h"

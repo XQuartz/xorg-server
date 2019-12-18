@@ -42,7 +42,6 @@
 #include "xwayland-window.h"
 #include "xwayland-window-buffers.h"
 #include "xwayland-shm.h"
-#include "xwayland.h"
 
 #include "viewporter-client-protocol.h"
 

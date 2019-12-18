@@ -36,7 +36,6 @@
 
 #include <X11/extensions/Xv.h>
 
-#include "xwayland.h"
 #include "xwayland-glamor.h"
 
 #define NUM_FORMATS    3

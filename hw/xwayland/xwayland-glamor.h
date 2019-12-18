@@ -28,6 +28,8 @@
 
 #include <xwayland-config.h>
 
+#include <wayland-client.h>
+
 #include "xwayland-types.h"
 
 struct xwl_egl_backend {

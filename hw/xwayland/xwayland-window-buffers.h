@@ -24,10 +24,13 @@
  *      Olivier Fourdan <ofourdan@redhat.com>
  */
 
-#include "xwayland.h"
-
 #ifndef XWAYLAND_WINDOW_BUFFERS_H
 #define XWAYLAND_WINDOW_BUFFERS_H
+
+#include <xwayland-config.h>
+
+#include "xwayland-types.h"
+#include "regionstr.h"
 
 void xwl_window_buffers_init(struct xwl_window *xwl_window);
 void xwl_window_buffers_recycle(struct xwl_window *xwl_window);

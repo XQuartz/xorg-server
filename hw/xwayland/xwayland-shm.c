@@ -40,7 +40,6 @@
 #include "os.h"
 #include "pixmapstr.h"
 
-#include "xwayland.h"
 #include "xwayland-pixmap.h"
 #include "xwayland-screen.h"
 #include "xwayland-shm.h"

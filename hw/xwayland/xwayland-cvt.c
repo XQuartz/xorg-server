@@ -33,7 +33,6 @@
 
 #include <string.h>
 #include <randrstr.h>
-#include "xwayland.h"
 
 #include "xwayland-cvt.h"
 

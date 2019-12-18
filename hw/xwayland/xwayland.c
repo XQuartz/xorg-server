@@ -23,6 +23,8 @@
  * SOFTWARE.
  */
 
+#include <xwayland-config.h>
+
 #include <stdio.h>
 
 #include <X11/Xatom.h>
@@ -36,7 +38,6 @@
 #include <xserver_poll.h>
 #include <propertyst.h>
 
-#include "xwayland.h"
 #include "xwayland-screen.h"
 #include "xwayland-vidmode.h"
 

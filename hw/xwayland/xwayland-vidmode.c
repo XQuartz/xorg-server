@@ -40,6 +40,7 @@
 #include "vidmodestr.h"
 
 #include "xwayland-screen.h"
+#include "xwayland-vidmode.h"
 
 static DevPrivateKeyRec xwlVidModePrivateKeyRec;
 #define xwlVidModePrivateKey (&xwlVidModePrivateKeyRec)

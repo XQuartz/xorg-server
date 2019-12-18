@@ -38,6 +38,7 @@
 
 #include "xwayland.h"
 #include "xwayland-screen.h"
+#include "xwayland-vidmode.h"
 
 #ifdef XF86VIDMODE
 #include <X11/extensions/xf86vmproto.h>

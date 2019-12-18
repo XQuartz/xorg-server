@@ -50,10 +50,6 @@
 
 #define MODIFIER_META 0x01
 
-#ifdef XF86VIDMODE
-void xwlVidModeExtensionInit(void);
-#endif
-
 #ifdef GLXEXT
 #include "glx_extinit.h"
 extern __GLXprovider glamor_provider;

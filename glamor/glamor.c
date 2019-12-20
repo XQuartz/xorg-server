@@ -624,6 +624,7 @@ glamor_init(ScreenPtr screen, unsigned int flags)
         epoxy_gl_version() >= 30 ||
         epoxy_has_gl_extension("GL_NV_pack_subimage");
     glamor_priv->has_dual_blend =
+        glamor_priv->glsl_version >= 130 &&
         epoxy_has_gl_extension("GL_ARB_blend_func_extended");
 
     glamor_priv->can_copyplane = (gl_version >= 30);

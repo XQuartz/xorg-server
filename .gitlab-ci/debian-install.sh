@@ -29,12 +29,13 @@ meson build
 ninja -j4 -C build install
 cd ..
 
-rm -rf piglit/.git xts/.git
+rm -rf piglit/.git xts/.git piglit/tests/spec/
 
 echo '[xts]' > piglit/piglit.conf
 echo 'path=/root/xts' >> piglit/piglit.conf
 
-find -name \*.a -o -name \*.o | xargs rm
+find -name \*.a -o -name \*.o -o -name \*.c -o -name \*.h -o -name \*.la\* | xargs rm
+strip xts/xts5/*/.libs/*
 
 apt-get purge -y git libxkbcommon-dev \
     x11-utils x11-xserver-utils xauth xvfb

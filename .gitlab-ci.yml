@@ -18,7 +18,7 @@ variables:
     DEBIAN_VERSION: testing-slim
     DEBIAN_EXEC: 'bash .gitlab-ci/debian-install.sh'
 
-    DEBIAN_TAG: "2019-09-03"
+    DEBIAN_TAG: "2020-01-06"
     IMAGE_LOCAL: "$CI_REGISTRY_IMAGE/debian/$DEBIAN_VERSION:$DEBIAN_TAG"
 
 include:
@@ -70,8 +70,8 @@ autotools-build-and-test:
         - mkdir build/
         - cd build/
         - ../autogen.sh --prefix=/usr
-        - make -j$(nproc) distcheck
-        - PIGLIT_DIR=/root/piglit XTEST_DIR=/root/xts make -j$(nproc) check
+        - make -j4 distcheck
+        - PIGLIT_DIR=/root/piglit XTEST_DIR=/root/xts make -j4 check
         - cd ..
         - .gitlab-ci/manpages-check
 
@@ -82,6 +82,6 @@ meson-build-and-test:
         XTEST_DIR: /root/xts
     script:
         - meson -Dprefix=/usr -Dxephyr=true build/
-        - ninja -C build/ install
-        - ninja -C build/ test
+        - ninja -j4 -C build/ install
+        - ninja -j4 -C build/ test
         - .gitlab-ci/manpages-check

@@ -20,13 +20,13 @@ git clone https://gitlab.freedesktop.org/mesa/piglit.git --depth 1
 git clone https://gitlab.freedesktop.org/xorg/test/xts --depth 1
 cd xts
 ./autogen.sh
-xvfb-run make -j$(nproc)
+xvfb-run make -j4
 cd ..
 
 git clone https://gitlab.freedesktop.org/xorg/test/rendercheck --depth 1
 cd rendercheck
 meson build
-ninja -C build install
+ninja -j4 -C build install
 cd ..
 
 rm -rf piglit/.git xts/.git

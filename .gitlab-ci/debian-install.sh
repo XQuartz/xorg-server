@@ -13,6 +13,7 @@ apt-get install -y \
 	git \
 	libgl1 \
 	libglx-mesa0 \
+	libnvidia-egl-wayland-dev \
 	libtool \
 	libxkbcommon-dev \
 	meson \

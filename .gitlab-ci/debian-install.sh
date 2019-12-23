@@ -6,10 +6,23 @@ set -o xtrace
 echo 'deb-src https://deb.debian.org/debian testing main' > /etc/apt/sources.list.d/deb-src.list
 apt-get update
 apt-get install -y \
-	meson git ca-certificates ccache automake autoconf libtool \
-	libxkbcommon-dev python3-mako python3-numpy python3-six \
-	x11-utils x11-xserver-utils xauth xvfb \
-        libgl1 libglx-mesa0
+	autoconf \
+	automake \
+	ca-certificates \
+	ccache \
+	git \
+	libgl1 \
+	libglx-mesa0 \
+	libtool \
+	libxkbcommon-dev \
+	meson \
+	python3-mako \
+	python3-numpy \
+	python3-six \
+	x11-utils \
+	x11-xserver-utils \
+	xauth \
+	xvfb \
 
 apt-get build-dep -y xorg-server
 
@@ -37,6 +50,12 @@ echo 'path=/root/xts' >> piglit/piglit.conf
 find -name \*.a -o -name \*.o -o -name \*.c -o -name \*.h -o -name \*.la\* | xargs rm
 strip xts/xts5/*/.libs/*
 
-apt-get purge -y git libxkbcommon-dev \
-    x11-utils x11-xserver-utils xauth xvfb
+apt-get purge -y \
+	git \
+	libxkbcommon-dev \
+	x11-utils \
+	x11-xserver-utils \
+	xauth \
+	xvfb \
+
 apt-get autoremove -y --purge

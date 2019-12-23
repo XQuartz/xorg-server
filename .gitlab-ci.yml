@@ -31,19 +31,20 @@ stages:
     - build-and-test
 
 # Retry jobs after runner system failures
-.retry: &retry
+.ci-run-policy:
   retry:
     max: 2
     when:
       - runner_system_failure
 
 debian-testing:
-  extends: .debian@container-ifnot-exists
+  extends:
+    - .debian@container-ifnot-exists
+    - .ci-run-policy
   stage: docker-image
-  <<: *retry
 
 .common-build-and-test:
-    <<: *retry
+    extends: .ci-run-policy
     stage: build-and-test
     image: $IMAGE_LOCAL
     artifacts:

@@ -53,20 +53,16 @@ debian-testing:
         when: on_failure
         paths:
             - build/test/piglit-results/
-    cache:
-        paths:
-            - ccache/
     variables:
+        CCACHE_COMPILERCHECK: content
+        CCACHE_DIR: /cache/xserver/cache
         LC_ALL: C.UTF-8
     before_script:
         - export CCACHE_BASEDIR="$PWD"
-        - export CCACHE_DIR="$PWD/ccache"
-        - export CCACHE_COMPILERCHECK=content
         - export PATH="/usr/lib/ccache:$PATH"
-        - ccache --zero-stats
         - ccache --show-stats
     after_script:
-        - CCACHE_DIR="$PWD/ccache" ccache --show-stats
+        - ccache --show-stats
 
 autotools-build-and-test:
     extends: .common-build-and-test

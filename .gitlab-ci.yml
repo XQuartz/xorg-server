@@ -30,12 +30,14 @@ stages:
     - docker-image
     - build-and-test
 
-# Retry jobs after runner system failures
 .ci-run-policy:
+  # Retry jobs after runner system failures
   retry:
     max: 2
     when:
       - runner_system_failure
+  # Cancel CI run if a newer commit is pushed to the same branch
+  interruptible: true
 
 debian-testing:
   extends:

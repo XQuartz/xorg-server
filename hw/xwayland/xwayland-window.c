@@ -217,17 +217,13 @@ xwl_window_enable_viewport(struct xwl_window *xwl_window,
                            struct xwl_output *xwl_output,
                            struct xwl_emulated_mode *emulated_mode)
 {
-    /* If necessary disable old viewport to apply new settings */
-    if (xwl_window_has_viewport_enabled(xwl_window))
-        xwl_window_disable_viewport(xwl_window);
-
-    DebugF("XWAYLAND: enabling viewport %dx%d -> %dx%d\n",
-           emulated_mode->width, emulated_mode->height,
-           xwl_output->width, xwl_output->height);
-
-    xwl_window->viewport =
-        wp_viewporter_get_viewport(xwl_window->xwl_screen->viewporter,
-                                   xwl_window->surface);
+    if (!xwl_window_has_viewport_enabled(xwl_window)) {
+        DebugF("XWAYLAND: enabling viewport %dx%d -> %dx%d\n",
+               emulated_mode->width, emulated_mode->height,
+               xwl_output->width, xwl_output->height);
+        xwl_window->viewport = wp_viewporter_get_viewport(xwl_window->xwl_screen->viewporter,
+                                                          xwl_window->surface);
+    }
 
     wp_viewport_set_source(xwl_window->viewport,
                            wl_fixed_from_int(0),

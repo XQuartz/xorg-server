@@ -276,6 +276,7 @@ xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
     struct xwl_output *xwl_output;
     ClientPtr owner;
     WindowPtr window;
+    DrawablePtr drawable;
 
     if (!xwl_screen_has_resolution_change_emulation(xwl_screen))
         return FALSE;
@@ -285,6 +286,7 @@ xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
         return FALSE;
 
     owner = wClient(window);
+    drawable = &window->drawable;
 
     /* 1. Test if the window matches the emulated mode on one of the outputs
      * This path gets hit by most games / libs (e.g. SDL, SFML, OGRE)
@@ -294,10 +296,10 @@ xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
         if (!emulated_mode)
             continue;
 
-        if (xwl_window->x == xwl_output->x &&
-            xwl_window->y == xwl_output->y &&
-            xwl_window->width  == emulated_mode->width &&
-            xwl_window->height == emulated_mode->height) {
+        if (drawable->x == xwl_output->x &&
+            drawable->y == xwl_output->y &&
+            drawable->width  == emulated_mode->width &&
+            drawable->height == emulated_mode->height) {
 
             *emulated_mode_ret = emulated_mode;
             *xwl_output_ret = xwl_output;
@@ -313,9 +315,9 @@ xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
     emulated_mode = xwl_output_get_emulated_mode_for_client(xwl_output, owner);
     if (xwl_output && xwl_window->window->overrideRedirect &&
         emulated_mode && emulated_mode->from_vidmode &&
-        xwl_window->x == 0 && xwl_window->y == 0 &&
-        xwl_window->width  == xwl_screen->width &&
-        xwl_window->height == xwl_screen->height) {
+        drawable->x == 0 && drawable->y == 0 &&
+        drawable->width  == xwl_screen->width &&
+        drawable->height == xwl_screen->height) {
 
         *emulated_mode_ret = emulated_mode;
         *xwl_output_ret = xwl_output;
@@ -451,8 +453,6 @@ ensure_surface_for_window(WindowPtr window)
 
     xwl_window->xwl_screen = xwl_screen;
     xwl_window->window = window;
-    xwl_window->width = window->drawable.width;
-    xwl_window->height = window->drawable.height;
     xwl_window->surface = wl_compositor_create_surface(xwl_screen->compositor);
     if (xwl_window->surface == NULL) {
         ErrorF("wl_display_create_surface failed\n");
@@ -682,20 +682,15 @@ xwl_resize_window(WindowPtr window,
     struct xwl_window *xwl_window;
 
     xwl_screen = xwl_screen_get(screen);
-    xwl_window = xwl_window_get(window);
+    xwl_window = xwl_window_from_window(window);
 
     screen->ResizeWindow = xwl_screen->ResizeWindow;
     (*screen->ResizeWindow) (window, x, y, width, height, sib);
     xwl_screen->ResizeWindow = screen->ResizeWindow;
     screen->ResizeWindow = xwl_resize_window;
 
-    if (xwl_window) {
-        xwl_window->x = x;
-        xwl_window->y = y;
-        xwl_window->width = width;
-        xwl_window->height = height;
+    if (xwl_window && xwl_window_is_toplevel(window))
         xwl_window_check_resolution_change_emulation(xwl_window);
-    }
 }
 
 static void

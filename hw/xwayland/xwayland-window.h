@@ -40,7 +40,6 @@ struct xwl_window {
     struct xwl_screen *xwl_screen;
     struct wl_surface *surface;
     struct wp_viewport *viewport;
-    int32_t x, y, width, height;
     float scale_x, scale_y;
     struct wl_shell_surface *shell_surface;
     WindowPtr window;

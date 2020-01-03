@@ -247,19 +247,18 @@ window_is_wm_window(WindowPtr window)
 }
 
 static ClientPtr
-xwl_window_get_owner(struct xwl_window *xwl_window)
+window_get_none_wm_owner(WindowPtr window)
 {
-    WindowPtr window = xwl_window->window;
     ClientPtr client = wClient(window);
 
     /* If the toplevel window is owned by the window-manager, then the
-     * actual client toplevel window has been reparented to a window-manager
-     * decoration window. In that case return the client of the
-     * first *and only* child of the toplevel (decoration) window.
+     * actual client toplevel window has been reparented to some window-manager
+     * decoration/wrapper windows. In that case recurse by checking the client
+     * of the first *and only* child of the decoration/wrapper window.
      */
     if (window_is_wm_window(window)) {
         if (window->firstChild && window->firstChild == window->lastChild)
-            return wClient(window->firstChild);
+            return window_get_none_wm_owner(window->firstChild);
         else
             return NULL; /* Should never happen, skip resolution emulation */
     }
@@ -280,7 +279,7 @@ xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
     if (!xwl_screen_has_resolution_change_emulation(xwl_screen))
         return FALSE;
 
-    owner = xwl_window_get_owner(xwl_window);
+    owner = window_get_none_wm_owner(xwl_window->window);
     if (!owner)
         return FALSE;
 
@@ -350,8 +349,8 @@ xwl_window_is_toplevel(WindowPtr window)
     if (window_get_damage(window))
         return TRUE;
 
-    /* Normal toplevel client windows, reparented to decoration window */
-    return (window->parent && window_get_damage(window->parent));
+    /* Normal toplevel client windows, reparented to a window-manager window */
+    return window->parent && window_is_wm_window(window->parent);
 }
 
 static void

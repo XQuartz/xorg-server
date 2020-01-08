@@ -1947,7 +1947,7 @@ if test "x$XORG" = xyes; then
 	        XORG_SYS_LIBS="$XORG_SYS_LIBS $XORG_MODULES_LIBS"
 	fi
 
-	if test "x$DRM" = xyes; then
+	if test "x$DRM" = xyes -a "x$DRI2" = xyes; then
 		XORG_DRIVER_MODESETTING=yes
 	fi
 

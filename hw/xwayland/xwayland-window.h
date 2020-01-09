@@ -33,6 +33,7 @@
 #include <X11/X.h>
 #include <dix.h>
 #include <propertyst.h>
+#include <validate.h>
 
 #include "xwayland-types.h"
 
@@ -73,6 +74,10 @@ void xwl_resize_window(WindowPtr window,
                        int x, int y,
                        unsigned int width, unsigned int height,
                        WindowPtr sib);
+void xwl_move_window(WindowPtr window,
+                     int x, int y,
+                     WindowPtr next_sib,
+                     VTKind kind);
 Bool xwl_destroy_window(WindowPtr window);
 void xwl_window_post_damage(struct xwl_window *xwl_window);
 void xwl_window_create_frame_callback(struct xwl_window *xwl_window);

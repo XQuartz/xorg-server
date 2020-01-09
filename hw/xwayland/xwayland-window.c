@@ -693,6 +693,28 @@ xwl_resize_window(WindowPtr window,
         xwl_window_check_resolution_change_emulation(xwl_window);
 }
 
+void
+xwl_move_window(WindowPtr window,
+                int x, int y,
+                WindowPtr next_sib,
+                VTKind kind)
+{
+    ScreenPtr screen = window->drawable.pScreen;
+    struct xwl_screen *xwl_screen;
+    struct xwl_window *xwl_window;
+
+    xwl_screen = xwl_screen_get(screen);
+    xwl_window = xwl_window_from_window(window);
+
+    screen->MoveWindow = xwl_screen->MoveWindow;
+    (*screen->MoveWindow) (window, x, y, next_sib, kind);
+    xwl_screen->MoveWindow = screen->MoveWindow;
+    screen->MoveWindow = xwl_move_window;
+
+    if (xwl_window && (xwl_window_get(window) || xwl_window_is_toplevel(window)))
+        xwl_window_check_resolution_change_emulation(xwl_window);
+}
+
 static void
 frame_callback(void *data,
                struct wl_callback *callback,

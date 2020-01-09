@@ -65,6 +65,7 @@ struct xwl_screen {
     SetWindowPixmapProcPtr SetWindowPixmap;
     ChangeWindowAttributesProcPtr ChangeWindowAttributes;
     ResizeWindowProcPtr ResizeWindow;
+    MoveWindowProcPtr MoveWindow;
 
     struct xorg_list output_list;
     struct xorg_list seat_list;

@@ -644,6 +644,9 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     xwl_screen->ResizeWindow = pScreen->ResizeWindow;
     pScreen->ResizeWindow = xwl_resize_window;
 
+    xwl_screen->MoveWindow = pScreen->MoveWindow;
+    pScreen->MoveWindow = xwl_move_window;
+
     if (xwl_screen->rootless) {
         xwl_screen->SetWindowPixmap = pScreen->SetWindowPixmap;
         pScreen->SetWindowPixmap = xwl_window_set_window_pixmap;

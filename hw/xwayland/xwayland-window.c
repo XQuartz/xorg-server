@@ -246,10 +246,10 @@ window_is_wm_window(WindowPtr window)
     return CLIENT_ID(window->drawable.id) == xwl_screen->wm_client_id;
 }
 
-static ClientPtr
-window_get_none_wm_owner(WindowPtr window)
+static WindowPtr
+window_get_client_toplevel(WindowPtr window)
 {
-    ClientPtr client = wClient(window);
+    assert(window);
 
     /* If the toplevel window is owned by the window-manager, then the
      * actual client toplevel window has been reparented to some window-manager
@@ -258,12 +258,12 @@ window_get_none_wm_owner(WindowPtr window)
      */
     if (window_is_wm_window(window)) {
         if (window->firstChild && window->firstChild == window->lastChild)
-            return window_get_none_wm_owner(window->firstChild);
+            return window_get_client_toplevel(window->firstChild);
         else
             return NULL; /* Should never happen, skip resolution emulation */
     }
 
-    return client;
+    return window;
 }
 
 static Bool
@@ -275,13 +275,16 @@ xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
     struct xwl_emulated_mode *emulated_mode;
     struct xwl_output *xwl_output;
     ClientPtr owner;
+    WindowPtr window;
 
     if (!xwl_screen_has_resolution_change_emulation(xwl_screen))
         return FALSE;
 
-    owner = window_get_none_wm_owner(xwl_window->window);
-    if (!owner)
+    window = window_get_client_toplevel(xwl_window->window);
+    if (!window)
         return FALSE;
+
+    owner = wClient(window);
 
     /* 1. Test if the window matches the emulated mode on one of the outputs
      * This path gets hit by most games / libs (e.g. SDL, SFML, OGRE)

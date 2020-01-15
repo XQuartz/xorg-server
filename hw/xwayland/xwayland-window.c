@@ -689,7 +689,7 @@ xwl_resize_window(WindowPtr window,
     xwl_screen->ResizeWindow = screen->ResizeWindow;
     screen->ResizeWindow = xwl_resize_window;
 
-    if (xwl_window && xwl_window_is_toplevel(window))
+    if (xwl_window && (xwl_window_get(window) || xwl_window_is_toplevel(window)))
         xwl_window_check_resolution_change_emulation(xwl_window);
 }
 

@@ -48,6 +48,7 @@ struct xwl_screen {
     int height;
     int depth;
     ScreenPtr screen;
+    int wm_client_id;
     int expecting_event;
     enum RootClipMode root_clip_mode;
 
@@ -62,6 +63,7 @@ struct xwl_screen {
     DestroyWindowProcPtr DestroyWindow;
     XYToWindowProcPtr XYToWindow;
     SetWindowPixmapProcPtr SetWindowPixmap;
+    ChangeWindowAttributesProcPtr ChangeWindowAttributes;
     ResizeWindowProcPtr ResizeWindow;
 
     struct xorg_list output_list;

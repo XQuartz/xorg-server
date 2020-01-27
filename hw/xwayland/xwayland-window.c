@@ -243,20 +243,11 @@ xwl_window_enable_viewport(struct xwl_window *xwl_window,
 }
 
 static Bool
-xwl_screen_client_is_window_manager(struct xwl_screen *xwl_screen,
-                                    ClientPtr client)
+window_is_wm_window(WindowPtr window)
 {
-    WindowPtr root = xwl_screen->screen->root;
-    OtherClients *others;
+    struct xwl_screen *xwl_screen = xwl_screen_get(window->drawable.pScreen);
 
-    for (others = wOtherClients(root); others; others = others->next) {
-        if (SameClient(others, client)) {
-            if (others->mask & (SubstructureRedirectMask | ResizeRedirectMask))
-                return TRUE;
-        }
-    }
-
-    return FALSE;
+    return CLIENT_ID(window->drawable.id) == xwl_screen->wm_client_id;
 }
 
 static ClientPtr
@@ -270,7 +261,7 @@ xwl_window_get_owner(struct xwl_window *xwl_window)
      * decoration window. In that case return the client of the
      * first *and only* child of the toplevel (decoration) window.
      */
-    if (xwl_screen_client_is_window_manager(xwl_window->xwl_screen, client)) {
+    if (window_is_wm_window(window)) {
         if (window->firstChild && window->firstChild == window->lastChild)
             return wClient(window->firstChild);
         else
@@ -356,9 +347,7 @@ xwl_window_check_resolution_change_emulation(struct xwl_window *xwl_window)
 Bool
 xwl_window_is_toplevel(WindowPtr window)
 {
-    struct xwl_screen *xwl_screen = xwl_screen_get(window->drawable.pScreen);
-
-    if (xwl_screen_client_is_window_manager(xwl_screen, wClient(window)))
+    if (window_is_wm_window(window))
         return FALSE;
 
     /* CSD and override-redirect toplevel windows */
@@ -658,6 +647,30 @@ xwl_window_set_window_pixmap(WindowPtr window,
     xwl_window = xwl_window_get(window);
     if (xwl_window)
             xwl_window_buffers_recycle(xwl_window);
+}
+
+Bool
+xwl_change_window_attributes(WindowPtr window, unsigned long mask)
+{
+    ScreenPtr screen = window->drawable.pScreen;
+    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
+    OtherClients *others;
+    Bool ret;
+
+    screen->ChangeWindowAttributes = xwl_screen->ChangeWindowAttributes;
+    ret = (*screen->ChangeWindowAttributes) (window, mask);
+    xwl_screen->ChangeWindowAttributes = screen->ChangeWindowAttributes;
+    screen->ChangeWindowAttributes = xwl_change_window_attributes;
+
+    if (window != screen->root || !(mask & CWEventMask))
+        return ret;
+
+    for (others = wOtherClients(window); others; others = others->next) {
+        if (others->mask & (SubstructureRedirectMask | ResizeRedirectMask))
+            xwl_screen->wm_client_id = CLIENT_ID(others->resource);
+    }
+
+    return ret;
 }
 
 void

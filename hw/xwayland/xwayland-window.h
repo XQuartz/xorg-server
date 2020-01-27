@@ -69,6 +69,7 @@ void xwl_window_check_resolution_change_emulation(struct xwl_window *xwl_window)
 void xwl_window_set_window_pixmap(WindowPtr window, PixmapPtr pixmap);
 Bool xwl_realize_window(WindowPtr window);
 Bool xwl_unrealize_window(WindowPtr window);
+Bool xwl_change_window_attributes(WindowPtr window, unsigned long mask);
 void xwl_resize_window(WindowPtr window,
                        int x, int y,
                        unsigned int width, unsigned int height,

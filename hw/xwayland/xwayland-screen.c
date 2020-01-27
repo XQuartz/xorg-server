@@ -638,6 +638,9 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     xwl_screen->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = xwl_close_screen;
 
+    xwl_screen->ChangeWindowAttributes = pScreen->ChangeWindowAttributes;
+    pScreen->ChangeWindowAttributes = xwl_change_window_attributes;
+
     xwl_screen->ResizeWindow = pScreen->ResizeWindow;
     pScreen->ResizeWindow = xwl_resize_window;
 

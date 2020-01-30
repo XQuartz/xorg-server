@@ -70,10 +70,8 @@ struct xwl_egl_backend {
                                                   Bool *created);
 
     /* Called by Xwayland to perform any pre-wl_surface damage routines
-     * that are required by the backend. If your backend is poorly
-     * designed and lacks the ability to render directly to a surface,
-     * you should implement blitting from the glamor pixmap to the wayland
-     * pixmap here. Otherwise, this callback is optional.
+     * that are required by the backend to make sure any pending drawing
+     * operations to the pixmap will be visible to the Wayland server.
      */
     void (*post_damage)(struct xwl_window *xwl_window,
                         PixmapPtr pixmap, RegionPtr region);

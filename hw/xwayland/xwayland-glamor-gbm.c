@@ -49,6 +49,7 @@
 #include "xwayland-glamor.h"
 #include "xwayland-pixmap.h"
 #include "xwayland-screen.h"
+#include "xwayland-window.h"
 
 #include "linux-dmabuf-unstable-v1-client-protocol.h"
 
@@ -919,6 +920,14 @@ xwl_glamor_gbm_has_wl_interfaces(struct xwl_screen *xwl_screen)
     return TRUE;
 }
 
+static void
+xwl_glamor_gbm_post_damage(struct xwl_window *xwl_window, PixmapPtr pixmap,
+                           RegionPtr region)
+{
+    /* Make sure any pending drawing to the pixmap is flushed to the kernel */
+    glamor_block_handler(xwl_window->xwl_screen->screen);
+}
+
 static Bool
 xwl_glamor_gbm_init_egl(struct xwl_screen *xwl_screen)
 {
@@ -1111,5 +1120,6 @@ xwl_glamor_init_gbm(struct xwl_screen *xwl_screen)
     xwl_screen->gbm_backend.init_egl = xwl_glamor_gbm_init_egl;
     xwl_screen->gbm_backend.init_screen = xwl_glamor_gbm_init_screen;
     xwl_screen->gbm_backend.get_wl_buffer_for_pixmap = xwl_glamor_gbm_get_wl_buffer_for_pixmap;
+    xwl_screen->gbm_backend.post_damage = xwl_glamor_gbm_post_damage;
     xwl_screen->gbm_backend.is_available = TRUE;
 }

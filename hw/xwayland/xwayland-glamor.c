@@ -124,7 +124,8 @@ xwl_glamor_post_damage(struct xwl_window *xwl_window,
 {
     struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
 
-    xwl_screen->egl_backend->post_damage(xwl_window, pixmap, region);
+    if (xwl_screen->egl_backend->post_damage)
+        xwl_screen->egl_backend->post_damage(xwl_window, pixmap, region);
 }
 
 Bool

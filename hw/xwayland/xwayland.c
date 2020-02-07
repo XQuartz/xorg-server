@@ -43,6 +43,10 @@
 _X_EXPORT Bool noXFree86VidModeExtension;
 #endif
 
+#ifdef XWL_HAS_GLAMOR
+#include <glamor.h>
+#endif
+
 void
 ddxGiveUp(enum ExitCode error)
 {
@@ -849,6 +853,13 @@ xwl_screen_post_damage(struct xwl_screen *xwl_screen)
 
     if (xorg_list_is_empty(&commit_window_list))
         return;
+
+#ifdef XWL_HAS_GLAMOR
+    if (xwl_screen->glamor &&
+        xwl_screen->egl_backend == &xwl_screen->gbm_backend) {
+        glamor_block_handler(xwl_screen->screen);
+    }
+#endif
 
     xorg_list_for_each_entry_safe(xwl_window, next_xwl_window,
                                   &commit_window_list, link_damage) {

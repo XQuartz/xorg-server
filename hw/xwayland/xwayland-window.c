@@ -808,10 +808,7 @@ xwl_window_post_damage(struct xwl_window *xwl_window)
     }
 
     xwl_window_create_frame_callback(xwl_window);
-    wl_surface_commit(xwl_window->surface);
     DamageEmpty(window_get_damage(xwl_window->window));
-
-    xorg_list_del(&xwl_window->link_damage);
 }
 
 Bool

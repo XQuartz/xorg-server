@@ -816,16 +816,16 @@ xwl_window_post_damage(struct xwl_window *xwl_window)
     xwl_window->frame_callback = wl_surface_frame(xwl_window->surface);
     wl_callback_add_listener(xwl_window->frame_callback, &frame_listener, xwl_window);
 
-    wl_surface_commit(xwl_window->surface);
     DamageEmpty(window_get_damage(xwl_window->window));
-
-    xorg_list_del(&xwl_window->link_damage);
 }
 
 static void
 xwl_screen_post_damage(struct xwl_screen *xwl_screen)
 {
     struct xwl_window *xwl_window, *next_xwl_window;
+    struct xorg_list commit_window_list;
+
+    xorg_list_init(&commit_window_list);
 
     xorg_list_for_each_entry_safe(xwl_window, next_xwl_window,
                                   &xwl_screen->damage_window_list, link_damage) {
@@ -843,6 +843,17 @@ xwl_screen_post_damage(struct xwl_screen *xwl_screen)
 #endif
 
         xwl_window_post_damage(xwl_window);
+        xorg_list_del(&xwl_window->link_damage);
+        xorg_list_append(&xwl_window->link_damage, &commit_window_list);
+    }
+
+    if (xorg_list_is_empty(&commit_window_list))
+        return;
+
+    xorg_list_for_each_entry_safe(xwl_window, next_xwl_window,
+                                  &commit_window_list, link_damage) {
+        wl_surface_commit(xwl_window->surface);
+        xorg_list_del(&xwl_window->link_damage);
     }
 }
 

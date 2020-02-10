@@ -64,7 +64,7 @@ debian-testing:
     after_script:
         - ccache --show-stats
 
-autotools-build-and-test:
+autotools:
     extends: .common-build-and-test
     script:
         - mkdir build/
@@ -75,7 +75,7 @@ autotools-build-and-test:
         - cd ..
         - .gitlab-ci/manpages-check
 
-meson-build-and-test:
+meson:
     extends: .common-build-and-test
     variables:
         PIGLIT_DIR: /root/piglit

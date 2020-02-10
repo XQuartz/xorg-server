@@ -107,9 +107,10 @@ glamor_prep_pixmap_box(PixmapPtr pixmap, glamor_access_t access, BoxPtr box)
                 glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
                 glDeleteBuffers(1, &priv->pbo);
                 priv->pbo = 0;
-                return FALSE;
             }
-        } else {
+        }
+
+        if (!priv->pbo) {
             pixmap->devPrivate.ptr = xallocarray(pixmap->devKind,
                                                  pixmap->drawable.height);
             if (!pixmap->devPrivate.ptr)
@@ -123,7 +124,7 @@ glamor_prep_pixmap_box(PixmapPtr pixmap, glamor_access_t access, BoxPtr box)
 
     RegionUninit(&region);
 
-    if (glamor_priv->has_rw_pbo) {
+    if (priv->pbo) {
         if (priv->map_access == GLAMOR_ACCESS_RW)
             gl_access = GL_READ_WRITE;
         else
@@ -155,7 +156,7 @@ glamor_fini_pixmap(PixmapPtr pixmap)
     if (!priv->prepared)
         return;
 
-    if (glamor_priv->has_rw_pbo) {
+    if (priv->pbo) {
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, priv->pbo);
         glUnmapBuffer(GL_PIXEL_UNPACK_BUFFER);
         pixmap->devPrivate.ptr = NULL;
@@ -170,7 +171,7 @@ glamor_fini_pixmap(PixmapPtr pixmap)
 
     RegionUninit(&priv->prepare_region);
 
-    if (glamor_priv->has_rw_pbo) {
+    if (priv->pbo) {
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
         glDeleteBuffers(1, &priv->pbo);
         priv->pbo = 0;

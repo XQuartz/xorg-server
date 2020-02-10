@@ -756,7 +756,6 @@ drmmode_crtc_set_mode(xf86CrtcPtr crtc, Bool test_only)
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(crtc->scrn);
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
     drmmode_ptr drmmode = drmmode_crtc->drmmode;
-    ScreenPtr screen = crtc->scrn->pScreen;
     drmModeModeInfo kmode;
     int output_count = 0;
     uint32_t *output_ids = NULL;
@@ -770,7 +769,7 @@ drmmode_crtc_set_mode(xf86CrtcPtr crtc, Bool test_only)
 #ifdef GLAMOR_HAS_GBM
     /* Make sure any pending drawing will be visible in a new scanout buffer */
     if (drmmode->glamor)
-        glamor_finish(screen);
+        glamor_finish(crtc->scrn->pScreen);
 #endif
 
     if (ms->atomic_modeset) {

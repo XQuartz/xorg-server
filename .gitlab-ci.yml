@@ -81,7 +81,13 @@ meson:
         PIGLIT_DIR: /root/piglit
         XTEST_DIR: /root/xts
     script:
-        - meson -Dc_args="-fno-common" -Dprefix=/usr -Dxephyr=true -Dwerror=true build/
+        - meson -Dc_args="-fno-common" -Dprefix=/usr -Dxephyr=true -Dwerror=true $MESON_EXTRA_OPTIONS build/
         - ninja -j4 -C build/ install
         - ninja -j4 -C build/ test
         - .gitlab-ci/manpages-check
+
+meson-noglamor:
+    extends: meson
+    variables:
+        MESON_EXTRA_OPTIONS: >
+          -Dglamor=false

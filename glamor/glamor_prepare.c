@@ -146,8 +146,6 @@ glamor_prep_pixmap_box(PixmapPtr pixmap, glamor_access_t access, BoxPtr box)
 static void
 glamor_fini_pixmap(PixmapPtr pixmap)
 {
-    ScreenPtr                   screen = pixmap->drawable.pScreen;
-    glamor_screen_private       *glamor_priv = glamor_get_screen_private(screen);
     glamor_pixmap_private       *priv = glamor_get_pixmap_private(pixmap);
 
     if (!GLAMOR_PIXMAP_PRIV_HAS_FBO(priv))

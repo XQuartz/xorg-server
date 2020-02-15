@@ -45,8 +45,8 @@ struct xwl_present_window {
 
     struct wl_callback *sync_callback;
 
-    struct xorg_list event_list;
-    struct xorg_list release_queue;
+    struct xorg_list wait_list;
+    struct xorg_list release_list;
 };
 
 struct xwl_present_event {

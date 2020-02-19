@@ -128,6 +128,21 @@ glamor_set_pixmap_texture(PixmapPtr pixmap, unsigned int tex)
     glamor_pixmap_attach_fbo(pixmap, fbo);
 }
 
+_X_EXPORT void
+glamor_clear_pixmap(PixmapPtr pixmap)
+{
+    ScreenPtr screen = pixmap->drawable.pScreen;
+    glamor_screen_private *glamor_priv;
+    glamor_pixmap_private *pixmap_priv;
+
+    glamor_priv = glamor_get_screen_private(screen);
+    pixmap_priv = glamor_get_pixmap_private(pixmap);
+
+    assert(pixmap_priv->fbo != NULL);
+
+    glamor_pixmap_clear_fbo(glamor_priv, pixmap_priv->fbo);
+}
+
 uint32_t
 glamor_get_pixmap_texture(PixmapPtr pixmap)
 {

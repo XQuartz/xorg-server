@@ -239,6 +239,18 @@ glamor_create_fbo_array(glamor_screen_private *glamor_priv,
     return NULL;
 }
 
+void
+glamor_pixmap_clear_fbo(glamor_screen_private *glamor_priv, glamor_pixmap_fbo *fbo)
+{
+    glamor_make_current(glamor_priv);
+
+    assert(fbo->fb != 0 && fbo->tex != 0);
+
+    glamor_set_destination_pixmap_fbo(glamor_priv, fbo, 0, 0, fbo->width, fbo->height);
+    glClearColor(0.0, 0.0, 0.0, 0.0);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
 glamor_pixmap_fbo *
 glamor_pixmap_detach_fbo(glamor_pixmap_private *pixmap_priv)
 {

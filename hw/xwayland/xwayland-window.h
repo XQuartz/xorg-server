@@ -42,7 +42,7 @@ struct xwl_window {
     struct wl_surface *surface;
     struct wp_viewport *viewport;
     float scale_x, scale_y;
-    struct wl_shell_surface *shell_surface;
+    struct xdg_surface *xdg_surface;
     WindowPtr window;
     struct xorg_list link_damage;
     struct xorg_list link_window;

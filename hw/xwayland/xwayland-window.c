@@ -44,6 +44,7 @@
 #include "xwayland-shm.h"
 
 #include "viewporter-client-protocol.h"
+#include "xdg-shell-client-protocol.h"
 
 static DevPrivateKeyRec xwl_window_private_key;
 static DevPrivateKeyRec xwl_damage_private_key;
@@ -401,28 +402,15 @@ send_surface_id_event(struct xwl_window *xwl_window)
 }
 
 static void
-shell_surface_ping(void *data,
-                   struct wl_shell_surface *shell_surface, uint32_t serial)
+xdg_surface_handle_configure(void *data,
+                             struct xdg_surface *xdg_surface,
+                             uint32_t serial)
 {
-    wl_shell_surface_pong(shell_surface, serial);
+    xdg_surface_ack_configure(xdg_surface, serial);
 }
 
-static void
-shell_surface_configure(void *data,
-                        struct wl_shell_surface *wl_shell_surface,
-                        uint32_t edges, int32_t width, int32_t height)
-{
-}
-
-static void
-shell_surface_popup_done(void *data, struct wl_shell_surface *wl_shell_surface)
-{
-}
-
-static const struct wl_shell_surface_listener shell_surface_listener = {
-    shell_surface_ping,
-    shell_surface_configure,
-    shell_surface_popup_done
+static const struct xdg_surface_listener xdg_surface_listener = {
+    xdg_surface_handle_configure,
 };
 
 static Bool
@@ -461,17 +449,19 @@ ensure_surface_for_window(WindowPtr window)
     }
 
     if (!xwl_screen->rootless) {
-        xwl_window->shell_surface =
-            wl_shell_get_shell_surface(xwl_screen->shell, xwl_window->surface);
-        if (xwl_window->shell_surface == NULL) {
-            ErrorF("Failed creating shell surface\n");
+        xwl_window->xdg_surface =
+            xdg_wm_base_get_xdg_surface(xwl_screen->xdg_wm_base, xwl_window->surface);
+        if (xwl_window->xdg_surface == NULL) {
+            ErrorF("Failed creating xdg_wm_base xdg_surface\n");
             goto err_surf;
         }
 
-        wl_shell_surface_add_listener(xwl_window->shell_surface,
-                                      &shell_surface_listener, xwl_window);
+        xdg_surface_add_listener(xwl_window->xdg_surface,
+                                 &xdg_surface_listener, xwl_window);
 
-        wl_shell_surface_set_toplevel(xwl_window->shell_surface);
+        xdg_surface_get_toplevel(xwl_window->xdg_surface);
+
+        wl_surface_commit(xwl_window->surface);
 
         region = wl_compositor_create_region(xwl_screen->compositor);
         if (region == NULL) {
@@ -520,8 +510,8 @@ ensure_surface_for_window(WindowPtr window)
     return TRUE;
 
 err_surf:
-    if (xwl_window->shell_surface)
-        wl_shell_surface_destroy(xwl_window->shell_surface);
+    if (xwl_window->xdg_surface)
+        xdg_surface_destroy(xwl_window->xdg_surface);
     wl_surface_destroy(xwl_window->surface);
 err:
     free(xwl_window);

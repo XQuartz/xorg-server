@@ -79,7 +79,7 @@ struct xwl_screen {
     struct wl_compositor *compositor;
     struct zwp_tablet_manager_v2 *tablet_manager;
     struct wl_shm *shm;
-    struct wl_shell *shell;
+    struct xdg_wm_base *xdg_wm_base;
     struct zwp_relative_pointer_manager_v1 *relative_pointer_manager;
     struct zwp_pointer_constraints_v1 *pointer_constraints;
     struct zwp_xwayland_keyboard_grab_manager_v1 *wp_grab;

@@ -54,6 +54,7 @@
 
 #include "xdg-output-unstable-v1-client-protocol.h"
 #include "viewporter-client-protocol.h"
+#include "xdg-shell-client-protocol.h"
 
 static DevPrivateKeyRec xwl_screen_private_key;
 static DevPrivateKeyRec xwl_client_private_key;
@@ -319,6 +320,17 @@ xwl_screen_post_damage(struct xwl_screen *xwl_screen)
 }
 
 static void
+xdg_wm_base_ping(void *data, struct xdg_wm_base *xdg_wm_base,
+                 uint32_t serial)
+{
+    xdg_wm_base_pong(xdg_wm_base, serial);
+}
+
+static const struct xdg_wm_base_listener xdg_wm_base_listener = {
+    xdg_wm_base_ping,
+};
+
+static void
 registry_global(void *data, struct wl_registry *registry, uint32_t id,
                 const char *interface, uint32_t version)
 {
@@ -336,9 +348,12 @@ registry_global(void *data, struct wl_registry *registry, uint32_t id,
     else if (strcmp(interface, "wl_shm") == 0) {
         xwl_screen->shm = wl_registry_bind(registry, id, &wl_shm_interface, 1);
     }
-    else if (strcmp(interface, "wl_shell") == 0) {
-        xwl_screen->shell =
-            wl_registry_bind(registry, id, &wl_shell_interface, 1);
+    else if (strcmp(interface, "xdg_wm_base") == 0) {
+        xwl_screen->xdg_wm_base =
+            wl_registry_bind(registry, id, &xdg_wm_base_interface, 1);
+        xdg_wm_base_add_listener(xwl_screen->xdg_wm_base,
+                                 &xdg_wm_base_listener,
+                                 NULL);
     }
     else if (strcmp(interface, "wl_output") == 0 && version >= 2) {
         if (xwl_output_create(xwl_screen, id))

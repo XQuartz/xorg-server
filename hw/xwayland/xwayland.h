@@ -199,9 +199,7 @@ struct xwl_present_window {
     uint64_t ust;
 
     OsTimerPtr frame_timer;
-    Bool frame_timer_firing;
 
-    struct wl_callback *frame_callback;
     struct wl_callback *sync_callback;
 
     struct xorg_list event_list;

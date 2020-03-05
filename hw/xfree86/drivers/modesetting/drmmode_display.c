@@ -1024,6 +1024,8 @@ drmmode_create_bo(drmmode_ptr drmmode, drmmode_bo *bo,
 
         if (drmmode->scrn->depth == 30)
             format = GBM_FORMAT_ARGB2101010;
+        else if (drmmode->scrn->depth == 16)
+            format = GBM_FORMAT_RGB565;
         else
             format = GBM_FORMAT_ARGB8888;
 

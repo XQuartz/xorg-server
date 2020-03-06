@@ -1022,12 +1022,20 @@ drmmode_create_bo(drmmode_ptr drmmode, drmmode_bo *bo,
 #endif
         uint32_t format;
 
-        if (drmmode->scrn->depth == 30)
-            format = GBM_FORMAT_ARGB2101010;
-        else if (drmmode->scrn->depth == 16)
+        switch (drmmode->scrn->depth) {
+        case 15:
+            format = GBM_FORMAT_ARGB1555;
+            break;
+        case 16:
             format = GBM_FORMAT_RGB565;
-        else
+            break;
+        case 30:
+            format = GBM_FORMAT_ARGB2101010;
+            break;
+        default:
             format = GBM_FORMAT_ARGB8888;
+            break;
+        }
 
 #ifdef GBM_BO_WITH_MODIFIERS
         num_modifiers = get_modifiers_set(drmmode->scrn, format, &modifiers,

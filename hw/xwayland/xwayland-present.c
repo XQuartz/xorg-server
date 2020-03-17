@@ -493,7 +493,8 @@ xwl_present_flip(WindowPtr present_window,
     /* Realign timer */
     xwl_present_reset_timer(xwl_present_window);
 
-    xwl_surface_damage(xwl_window->xwl_screen, xwl_window->surface, 0, 0,
+    xwl_surface_damage(xwl_window->xwl_screen, xwl_window->surface,
+                       damage_box->x1, damage_box->y1,
                        damage_box->x2 - damage_box->x1,
                        damage_box->y2 - damage_box->y1);
 

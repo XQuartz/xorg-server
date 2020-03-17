@@ -700,8 +700,15 @@ xwl_unrealize_window(WindowPtr window)
         wl_callback_destroy(xwl_window->frame_callback);
 
 #ifdef GLAMOR_HAS_GBM
-    if (xwl_screen->present)
-        xwl_present_unrealize_window(window);
+    if (xwl_screen->present) {
+        struct xwl_present_window *xwl_present_window, *tmp;
+
+        xorg_list_for_each_entry_safe(xwl_present_window, tmp,
+                                      &xwl_window->frame_callback_list,
+                                      frame_callback_list) {
+            xwl_present_unrealize_window(xwl_present_window);
+        }
+    }
 #endif
 
     free(xwl_window);

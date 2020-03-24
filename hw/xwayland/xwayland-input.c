@@ -2817,6 +2817,9 @@ xwl_seat_maybe_lock_on_hidden_cursor(struct xwl_seat *xwl_seat)
     if (!xwl_seat->focus_window)
         return FALSE;
 
+    if (xwl_seat->cursor_confinement_window != xwl_seat->focus_window)
+        return FALSE;
+
     if (xwl_seat->confined_pointer)
         xwl_seat_destroy_confined_pointer(xwl_seat);
 

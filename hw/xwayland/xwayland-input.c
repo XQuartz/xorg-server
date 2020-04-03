@@ -673,23 +673,23 @@ dispatch_scroll_motion(struct xwl_seat *xwl_seat)
     const int divisor = 10;
     wl_fixed_t dy = xwl_seat->pending_pointer_event.scroll_dy;
     wl_fixed_t dx = xwl_seat->pending_pointer_event.scroll_dx;
-    int32_t discrete_dy = xwl_seat->pending_pointer_event.scroll_discrete_dy;
-    int32_t discrete_dx = xwl_seat->pending_pointer_event.scroll_discrete_dx;
+    int32_t dy_v120 = xwl_seat->pending_pointer_event.scroll_dy_v120;
+    int32_t dx_v120 = xwl_seat->pending_pointer_event.scroll_dx_v120;
 
     valuator_mask_zero(&mask);
-    if (xwl_seat->pending_pointer_event.has_vertical_scroll)
+    if (xwl_seat->pending_pointer_event.has_vertical_scroll_v120)
+        valuator_mask_set_double(&mask, SCROLL_AXIS_VERT, dy_v120 / 120.0);
+    else if (xwl_seat->pending_pointer_event.has_vertical_scroll)
         valuator_mask_set_double(&mask,
                                  SCROLL_AXIS_VERT,
                                  wl_fixed_to_double(dy) / divisor);
-    else if (xwl_seat->pending_pointer_event.has_vertical_scroll_discrete)
-        valuator_mask_set(&mask, SCROLL_AXIS_VERT, discrete_dy);
 
-    if (xwl_seat->pending_pointer_event.has_horizontal_scroll)
+    if (xwl_seat->pending_pointer_event.has_horizontal_scroll_v120)
+        valuator_mask_set_double(&mask, SCROLL_AXIS_HORIZ, dx_v120 / 120.0);
+    else if (xwl_seat->pending_pointer_event.has_horizontal_scroll)
         valuator_mask_set_double(&mask,
                                  SCROLL_AXIS_HORIZ,
                                  wl_fixed_to_double(dx) / divisor);
-    else if (xwl_seat->pending_pointer_event.has_horizontal_scroll_discrete)
-        valuator_mask_set(&mask, SCROLL_AXIS_HORIZ, discrete_dx);
 
     QueuePointerEvents(get_pointer_device(xwl_seat),
                        MotionNotify, 0, POINTER_RELATIVE, &mask);
@@ -714,16 +714,16 @@ dispatch_pointer_motion_event(struct xwl_seat *xwl_seat)
 
     if (xwl_seat->pending_pointer_event.has_vertical_scroll ||
         xwl_seat->pending_pointer_event.has_horizontal_scroll ||
-        xwl_seat->pending_pointer_event.has_vertical_scroll_discrete ||
-        xwl_seat->pending_pointer_event.has_horizontal_scroll_discrete)
+        xwl_seat->pending_pointer_event.has_vertical_scroll_v120 ||
+        xwl_seat->pending_pointer_event.has_horizontal_scroll_v120)
         dispatch_scroll_motion(xwl_seat);
 
     xwl_seat->pending_pointer_event.has_absolute = FALSE;
     xwl_seat->pending_pointer_event.has_relative = FALSE;
     xwl_seat->pending_pointer_event.has_vertical_scroll = FALSE;
     xwl_seat->pending_pointer_event.has_horizontal_scroll = FALSE;
-    xwl_seat->pending_pointer_event.has_vertical_scroll_discrete = FALSE;
-    xwl_seat->pending_pointer_event.has_horizontal_scroll_discrete = FALSE;
+    xwl_seat->pending_pointer_event.has_vertical_scroll_v120 = FALSE;
+    xwl_seat->pending_pointer_event.has_horizontal_scroll_v120 = FALSE;
 }
 
 static void
@@ -835,15 +835,35 @@ pointer_handle_axis_discrete(void *data, struct wl_pointer *wl_pointer,
 
     switch (axis) {
     case WL_POINTER_AXIS_VERTICAL_SCROLL:
-        xwl_seat->pending_pointer_event.has_vertical_scroll_discrete = TRUE;
-        xwl_seat->pending_pointer_event.scroll_discrete_dy = discrete;
+        xwl_seat->pending_pointer_event.has_vertical_scroll_v120 = TRUE;
+        xwl_seat->pending_pointer_event.scroll_dy_v120 = 120 * discrete;
         break;
     case WL_POINTER_AXIS_HORIZONTAL_SCROLL:
-        xwl_seat->pending_pointer_event.has_horizontal_scroll_discrete = TRUE;
-        xwl_seat->pending_pointer_event.scroll_discrete_dx = discrete;
+        xwl_seat->pending_pointer_event.has_horizontal_scroll_v120 = TRUE;
+        xwl_seat->pending_pointer_event.scroll_dx_v120 = 120 * discrete;
         break;
     }
 }
+
+#ifdef XWL_HAS_WL_POINTER_AXIS_V120
+static void
+pointer_handle_axis_v120(void *data, struct wl_pointer *pointer,
+                         uint32_t axis, int32_t v120)
+{
+    struct xwl_seat *xwl_seat = data;
+
+    switch (axis) {
+    case WL_POINTER_AXIS_VERTICAL_SCROLL:
+        xwl_seat->pending_pointer_event.has_vertical_scroll_v120 = TRUE;
+        xwl_seat->pending_pointer_event.scroll_dy_v120 = v120;
+        break;
+    case WL_POINTER_AXIS_HORIZONTAL_SCROLL:
+        xwl_seat->pending_pointer_event.has_horizontal_scroll_v120 = TRUE;
+        xwl_seat->pending_pointer_event.scroll_dx_v120 = v120;
+        break;
+    }
+}
+#endif
 
 static const struct wl_pointer_listener pointer_listener = {
     pointer_handle_enter,
@@ -855,6 +875,9 @@ static const struct wl_pointer_listener pointer_listener = {
     pointer_handle_axis_source,
     pointer_handle_axis_stop,
     pointer_handle_axis_discrete,
+#ifdef XWL_HAS_WL_POINTER_AXIS_V120
+    pointer_handle_axis_v120,
+#endif
 };
 
 static void
@@ -1831,6 +1854,11 @@ static void
 create_input_device(struct xwl_screen *xwl_screen, uint32_t id, uint32_t version)
 {
     struct xwl_seat *xwl_seat;
+    int seat_version = 5;
+
+#ifdef XWL_HAS_WL_POINTER_AXIS_V120
+    seat_version = 8;
+#endif
 
     xwl_seat = calloc(1, sizeof *xwl_seat);
     if (xwl_seat == NULL) {
@@ -1843,7 +1871,7 @@ create_input_device(struct xwl_screen *xwl_screen, uint32_t id, uint32_t version
 
     xwl_seat->seat =
         wl_registry_bind(xwl_screen->registry, id,
-                         &wl_seat_interface, min(version, 5));
+                         &wl_seat_interface, min(version, seat_version));
     xwl_seat->id = id;
 
     xwl_cursor_init(&xwl_seat->cursor, xwl_seat->xwl_screen,

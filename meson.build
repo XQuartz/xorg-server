@@ -215,8 +215,9 @@ if (host_machine.system() != 'darwin' and
             xwayland_path = join_paths(get_option('prefix'), get_option('bindir'))
         endif
 
+        wayland_client_dep = dependency('wayland-client', version: wayland_req, required: xwayland_required)
         xwayland_dep = [
-            dependency('wayland-client', version: wayland_req, required: xwayland_required),
+            wayland_client_dep,
             dependency('wayland-protocols', version: wayland_protocols_req, required: xwayland_required),
             dependency('libxcvt', fallback: ['libxcvt', 'libxcvt_dep'], required: xwayland_required),
         ]
@@ -234,6 +235,8 @@ if (host_machine.system() != 'darwin' and
             endif
         endforeach
     endif
+else
+    wayland_client_dep = dependency('', required: false)
 endif
 
 build_xnest = false

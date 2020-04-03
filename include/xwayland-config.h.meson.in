@@ -15,3 +15,6 @@
 
 /* Build Xwayland with XWAYLAND extension */
 #mesondefine XWL_HAS_XWAYLAND_EXTENSION
+
+/* libwayland has support for wl_pointer.axis_v120 events */
+#mesondefine XWL_HAS_WL_POINTER_AXIS_V120

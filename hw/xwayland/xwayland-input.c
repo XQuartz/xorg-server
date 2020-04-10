@@ -2782,6 +2782,9 @@ xwl_seat_can_emulate_pointer_warp(struct xwl_seat *xwl_seat)
 {
     struct xwl_screen *xwl_screen = xwl_seat->xwl_screen;
 
+    if (!xwl_seat->pointer)
+        return FALSE;
+
     if (!xwl_screen->relative_pointer_manager)
         return FALSE;
 
@@ -2872,6 +2875,9 @@ xwl_seat_confine_pointer(struct xwl_seat *xwl_seat,
         xwl_seat->xwl_screen->pointer_constraints;
 
     if (!pointer_constraints)
+        return;
+
+    if (!xwl_seat->wl_pointer)
         return;
 
     if (xwl_seat->cursor_confinement_window == xwl_window &&

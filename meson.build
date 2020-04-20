@@ -200,6 +200,11 @@ if (host_machine.system() != 'darwin' and
         xwayland_required = get_option('xwayland') == 'true'
         build_glamor = glamor_option == 'true' or glamor_option == 'auto'
 
+        xwayland_path = get_option('xwayland-path')
+        if (xwayland_path == '')
+            xwayland_path = join_paths(get_option('prefix'), get_option('bindir'))
+        endif
+
         xwayland_dep = [
             dependency('wayland-client', version: wayland_req, required: xwayland_required),
             dependency('wayland-protocols', version: wayland_protocols_req, required: xwayland_required),

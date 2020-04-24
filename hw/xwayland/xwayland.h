@@ -381,6 +381,8 @@ void xwl_window_create_frame_callback(struct xwl_window *xwl_window);
 
 void xwl_sync_events (struct xwl_screen *xwl_screen);
 
+void xwl_screen_roundtrip (struct xwl_screen *xwl_screen);
+
 Bool xwl_screen_init_cursor(struct xwl_screen *xwl_screen);
 
 struct xwl_screen *xwl_screen_get(ScreenPtr screen);

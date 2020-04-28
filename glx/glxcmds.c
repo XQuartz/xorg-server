@@ -985,7 +985,6 @@ __glXDisp_GetVisualConfigs(__GLXclientState * cl, GLbyte * pc)
         /* Pad with zeroes, so that attributes count is constant. */
         while (p < GLX_VIS_CONFIG_TOTAL) {
             buf[p++] = 0;
-            buf[p++] = 0;
         }
 
         assert(p == GLX_VIS_CONFIG_TOTAL);

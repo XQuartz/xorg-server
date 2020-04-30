@@ -72,6 +72,9 @@ xwl_pointer_warp_emulator_maybe_lock(struct xwl_pointer_warp_emulator *warp_emul
                                      SpritePtr sprite,
                                      int x, int y);
 
+static Bool
+xwl_seat_maybe_lock_on_hidden_cursor(struct xwl_seat *xwl_seat);
+
 static void
 xwl_seat_destroy_confined_pointer(struct xwl_seat *xwl_seat);
 
@@ -446,6 +449,9 @@ pointer_handle_enter(void *data, struct wl_pointer *pointer,
         xwl_pointer_warp_emulator_maybe_lock(xwl_seat->pointer_warp_emulator,
                                              xwl_seat->focus_window,
                                              NULL, 0, 0);
+    }
+    else {
+        xwl_seat_maybe_lock_on_hidden_cursor(xwl_seat);
     }
 }
 

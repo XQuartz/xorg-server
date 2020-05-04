@@ -514,7 +514,8 @@ glamor_pixmap_from_fds(ScreenPtr screen, CARD8 num_fds, const int *fds,
           data.strides[i] = strides[i];
           data.offsets[i] = offsets[i];
        }
-       bo = gbm_bo_import(xwl_gbm->gbm, GBM_BO_IMPORT_FD_MODIFIER, &data, 0);
+       bo = gbm_bo_import(xwl_gbm->gbm, GBM_BO_IMPORT_FD_MODIFIER, &data,
+                          GBM_BO_USE_RENDERING);
 #endif
     } else if (num_fds == 1) {
        struct gbm_import_fd_data data;
@@ -525,7 +526,7 @@ glamor_pixmap_from_fds(ScreenPtr screen, CARD8 num_fds, const int *fds,
        data.stride = strides[0];
        data.format = gbm_format_for_depth(depth);
        bo = gbm_bo_import(xwl_gbm->gbm, GBM_BO_IMPORT_FD, &data,
-             GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+                          GBM_BO_USE_RENDERING);
     } else {
        goto error;
     }

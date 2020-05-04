@@ -239,7 +239,7 @@ xwl_glamor_gbm_create_pixmap(ScreenPtr screen,
 #endif
         {
             bo = gbm_bo_create(xwl_gbm->gbm, width, height, format,
-                               GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+                               GBM_BO_USE_RENDERING);
         }
 
         if (bo) {

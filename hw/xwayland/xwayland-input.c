@@ -2823,8 +2823,7 @@ xwl_seat_maybe_lock_on_hidden_cursor(struct xwl_seat *xwl_seat)
      * to implement infinite panning (eg. 3D views), lock the
      * pointer for so the relative pointer is used.
      */
-    if (xwl_seat->x_cursor ||
-        !xwl_seat->cursor_confinement_window)
+    if (xwl_seat->x_cursor)
         return FALSE;
 
     if (!xwl_seat->focus_window)

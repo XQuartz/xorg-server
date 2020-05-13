@@ -1121,17 +1121,43 @@ set_grab(struct xwl_seat *xwl_seat, struct xwl_window *xwl_window)
 }
 
 static void
+find_toplevel_callback(void *resource, XID id, void *user_data)
+{
+    WindowPtr window = resource;
+    WindowPtr *toplevel = user_data;
+
+    /* Pick the first realized toplevel we find */
+    if (*toplevel == NullWindow && window->realized && xwl_window_is_toplevel(window))
+        *toplevel = window;
+}
+
+static WindowPtr
+xwl_keyboard_search_window(ClientPtr client)
+{
+    WindowPtr window = NullWindow;
+
+    FindClientResourcesByType(client, RT_WINDOW, find_toplevel_callback, &window);
+
+    return window;
+}
+
+static void
 xwl_keyboard_activate_grab(DeviceIntPtr device, GrabPtr grab, TimeStamp time, Bool passive)
 {
     struct xwl_seat *xwl_seat = device->public.devicePrivate;
+    WindowPtr grab_window = grab->window;
 
     /* We are not interested in passive grabs */
     if (!passive) {
         /* If the device is the MASTER_KEYBOARD, we don't have an xwl_seat */
         if (xwl_seat == NULL)
             xwl_seat = find_matching_seat(device);
-        if (xwl_seat)
-            set_grab(xwl_seat, xwl_window_from_window(grab->window));
+        if (xwl_seat) {
+            if (grab_window == xwl_seat->xwl_screen->screen->root)
+                grab_window = xwl_keyboard_search_window(GetCurrentClient());
+            if (grab_window)
+                set_grab(xwl_seat, xwl_window_from_window(grab_window));
+        }
     }
 
     ActivateKeyboardGrab(device, grab, time, passive);

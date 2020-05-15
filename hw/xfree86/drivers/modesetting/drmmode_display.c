@@ -3206,10 +3206,10 @@ drmmode_xf86crtc_resize(ScrnInfoPtr scrn, int width, int height)
                                crtc->rotation, crtc->x, crtc->y);
     }
 
-    if (old_fb_id) {
+    if (old_fb_id)
         drmModeRmFB(drmmode->fd, old_fb_id);
-        drmmode_bo_destroy(drmmode, &old_front);
-    }
+
+    drmmode_bo_destroy(drmmode, &old_front);
 
     return TRUE;
 

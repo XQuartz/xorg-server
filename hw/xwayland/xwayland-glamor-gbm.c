@@ -668,7 +668,9 @@ glamor_get_modifiers(ScreenPtr screen, uint32_t format,
        }
     }
 
-    if (!xwl_format)
+    if (!xwl_format ||
+        (xwl_format->num_modifiers == 1 &&
+         xwl_format->modifiers[0] == DRM_FORMAT_MOD_INVALID))
         return FALSE;
 
     *modifiers = calloc(xwl_format->num_modifiers, sizeof(uint64_t));
@@ -831,10 +833,6 @@ xwl_dmabuf_handle_modifier(void *data, struct zwp_linux_dmabuf_v1 *dmabuf,
    struct xwl_screen *xwl_screen = data;
     struct xwl_format *xwl_format = NULL;
     int i;
-
-    if (modifier_hi == (DRM_FORMAT_MOD_INVALID >> 32) &&
-        modifier_lo == (DRM_FORMAT_MOD_INVALID & 0xffffffff))
-        return;
 
     for (i = 0; i < xwl_screen->num_formats; i++) {
         if (xwl_screen->formats[i].format == format) {

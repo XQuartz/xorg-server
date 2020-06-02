@@ -87,6 +87,8 @@ ddxInputThreadInit(void)
 }
 #endif
 
+#define DEFAULT_DPI 96
+
  _X_NORETURN
 static void _X_ATTRIBUTE_PRINTF(1, 2)
 xwl_give_up(const char *f, ...)
@@ -1195,6 +1197,9 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     xorg_list_init(&xwl_screen->damage_window_list);
     xwl_screen->depth = 24;
 
+    if (!monitorResolution)
+        monitorResolution = DEFAULT_DPI;
+
     xwl_screen->display = wl_display_connect(NULL);
     if (xwl_screen->display == NULL) {
         ErrorF("could not connect to wayland server\n");
@@ -1225,7 +1230,7 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
 
     ret = fbScreenInit(pScreen, NULL,
                        xwl_screen->width, xwl_screen->height,
-                       96, 96, 0,
+                       monitorResolution, monitorResolution, 0,
                        BitsPerPixel(xwl_screen->depth));
     if (!ret)
         return FALSE;

@@ -575,6 +575,19 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     for (i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-rootless") == 0) {
             xwl_screen->rootless = 1;
+
+            /* Disable the XSS extension on Xwayland rootless.
+             *
+             * Xwayland is just a Wayland client, no X11 screensaver
+             * should be expected to work reliably on Xwayland rootless.
+             */
+#ifdef SCREENSAVER
+            noScreenSaverExtension = TRUE;
+#endif
+            ScreenSaverTime = 0;
+            ScreenSaverInterval = 0;
+            defaultScreenSaverTime = 0;
+            defaultScreenSaverInterval = 0;
         }
         else if (strcmp(argv[i], "-shm") == 0) {
             xwl_screen->glamor = 0;

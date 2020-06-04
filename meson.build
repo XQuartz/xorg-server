@@ -164,7 +164,7 @@ glamor_option = get_option('glamor')
 
 build_udev = get_option('udev')
 build_udev_kms = get_option('udev_kms')
-if host_machine.system() == 'windows' or host_machine.system() == 'darwin'
+if ['windows',  'darwin', 'cygwin'].contains(host_machine.system())
     build_udev = false
     build_udev_kms = false
     hal_option = 'false'

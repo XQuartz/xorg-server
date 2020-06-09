@@ -332,6 +332,7 @@ static Bool
 xwlVidModeGetGamma(ScreenPtr pScreen, float *red, float *green, float *blue)
 {
     /* Unsupported for now, but pretend it works */
+    *red = *green = *blue = 1.0f;
     return TRUE;
 }
 

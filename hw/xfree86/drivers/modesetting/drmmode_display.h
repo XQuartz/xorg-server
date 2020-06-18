@@ -112,6 +112,7 @@ typedef struct {
 
     DevPrivateKeyRec pixmapPrivateKeyRec;
     DevScreenPrivateKeyRec spritePrivateKeyRec;
+    DevPrivateKeyRec vrrPrivateKeyRec;
     /* Number of SW cursors currently visible on this screen */
     int sprites_visible;
 
@@ -127,6 +128,8 @@ typedef struct {
 
     Bool dri2_enable;
     Bool present_enable;
+
+    uint32_t vrr_prop_id;
 } drmmode_rec, *drmmode_ptr;
 
 typedef struct {
@@ -193,6 +196,8 @@ typedef struct {
 
     Bool enable_flipping;
     Bool flipping_active;
+
+    Bool vrr_enabled;
 } drmmode_crtc_private_rec, *drmmode_crtc_private_ptr;
 
 typedef struct {
@@ -293,5 +298,6 @@ void drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode);
 int drmmode_crtc_flip(xf86CrtcPtr crtc, uint32_t fb_id, uint32_t flags, void *data);
 
 void drmmode_set_dpms(ScrnInfoPtr scrn, int PowerManagementMode, int flags);
+void drmmode_crtc_set_vrr(xf86CrtcPtr crtc, Bool enabled);
 
 #endif

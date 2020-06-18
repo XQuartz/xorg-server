@@ -706,6 +706,12 @@ msBlockHandler_oneshot(ScreenPtr pScreen, void *pTimeout)
     drmmode_set_desired_modes(pScrn, &ms->drmmode, TRUE);
 }
 
+Bool
+ms_window_has_variable_refresh(modesettingPtr ms, WindowPtr win) {
+	struct ms_vrr_priv *priv = dixLookupPrivate(&win->devPrivates, &ms->drmmode.vrrPrivateKeyRec);
+
+	return priv->variable_refresh;
+}
 static void
 FreeRec(ScrnInfoPtr pScrn)
 {
@@ -1450,6 +1456,12 @@ CreateScreenResources(ScreenPtr pScreen)
 
         pScrPriv->rrStartFlippingPixmapTracking = msStartFlippingPixmapTracking;
     }
+
+    if (ms->vrr_support &&
+        !dixRegisterPrivateKey(&ms->drmmode.vrrPrivateKeyRec,
+                               PRIVATE_WINDOW,
+                               sizeof(struct ms_vrr_priv)))
+            return FALSE;
 
     return ret;
 }

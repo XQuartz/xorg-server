@@ -111,6 +111,13 @@ xwl_present_reset_timer(struct xwl_present_window *xwl_present_window)
     }
 }
 
+static void
+xwl_present_free_event(struct xwl_present_event *event)
+{
+    xorg_list_del(&event->list);
+    free(event);
+}
+
 void
 xwl_present_cleanup(WindowPtr window)
 {
@@ -128,17 +135,15 @@ xwl_present_cleanup(WindowPtr window)
     }
 
     /* Clear remaining events */
-    xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->event_list, list) {
-        xorg_list_del(&event->list);
-        free(event);
-    }
+    xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->event_list, list)
+        xwl_present_free_event(event);
 
     /* Clear remaining buffer releases and inform Present about free ressources */
     event = xwl_present_window->sync_flip;
     xwl_present_window->sync_flip = NULL;
     if (event) {
         if (event->buffer_released) {
-            free(event);
+            xwl_present_free_event(event);
         } else {
             event->pending = FALSE;
             event->abort = TRUE;
@@ -158,13 +163,6 @@ xwl_present_cleanup(WindowPtr window)
                   NULL);
 
     free(xwl_present_window);
-}
-
-static void
-xwl_present_free_event(struct xwl_present_event *event)
-{
-    xorg_list_del(&event->list);
-    free(event);
 }
 
 static void
@@ -216,7 +214,7 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
             /* If the buffer was already released, clean up now */
             present_wnmd_event_notify(xwl_present_window->window, event->event_id,
                                       xwl_present_window->ust, msc);
-            free(event);
+            xwl_present_free_event(event);
         } else {
             xorg_list_add(&event->list, &xwl_present_window->release_queue);
         }
@@ -392,8 +390,7 @@ xwl_present_abort_vblank(WindowPtr present_window,
 
     xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->event_list, list) {
         if (event->event_id == event_id) {
-            xorg_list_del(&event->list);
-            free(event);
+            xwl_present_free_event(event);
             return;
         }
     }

@@ -56,7 +56,6 @@ struct xwl_present_event {
 
     Bool abort;
     Bool pending;
-    Bool buffer_released;
 
     struct xwl_present_window *xwl_present_window;
     PixmapPtr pixmap;

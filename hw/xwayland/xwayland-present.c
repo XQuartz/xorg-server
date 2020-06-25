@@ -118,18 +118,23 @@ xwl_present_reset_timer(struct xwl_present_window *xwl_present_window)
 }
 
 static void
+xwl_present_release_pixmap(struct xwl_present_event *event)
+{
+    if (!event->pixmap)
+        return;
+
+    xwl_pixmap_del_buffer_release_cb(event->pixmap);
+    dixDestroyPixmap(event->pixmap, event->pixmap->drawable.id);
+    event->pixmap = NULL;
+}
+
+static void
 xwl_present_free_event(struct xwl_present_event *event)
 {
     if (!event)
         return;
 
-    if (event->pixmap) {
-        if (!event->buffer_released)
-            xwl_pixmap_del_buffer_release_cb(event->pixmap);
-
-        dixDestroyPixmap(event->pixmap, event->pixmap->drawable.id);
-    }
-
+    xwl_present_release_pixmap(event);
     xorg_list_del(&event->list);
     free(event);
 }
@@ -178,8 +183,7 @@ xwl_present_buffer_release(PixmapPtr pixmap, void *data)
     if (!event)
         return;
 
-    xwl_pixmap_del_buffer_release_cb(pixmap);
-    event->buffer_released = TRUE;
+    xwl_present_release_pixmap(event);
 
     if (event->abort) {
         if (!event->pending)
@@ -212,7 +216,7 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
         present_wnmd_event_notify(xwl_present_window->window, event->event_id,
                                   xwl_present_window->ust, msc);
 
-        if (event->buffer_released) {
+        if (!event->pixmap) {
             /* If the buffer was already released, clean up now */
             present_wnmd_event_notify(xwl_present_window->window, event->event_id,
                                       xwl_present_window->ust, msc);
@@ -281,7 +285,7 @@ xwl_present_sync_callback(void *data,
 
     if (event->abort) {
         /* Event might have been aborted */
-        if (event->buffer_released)
+        if (!event->pixmap)
             /* Buffer was already released, cleanup now */
             xwl_present_free_event(event);
         return;
@@ -292,7 +296,7 @@ xwl_present_sync_callback(void *data,
                               xwl_present_window->ust,
                               xwl_present_window->msc);
 
-    if (event->buffer_released) {
+    if (!event->pixmap) {
         /* If the buffer was already released, send the event now again */
         present_wnmd_event_notify(xwl_present_window->window,
                                   event->event_id,
@@ -468,7 +472,6 @@ xwl_present_flip(WindowPtr present_window,
     event->target_msc = target_msc;
     event->pending = TRUE;
     event->abort = FALSE;
-    event->buffer_released = FALSE;
 
     if (sync_flip) {
         xorg_list_init(&event->list);

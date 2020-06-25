@@ -176,7 +176,7 @@ xwl_present_cleanup(WindowPtr window)
 }
 
 static void
-xwl_present_buffer_release(PixmapPtr pixmap, void *data)
+xwl_present_buffer_release(void *data)
 {
     struct xwl_present_event *event = data;
 

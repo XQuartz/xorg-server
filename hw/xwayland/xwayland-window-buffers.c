@@ -181,7 +181,7 @@ xwl_window_buffer_timer_callback(OsTimerPtr timer, CARD32 time, void *arg)
 }
 
 static void
-xwl_window_buffer_release_callback(PixmapPtr pixmap, void *data)
+xwl_window_buffer_release_callback(void *data)
 {
     struct xwl_window_buffer *xwl_window_buffer = data;
     struct xwl_window *xwl_window = xwl_window_buffer->xwl_window;

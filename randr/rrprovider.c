@@ -490,10 +490,20 @@ RRDeliverProviderEvent(ClientPtr client, WindowPtr pWin, RRProviderPtr provider)
 void
 RRProviderAutoConfigGpuScreen(ScreenPtr pScreen, ScreenPtr primaryScreen)
 {
-    rrScrPrivPtr pScrPriv = rrGetScrPriv(pScreen);
-    rrScrPrivPtr primaryPriv = rrGetScrPriv(primaryScreen);
-    RRProviderPtr provider = pScrPriv->provider;
-    RRProviderPtr primary_provider = primaryPriv->provider;
+    rrScrPrivPtr pScrPriv;
+    rrScrPrivPtr primaryPriv;
+    RRProviderPtr provider;
+    RRProviderPtr primary_provider;
+
+    /* Bail out if RandR wasn't initialized. */
+    if (!dixPrivateKeyRegistered(rrPrivKey))
+        return;
+
+    pScrPriv = rrGetScrPriv(pScreen);
+    primaryPriv = rrGetScrPriv(primaryScreen);
+
+    provider = pScrPriv->provider;
+    primary_provider = primaryPriv->provider;
 
     if (!provider || !primary_provider)
         return;

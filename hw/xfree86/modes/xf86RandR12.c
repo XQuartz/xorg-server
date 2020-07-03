@@ -901,6 +901,9 @@ xf86RandR12CloseScreen(ScreenPtr pScreen)
 {
     XF86RandRInfoPtr randrp;
 
+    if (!dixPrivateKeyRegistered(&xf86RandR12KeyRec))
+        return;
+
     randrp = XF86RANDRINFO(pScreen);
 #if RANDR_12_INTERFACE
     xf86ScreenToScrn(pScreen)->EnterVT = randrp->orig_EnterVT;
@@ -922,6 +925,9 @@ xf86RandR12SetRotations(ScreenPtr pScreen, Rotation rotations)
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
 #endif
 
+    if (!dixPrivateKeyRegistered(&xf86RandR12KeyRec))
+        return;
+
     randrp = XF86RANDRINFO(pScreen);
 #if RANDR_12_INTERFACE
     for (c = 0; c < config->num_crtc; c++) {
@@ -940,6 +946,9 @@ xf86RandR12SetTransformSupport(ScreenPtr pScreen, Bool transforms)
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     int c;
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(pScrn);
+
+    if (!dixPrivateKeyRegistered(&xf86RandR12KeyRec))
+        return;
 
     for (c = 0; c < config->num_crtc; c++) {
         xf86CrtcPtr crtc = config->crtc[c];

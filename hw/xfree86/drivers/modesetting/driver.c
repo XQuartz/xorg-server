@@ -569,14 +569,14 @@ dispatch_dirty_pixmap(ScrnInfoPtr scrn, xf86CrtcPtr crtc, PixmapPtr ppix)
 {
     modesettingPtr ms = modesettingPTR(scrn);
     msPixmapPrivPtr ppriv = msGetPixmapPriv(&ms->drmmode, ppix);
-    DamagePtr damage = ppriv->slave_damage;
+    DamagePtr damage = ppriv->secondary_damage;
     int fb_id = ppriv->fb_id;
 
     dispatch_dirty_region(scrn, ppix, damage, fb_id);
 }
 
 static void
-dispatch_slave_dirty(ScreenPtr pScreen)
+dispatch_secondary_dirty(ScreenPtr pScreen)
 {
     ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
     xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
@@ -601,28 +601,28 @@ redisplay_dirty(ScreenPtr screen, PixmapDirtyUpdatePtr dirty, int *timeout)
 {
     RegionRec pixregion;
 
-    PixmapRegionInit(&pixregion, dirty->slave_dst);
-    DamageRegionAppend(&dirty->slave_dst->drawable, &pixregion);
+    PixmapRegionInit(&pixregion, dirty->secondary_dst);
+    DamageRegionAppend(&dirty->secondary_dst->drawable, &pixregion);
     PixmapSyncDirtyHelper(dirty);
 
     if (!screen->isGPU) {
 #ifdef GLAMOR_HAS_GBM
         modesettingPtr ms = modesettingPTR(xf86ScreenToScrn(screen));
         /*
-         * When copying from the master framebuffer to the shared pixmap,
-         * we must ensure the copy is complete before the slave starts a
-         * copy to its own framebuffer (some slaves scanout directly from
+         * When copying from the primary framebuffer to the shared pixmap,
+         * we must ensure the copy is complete before the secondary starts a
+         * copy to its own framebuffer (some secondarys scanout directly from
          * the shared pixmap, but not all).
          */
         if (ms->drmmode.glamor)
             ms->glamor.finish(screen);
 #endif
-        /* Ensure the slave processes the damage immediately */
+        /* Ensure the secondary processes the damage immediately */
         if (timeout)
             *timeout = 0;
     }
 
-    DamageRegionProcessPending(&dirty->slave_dst->drawable);
+    DamageRegionProcessPending(&dirty->secondary_dst->drawable);
     RegionUninit(&pixregion);
 }
 
@@ -642,13 +642,13 @@ ms_dirty_update(ScreenPtr screen, int *timeout)
         if (RegionNotEmpty(region)) {
             if (!screen->isGPU) {
                    msPixmapPrivPtr ppriv =
-                    msGetPixmapPriv(&ms->drmmode, ent->slave_dst->master_pixmap);
+                    msGetPixmapPriv(&ms->drmmode, ent->secondary_dst->primary_pixmap);
 
                 if (ppriv->notify_on_damage) {
                     ppriv->notify_on_damage = FALSE;
 
-                    ent->slave_dst->drawable.pScreen->
-                        SharedPixmapNotifyDamage(ent->slave_dst);
+                    ent->secondary_dst->drawable.pScreen->
+                        SharedPixmapNotifyDamage(ent->secondary_dst);
                 }
 
                 /* Requested manual updating */
@@ -663,7 +663,7 @@ ms_dirty_update(ScreenPtr screen, int *timeout)
 }
 
 static PixmapDirtyUpdatePtr
-ms_dirty_get_ent(ScreenPtr screen, PixmapPtr slave_dst)
+ms_dirty_get_ent(ScreenPtr screen, PixmapPtr secondary_dst)
 {
     PixmapDirtyUpdatePtr ent;
 
@@ -671,7 +671,7 @@ ms_dirty_get_ent(ScreenPtr screen, PixmapPtr slave_dst)
         return NULL;
 
     xorg_list_for_each_entry(ent, &screen->pixmap_dirty_list, ent) {
-        if (ent->slave_dst == slave_dst)
+        if (ent->secondary_dst == secondary_dst)
             return ent;
     }
 
@@ -688,7 +688,7 @@ msBlockHandler(ScreenPtr pScreen, void *timeout)
     ms->BlockHandler = pScreen->BlockHandler;
     pScreen->BlockHandler = msBlockHandler;
     if (pScreen->isGPU && !ms->drmmode.reverse_prime_offload_mode)
-        dispatch_slave_dirty(pScreen);
+        dispatch_secondary_dirty(pScreen);
     else if (ms->dirty_enabled)
         dispatch_dirty(pScreen);
 
@@ -1291,32 +1291,32 @@ msDisableSharedPixmapFlipping(RRCrtcPtr crtc)
 
 static Bool
 msStartFlippingPixmapTracking(RRCrtcPtr crtc, DrawablePtr src,
-                              PixmapPtr slave_dst1, PixmapPtr slave_dst2,
+                              PixmapPtr secondary_dst1, PixmapPtr secondary_dst2,
                               int x, int y, int dst_x, int dst_y,
                               Rotation rotation)
 {
     ScreenPtr pScreen = src->pScreen;
     modesettingPtr ms = modesettingPTR(xf86ScreenToScrn(pScreen));
 
-    msPixmapPrivPtr ppriv1 = msGetPixmapPriv(&ms->drmmode, slave_dst1->master_pixmap),
-                    ppriv2 = msGetPixmapPriv(&ms->drmmode, slave_dst2->master_pixmap);
+    msPixmapPrivPtr ppriv1 = msGetPixmapPriv(&ms->drmmode, secondary_dst1->primary_pixmap),
+                    ppriv2 = msGetPixmapPriv(&ms->drmmode, secondary_dst2->primary_pixmap);
 
-    if (!PixmapStartDirtyTracking(src, slave_dst1, x, y,
+    if (!PixmapStartDirtyTracking(src, secondary_dst1, x, y,
                                   dst_x, dst_y, rotation)) {
         return FALSE;
     }
 
-    if (!PixmapStartDirtyTracking(src, slave_dst2, x, y,
+    if (!PixmapStartDirtyTracking(src, secondary_dst2, x, y,
                                   dst_x, dst_y, rotation)) {
-        PixmapStopDirtyTracking(src, slave_dst1);
+        PixmapStopDirtyTracking(src, secondary_dst1);
         return FALSE;
     }
 
-    ppriv1->slave_src = src;
-    ppriv2->slave_src = src;
+    ppriv1->secondary_src = src;
+    ppriv2->secondary_src = src;
 
-    ppriv1->dirty = ms_dirty_get_ent(pScreen, slave_dst1);
-    ppriv2->dirty = ms_dirty_get_ent(pScreen, slave_dst2);
+    ppriv1->dirty = ms_dirty_get_ent(pScreen, secondary_dst1);
+    ppriv2->dirty = ms_dirty_get_ent(pScreen, secondary_dst2);
 
     ppriv1->defer_dirty_update = TRUE;
     ppriv2->defer_dirty_update = TRUE;
@@ -1325,17 +1325,17 @@ msStartFlippingPixmapTracking(RRCrtcPtr crtc, DrawablePtr src,
 }
 
 static Bool
-msPresentSharedPixmap(PixmapPtr slave_dst)
+msPresentSharedPixmap(PixmapPtr secondary_dst)
 {
-    ScreenPtr pScreen = slave_dst->master_pixmap->drawable.pScreen;
+    ScreenPtr pScreen = secondary_dst->primary_pixmap->drawable.pScreen;
     modesettingPtr ms = modesettingPTR(xf86ScreenToScrn(pScreen));
 
-    msPixmapPrivPtr ppriv = msGetPixmapPriv(&ms->drmmode, slave_dst->master_pixmap);
+    msPixmapPrivPtr ppriv = msGetPixmapPriv(&ms->drmmode, secondary_dst->primary_pixmap);
 
     RegionPtr region = DamageRegion(ppriv->dirty->damage);
 
     if (RegionNotEmpty(region)) {
-        redisplay_dirty(ppriv->slave_src->pScreen, ppriv->dirty, NULL);
+        redisplay_dirty(ppriv->secondary_src->pScreen, ppriv->dirty, NULL);
         DamageEmpty(ppriv->dirty->damage);
 
         return TRUE;
@@ -1346,22 +1346,22 @@ msPresentSharedPixmap(PixmapPtr slave_dst)
 
 static Bool
 msStopFlippingPixmapTracking(DrawablePtr src,
-                             PixmapPtr slave_dst1, PixmapPtr slave_dst2)
+                             PixmapPtr secondary_dst1, PixmapPtr secondary_dst2)
 {
     ScreenPtr pScreen = src->pScreen;
     modesettingPtr ms = modesettingPTR(xf86ScreenToScrn(pScreen));
 
-    msPixmapPrivPtr ppriv1 = msGetPixmapPriv(&ms->drmmode, slave_dst1->master_pixmap),
-                    ppriv2 = msGetPixmapPriv(&ms->drmmode, slave_dst2->master_pixmap);
+    msPixmapPrivPtr ppriv1 = msGetPixmapPriv(&ms->drmmode, secondary_dst1->primary_pixmap),
+                    ppriv2 = msGetPixmapPriv(&ms->drmmode, secondary_dst2->primary_pixmap);
 
     Bool ret = TRUE;
 
-    ret &= PixmapStopDirtyTracking(src, slave_dst1);
-    ret &= PixmapStopDirtyTracking(src, slave_dst2);
+    ret &= PixmapStopDirtyTracking(src, secondary_dst1);
+    ret &= PixmapStopDirtyTracking(src, secondary_dst2);
 
     if (ret) {
-        ppriv1->slave_src = NULL;
-        ppriv2->slave_src = NULL;
+        ppriv1->secondary_src = NULL;
+        ppriv2->secondary_src = NULL;
 
         ppriv1->dirty = NULL;
         ppriv2->dirty = NULL;
@@ -1455,7 +1455,7 @@ CreateScreenResources(ScreenPtr pScreen)
 }
 
 static Bool
-msSharePixmapBacking(PixmapPtr ppix, ScreenPtr slave, void **handle)
+msSharePixmapBacking(PixmapPtr ppix, ScreenPtr secondary, void **handle)
 {
 #ifdef GLAMOR_HAS_GBM
     modesettingPtr ms =
@@ -1515,7 +1515,7 @@ msRequestSharedPixmapNotifyDamage(PixmapPtr ppix)
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     modesettingPtr ms = modesettingPTR(scrn);
 
-    msPixmapPrivPtr ppriv = msGetPixmapPriv(&ms->drmmode, ppix->master_pixmap);
+    msPixmapPrivPtr ppriv = msGetPixmapPriv(&ms->drmmode, ppix->primary_pixmap);
 
     ppriv->notify_on_damage = TRUE;
 
@@ -1548,7 +1548,7 @@ msSharedPixmapNotifyDamage(PixmapPtr ppix)
         if (!(drmmode_crtc->prime_pixmap && drmmode_crtc->prime_pixmap_back))
             continue;
 
-        // Received damage on master screen pixmap, schedule present on vblank
+        // Received damage on primary screen pixmap, schedule present on vblank
         ret |= drmmode_SharedPixmapPresentOnVBlank(ppix, crtc, &ms->drmmode);
     }
 

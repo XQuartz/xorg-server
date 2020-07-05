@@ -3110,7 +3110,7 @@ xf86DisableUnusedFunctions(ScrnInfoPtr pScrn)
         pScrn->ModeSet(pScrn);
     if (pScrn->pScreen) {
         if (pScrn->pScreen->isGPU)
-            xf86CursorResetCursor(pScrn->pScreen->current_master);
+            xf86CursorResetCursor(pScrn->pScreen->current_primary);
         else
             xf86CursorResetCursor(pScrn->pScreen);
     }

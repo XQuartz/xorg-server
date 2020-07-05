@@ -461,8 +461,8 @@ xf86CurrentCursor(ScreenPtr pScreen)
 {
     xf86CursorScreenPtr ScreenPriv;
 
-    if (pScreen->is_output_slave)
-        pScreen = pScreen->current_master;
+    if (pScreen->is_output_secondary)
+        pScreen = pScreen->current_primary;
 
     ScreenPriv = dixLookupPrivate(&pScreen->devPrivates, xf86CursorScreenKey);
     return ScreenPriv->CurrentCursor;

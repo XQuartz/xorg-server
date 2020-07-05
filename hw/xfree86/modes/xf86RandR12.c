@@ -2183,7 +2183,7 @@ xf86RandR14ProviderDestroy(ScreenPtr screen, RRProviderPtr provider)
             config->randr_provider->output_source = NULL;
             RRSetChanged(screen);
         }
-        if (screen->current_master)
+        if (screen->current_primary)
             DetachUnboundGPU(screen);
     }
     config->randr_provider = NULL;

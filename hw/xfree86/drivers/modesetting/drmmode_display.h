@@ -227,7 +227,7 @@ typedef struct _msPixmapPriv {
     uint32_t fb_id;
     struct dumb_bo *backing_bo; /* if this pixmap is backed by a dumb bo */
 
-    DamagePtr slave_damage;
+    DamagePtr secondary_damage;
 
     /** Sink fields for flipping shared pixmaps */
     int flip_seq; /* seq of current page flip event handler */
@@ -236,7 +236,7 @@ typedef struct _msPixmapPriv {
     /** Source fields for flipping shared pixmaps */
     Bool defer_dirty_update; /* if we want to manually update */
     PixmapDirtyUpdatePtr dirty; /* cached dirty ent to avoid searching list */
-    DrawablePtr slave_src; /* if we exported shared pixmap, dirty tracking src */
+    DrawablePtr secondary_src; /* if we exported shared pixmap, dirty tracking src */
     Bool notify_on_damage; /* if sink has requested damage notification */
 } msPixmapPrivRec, *msPixmapPrivPtr;
 
@@ -259,7 +259,7 @@ int drmmode_bo_destroy(drmmode_ptr drmmode, drmmode_bo *bo);
 uint32_t drmmode_bo_get_pitch(drmmode_bo *bo);
 uint32_t drmmode_bo_get_handle(drmmode_bo *bo);
 Bool drmmode_glamor_handle_new_screen_pixmap(drmmode_ptr drmmode);
-void *drmmode_map_slave_bo(drmmode_ptr drmmode, msPixmapPrivPtr ppriv);
+void *drmmode_map_secondary_bo(drmmode_ptr drmmode, msPixmapPrivPtr ppriv);
 Bool drmmode_SetSlaveBO(PixmapPtr ppix,
                         drmmode_ptr drmmode,
                         int fd_handle, int pitch, int size);

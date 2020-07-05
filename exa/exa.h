@@ -694,7 +694,7 @@ typedef struct _ExaDriver {
                             int depth, int usage_hint, int bitsPerPixel,
                             int *new_fb_pitch);
     /** @} */
-    Bool (*SharePixmapBacking)(PixmapPtr pPixmap, ScreenPtr slave, void **handle_p);
+    Bool (*SharePixmapBacking)(PixmapPtr pPixmap, ScreenPtr secondary, void **handle_p);
 
     Bool (*SetSharedPixmapBacking)(PixmapPtr pPixmap, void *handle);
 

@@ -658,7 +658,7 @@ void
 Bool
 exaSetSharedPixmapBacking_mixed(PixmapPtr pPixmap, void *handle);
 Bool
-exaSharePixmapBacking_mixed(PixmapPtr pPixmap, ScreenPtr slave, void **handle_p);
+exaSharePixmapBacking_mixed(PixmapPtr pPixmap, ScreenPtr secondary, void **handle_p);
 
 /* exa_render.c */
 Bool

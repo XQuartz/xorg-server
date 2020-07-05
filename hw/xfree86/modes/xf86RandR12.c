@@ -550,7 +550,7 @@ xf86RandR12SetMode(ScreenPtr pScreen,
     }
     /*
      * We know that if the driver failed to SwitchMode to the rotated
-     * version, then it should revert back to it's prior mode.
+     * version, then it should revert back to its prior mode.
      */
     if (!xf86SwitchMode(pScreen, mode)) {
         ret = FALSE;

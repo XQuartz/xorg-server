@@ -95,7 +95,7 @@ typedef Bool (*present_flip_ptr) (RRCrtcPtr crtc,
                                   Bool sync_flip);
 /* Flip pixmap for window, return false if it didn't happen.
  *
- * Like present_flip_ptr, additionaly with:
+ * Like present_flip_ptr, additionally with:
  *
  * 'window' used for synchronization.
  *

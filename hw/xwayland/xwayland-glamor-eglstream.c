@@ -84,7 +84,7 @@ struct xwl_pixmap {
     struct wl_buffer *buffer;
     struct xwl_screen *xwl_screen;
 
-    /* The stream and associated resources have their own lifetime seperate
+    /* The stream and associated resources have their own lifetime separate
      * from the pixmap's */
     int refcount;
 
@@ -365,7 +365,7 @@ xwl_eglstream_set_window_pixmap(WindowPtr window, PixmapPtr pixmap)
  * - X window receives resize event, causing us to create a new pixmap and
  *   begin creating the corresponding eglstream. This pixmap is known as
  *   pixmap A.
- * - X window receives another resize event, and again changes it's current
+ * - X window receives another resize event, and again changes its current
  *   pixmap causing us to create another corresponding eglstream for the same
  *   window. This pixmap is known as pixmap B.
  * - Start handling events from the wayland compositor.
@@ -375,7 +375,7 @@ xwl_eglstream_set_window_pixmap(WindowPtr window, PixmapPtr pixmap)
  * callback in the original order the pixmaps were created. This means the
  * following would happen:
  *
- * - Receive pixmap A's stream callback, attach it's stream to the surface of
+ * - Receive pixmap A's stream callback, attach its stream to the surface of
  *   the window that just orphaned it.
  * - Receive pixmap B's stream callback, fall over and fail because the
  *   window's surface now incorrectly has pixmap A's stream attached to it.
@@ -386,7 +386,7 @@ xwl_eglstream_set_window_pixmap(WindowPtr window, PixmapPtr pixmap)
  *
  * - Begin processing X events...
  * - A window is resized, causing us to add an eglstream (known as eglstream
- *   A) waiting for it's consumer to finish attachment to be added to the
+ *   A) waiting for its consumer to finish attachment to be added to the
  *   queue.
  * - Resize on same window happens. We invalidate the previously pending
  *   stream and add another one to the pending queue (known as eglstream B).

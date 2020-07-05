@@ -251,7 +251,7 @@ DoCreateContext(__GLXclientState * cl, GLXContextID gcId,
      ** Find the display list space that we want to share.
      **
      ** NOTE: In a multithreaded X server, we would need to keep a reference
-     ** count for each display list so that if one client detroyed a list that
+     ** count for each display list so that if one client destroyed a list that
      ** another client was using, the list would not really be freed until it
      ** was no longer in use.  Since this sample implementation has no support
      ** for multithreaded servers, we don't do this.

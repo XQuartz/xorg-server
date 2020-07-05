@@ -486,9 +486,9 @@ typedef void (*DPMSProcPtr)(ScreenPtr pScreen, int level);
         Wrap(as, pScreen, UnrealizeCursor, AnimCurUnrealizeCursor);
 
     The wrapping block handler is a bit different; it does the Unwrap,
-    the local operations and then only re-Wraps if the hook is still
-    required. Unwrap occurrs at the top of each function, just after
-    entry, and Wrap occurrs at the bottom of each function, just
+    the local operations, and then only re-Wraps if the hook is still
+    required. Unwrap occurs at the top of each function, just after
+    entry, and Wrap occurs at the bottom of each function, just
     before returning.
  */
 

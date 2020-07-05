@@ -1267,7 +1267,7 @@ msEnableSharedPixmapFlipping(RRCrtcPtr crtc, PixmapPtr front, PixmapPtr back)
             return FALSE;
 
         /* EVDI uses USB transport but is platform device, not usb.
-         * Blacklist it explicitly */
+         * Exclude it explicitly. */
         if (syspath && strstr(syspath, "evdi"))
             return FALSE;
     }
@@ -1691,7 +1691,7 @@ ScreenInit(ScreenPtr pScreen, int argc, char **argv)
     miDCInitialize(pScreen, xf86GetPointerScreenFuncs());
 
     /* If pageflip is enabled hook the screen's cursor-sprite (swcursor) funcs.
-     * So that we can disabe page-flipping on fallback to a swcursor. */
+     * So that we can disable page-flipping on fallback to a swcursor. */
     if (ms->drmmode.pageflip) {
         miPointerScreenPtr PointPriv =
             dixLookupPrivate(&pScreen->devPrivates, miPointerScreenKey);

@@ -173,7 +173,7 @@ xorg_backtrace(void)
 #define ElfSym Elf32_Sym
 #endif
 
-/* Called for each frame on the stack to print it's contents */
+/* Called for each frame on the stack to print its contents */
 static int
 xorg_backtrace_frame(uintptr_t pc, int signo, void *arg)
 {

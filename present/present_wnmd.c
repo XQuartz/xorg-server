@@ -34,7 +34,7 @@
  *
  * A flip still requires a copy currently, since the original pixmap needs
  * to be updated with the new pixmap content. Just a flip of all windows
- * to the new pixmap is diffcult, because the original pixmap might not be
+ * to the new pixmap is difficult, because the original pixmap might not be
  * controlled by the Xserver.
  *
  */

@@ -811,8 +811,8 @@ xf86SetGamma(ScrnInfoPtr scrp, Gamma gamma)
         scrp->gamma.red = SET_GAMMA(DDC->features.gamma);
         scrp->gamma.green = SET_GAMMA(DDC->features.gamma);
         scrp->gamma.blue = SET_GAMMA(DDC->features.gamma);
-        /* EDID structure version 2 gives optional seperate red, green & blue gamma values
-         * in bytes 0x57-0x59 */
+        /* EDID structure version 2 gives optional separate red, green & blue
+         * gamma values in bytes 0x57-0x59 */
 #endif
     }
     else if (TEST_GAMMA(gamma)) {

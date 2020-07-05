@@ -3970,7 +3970,7 @@ drmmode_get_default_bpp(ScrnInfoPtr pScrn, drmmode_ptr drmmode, int *depth,
 
 /*
  * We hook the screen's cursor-sprite (swcursor) functions to see if a swcursor
- * is active. When a swcursor is active we disabe page-flipping.
+ * is active. When a swcursor is active we disable page-flipping.
  */
 
 static void drmmode_sprite_do_set_cursor(msSpritePrivPtr sprite_priv,

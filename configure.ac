@@ -189,7 +189,7 @@ if test "x$ac_cv_func_getpeereid" = xno && test "x$ac_cv_func_getpeerucred" = xn
 	AC_DEFINE([NO_LOCAL_CLIENT_CRED], 1, [Define to 1 if no local socket credentials interface exists])
 fi
 
-dnl Find the math libary, then check for cbrt function in it.
+dnl Find the math library, then check for cbrt function in it.
 AC_CHECK_LIB(m, sqrt)
 AC_CHECK_FUNCS([cbrt])
 

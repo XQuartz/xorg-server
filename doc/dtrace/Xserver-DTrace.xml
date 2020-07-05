@@ -58,7 +58,7 @@ DEALINGS IN THE SOFTWARE.
     </para>
 
     <para>
-      The provider was integrated into the X.Org git master repository
+      The provider was integrated into the X.Org code base
       with Solaris 10 &amp; OpenSolaris support for the Xserver 1.4 release,
       released in 2007 with X11R7.3.   Support for DTrace on MacOS X
       was added in Xserver 1.7.

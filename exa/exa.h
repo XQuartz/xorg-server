@@ -140,7 +140,7 @@ typedef struct _ExaDriver {
     /**
      * The flags field is bitfield of boolean values controlling EXA's behavior.
      *
-     * The flags in clude EXA_OFFSCREEN_PIXMAPS, EXA_OFFSCREEN_ALIGN_POT, and
+     * The flags include EXA_OFFSCREEN_PIXMAPS, EXA_OFFSCREEN_ALIGN_POT, and
      * EXA_TWO_BITBLT_DIRECTIONS.
      */
     int flags;

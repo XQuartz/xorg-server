@@ -3864,7 +3864,7 @@ static int init_screen(ScreenPtr pScreen, int i, Bool gpu)
 
     /*
      * This loop gets run once for every Screen that gets added,
-     * but thats ok.  If the ddx layer initializes the formats
+     * but that's ok.  If the ddx layer initializes the formats
      * one at a time calling AddScreen() after each, then each
      * iteration will make it a little more accurate.  Worst case
      * we do this loop N * numPixmapFormats where N is # of screens.

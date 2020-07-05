@@ -130,7 +130,7 @@ extern _X_EXPORT Bool
 PixmapStopDirtyTracking(DrawablePtr src, PixmapPtr slave_dst);
 
 /* helper function, drivers can do this themselves if they can do it more
-   efficently */
+   efficiently */
 extern _X_EXPORT Bool
 PixmapSyncDirtyHelper(PixmapDirtyUpdatePtr dirty);
 

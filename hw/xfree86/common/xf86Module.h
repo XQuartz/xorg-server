@@ -92,7 +92,7 @@ typedef enum {
     LDR_NOENT,                  /* Module file does not exist */
     LDR_NOLOAD,                 /* type specific loader failed */
     LDR_ONCEONLY,               /* Module should only be loaded once (not an error) */
-    LDR_MISMATCH,               /* the module didn't match the spec'd requirments */
+    LDR_MISMATCH,               /* the module didn't match the spec'd requirements */
     LDR_BADUSAGE,               /* LoadModule is called with bad arguments */
     LDR_INVALID,                /* The module doesn't have a valid ModuleData object */
     LDR_BADOS,                  /* The module doesn't support the OS */

@@ -2737,7 +2737,7 @@ xf86DisableCrtc(xf86CrtcPtr crtc)
 }
 
 /*
- * Check the CRTC we're going to map each output to vs. it's current
+ * Check the CRTC we're going to map each output to vs. its current
  * CRTC.  If they don't match, we have to disable the output and the CRTC
  * since the driver will have to re-route things.
  */
@@ -3164,7 +3164,7 @@ xf86OutputSetTileProperty(xf86OutputPtr output)
 
 #endif
 
-/* Pull out a phyiscal size from a detailed timing if available. */
+/* Pull out a physical size from a detailed timing if available. */
 struct det_phySize_parameter {
     xf86OutputPtr output;
     ddc_quirk_t quirks;

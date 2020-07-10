@@ -2807,10 +2807,15 @@ xwl_seat_create_pointer_warp_emulator(struct xwl_seat *xwl_seat)
 static Bool
 xwl_seat_can_emulate_pointer_warp(struct xwl_seat *xwl_seat)
 {
-    struct xwl_screen *xwl_screen = xwl_seat->xwl_screen;
+    struct xwl_screen *xwl_screen;
+
+    if (!xwl_seat)
+        return FALSE;
 
     if (!xwl_seat->pointer)
         return FALSE;
+
+    xwl_screen = xwl_seat->xwl_screen;
 
     if (!xwl_screen->relative_pointer_manager)
         return FALSE;

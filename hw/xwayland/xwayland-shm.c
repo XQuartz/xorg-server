@@ -37,7 +37,6 @@
 #include <stdlib.h>
 
 #include "fb.h"
-#include "os.h"
 #include "pixmapstr.h"
 
 #include "xwayland-pixmap.h"

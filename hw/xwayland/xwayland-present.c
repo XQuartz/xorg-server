@@ -192,10 +192,7 @@ xwl_present_buffer_release(void *data)
     }
 
     if (!event->pending) {
-        present_wnmd_event_notify(event->xwl_present_window->window,
-                                  event->event_id,
-                                  event->xwl_present_window->ust,
-                                  event->xwl_present_window->msc);
+        present_wnmd_idle_notify(event->xwl_present_window->window, event->event_id);
         xwl_present_free_event(event);
     }
 }
@@ -213,13 +210,12 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
     if (event) {
         event->pending = FALSE;
 
-        present_wnmd_event_notify(xwl_present_window->window, event->event_id,
-                                  xwl_present_window->ust, msc);
+        present_wnmd_flip_notify(xwl_present_window->window, event->event_id,
+                                 xwl_present_window->ust, msc);
 
         if (!event->pixmap) {
             /* If the buffer was already released, clean up now */
-            present_wnmd_event_notify(xwl_present_window->window, event->event_id,
-                                      xwl_present_window->ust, msc);
+            present_wnmd_idle_notify(xwl_present_window->window, event->event_id);
             xwl_present_free_event(event);
         } else {
             xorg_list_add(&event->list, &xwl_present_window->release_list);
@@ -291,17 +287,12 @@ xwl_present_sync_callback(void *data,
         return;
     }
 
-    present_wnmd_event_notify(xwl_present_window->window,
-                              event->event_id,
-                              xwl_present_window->ust,
-                              xwl_present_window->msc);
+    present_wnmd_flip_notify(xwl_present_window->window, event->event_id,
+                             xwl_present_window->ust, xwl_present_window->msc);
 
     if (!event->pixmap) {
         /* If the buffer was already released, send the event now again */
-        present_wnmd_event_notify(xwl_present_window->window,
-                                  event->event_id,
-                                  xwl_present_window->ust,
-                                  xwl_present_window->msc);
+        present_wnmd_idle_notify(xwl_present_window->window, event->event_id);
         xwl_present_free_event(event);
     }
 }

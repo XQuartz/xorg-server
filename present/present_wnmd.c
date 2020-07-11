@@ -163,7 +163,7 @@ present_wnmd_flips_stop(WindowPtr window)
 }
 
 static void
-present_wnmd_flip_notify(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
+present_wnmd_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
 {
     WindowPtr                   window = vblank->window;
     present_window_priv_ptr     window_priv = present_window_priv(window);
@@ -207,12 +207,6 @@ present_wnmd_event_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uin
     if (!event_id)
         return;
 
-    if (window_priv->flip_active && window_priv->flip_active->event_id == event_id) {
-        /* Notify for active flip, means it is allowed to become idle */
-        window_priv->flip_active->flip_idler = TRUE;
-        return;
-    }
-
     DebugPresent(("\te %" PRIu64 " ust %" PRIu64 " msc %" PRIu64 "\n", event_id, ust, msc));
     xorg_list_for_each_entry(vblank, &window_priv->exec_queue, event_queue) {
         if (event_id == vblank->event_id) {
@@ -222,14 +216,39 @@ present_wnmd_event_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uin
     }
     xorg_list_for_each_entry(vblank, &window_priv->flip_queue, event_queue) {
         if (vblank->event_id == event_id) {
-            if (vblank->queued) {
-                present_wnmd_execute(vblank, ust, msc);
-            } else {
-                assert(vblank->window);
-                present_wnmd_flip_notify(vblank, ust, msc);
-            }
+            assert(vblank->queued);
+            present_wnmd_execute(vblank, ust, msc);
             return;
         }
+    }
+}
+
+void
+present_wnmd_flip_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uint64_t msc)
+{
+    present_window_priv_ptr     window_priv = present_window_priv(window);
+    present_vblank_ptr          vblank;
+
+    xorg_list_for_each_entry(vblank, &window_priv->flip_queue, event_queue) {
+        if (vblank->event_id == event_id) {
+            assert(!vblank->queued);
+            assert(vblank->window);
+            present_wnmd_flip_notify_vblank(vblank, ust, msc);
+            return;
+        }
+    }
+}
+
+void
+present_wnmd_idle_notify(WindowPtr window, uint64_t event_id)
+{
+    present_window_priv_ptr     window_priv = present_window_priv(window);
+    present_vblank_ptr          vblank;
+
+    if (window_priv->flip_active && window_priv->flip_active->event_id == event_id) {
+        /* Active flip is allowed to become idle directly when it becomes unactive again. */
+        window_priv->flip_active->flip_idler = TRUE;
+        return;
     }
 
     xorg_list_for_each_entry(vblank, &window_priv->idle_queue, event_queue) {

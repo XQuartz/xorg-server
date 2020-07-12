@@ -257,6 +257,13 @@ present_wnmd_idle_notify(WindowPtr window, uint64_t event_id)
             return;
         }
     }
+
+    xorg_list_for_each_entry(vblank, &window_priv->flip_queue, event_queue) {
+        if (vblank->event_id == event_id) {
+            vblank->flip_idler = TRUE;
+            return;
+        }
+    }
 }
 
 static Bool

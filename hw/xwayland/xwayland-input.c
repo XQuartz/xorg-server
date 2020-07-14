@@ -60,6 +60,8 @@ struct sync_pending {
     DeviceIntPtr pending_dev;
 };
 
+static DevPrivateKeyRec xwl_tablet_private_key;
+
 static void
 xwl_pointer_warp_emulator_handle_motion(struct xwl_pointer_warp_emulator *warp_emulator,
                                         double dx,
@@ -2108,7 +2110,8 @@ static struct zwp_tablet_pad_group_v2_listener tablet_pad_group_listener = {
 static int
 xwl_tablet_pad_proc(DeviceIntPtr device, int what)
 {
-    struct xwl_tablet_pad *pad = device->public.devicePrivate;
+    struct xwl_tablet_pad *pad = dixGetPrivate(&device->devPrivates,
+                                               &xwl_tablet_private_key);
     /* Axis layout mirrors that of xf86-input-wacom to have better
        compatibility with existing clients */
 #define NAXES 7
@@ -2232,7 +2235,7 @@ tablet_pad_done(void *data,
 
     pad->xdevice = add_device(pad->seat, "xwayland-tablet-pad",
                               xwl_tablet_pad_proc);
-    pad->xdevice->public.devicePrivate = pad;
+    dixSetPrivate(&pad->xdevice->devPrivates, &xwl_tablet_private_key, pad);
     ActivateDevice(pad->xdevice, TRUE);
     EnableDevice(pad->xdevice, TRUE);
 }
@@ -2949,6 +2952,11 @@ InitInput(int argc, char *argv[])
 {
     ScreenPtr pScreen = screenInfo.screens[0];
     struct xwl_screen *xwl_screen = xwl_screen_get(pScreen);
+
+    if (!dixRegisterPrivateKey(&xwl_tablet_private_key, PRIVATE_DEVICE, 0)) {
+        ErrorF("Failed to register private key\n");
+        return;
+    }
 
     mieqInit();
 

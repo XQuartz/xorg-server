@@ -138,16 +138,6 @@ present_wnmd_toplvl_pixmap_window(WindowPtr window)
     return w;
 }
 
-void
-present_wnmd_set_abort_flip(WindowPtr window)
-{
-    present_window_priv_ptr window_priv = present_window_priv(window);
-
-    if (!window_priv->flip_pending->abort_flip) {
-        window_priv->flip_pending->abort_flip = TRUE;
-    }
-}
-
 static void
 present_wnmd_flips_stop(WindowPtr window)
 {
@@ -352,7 +342,7 @@ present_wnmd_check_flip_window (WindowPtr window)
     if (flip_pending) {
         if (!present_wnmd_check_flip(flip_pending->crtc, flip_pending->window, flip_pending->pixmap,
                                 flip_pending->sync_flip, NULL, 0, 0, NULL))
-            present_wnmd_set_abort_flip(window);
+            window_priv->flip_pending->abort_flip = TRUE;
     } else if (flip_active) {
         if (!present_wnmd_check_flip(flip_active->crtc, flip_active->window, flip_active->pixmap,
                                      flip_active->sync_flip, NULL, 0, 0, NULL))
@@ -399,7 +389,7 @@ present_wnmd_cancel_flip(WindowPtr window)
     present_window_priv_ptr window_priv = present_window_priv(window);
 
     if (window_priv->flip_pending)
-        present_wnmd_set_abort_flip(window);
+        window_priv->flip_pending->abort_flip = TRUE;
     else if (window_priv->flip_active)
         present_wnmd_flips_stop(window);
 }

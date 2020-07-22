@@ -117,8 +117,16 @@ xwl_present_free_event(struct xwl_present_event *event)
     if (!event)
         return;
 
-    if (event->buffer)
-        wl_buffer_set_user_data(event->buffer, NULL);
+    if (event->pixmap) {
+        if (!event->buffer_released) {
+            struct wl_buffer *buffer =
+                xwl_glamor_pixmap_get_wl_buffer(event->pixmap, NULL);
+
+            wl_buffer_set_user_data(buffer, NULL);
+        }
+
+        dixDestroyPixmap(event->pixmap, event->pixmap->drawable.id);
+    }
 
     xorg_list_del(&event->list);
     free(event);
@@ -348,7 +356,7 @@ xwl_present_queue_vblank(WindowPtr present_window,
         return BadAlloc;
 
     event->event_id = event_id;
-    event->buffer = NULL;
+    event->pixmap = NULL;
     event->xwl_present_window = xwl_present_window;
     event->target_msc = msc;
 
@@ -453,11 +461,12 @@ xwl_present_flip(WindowPtr present_window,
     if (!event)
         return FALSE;
 
+    pixmap->refcnt++;
     buffer = xwl_glamor_pixmap_get_wl_buffer(pixmap, &buffer_created);
 
     event->event_id = event_id;
     event->xwl_present_window = xwl_present_window;
-    event->buffer = buffer;
+    event->pixmap = pixmap;
     event->target_msc = target_msc;
     event->pending = TRUE;
     event->abort = FALSE;

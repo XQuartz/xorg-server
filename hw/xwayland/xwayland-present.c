@@ -185,17 +185,11 @@ xwl_present_buffer_release(void *data)
 
     xwl_present_release_pixmap(event);
 
-    if (event->abort) {
-        if (!event->pending)
-            xwl_present_free_event(event);
-        return;
-    }
+    if (!event->abort)
+        present_wnmd_idle_notify(event->xwl_present_window->window, event->event_id);
 
-    present_wnmd_idle_notify(event->xwl_present_window->window, event->event_id);
-
-    if (!event->pending) {
+    if (!event->pending)
         xwl_present_free_event(event);
-    }
 }
 
 static void
@@ -279,20 +273,12 @@ xwl_present_sync_callback(void *data,
 
     event->pending = FALSE;
 
-    if (event->abort) {
-        /* Event might have been aborted */
-        if (!event->pixmap)
-            /* Buffer was already released, cleanup now */
-            xwl_present_free_event(event);
-        return;
-    }
+    if (!event->abort)
+        present_wnmd_flip_notify(xwl_present_window->window, event->event_id,
+                                 xwl_present_window->ust, xwl_present_window->msc);
 
-    present_wnmd_flip_notify(xwl_present_window->window, event->event_id,
-                             xwl_present_window->ust, xwl_present_window->msc);
-
-    if (!event->pixmap) {
+    if (!event->pixmap)
         xwl_present_free_event(event);
-    }
 }
 
 static const struct wl_callback_listener xwl_present_sync_listener = {

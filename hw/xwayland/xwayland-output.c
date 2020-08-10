@@ -503,17 +503,16 @@ apply_output_change(struct xwl_output *xwl_output)
     int mode_width, mode_height, count;
     int width = 0, height = 0, has_this_output = 0;
     RRModePtr *randr_modes;
-    Bool need_rotate;
 
     /* Clear out the "done" received flags */
     xwl_output->wl_output_done = FALSE;
     xwl_output->xdg_output_done = FALSE;
 
-    /* xdg-output sends output size in compositor space. so already rotated */
-    need_rotate = (xwl_output->xdg_output == NULL);
-
-    /* We need to rotate back the logical size for the mode */
-    if (need_rotate || xwl_output->rotation & (RR_Rotate_0 | RR_Rotate_180)) {
+    /* When we have received an xdg-output for the mode size we might need to
+     * rotate back the stored logical size it provided.
+     */
+    if (xwl_output->xdg_output == NULL
+        || xwl_output->rotation & (RR_Rotate_0 | RR_Rotate_180)) {
         mode_width = xwl_output->width;
         mode_height = xwl_output->height;
     } else {

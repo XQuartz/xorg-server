@@ -131,7 +131,7 @@ output_handle_mode(void *data, struct wl_output *wl_output, uint32_t flags,
  * function sets the provided values to these maxima on return.
  */
 static inline void
-output_get_new_size(struct xwl_output *xwl_output, int *height, int *width)
+output_get_new_size(struct xwl_output *xwl_output, int *width, int *height)
 {
     int output_width, output_height;
 
@@ -540,14 +540,14 @@ apply_output_change(struct xwl_output *xwl_output)
         if (it == xwl_output)
             has_this_output = 1;
 
-        output_get_new_size(it, &height, &width);
+        output_get_new_size(it, &width, &height);
     }
 
     if (!has_this_output) {
         xorg_list_append(&xwl_output->link, &xwl_screen->output_list);
 
         /* we did not check this output for new screen size, do it now */
-        output_get_new_size(xwl_output, &height, &width);
+        output_get_new_size(xwl_output, &width, &height);
 
 	--xwl_screen->expecting_event;
     }
@@ -713,7 +713,7 @@ xwl_output_remove(struct xwl_output *xwl_output)
     xorg_list_del(&xwl_output->link);
 
     xorg_list_for_each_entry(it, &xwl_screen->output_list, link)
-        output_get_new_size(it, &height, &width);
+        output_get_new_size(it, &width, &height);
     update_screen_size(xwl_output, width, height);
 
     RRCrtcDestroy(xwl_output->randr_crtc);

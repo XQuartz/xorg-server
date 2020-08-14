@@ -423,7 +423,8 @@ glamor_debug_output_callback(GLenum source,
 static void
 glamor_setup_debug_output(ScreenPtr screen)
 {
-    if (!epoxy_has_gl_extension("GL_ARB_debug_output"))
+    if (!epoxy_has_gl_extension("GL_KHR_debug") &&
+        !epoxy_has_gl_extension("GL_ARB_debug_output"))
         return;
 
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);

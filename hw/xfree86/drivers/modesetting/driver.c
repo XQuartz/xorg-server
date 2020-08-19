@@ -139,6 +139,7 @@ static const OptionInfoRec Options[] = {
     {OPTION_ZAPHOD_HEADS, "ZaphodHeads", OPTV_STRING, {0}, FALSE},
     {OPTION_DOUBLE_SHADOW, "DoubleShadow", OPTV_BOOLEAN, {0}, FALSE},
     {OPTION_ATOMIC, "Atomic", OPTV_BOOLEAN, {0}, FALSE},
+    {OPTION_VARIABLE_REFRESH, "VariableRefresh", OPTV_BOOLEAN, {0}, FALSE},
     {-1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
@@ -1188,6 +1189,13 @@ PreInit(ScrnInfoPtr pScrn, int flags)
                    ms->drmmode.shadow_enable ? "YES" : "NO");
 
         ms->drmmode.shadow_enable2 = msShouldDoubleShadow(pScrn, ms);
+    } else {
+        if (!pScrn->is_gpu) {
+            MessageType from = xf86GetOptValBool(ms->drmmode.Options, OPTION_VARIABLE_REFRESH,
+                                                 &ms->vrr_support) ? X_CONFIG : X_DEFAULT;
+            xf86DrvMsg(pScrn->scrnIndex, from, "VariableRefresh: %sabled\n",
+                       ms->vrr_support ? "en" : "dis");
+        }
     }
 
     ms->drmmode.pageflip =

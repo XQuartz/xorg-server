@@ -334,6 +334,9 @@ xf86CursorSetCursor(DeviceIntPtr pDev, ScreenPtr pScreen, CursorPtr pCurs,
         ScreenPriv->HotY = cursor->bits->yhot;
 
         if (!infoPtr->pScrn->vtSema) {
+            cursor = RefCursor(cursor);
+            if (ScreenPriv->SavedCursor)
+                FreeCursor(ScreenPriv->SavedCursor, None);
             ScreenPriv->SavedCursor = cursor;
             return;
         }

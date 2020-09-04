@@ -675,12 +675,6 @@ present_wnmd_abort_vblank(ScreenPtr screen, WindowPtr window, RRCrtcPtr crtc, ui
 }
 
 static void
-present_wnmd_flip_destroy(ScreenPtr screen)
-{
-    /* Cleanup done on window destruction */
-}
-
-static void
 present_wnmd_flush(WindowPtr window)
 {
     ScreenPtr               screen = window->drawable.pScreen;
@@ -705,5 +699,4 @@ present_wnmd_init_mode_hooks(present_screen_priv_ptr screen_priv)
     screen_priv->re_execute         =   &present_wnmd_re_execute;
 
     screen_priv->abort_vblank       =   &present_wnmd_abort_vblank;
-    screen_priv->flip_destroy       =   &present_wnmd_flip_destroy;
 }

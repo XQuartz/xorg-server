@@ -413,34 +413,6 @@ present_wnmd_cancel_flip(WindowPtr window)
         present_wnmd_flips_stop(window);
 }
 
-static Bool
-present_wnmd_can_window_flip(WindowPtr window)
-{
-    ScreenPtr                   screen = window->drawable.pScreen;
-    present_screen_priv_ptr     screen_priv = present_screen_priv(screen);
-    WindowPtr                   toplvl_window = present_wnmd_toplvl_pixmap_window(window);
-
-    if (!screen_priv)
-        return FALSE;
-
-    if (!screen_priv->wnmd_info)
-        return FALSE;
-
-    /* Check to see if the driver supports flips at all */
-    if (!screen_priv->wnmd_info->flip)
-        return FALSE;
-
-    /* Don't flip redirected windows */
-    if (window->redirectDraw != RedirectDrawNone)
-        return FALSE;
-
-    /* Window must be same region as toplevel window */
-    if ( !RegionEqual(&window->winSize, &toplvl_window->winSize) )
-        return FALSE;
-
-    return TRUE;
-}
-
 /*
  * Once the required MSC has been reached, execute the pending request.
  *
@@ -725,7 +697,6 @@ present_wnmd_init_mode_hooks(present_screen_priv_ptr screen_priv)
 
     screen_priv->check_flip         =   &present_wnmd_check_flip;
     screen_priv->check_flip_window  =   &present_wnmd_check_flip_window;
-    screen_priv->can_window_flip    =   &present_wnmd_can_window_flip;
 
     screen_priv->present_pixmap     =   &present_wnmd_pixmap;
     screen_priv->create_event_id    =   &present_wnmd_create_event_id;

@@ -221,8 +221,12 @@ EnableDisableExtensionError(const char *name, Bool enable)
             break;
         }
     }
-    if (found == FALSE)
+    if (found == FALSE) {
         ErrorF("[mi] Extension \"%s\" is not recognized\n", name);
+        /* Disabling a non-existing extension is a no-op anyway */
+        if (enable == FALSE)
+            return;
+    }
     ErrorF("[mi] Only the following extensions can be run-time %s:\n",
            enable ? "enabled" : "disabled");
     for (i = 0; i < ARRAY_SIZE(staticExtensions); i++) {

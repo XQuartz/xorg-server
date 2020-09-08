@@ -470,7 +470,7 @@ config_udev_odev_setup_attribs(struct udev_device *udev_device, const char *path
                                config_odev_probe_proc_ptr probe_callback)
 {
     struct OdevAttributes *attribs = config_odev_allocate_attributes();
-    const char *value, *str;
+    const char *value;
 
     attribs->path = XNFstrdup(path);
     attribs->syspath = XNFstrdup(syspath);
@@ -478,8 +478,8 @@ config_udev_odev_setup_attribs(struct udev_device *udev_device, const char *path
     attribs->minor = minor;
 
     value = udev_device_get_property_value(udev_device, "ID_PATH");
-    if (value && (str = strstr(value, "pci-"))) {
-        attribs->busid = XNFstrdup(str);
+    if (value && !strncmp(value, "pci-", 4)) {
+        attribs->busid = XNFstrdup(value);
         attribs->busid[3] = ':';
     }
 

@@ -107,6 +107,8 @@ SOFTWARE.
 #include "os.h"
 #include "globals.h"
 
+#include "miinitext.h"
+
 /* List of built-in (statically linked) extensions */
 static const ExtensionModule staticExtensions[] = {
     {GEExtensionInit, "Generic Event Extension", &noGEExtension},
@@ -182,6 +184,21 @@ static const ExtensionModule staticExtensions[] = {
 #endif
 };
 
+void
+ListStaticExtensions(void)
+{
+    const ExtensionModule *ext;
+    int i;
+
+    ErrorF(" Only the following extensions can be run-time enabled/disabled:\n");
+    for (i = 0; i < ARRAY_SIZE(staticExtensions); i++) {
+        ext = &staticExtensions[i];
+        if (ext->disablePtr != NULL) {
+            ErrorF("\t%s\n", ext->name);
+        }
+    }
+}
+
 Bool
 EnableDisableExtension(const char *name, Bool enable)
 {
@@ -227,14 +244,7 @@ EnableDisableExtensionError(const char *name, Bool enable)
         if (enable == FALSE)
             return;
     }
-    ErrorF("[mi] Only the following extensions can be run-time %s:\n",
-           enable ? "enabled" : "disabled");
-    for (i = 0; i < ARRAY_SIZE(staticExtensions); i++) {
-        ext = &staticExtensions[i];
-        if (ext->disablePtr != NULL) {
-            ErrorF("[mi]    %s\n", ext->name);
-        }
-    }
+    ListStaticExtensions();
 }
 
 static ExtensionModule *ExtensionModuleList = NULL;

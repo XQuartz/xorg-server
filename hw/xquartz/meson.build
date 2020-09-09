@@ -34,6 +34,7 @@ srcs_libxquartz = [
     'quartzRandR.c',
     'console_redirect.c',
     '../../mi/miinitext.c',
+    '../../mi/miinitext.h',
 ]
 
 libxquartz_defs = [

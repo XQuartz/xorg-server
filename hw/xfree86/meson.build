@@ -40,7 +40,8 @@ subdir('ramdac')
 subdir('xkb')
 
 srcs_xorg = [
-    '../../mi/miinitext.c'
+    '../../mi/miinitext.c',
+    '../../mi/miinitext.h',
 ]
 
 # Extract all the objects so that all symbols get brought into the

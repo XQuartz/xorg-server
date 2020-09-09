@@ -25,6 +25,7 @@ srcs = [
     'xwayland-window-buffers.c',
     'xwayland-window-buffers.h',
     '../../mi/miinitext.c',
+    '../../mi/miinitext.h',
 ]
 
 scanner_dep = dependency('wayland-scanner', native: true)

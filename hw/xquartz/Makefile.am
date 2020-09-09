@@ -21,6 +21,7 @@ DIST_SUBDIRS = bundle . GL xpr pbproxy mach-startup man
 
 libXquartz_la_SOURCES = \
 	$(top_srcdir)/mi/miinitext.c \
+	$(top_srcdir)/mi/miinitext.h \
 	X11Application.m \
 	X11Controller.m \
 	applewm.c \

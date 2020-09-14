@@ -330,10 +330,8 @@ xwl_screen_post_damage(struct xwl_screen *xwl_screen)
         return;
 
 #ifdef XWL_HAS_GLAMOR
-    if (xwl_screen->glamor &&
-        xwl_screen->egl_backend == &xwl_screen->gbm_backend) {
+    if (xwl_glamor_needs_buffer_flush(xwl_screen))
         glamor_block_handler(xwl_screen->screen);
-    }
 #endif
 
     xorg_list_for_each_entry_safe(xwl_window, next_xwl_window,

@@ -540,10 +540,7 @@ xwl_present_init(ScreenPtr screen)
 {
     struct xwl_screen *xwl_screen = xwl_screen_get(screen);
 
-    /*
-     * doesn't work with the EGLStream backend.
-     */
-    if (xwl_screen->egl_backend == &xwl_screen->eglstream_backend)
+    if (!xwl_glamor_has_present_flip(xwl_screen))
         return FALSE;
 
     if (!dixRegisterPrivateKey(&xwl_present_window_private_key, PRIVATE_WINDOW, 0))

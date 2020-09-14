@@ -939,4 +939,5 @@ xwl_glamor_init_eglstream(struct xwl_screen *xwl_screen)
     xwl_screen->eglstream_backend.post_damage = xwl_glamor_eglstream_post_damage;
     xwl_screen->eglstream_backend.allow_commits = xwl_glamor_eglstream_allow_commits;
     xwl_screen->eglstream_backend.is_available = TRUE;
+    xwl_screen->eglstream_backend.backend_flags = XWL_EGL_BACKEND_NO_FLAG;
 }

@@ -176,6 +176,26 @@ glamor_egl_fd_name_from_pixmap(ScreenPtr screen,
     return 0;
 }
 
+Bool
+xwl_glamor_has_present_flip(struct xwl_screen *xwl_screen)
+{
+    if (!xwl_screen->glamor || !xwl_screen->egl_backend)
+        return FALSE;
+
+    return (xwl_screen->egl_backend->backend_flags &
+                XWL_EGL_BACKEND_HAS_PRESENT_FLIP);
+}
+
+Bool
+xwl_glamor_needs_buffer_flush(struct xwl_screen *xwl_screen)
+{
+    if (!xwl_screen->glamor || !xwl_screen->egl_backend)
+        return FALSE;
+
+    return (xwl_screen->egl_backend->backend_flags &
+                XWL_EGL_BACKEND_NEEDS_BUFFER_FLUSH);
+}
+
 void
 xwl_glamor_init_backends(struct xwl_screen *xwl_screen, Bool use_eglstream)
 {

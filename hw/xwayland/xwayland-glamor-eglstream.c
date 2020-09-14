@@ -431,8 +431,8 @@ xwl_eglstream_consumer_ready_callback(void *data,
     DebugF("eglstream: win %d completes eglstream for pixmap %p, congrats!\n",
            pending->window->drawable.id, pending->pixmap);
 
-    xwl_eglstream_window_set_pending(pending->window, NULL);
 out:
+    xwl_eglstream_window_set_pending(pending->window, NULL);
     xorg_list_del(&pending->link);
     free(pending);
 }

@@ -196,6 +196,17 @@ xwl_glamor_needs_buffer_flush(struct xwl_screen *xwl_screen)
                 XWL_EGL_BACKEND_NEEDS_BUFFER_FLUSH);
 }
 
+Bool
+xwl_glamor_needs_n_buffering(struct xwl_screen *xwl_screen)
+{
+    /* wl_shm benefits from n-buffering */
+    if (!xwl_screen->glamor || !xwl_screen->egl_backend)
+        return TRUE;
+
+    return (xwl_screen->egl_backend->backend_flags &
+                XWL_EGL_BACKEND_NEEDS_N_BUFFERING);
+}
+
 void
 xwl_glamor_init_backends(struct xwl_screen *xwl_screen, Bool use_eglstream)
 {

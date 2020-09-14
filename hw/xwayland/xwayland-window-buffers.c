@@ -279,6 +279,11 @@ xwl_window_buffers_get_pixmap(struct xwl_window *xwl_window,
 
     window_pixmap = (*xwl_screen->screen->GetWindowPixmap) (xwl_window->window);
 
+#ifdef XWL_HAS_GLAMOR
+    if (!xwl_glamor_needs_n_buffering(xwl_screen))
+        return window_pixmap;
+#endif /* XWL_HAS_GLAMOR */
+
     xwl_window_buffer = xwl_window_buffer_get_available(xwl_window);
     if (!xwl_window_buffer)
         return window_pixmap;

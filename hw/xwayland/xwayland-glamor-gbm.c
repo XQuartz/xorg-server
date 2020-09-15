@@ -111,21 +111,6 @@ wl_drm_format_for_depth(int depth)
 }
 
 static char
-is_fd_render_node(int fd)
-{
-    struct stat render;
-
-    if (fstat(fd, &render))
-        return 0;
-    if (!S_ISCHR(render.st_mode))
-        return 0;
-    if (render.st_rdev & 0x80)
-        return 1;
-
-    return 0;
-}
-
-static char
 is_device_path_render_node (const char *device_path)
 {
     char is_render_node;
@@ -135,7 +120,7 @@ is_device_path_render_node (const char *device_path)
     if (fd < 0)
         return 0;
 
-    is_render_node = is_fd_render_node(fd);
+    is_render_node = (drmGetNodeTypeFromFd(fd) == DRM_NODE_RENDER);
     close(fd);
 
     return is_render_node;
@@ -767,7 +752,7 @@ xwl_drm_handle_device(void *data, struct wl_drm *drm, const char *device)
        return;
    }
 
-   if (is_fd_render_node(xwl_gbm->drm_fd)) {
+   if (drmGetNodeTypeFromFd(xwl_gbm->drm_fd) == DRM_NODE_RENDER) {
        xwl_gbm->fd_render_node = 1;
        xwl_screen->expecting_event--;
    } else {

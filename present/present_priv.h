@@ -23,6 +23,7 @@
 #ifndef _PRESENT_PRIV_H_
 #define _PRESENT_PRIV_H_
 
+#include "dix-config.h"
 #include <X11/X.h>
 #include "scrnintstr.h"
 #include "misc.h"

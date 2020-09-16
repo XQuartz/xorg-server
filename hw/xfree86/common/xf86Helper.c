@@ -39,6 +39,7 @@
 #endif
 
 #include <X11/X.h>
+#include "mi.h"
 #include "os.h"
 #include "servermd.h"
 #include "pixmapstr.h"
@@ -1737,4 +1738,17 @@ void
 xf86UpdateDesktopDimensions(void)
 {
     update_desktop_dimensions();
+}
+
+
+void
+xf86AddInputEventDrainCallback(CallbackProcPtr callback, void *param)
+{
+    mieqAddCallbackOnDrained(callback, param);
+}
+
+void
+xf86RemoveInputEventDrainCallback(CallbackProcPtr callback, void *param)
+{
+    mieqRemoveCallbackOnDrained(callback, param);
 }

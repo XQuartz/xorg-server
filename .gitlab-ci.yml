@@ -16,7 +16,7 @@
 variables:
     UPSTREAM_REPO: xorg/xserver
     DEBIAN_VERSION: testing-slim
-    DEBIAN_EXEC: 'bash .gitlab-ci/debian-install.sh'
+    DEBIAN_EXEC: 'env FDO_CI_CONCURRENT=${FDO_CI_CONCURRENT} bash .gitlab-ci/debian-install.sh'
 
     DEBIAN_TAG: "2020-04-21"
     IMAGE_LOCAL: "$CI_REGISTRY_IMAGE/debian/$DEBIAN_VERSION:$DEBIAN_TAG"
@@ -70,8 +70,8 @@ autotools:
         - mkdir build/
         - cd build/
         - ../autogen.sh --prefix=/usr CFLAGS="-fno-common"
-        - make -j4 distcheck
-        - PIGLIT_DIR=/root/piglit XTEST_DIR=/root/xts make -j4 check
+        - make -j${FDO_CI_CONCURRENT:-4} distcheck
+        - PIGLIT_DIR=/root/piglit XTEST_DIR=/root/xts make -j${FDO_CI_CONCURRENT:-4} check
         - cd ..
         - .gitlab-ci/manpages-check
 
@@ -82,8 +82,8 @@ meson:
         XTEST_DIR: /root/xts
     script:
         - meson -Dc_args="-fno-common" -Dprefix=/usr -Dxephyr=true -Dwerror=true $MESON_EXTRA_OPTIONS build/
-        - ninja -j4 -C build/ install
-        - ninja -j4 -C build/ test
+        - ninja -j${FDO_CI_CONCURRENT:-4} -C build/ install
+        - ninja -j${FDO_CI_CONCURRENT:-4} -C build/ test
         - .gitlab-ci/manpages-check
 
 meson-noglamor:

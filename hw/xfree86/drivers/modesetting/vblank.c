@@ -49,7 +49,7 @@
 static struct xorg_list ms_drm_queue;
 static uint32_t ms_drm_seq;
 
-static void ms_box_intersect(BoxPtr dest, BoxPtr a, BoxPtr b)
+static void box_intersect(BoxPtr dest, BoxPtr a, BoxPtr b)
 {
     dest->x1 = a->x1 > b->x1 ? a->x1 : b->x1;
     dest->x2 = a->x2 < b->x2 ? a->x2 : b->x2;
@@ -64,7 +64,7 @@ static void ms_box_intersect(BoxPtr dest, BoxPtr a, BoxPtr b)
         dest->x1 = dest->x2 = dest->y1 = dest->y2 = 0;
 }
 
-static void ms_randr_crtc_box(RRCrtcPtr crtc, BoxPtr crtc_box)
+static void rr_crtc_box(RRCrtcPtr crtc, BoxPtr crtc_box)
 {
     if (crtc->mode) {
         crtc_box->x1 = crtc->x;
@@ -86,25 +86,25 @@ static void ms_randr_crtc_box(RRCrtcPtr crtc, BoxPtr crtc_box)
         crtc_box->x1 = crtc_box->x2 = crtc_box->y1 = crtc_box->y2 = 0;
 }
 
-static int ms_box_area(BoxPtr box)
+static int box_area(BoxPtr box)
 {
     return (int)(box->x2 - box->x1) * (int)(box->y2 - box->y1);
 }
 
-static Bool rr_crtc_on(RRCrtcPtr crtc, Bool crtc_is_ms_hint)
+static Bool rr_crtc_on(RRCrtcPtr crtc, Bool crtc_is_xf86_hint)
 {
     if (!crtc) {
         return FALSE;
     }
-    if (crtc_is_ms_hint && crtc->devPrivate) {
-         return ms_crtc_on(crtc->devPrivate);
+    if (crtc_is_xf86_hint && crtc->devPrivate) {
+         return xf86_crtc_on(crtc->devPrivate);
     } else {
         return !!crtc->mode;
     }
 }
 
 Bool
-ms_crtc_on(xf86CrtcPtr crtc)
+xf86_crtc_on(xf86CrtcPtr crtc)
 {
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 
@@ -117,7 +117,7 @@ ms_crtc_on(xf86CrtcPtr crtc)
  * 'box', then prefer the crtc with greater coverage.
  */
 static RRCrtcPtr
-ms_covering_randr_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
+rr_crtc_covering_box(ScreenPtr pScreen, BoxPtr box, Bool screen_is_xf86_hint)
 {
     rrScrPrivPtr pScrPriv;
     RRCrtcPtr crtc, best_crtc;
@@ -140,12 +140,12 @@ ms_covering_randr_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
         crtc = pScrPriv->crtcs[c];
 
         /* If the CRTC is off, treat it as not covering */
-        if (!rr_crtc_on(crtc, screen_is_ms))
+        if (!rr_crtc_on(crtc, screen_is_xf86_hint))
             continue;
 
-        ms_randr_crtc_box(crtc, &crtc_box);
-        ms_box_intersect(&cover_box, &crtc_box, box);
-        coverage = ms_box_area(&cover_box);
+        rr_crtc_box(crtc, &crtc_box);
+        box_intersect(&cover_box, &crtc_box, box);
+        coverage = box_area(&cover_box);
         if (coverage > best_coverage) {
             best_crtc = crtc;
             best_coverage = coverage;
@@ -156,7 +156,7 @@ ms_covering_randr_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
 }
 
 static RRCrtcPtr
-ms_covering_randr_crtc_on_secondary(ScreenPtr pScreen, BoxPtr box)
+rr_crtc_covering_box_on_secondary(ScreenPtr pScreen, BoxPtr box)
 {
     if (!pScreen->isGPU) {
         ScreenPtr secondary;
@@ -166,7 +166,7 @@ ms_covering_randr_crtc_on_secondary(ScreenPtr pScreen, BoxPtr box)
             if (!secondary->is_output_secondary)
                 continue;
 
-            crtc = ms_covering_randr_crtc(secondary, box, FALSE);
+            crtc = rr_crtc_covering_box(secondary, box, FALSE);
             if (crtc)
                 return crtc;
         }
@@ -187,7 +187,7 @@ ms_dri2_crtc_covering_drawable(DrawablePtr pDraw)
     box.x2 = box.x1 + pDraw->width;
     box.y2 = box.y1 + pDraw->height;
 
-    crtc = ms_covering_randr_crtc(pScreen, &box, TRUE);
+    crtc = rr_crtc_covering_box(pScreen, &box, TRUE);
     if (crtc) {
         return crtc->devPrivate;
     }
@@ -206,9 +206,9 @@ ms_randr_crtc_covering_drawable(DrawablePtr pDraw)
     box.x2 = box.x1 + pDraw->width;
     box.y2 = box.y1 + pDraw->height;
 
-    crtc = ms_covering_randr_crtc(pScreen, &box, TRUE);
+    crtc = rr_crtc_covering_box(pScreen, &box, TRUE);
     if (!crtc) {
-        crtc = ms_covering_randr_crtc_on_secondary(pScreen, &box);
+        crtc = rr_crtc_covering_box_on_secondary(pScreen, &box);
     }
     return crtc;
 }

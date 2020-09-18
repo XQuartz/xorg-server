@@ -634,8 +634,9 @@ present_scmd_update_window_crtc(WindowPtr window, RRCrtcPtr crtc, uint64_t new_m
         return;
     }
 
-    /* Crtc may have been turned off, just use whatever previous MSC we'd seen from this CRTC. */
-    if (present_get_ust_msc(window->drawable.pScreen, window_priv->crtc, &old_ust, &old_msc) != Success)
+    /* Crtc may have been turned off or be destroyed, just use whatever previous MSC we'd seen from this CRTC. */
+    if (!RRCrtcExists(window->drawable.pScreen, window_priv->crtc) ||
+        present_get_ust_msc(window->drawable.pScreen, window_priv->crtc, &old_ust, &old_msc) != Success)
         old_msc = window_priv->msc;
 
     window_priv->msc_offset += new_msc - old_msc;

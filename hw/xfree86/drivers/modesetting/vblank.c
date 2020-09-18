@@ -104,6 +104,18 @@ static int ms_box_area(BoxPtr box)
     return (int)(box->x2 - box->x1) * (int)(box->y2 - box->y1);
 }
 
+static Bool rr_crtc_on(RRCrtcPtr crtc, Bool crtc_is_ms_hint)
+{
+    if (!crtc) {
+        return FALSE;
+    }
+    if (crtc_is_ms_hint && crtc->devPrivate) {
+         return ms_crtc_on(crtc->devPrivate);
+    } else {
+        return !!crtc->mode;
+    }
+}
+
 Bool
 ms_crtc_on(xf86CrtcPtr crtc)
 {
@@ -219,13 +231,11 @@ ms_covering_xf86_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
 static RRCrtcPtr
 ms_covering_randr_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
 {
-    ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
     rrScrPrivPtr pScrPriv;
     RRCrtcPtr crtc, best_crtc;
     int coverage, best_coverage;
     int c;
     BoxRec crtc_box, cover_box;
-    Bool crtc_on;
 
     best_crtc = NULL;
     best_coverage = 0;
@@ -241,14 +251,8 @@ ms_covering_randr_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
     for (c = 0; c < pScrPriv->numCrtcs; c++) {
         crtc = pScrPriv->crtcs[c];
 
-        if (screen_is_ms) {
-            crtc_on = ms_crtc_on((xf86CrtcPtr) crtc->devPrivate);
-        } else {
-            crtc_on = !!crtc->mode;
-        }
-
         /* If the CRTC is off, treat it as not covering */
-        if (!crtc_on)
+        if (!rr_crtc_on(crtc, screen_is_ms))
             continue;
 
         ms_randr_crtc_box(crtc, &crtc_box);
@@ -260,32 +264,27 @@ ms_covering_randr_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
         }
     }
 
-    /* Fallback to primary crtc for drawable's on slave outputs */
-    if (best_crtc == NULL && !pScreen->isGPU) {
-        RROutputPtr primary_output = NULL;
+    return best_crtc;
+}
+
+static RRCrtcPtr
+ms_covering_randr_crtc_on_slave(ScreenPtr pScreen, BoxPtr box)
+{
+    if (!pScreen->isGPU) {
         ScreenPtr slave;
-
-        if (dixPrivateKeyRegistered(rrPrivKey))
-            primary_output = ms_first_output(scrn->pScreen);
-        if (!primary_output || !primary_output->crtc)
-            return NULL;
-
-        crtc = primary_output->crtc;
-        if (!ms_crtc_on((xf86CrtcPtr) crtc->devPrivate))
-            return NULL;
+        RRCrtcPtr crtc = NULL;
 
         xorg_list_for_each_entry(slave, &pScreen->slave_list, slave_head) {
             if (!slave->is_output_slave)
                 continue;
 
-            if (ms_covering_randr_crtc(slave, box, FALSE)) {
-                /* The drawable is on a slave output, return primary crtc */
+            crtc = ms_covering_randr_crtc(slave, box, FALSE);
+            if (crtc)
                 return crtc;
-            }
         }
     }
 
-    return best_crtc;
+    return NULL;
 }
 
 xf86CrtcPtr
@@ -306,6 +305,7 @@ RRCrtcPtr
 ms_randr_crtc_covering_drawable(DrawablePtr pDraw)
 {
     ScreenPtr pScreen = pDraw->pScreen;
+    RRCrtcPtr crtc = NULL;
     BoxRec box;
 
     box.x1 = pDraw->x;
@@ -313,7 +313,11 @@ ms_randr_crtc_covering_drawable(DrawablePtr pDraw)
     box.x2 = box.x1 + pDraw->width;
     box.y2 = box.y1 + pDraw->height;
 
-    return ms_covering_randr_crtc(pScreen, &box, TRUE);
+    crtc = ms_covering_randr_crtc(pScreen, &box, TRUE);
+    if (!crtc) {
+        crtc = ms_covering_randr_crtc_on_slave(pScreen, &box);
+    }
+    return crtc;
 }
 
 static Bool

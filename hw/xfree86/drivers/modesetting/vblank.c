@@ -64,19 +64,6 @@ static void ms_box_intersect(BoxPtr dest, BoxPtr a, BoxPtr b)
         dest->x1 = dest->x2 = dest->y1 = dest->y2 = 0;
 }
 
-static void ms_crtc_box(xf86CrtcPtr crtc, BoxPtr crtc_box)
-{
-    if (crtc->enabled) {
-        crtc_box->x1 = crtc->x;
-        crtc_box->x2 =
-            crtc->x + xf86ModeWidth(&crtc->mode, crtc->rotation);
-        crtc_box->y1 = crtc->y;
-        crtc_box->y2 =
-            crtc->y + xf86ModeHeight(&crtc->mode, crtc->rotation);
-    } else
-        crtc_box->x1 = crtc_box->x2 = crtc_box->y1 = crtc_box->y2 = 0;
-}
-
 static void ms_randr_crtc_box(RRCrtcPtr crtc, BoxPtr crtc_box)
 {
     if (crtc->mode) {
@@ -124,110 +111,11 @@ ms_crtc_on(xf86CrtcPtr crtc)
     return crtc->enabled && drmmode_crtc->dpms_mode == DPMSModeOn;
 }
 
-/*
- * Return the first output which is connected to an active CRTC on this screen.
- *
- * RRFirstOutput() will return an output from a slave screen if it is primary,
- * which is not the behavior that ms_covering_crtc() wants.
- */
-
-static RROutputPtr ms_first_output(ScreenPtr pScreen)
-{
-    rrScrPriv(pScreen);
-    RROutputPtr output;
-    int i, j;
-
-    if (!pScrPriv)
-        return NULL;
-
-    if (pScrPriv->primaryOutput && pScrPriv->primaryOutput->crtc &&
-        (pScrPriv->primaryOutput->pScreen == pScreen)) {
-        return pScrPriv->primaryOutput;
-    }
-
-    for (i = 0; i < pScrPriv->numCrtcs; i++) {
-        RRCrtcPtr crtc = pScrPriv->crtcs[i];
-
-        for (j = 0; j < pScrPriv->numOutputs; j++) {
-            output = pScrPriv->outputs[j];
-            if (output->crtc == crtc)
-                return output;
-        }
-    }
-    return NULL;
-}
 
 /*
  * Return the crtc covering 'box'. If two crtcs cover a portion of
  * 'box', then prefer the crtc with greater coverage.
  */
-
-static xf86CrtcPtr
-ms_covering_xf86_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
-{
-    ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
-    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
-    xf86CrtcPtr crtc, best_crtc;
-    int coverage, best_coverage;
-    int c;
-    BoxRec crtc_box, cover_box;
-    Bool crtc_on;
-
-    best_crtc = NULL;
-    best_coverage = 0;
-
-    if (!xf86_config)
-        return NULL;
-
-    for (c = 0; c < xf86_config->num_crtc; c++) {
-        crtc = xf86_config->crtc[c];
-
-        if (screen_is_ms)
-            crtc_on = ms_crtc_on(crtc);
-        else
-            crtc_on = crtc->enabled;
-
-        /* If the CRTC is off, treat it as not covering */
-        if (!crtc_on)
-            continue;
-
-        ms_crtc_box(crtc, &crtc_box);
-        ms_box_intersect(&cover_box, &crtc_box, box);
-        coverage = ms_box_area(&cover_box);
-        if (coverage > best_coverage) {
-            best_crtc = crtc;
-            best_coverage = coverage;
-        }
-    }
-
-    /* Fallback to primary crtc for drawable's on slave outputs */
-    if (best_crtc == NULL && !pScreen->isGPU) {
-        RROutputPtr primary_output = NULL;
-        ScreenPtr slave;
-
-        if (dixPrivateKeyRegistered(rrPrivKey))
-            primary_output = ms_first_output(scrn->pScreen);
-        if (!primary_output || !primary_output->crtc)
-            return NULL;
-
-        crtc = primary_output->crtc->devPrivate;
-        if (!ms_crtc_on(crtc))
-            return NULL;
-
-        xorg_list_for_each_entry(slave, &pScreen->slave_list, slave_head) {
-            if (!slave->is_output_slave)
-                continue;
-
-            if (ms_covering_xf86_crtc(slave, box, FALSE)) {
-                /* The drawable is on a slave output, return primary crtc */
-                return crtc;
-            }
-        }
-    }
-
-    return best_crtc;
-}
-
 static RRCrtcPtr
 ms_covering_randr_crtc(ScreenPtr pScreen, BoxPtr box, Bool screen_is_ms)
 {
@@ -291,6 +179,7 @@ xf86CrtcPtr
 ms_dri2_crtc_covering_drawable(DrawablePtr pDraw)
 {
     ScreenPtr pScreen = pDraw->pScreen;
+    RRCrtcPtr crtc = NULL;
     BoxRec box;
 
     box.x1 = pDraw->x;
@@ -298,7 +187,11 @@ ms_dri2_crtc_covering_drawable(DrawablePtr pDraw)
     box.x2 = box.x1 + pDraw->width;
     box.y2 = box.y1 + pDraw->height;
 
-    return ms_covering_xf86_crtc(pScreen, &box, TRUE);
+    crtc = ms_covering_randr_crtc(pScreen, &box, TRUE);
+    if (crtc) {
+        return crtc->devPrivate;
+    }
+    return NULL;
 }
 
 RRCrtcPtr

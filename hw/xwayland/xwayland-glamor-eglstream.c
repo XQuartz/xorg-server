@@ -465,14 +465,14 @@ xwl_eglstream_queue_pending_stream(struct xwl_screen *xwl_screen,
 }
 
 static void
-xwl_eglstream_buffer_release_callback(void *data, struct wl_buffer *wl_buffer)
+xwl_eglstream_buffer_release_callback(void *data)
 {
     /* drop the reference we took in post_damage, freeing if necessary */
     dixDestroyPixmap(data, 0);
 }
 
 static const struct wl_buffer_listener xwl_eglstream_buffer_release_listener = {
-    xwl_eglstream_buffer_release_callback
+    xwl_pixmap_buffer_release_cb,
 };
 
 static void
@@ -510,6 +510,10 @@ xwl_eglstream_create_pending_stream(struct xwl_screen *xwl_screen,
     wl_buffer_add_listener(xwl_pixmap->buffer,
                            &xwl_eglstream_buffer_release_listener,
                            pixmap);
+
+    xwl_pixmap_set_buffer_release_cb(pixmap,
+                                     xwl_eglstream_buffer_release_callback,
+                                     pixmap);
 
     wl_eglstream_controller_attach_eglstream_consumer(
         xwl_eglstream->controller, xwl_window->surface, xwl_pixmap->buffer);

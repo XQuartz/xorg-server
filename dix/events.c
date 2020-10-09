@@ -3669,7 +3669,6 @@ ActivatePassiveGrab(DeviceIntPtr device, GrabPtr grab, InternalEvent *event,
                     InternalEvent *real_event)
 {
     SpritePtr pSprite = device->spriteInfo->sprite;
-    GrabInfoPtr grabinfo = &device->deviceGrab;
     xEvent *xE = NULL;
     int count;
     int rc;
@@ -3719,8 +3718,7 @@ ActivatePassiveGrab(DeviceIntPtr device, GrabPtr grab, InternalEvent *event,
         }
     }
 
-    (*grabinfo->ActivateGrab) (device, grab,
-                               ClientTimeToServerTime(event->any.time), TRUE);
+    ActivateGrabNoDelivery(device, grab, event, real_event);
 
     if (xE) {
         FixUpEventFromWindow(pSprite, xE, grab->window, None, TRUE);
@@ -3731,12 +3729,29 @@ ActivatePassiveGrab(DeviceIntPtr device, GrabPtr grab, InternalEvent *event,
                         GetEventFilter(device, xE), grab);
     }
 
+    free(xE);
+    return TRUE;
+}
+
+/**
+ * Activates a grab without event delivery.
+ *
+ * @param device The device of the event to check.
+ * @param grab The grab to check.
+ * @param event The current device event.
+ * @param real_event The original event, in case of touch emulation. The
+ * real event is the one stored in the sync queue.
+ */
+void ActivateGrabNoDelivery(DeviceIntPtr dev, GrabPtr grab,
+                            InternalEvent *event, InternalEvent *real_event)
+{
+    GrabInfoPtr grabinfo = &dev->deviceGrab;
+    (*grabinfo->ActivateGrab) (dev, grab,
+                               ClientTimeToServerTime(event->any.time), TRUE);
+
     if (grabinfo->sync.state == FROZEN_NO_EVENT)
         grabinfo->sync.state = FROZEN_WITH_EVENT;
     *grabinfo->sync.event = *real_event;
-
-    free(xE);
-    return TRUE;
 }
 
 static BOOL

@@ -630,6 +630,9 @@ extern WindowPtr XYToWindow(SpritePtr pSprite, int x, int y);
 extern int EventIsDeliverable(DeviceIntPtr dev, int evtype, WindowPtr win);
 extern Bool ActivatePassiveGrab(DeviceIntPtr dev, GrabPtr grab,
                                 InternalEvent *ev, InternalEvent *real_event);
+extern void ActivateGrabNoDelivery(DeviceIntPtr dev, GrabPtr grab,
+                                   InternalEvent *event,
+                                   InternalEvent *real_event);
 /**
  * Masks specifying the type of event to deliver for an InternalEvent; used
  * by EventIsDeliverable.

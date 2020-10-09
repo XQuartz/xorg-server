@@ -2502,6 +2502,35 @@ FindChildForEvent(SpritePtr pSprite, WindowPtr event)
     return child;
 }
 
+static void
+FixUpXI2DeviceEventFromWindow(SpritePtr pSprite, int evtype,
+                              xXIDeviceEvent *event, WindowPtr pWin, Window child)
+{
+    event->root = RootWindow(pSprite)->drawable.id;
+    event->event = pWin->drawable.id;
+
+    if (evtype == XI_TouchOwnership) {
+        event->child = child;
+        return;
+    }
+
+    if (pSprite->hot.pScreen == pWin->drawable.pScreen) {
+        event->event_x = event->root_x - double_to_fp1616(pWin->drawable.x);
+        event->event_y = event->root_y - double_to_fp1616(pWin->drawable.y);
+        event->child = child;
+    }
+    else {
+        event->event_x = 0;
+        event->event_y = 0;
+        event->child = None;
+    }
+
+    if (event->evtype == XI_Enter || event->evtype == XI_Leave ||
+        event->evtype == XI_FocusIn || event->evtype == XI_FocusOut)
+        ((xXIEnterEvent *) event)->same_screen =
+            (pSprite->hot.pScreen == pWin->drawable.pScreen);
+}
+
 /**
  * Adjust event fields to comply with the window properties.
  *
@@ -2520,8 +2549,6 @@ FixUpEventFromWindow(SpritePtr pSprite,
         child = FindChildForEvent(pSprite, pWin);
 
     if ((evtype = xi2_get_type(xE))) {
-        xXIDeviceEvent *event = (xXIDeviceEvent *) xE;
-
         switch (evtype) {
         case XI_RawKeyPress:
         case XI_RawKeyRelease:
@@ -2538,33 +2565,10 @@ FixUpEventFromWindow(SpritePtr pSprite,
         case XI_BarrierLeave:
             return;
         default:
+            FixUpXI2DeviceEventFromWindow(pSprite, evtype,
+                                          (xXIDeviceEvent*) xE, pWin, child);
             break;
         }
-
-        event->root = RootWindow(pSprite)->drawable.id;
-        event->event = pWin->drawable.id;
-
-        if (evtype == XI_TouchOwnership) {
-            event->child = child;
-            return;
-        }
-
-        if (pSprite->hot.pScreen == pWin->drawable.pScreen) {
-            event->event_x = event->root_x - double_to_fp1616(pWin->drawable.x);
-            event->event_y = event->root_y - double_to_fp1616(pWin->drawable.y);
-            event->child = child;
-        }
-        else {
-            event->event_x = 0;
-            event->event_y = 0;
-            event->child = None;
-        }
-
-        if (event->evtype == XI_Enter || event->evtype == XI_Leave ||
-            event->evtype == XI_FocusIn || event->evtype == XI_FocusOut)
-            ((xXIEnterEvent *) event)->same_screen =
-                (pSprite->hot.pScreen == pWin->drawable.pScreen);
-
     }
     else {
         XE_KBPTR.root = RootWindow(pSprite)->drawable.id;

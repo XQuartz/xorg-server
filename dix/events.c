@@ -4256,7 +4256,6 @@ DeliverGrabbedEvent(InternalEvent *event, DeviceIntPtr thisDev,
     GrabPtr grab;
     GrabInfoPtr grabinfo;
     int deliveries = 0;
-    DeviceIntPtr dev;
     SpritePtr pSprite = thisDev->spriteInfo->sprite;
     BOOL sendCore = FALSE;
 
@@ -4304,28 +4303,38 @@ DeliverGrabbedEvent(InternalEvent *event, DeviceIntPtr thisDev,
          event->any.type == ET_KeyRelease ||
          event->any.type == ET_ButtonPress ||
          event->any.type == ET_ButtonRelease)) {
-        switch (grabinfo->sync.state) {
-        case FREEZE_BOTH_NEXT_EVENT:
-            dev = GetPairedDevice(thisDev);
-            if (dev) {
-                FreezeThaw(dev, TRUE);
-                if ((dev->deviceGrab.sync.state == FREEZE_BOTH_NEXT_EVENT) &&
-                    (CLIENT_BITS(grab->resource) ==
-                     CLIENT_BITS(dev->deviceGrab.grab->resource)))
-                    dev->deviceGrab.sync.state = FROZEN_NO_EVENT;
-                else
-                    dev->deviceGrab.sync.other = grab;
-            }
-            /* fall through */
-        case FREEZE_NEXT_EVENT:
-            grabinfo->sync.state = FROZEN_WITH_EVENT;
-            FreezeThaw(thisDev, TRUE);
-            *grabinfo->sync.event = *event;
-            break;
-        }
+        FreezeThisEventIfNeededForSyncGrab(thisDev, event);
     }
 
     return deliveries;
+}
+
+void
+FreezeThisEventIfNeededForSyncGrab(DeviceIntPtr thisDev, InternalEvent *event)
+{
+    GrabInfoPtr grabinfo = &thisDev->deviceGrab;
+    GrabPtr grab = grabinfo->grab;
+    DeviceIntPtr dev;
+
+    switch (grabinfo->sync.state) {
+    case FREEZE_BOTH_NEXT_EVENT:
+        dev = GetPairedDevice(thisDev);
+        if (dev) {
+            FreezeThaw(dev, TRUE);
+            if ((dev->deviceGrab.sync.state == FREEZE_BOTH_NEXT_EVENT) &&
+                (CLIENT_BITS(grab->resource) ==
+                 CLIENT_BITS(dev->deviceGrab.grab->resource)))
+                dev->deviceGrab.sync.state = FROZEN_NO_EVENT;
+            else
+                dev->deviceGrab.sync.other = grab;
+        }
+        /* fall through */
+    case FREEZE_NEXT_EVENT:
+        grabinfo->sync.state = FROZEN_WITH_EVENT;
+        FreezeThaw(thisDev, TRUE);
+        *grabinfo->sync.event = *event;
+        break;
+    }
 }
 
 /* This function is used to set the key pressed or key released state -

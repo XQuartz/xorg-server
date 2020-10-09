@@ -1480,14 +1480,14 @@ UpdateTouchesForGrab(DeviceIntPtr mouse)
             CLIENT_BITS(listener->listener) == grab->resource) {
             listener->listener = grab->resource;
             listener->level = grab->grabtype;
-            listener->state = LISTENER_IS_OWNER;
+            listener->state = TOUCH_LISTENER_IS_OWNER;
             listener->window = grab->window;
 
             if (grab->grabtype == CORE || grab->grabtype == XI ||
                 !xi2mask_isset(grab->xi2mask, mouse, XI_TouchBegin))
-                listener->type = LISTENER_POINTER_GRAB;
+                listener->type = TOUCH_LISTENER_POINTER_GRAB;
             else
-                listener->type = LISTENER_GRAB;
+                listener->type = TOUCH_LISTENER_GRAB;
             if (listener->grab)
                 FreeGrab(listener->grab);
             listener->grab = AllocGrab(grab);
@@ -1583,7 +1583,7 @@ DeactivatePointerGrab(DeviceIntPtr mouse)
                  * ProcessTouchOwnershipEvent() will still call
                  * TouchEmitTouchEnd for this listener. The other half of
                  * this hack is in DeliverTouchEndEvent */
-                ti->listeners[0].state = LISTENER_HAS_END;
+                ti->listeners[0].state = TOUCH_LISTENER_HAS_END;
             }
             TouchListenerAcceptReject(mouse, ti, 0, mode);
         }

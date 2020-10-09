@@ -555,20 +555,21 @@ extern _X_EXPORT InputAttributes *DuplicateInputAttributes(InputAttributes *
 extern _X_EXPORT void FreeInputAttributes(InputAttributes * attrs);
 
 enum TouchListenerState {
-    LISTENER_AWAITING_BEGIN = 0,   /**< Waiting for a TouchBegin event */
-    LISTENER_AWAITING_OWNER,       /**< Waiting for a TouchOwnership event */
-    LISTENER_EARLY_ACCEPT,         /**< Waiting for ownership, has already
-                                        accepted */
-    LISTENER_IS_OWNER,             /**< Is the current owner, hasn't accepted */
-    LISTENER_HAS_ACCEPTED,         /**< Is the current owner, has accepted */
-    LISTENER_HAS_END,              /**< Has already received the end event */
+    TOUCH_LISTENER_AWAITING_BEGIN = 0, /**< Waiting for a TouchBegin event */
+    TOUCH_LISTENER_AWAITING_OWNER,     /**< Waiting for a TouchOwnership event */
+    TOUCH_LISTENER_EARLY_ACCEPT,       /**< Waiting for ownership, has already
+                                            accepted */
+    TOUCH_LISTENER_IS_OWNER,           /**< Is the current owner, hasn't
+                                            accepted */
+    TOUCH_LISTENER_HAS_ACCEPTED,       /**< Is the current owner, has accepted */
+    TOUCH_LISTENER_HAS_END,            /**< Has already received the end event */
 };
 
 enum TouchListenerType {
-    LISTENER_GRAB,
-    LISTENER_POINTER_GRAB,
-    LISTENER_REGULAR,
-    LISTENER_POINTER_REGULAR,
+    TOUCH_LISTENER_GRAB,
+    TOUCH_LISTENER_POINTER_GRAB,
+    TOUCH_LISTENER_REGULAR,
+    TOUCH_LISTENER_POINTER_REGULAR,
 };
 
 extern void TouchInitDDXTouchPoint(DeviceIntPtr dev,

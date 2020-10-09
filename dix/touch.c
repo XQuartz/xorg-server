@@ -682,7 +682,7 @@ TouchRemoveListener(TouchPointInfoPtr ti, XID resource)
             ti->listeners[j] = ti->listeners[j + 1];
         ti->num_listeners--;
         ti->listeners[ti->num_listeners].listener = 0;
-        ti->listeners[ti->num_listeners].state = LISTENER_AWAITING_BEGIN;
+        ti->listeners[ti->num_listeners].state = TOUCH_LISTENER_AWAITING_BEGIN;
 
         return TRUE;
     }
@@ -693,7 +693,7 @@ static void
 TouchAddGrabListener(DeviceIntPtr dev, TouchPointInfoPtr ti,
                      InternalEvent *ev, GrabPtr grab)
 {
-    enum TouchListenerType type = LISTENER_GRAB;
+    enum TouchListenerType type = TOUCH_LISTENER_GRAB;
 
     /* FIXME: owner_events */
 
@@ -701,16 +701,16 @@ TouchAddGrabListener(DeviceIntPtr dev, TouchPointInfoPtr ti,
         if (!xi2mask_isset(grab->xi2mask, dev, XI_TouchOwnership))
             TouchEventHistoryAllocate(ti);
         if (!xi2mask_isset(grab->xi2mask, dev, XI_TouchBegin))
-            type = LISTENER_POINTER_GRAB;
+            type = TOUCH_LISTENER_POINTER_GRAB;
     }
     else if (grab->grabtype == XI || grab->grabtype == CORE) {
         TouchEventHistoryAllocate(ti);
-        type = LISTENER_POINTER_GRAB;
+        type = TOUCH_LISTENER_POINTER_GRAB;
     }
 
     /* grab listeners are always RT_NONE since we keep the grab pointer */
     TouchAddListener(ti, grab->resource, RT_NONE, grab->grabtype,
-                     type, LISTENER_AWAITING_BEGIN, grab->window, grab);
+                     type, TOUCH_LISTENER_AWAITING_BEGIN, grab->window, grab);
 }
 
 /**
@@ -738,7 +738,7 @@ TouchAddRegularListener(DeviceIntPtr dev, TouchPointInfoPtr ti,
     InputClients *iclients = NULL;
     OtherInputMasks *inputMasks = NULL;
     uint16_t evtype = 0;        /* may be event type or emulated event type */
-    enum TouchListenerType type = LISTENER_REGULAR;
+    enum TouchListenerType type = TOUCH_LISTENER_REGULAR;
     int mask;
 
     evtype = GetXI2Type(ev->any.type);
@@ -749,7 +749,7 @@ TouchAddRegularListener(DeviceIntPtr dev, TouchPointInfoPtr ti,
         mask = EventIsDeliverable(dev, TouchGetPointerEventType(ev), win);
         if (mask) {
             evtype = GetXI2Type(TouchGetPointerEventType(ev));
-            type = LISTENER_POINTER_REGULAR;
+            type = TOUCH_LISTENER_POINTER_REGULAR;
         }
     }
     if (!mask)
@@ -766,7 +766,7 @@ TouchAddRegularListener(DeviceIntPtr dev, TouchPointInfoPtr ti,
                 TouchEventHistoryAllocate(ti);
 
             TouchAddListener(ti, iclients->resource, RT_INPUTCLIENT, XI2,
-                             type, LISTENER_AWAITING_BEGIN, win, NULL);
+                             type, TOUCH_LISTENER_AWAITING_BEGIN, win, NULL);
             return TRUE;
         }
     }
@@ -781,7 +781,8 @@ TouchAddRegularListener(DeviceIntPtr dev, TouchPointInfoPtr ti,
 
             TouchEventHistoryAllocate(ti);
             TouchAddListener(ti, iclients->resource, RT_INPUTCLIENT, XI,
-                             LISTENER_POINTER_REGULAR, LISTENER_AWAITING_BEGIN,
+                             TOUCH_LISTENER_POINTER_REGULAR,
+                             TOUCH_LISTENER_AWAITING_BEGIN,
                              win, NULL);
             return TRUE;
         }
@@ -796,7 +797,8 @@ TouchAddRegularListener(DeviceIntPtr dev, TouchPointInfoPtr ti,
         if (IsMaster(dev) && (win->eventMask & core_filter)) {
             TouchEventHistoryAllocate(ti);
             TouchAddListener(ti, win->drawable.id, RT_WINDOW, CORE,
-                             LISTENER_POINTER_REGULAR, LISTENER_AWAITING_BEGIN,
+                             TOUCH_LISTENER_POINTER_REGULAR,
+                             TOUCH_LISTENER_AWAITING_BEGIN,
                              win, NULL);
             return TRUE;
         }
@@ -808,7 +810,7 @@ TouchAddRegularListener(DeviceIntPtr dev, TouchPointInfoPtr ti,
 
             TouchEventHistoryAllocate(ti);
             TouchAddListener(ti, oclients->resource, RT_OTHERCLIENT, CORE,
-                             type, LISTENER_AWAITING_BEGIN, win, NULL);
+                             type, TOUCH_LISTENER_AWAITING_BEGIN, win, NULL);
             return TRUE;
         }
     }
@@ -950,7 +952,7 @@ TouchListenerAcceptReject(DeviceIntPtr dev, TouchPointInfoPtr ti, int listener,
         if (mode == XIRejectTouch)
             TouchRejected(dev, ti, ti->listeners[listener].listener, NULL);
         else
-            ti->listeners[listener].state = LISTENER_EARLY_ACCEPT;
+            ti->listeners[listener].state = TOUCH_LISTENER_EARLY_ACCEPT;
 
         return Success;
     }

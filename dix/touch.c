@@ -877,7 +877,7 @@ TouchRemovePointerGrab(DeviceIntPtr dev)
 {
     TouchPointInfoPtr ti;
     GrabPtr grab;
-    DeviceEvent *ev;
+    InternalEvent *ev;
 
     if (!dev->touch)
         return;
@@ -887,10 +887,10 @@ TouchRemovePointerGrab(DeviceIntPtr dev)
         return;
 
     ev = dev->deviceGrab.sync.event;
-    if (!IsTouchEvent((InternalEvent *) ev))
+    if (!IsTouchEvent(ev))
         return;
 
-    ti = TouchFindByClientID(dev, ev->touchid);
+    ti = TouchFindByClientID(dev, ev->device_event.touchid);
     if (!ti)
         return;
 

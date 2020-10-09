@@ -1304,7 +1304,6 @@ static void
 ComputeFreezes(void)
 {
     DeviceIntPtr replayDev = syncEvents.replayDev;
-    WindowPtr w;
     GrabPtr grab;
     DeviceIntPtr dev;
 
@@ -1316,26 +1315,29 @@ ComputeFreezes(void)
         return;
     syncEvents.playingEvents = TRUE;
     if (replayDev) {
-        DeviceEvent *event = replayDev->deviceGrab.sync.event;
+        InternalEvent *event = replayDev->deviceGrab.sync.event;
 
         syncEvents.replayDev = (DeviceIntPtr) NULL;
 
-        w = XYToWindow(replayDev->spriteInfo->sprite,
-                       event->root_x, event->root_y);
-        if (!CheckDeviceGrabs(replayDev, event, syncEvents.replayWin)) {
-            if (IsTouchEvent((InternalEvent *) event)) {
+        if (!CheckDeviceGrabs(replayDev, &event->device_event,
+                              syncEvents.replayWin)) {
+            if (IsTouchEvent(event)) {
                 TouchPointInfoPtr ti =
-                    TouchFindByClientID(replayDev, event->touchid);
+                    TouchFindByClientID(replayDev, event->device_event.touchid);
                 BUG_WARN(!ti);
 
                 TouchListenerAcceptReject(replayDev, ti, 0, XIRejectTouch);
             }
-            else if (replayDev->focus &&
-                     !IsPointerEvent((InternalEvent *) event))
-                DeliverFocusedEvent(replayDev, (InternalEvent *) event, w);
-            else
-                DeliverDeviceEvents(w, (InternalEvent *) event, NullGrab,
-                                    NullWindow, replayDev);
+            else {
+                WindowPtr w = XYToWindow(replayDev->spriteInfo->sprite,
+                                         event->device_event.root_x,
+                                         event->device_event.root_y);
+                if (replayDev->focus && !IsPointerEvent(event))
+                    DeliverFocusedEvent(replayDev, event, w);
+                else
+                    DeliverDeviceEvents(w, event, NullGrab,
+                                        NullWindow, replayDev);
+            }
         }
     }
     for (dev = inputInfo.devices; dev; dev = dev->next) {
@@ -1813,8 +1815,8 @@ AllowSome(ClientPtr client, TimeStamp time, DeviceIntPtr thisDev, int newState)
      * anything else is accept.
      */
     if (newState != NOT_GRABBED /* Replay */ &&
-        IsTouchEvent((InternalEvent*)grabinfo->sync.event)) {
-        TouchAcceptAndEnd(thisDev, grabinfo->sync.event->touchid);
+        IsTouchEvent(grabinfo->sync.event)) {
+        TouchAcceptAndEnd(thisDev, grabinfo->sync.event->device_event.touchid);
     }
 }
 
@@ -3731,7 +3733,7 @@ ActivatePassiveGrab(DeviceIntPtr device, GrabPtr grab, InternalEvent *event,
 
     if (grabinfo->sync.state == FROZEN_NO_EVENT)
         grabinfo->sync.state = FROZEN_WITH_EVENT;
-    *grabinfo->sync.event = real_event->device_event;
+    *grabinfo->sync.event = *real_event;
 
     free(xE);
     return TRUE;
@@ -4303,7 +4305,7 @@ DeliverGrabbedEvent(InternalEvent *event, DeviceIntPtr thisDev,
         case FREEZE_NEXT_EVENT:
             grabinfo->sync.state = FROZEN_WITH_EVENT;
             FreezeThaw(thisDev, TRUE);
-            *grabinfo->sync.event = event->device_event;
+            *grabinfo->sync.event = *event;
             break;
         }
     }

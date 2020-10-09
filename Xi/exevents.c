@@ -1451,7 +1451,7 @@ DeliverTouchEmulatedEvent(DeviceIntPtr dev, TouchPointInfoPtr ti,
             g = AllocGrab(devgrab);
             BUG_WARN(!g);
 
-            *dev->deviceGrab.sync.event = ev->device_event;
+            *dev->deviceGrab.sync.event = *ev;
 
             /* The listener array has a sequence of grabs and then one event
              * selection. Implicit grab activation occurs through delivering an

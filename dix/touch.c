@@ -500,7 +500,6 @@ TouchBuildDependentSpriteTrace(DeviceIntPtr dev, SpritePtr sprite)
 {
     int i;
     TouchClassPtr t = dev->touch;
-    WindowPtr *trace;
     SpritePtr srcsprite;
 
     /* All touches should have the same sprite trace, so find and reuse an
@@ -516,21 +515,7 @@ TouchBuildDependentSpriteTrace(DeviceIntPtr dev, SpritePtr sprite)
     else
         return FALSE;
 
-    if (srcsprite->spriteTraceGood > sprite->spriteTraceSize) {
-        trace = reallocarray(sprite->spriteTrace,
-                             srcsprite->spriteTraceSize, sizeof(*trace));
-        if (!trace) {
-            sprite->spriteTraceGood = 0;
-            return FALSE;
-        }
-        sprite->spriteTrace = trace;
-        sprite->spriteTraceSize = srcsprite->spriteTraceGood;
-    }
-    memcpy(sprite->spriteTrace, srcsprite->spriteTrace,
-           srcsprite->spriteTraceGood * sizeof(*trace));
-    sprite->spriteTraceGood = srcsprite->spriteTraceGood;
-
-    return TRUE;
+    return CopySprite(srcsprite, sprite);
 }
 
 /**

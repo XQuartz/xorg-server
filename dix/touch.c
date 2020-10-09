@@ -447,7 +447,7 @@ TouchEventHistoryReplay(TouchPointInfoPtr ti, DeviceIntPtr dev, XID resource)
     if (!ti->history)
         return;
 
-    TouchDeliverDeviceClassesChangedEvent(ti, ti->history[0].time, resource);
+    DeliverDeviceClassesChangedEvent(ti->sourceid, ti->history[0].time);
 
     for (i = 0; i < ti->history_elements; i++) {
         DeviceEvent *ev = &ti->history[i];
@@ -468,30 +468,6 @@ TouchEventHistoryReplay(TouchPointInfoPtr ti, DeviceIntPtr dev, XID resource)
            want the events right here, right now.
          */
         dev->public.processInputProc((InternalEvent*)ev, dev);
-    }
-}
-
-void
-TouchDeliverDeviceClassesChangedEvent(TouchPointInfoPtr ti, Time time,
-                                      XID resource)
-{
-    DeviceIntPtr dev;
-    int num_events = 0;
-    InternalEvent dcce;
-
-    dixLookupDevice(&dev, ti->sourceid, serverClient, DixWriteAccess);
-
-    if (!dev)
-        return;
-
-    /* UpdateFromMaster generates at most one event */
-    UpdateFromMaster(&dcce, dev, DEVCHANGE_POINTER_EVENT, &num_events);
-    BUG_WARN(num_events > 1);
-
-    if (num_events) {
-        dcce.any.time = time;
-        /* FIXME: This doesn't do anything */
-        dev->public.processInputProc(&dcce, dev);
     }
 }
 
@@ -1073,7 +1049,7 @@ TouchEmitTouchEnd(DeviceIntPtr dev, TouchPointInfoPtr ti, int flags, XID resourc
     flags |= TOUCH_CLIENT_ID;
     if (ti->emulate_pointer)
         flags |= TOUCH_POINTER_EMULATED;
-    TouchDeliverDeviceClassesChangedEvent(ti, GetTimeInMillis(), resource);
+    DeliverDeviceClassesChangedEvent(ti->sourceid, GetTimeInMillis());
     GetDixTouchEnd(&event, dev, ti, flags);
     DeliverTouchEvents(dev, ti, &event, resource);
     if (ti->num_grabs == 0)

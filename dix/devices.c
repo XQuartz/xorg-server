@@ -2811,3 +2811,26 @@ valuator_set_mode(DeviceIntPtr dev, int axis, int mode)
             dev->valuator->axes[i].mode = mode;
     }
 }
+
+void
+DeliverDeviceClassesChangedEvent(int sourceid, Time time)
+{
+    DeviceIntPtr dev;
+    int num_events = 0;
+    InternalEvent dcce;
+
+    dixLookupDevice(&dev, sourceid, serverClient, DixWriteAccess);
+
+    if (!dev)
+        return;
+
+    /* UpdateFromMaster generates at most one event */
+    UpdateFromMaster(&dcce, dev, DEVCHANGE_POINTER_EVENT, &num_events);
+    BUG_WARN(num_events > 1);
+
+    if (num_events) {
+        dcce.any.time = time;
+        /* FIXME: This doesn't do anything */
+        dev->public.processInputProc(&dcce, dev);
+    }
+}

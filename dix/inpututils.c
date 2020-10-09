@@ -1245,4 +1245,3 @@ CopySprite(SpritePtr src, SpritePtr dst)
     dst->spriteTraceGood = src->spriteTraceGood;
     return TRUE;
 }
-

@@ -549,6 +549,7 @@ extern int AllocXTestDevice(ClientPtr client, const char *name,
 extern BOOL IsXTestDevice(DeviceIntPtr dev, DeviceIntPtr master);
 extern DeviceIntPtr GetXTestDevice(DeviceIntPtr master);
 extern void SendDevicePresenceEvent(int deviceid, int type);
+extern void DeliverDeviceClassesChangedEvent(int sourceid, Time time);
 extern _X_EXPORT InputAttributes *DuplicateInputAttributes(InputAttributes *
                                                            attrs);
 extern _X_EXPORT void FreeInputAttributes(InputAttributes * attrs);
@@ -612,8 +613,6 @@ extern int TouchListenerAcceptReject(DeviceIntPtr dev, TouchPointInfoPtr ti,
 extern int TouchAcceptReject(ClientPtr client, DeviceIntPtr dev, int mode,
                              uint32_t touchid, Window grab_window, XID *error);
 extern void TouchEndPhysicallyActiveTouches(DeviceIntPtr dev);
-extern void TouchDeliverDeviceClassesChangedEvent(TouchPointInfoPtr ti,
-                                                  Time time, XID resource);
 extern void TouchEmitTouchEnd(DeviceIntPtr dev, TouchPointInfoPtr ti, int flags, XID resource);
 extern void TouchAcceptAndEnd(DeviceIntPtr dev, int touchid);
 

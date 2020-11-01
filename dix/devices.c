@@ -267,9 +267,6 @@ AddInputDevice(ClientPtr client, DeviceProc deviceProc, Bool autoStart)
         return NULL;
     }
 
-    if (!dev)
-        return (DeviceIntPtr) NULL;
-
     dev->last.scroll = NULL;
     dev->last.touches = NULL;
     dev->id = devid;

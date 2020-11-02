@@ -298,12 +298,32 @@ xwl_eglstream_unref_pixmap_stream(struct xwl_pixmap *xwl_pixmap)
     free(xwl_pixmap);
 }
 
+static void
+xwl_glamor_eglstream_del_pending_stream_cb(struct xwl_pixmap *xwl_pixmap)
+{
+    struct xwl_eglstream_private *xwl_eglstream =
+        xwl_eglstream_get(xwl_pixmap->xwl_screen);
+    struct xwl_eglstream_pending_stream *pending;
+
+    xorg_list_for_each_entry(pending,
+                             &xwl_eglstream->pending_streams, link) {
+        if (pending->xwl_pixmap == xwl_pixmap) {
+            wl_callback_destroy(pending->cb);
+            xwl_eglstream_window_set_pending(pending->window, NULL);
+            xorg_list_del(&pending->link);
+            free(pending);
+            break;
+        }
+    }
+}
+
 static Bool
 xwl_glamor_eglstream_destroy_pixmap(PixmapPtr pixmap)
 {
     struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
 
     if (xwl_pixmap && pixmap->refcnt == 1) {
+        xwl_glamor_eglstream_del_pending_stream_cb(xwl_pixmap);
         xwl_pixmap_del_buffer_release_cb(pixmap);
         xwl_eglstream_unref_pixmap_stream(xwl_pixmap);
     }

@@ -527,7 +527,7 @@ ensure_surface_for_window(WindowPtr window)
     struct xwl_window *xwl_window;
     struct wl_region *region;
 
-    if (xwl_window_get(window))
+    if (xwl_window_from_window(window))
         return TRUE;
 
     xwl_screen = xwl_screen_get(screen);

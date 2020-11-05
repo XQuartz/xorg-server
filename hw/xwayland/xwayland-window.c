@@ -422,7 +422,7 @@ ensure_surface_for_window(WindowPtr window)
     struct wl_region *region;
     WindowPtr toplevel;
 
-    if (xwl_window_get(window))
+    if (xwl_window_from_window(window))
         return TRUE;
 
     xwl_screen = xwl_screen_get(screen);

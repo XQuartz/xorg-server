@@ -257,11 +257,11 @@ window_get_client_toplevel(WindowPtr window)
      * decoration/wrapper windows. In that case recurse by checking the client
      * of the first *and only* child of the decoration/wrapper window.
      */
-    if (window_is_wm_window(window)) {
-        if (window->firstChild && window->firstChild == window->lastChild)
-            return window_get_client_toplevel(window->firstChild);
-        else
+    while (window_is_wm_window(window)) {
+        if (!window->firstChild || window->firstChild != window->lastChild)
             return NULL; /* Should never happen, skip resolution emulation */
+
+        window = window->firstChild;
     }
 
     return window;

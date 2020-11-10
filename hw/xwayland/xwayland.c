@@ -90,6 +90,7 @@ ddxUseMsg(void)
     ErrorF("-listenfd fd           add given fd as a listen socket\n");
     ErrorF("-listen fd             deprecated, use \"-listenfd\" instead\n");
     ErrorF("-eglstream             use eglstream backend for nvidia GPUs\n");
+    ErrorF("-shm                   use shared memory for passing buffers\n");
     ErrorF("-version               show the server version and exit\n");
 }
 

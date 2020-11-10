@@ -2518,6 +2518,7 @@ hw/kdrive/ephyr/Makefile
 hw/kdrive/ephyr/man/Makefile
 hw/kdrive/src/Makefile
 hw/xwayland/Makefile
+hw/xwayland/man/Makefile
 hw/xwayland/xwayland.pc
 test/Makefile
 xserver.ent

@@ -9,7 +9,7 @@
 # using the same tag.
 variables:
     UPSTREAM_REPO: xorg/xserver
-    FDO_DISTRIBUTION_VERSION: testing-slim
+    FDO_DISTRIBUTION_VERSION: buster-slim
     FDO_DISTRIBUTION_EXEC: 'env FDO_CI_CONCURRENT=${FDO_CI_CONCURRENT} bash .gitlab-ci/debian-install.sh'
     FDO_DISTRIBUTION_TAG: "2020-11-16"
 
@@ -31,7 +31,7 @@ stages:
   # Cancel CI run if a newer commit is pushed to the same branch
   interruptible: true
 
-debian-testing:
+debian-buster:
   extends:
     - .fdo.container-build@debian
     - .ci-run-policy

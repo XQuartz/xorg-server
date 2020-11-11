@@ -83,7 +83,6 @@ apt-get install -y \
 	python3-mako \
 	python3-numpy \
 	python3-six \
-	wayland-protocols \
 	x11-xkb-utils \
 	x11proto-dev \
 	xfonts-utils \
@@ -92,6 +91,14 @@ apt-get install -y \
 	xutils-dev
 
 cd /root
+
+# Xwayland requires wayland-protocols >= 1.18, but Debian buster has 1.17 only
+git clone https://gitlab.freedesktop.org/wayland/wayland-protocols.git --depth 1 --branch=1.18
+cd wayland-protocols
+./autogen.sh
+make -j${FDO_CI_CONCURRENT:-4} install
+cd ..
+rm -rf wayland-protocols
 
 git clone https://gitlab.freedesktop.org/mesa/piglit.git --depth 1
 

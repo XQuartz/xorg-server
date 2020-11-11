@@ -43,7 +43,7 @@ meson build
 ninja -j${FDO_CI_CONCURRENT:-4} -C build install
 cd ..
 
-rm -rf piglit/.git xts/.git piglit/tests/spec/
+rm -rf piglit/.git xts/.git piglit/tests/spec/ rendercheck/
 
 echo '[xts]' > piglit/piglit.conf
 echo 'path=/root/xts' >> piglit/piglit.conf

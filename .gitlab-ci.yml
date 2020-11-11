@@ -44,6 +44,8 @@ debian-testing:
     - .debian@container-ifnot-exists
     - .ci-run-policy
   stage: docker-image
+  variables:
+    GIT_STRATEGY: none
 
 .common-build-and-test:
     extends: .ci-run-policy

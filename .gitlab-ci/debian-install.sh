@@ -5,25 +5,31 @@ set -o xtrace
 
 echo 'deb-src https://deb.debian.org/debian testing main' > /etc/apt/sources.list.d/deb-src.list
 apt-get update
+
+# Packages which are needed by this script, but not for the xserver build
+EPHEMERAL="
+	git
+	libxkbcommon-dev
+	x11-utils
+	x11-xserver-utils
+	xauth
+	xvfb
+	"
+
 apt-get install -y \
+	$EPHEMERAL \
 	autoconf \
 	automake \
 	ca-certificates \
 	ccache \
-	git \
 	libgl1 \
 	libglx-mesa0 \
 	libnvidia-egl-wayland-dev \
 	libtool \
-	libxkbcommon-dev \
 	meson \
 	python3-mako \
 	python3-numpy \
-	python3-six \
-	x11-utils \
-	x11-xserver-utils \
-	xauth \
-	xvfb \
+	python3-six
 
 apt-get build-dep -y xorg-server
 
@@ -52,11 +58,6 @@ find -name \*.a -o -name \*.o -o -name \*.c -o -name \*.h -o -name \*.la\* | xar
 strip xts/xts5/*/.libs/*
 
 apt-get purge -y \
-	git \
-	libxkbcommon-dev \
-	x11-utils \
-	x11-xserver-utils \
-	xauth \
-	xvfb \
+	$EPHEMERAL
 
 apt-get autoremove -y --purge

@@ -3,9 +3,6 @@
 set -e
 set -o xtrace
 
-echo 'deb-src https://deb.debian.org/debian testing main' > /etc/apt/sources.list.d/deb-src.list
-apt-get update
-
 # Packages which are needed by this script, but not for the xserver build
 EPHEMERAL="
 	git
@@ -20,18 +17,79 @@ apt-get install -y \
 	$EPHEMERAL \
 	autoconf \
 	automake \
+	bison \
+	build-essential \
 	ca-certificates \
 	ccache \
-	libgl1 \
+	flex \
+	libaudit-dev \
+	libbsd-dev \
+	libdbus-1-dev \
+	libdmx-dev \
+	libdrm-dev \
+	libegl1-mesa-dev \
+	libepoxy-dev \
+	libgbm-dev \
+	libgcrypt-dev \
+	libgl1-mesa-dev \
 	libglx-mesa0 \
 	libnvidia-egl-wayland-dev \
+	libpciaccess-dev \
+	libpixman-1-dev \
+	libselinux1-dev \
+	libsystemd-dev \
 	libtool \
+	libudev-dev \
+	libunwind-dev \
+	libwayland-dev \
+	libx11-dev \
+	libx11-xcb-dev \
+	libxau-dev \
+	libxaw7-dev \
+	libxcb-glx0-dev \
+	libxcb-icccm4-dev \
+	libxcb-image0-dev \
+	libxcb-keysyms1-dev \
+	libxcb-randr0-dev \
+	libxcb-render-util0-dev \
+	libxcb-render0-dev \
+	libxcb-shape0-dev \
+	libxcb-shm0-dev \
+	libxcb-util0-dev \
+	libxcb-xf86dri0-dev \
+	libxcb-xkb-dev \
+	libxcb-xv0-dev \
+	libxcb1-dev \
+	libxdmcp-dev \
+	libxext-dev \
+	libxfixes-dev \
+	libxfont-dev \
+	libxi-dev \
+	libxinerama-dev \
+	libxkbfile-dev \
+	libxmu-dev \
+	libxmuu-dev \
+	libxpm-dev \
+	libxrender-dev \
+	libxres-dev \
+	libxshmfence-dev \
+	libxt-dev \
+	libxtst-dev \
+	libxv-dev \
+	mesa-common-dev \
 	meson \
+	nettle-dev \
+	pkg-config \
 	python3-mako \
 	python3-numpy \
-	python3-six
-
-apt-get build-dep -y xorg-server
+	python3-six \
+	wayland-protocols \
+	x11-xkb-utils \
+	x11proto-dev \
+	xfonts-utils \
+	xkb-data \
+	xtrans-dev \
+	xutils-dev
 
 cd /root
 

@@ -1820,6 +1820,8 @@ EnterVT(ScrnInfoPtr pScrn)
 
     SetMaster(pScrn);
 
+    drmmode_update_kms_state(&ms->drmmode);
+
     if (!drmmode_set_desired_modes(pScrn, &ms->drmmode, TRUE))
         return FALSE;
 

@@ -37,6 +37,8 @@
 #include <glamor_transfer.h>
 
 #include <xf86drm.h>
+#include <dri3.h>
+#include <drm_fourcc.h>
 
 #include <epoxy/egl.h>
 
@@ -47,6 +49,7 @@
 
 #include "wayland-eglstream-client-protocol.h"
 #include "wayland-eglstream-controller-client-protocol.h"
+#include "linux-dmabuf-unstable-v1-client-protocol.h"
 
 struct xwl_eglstream_pending_stream {
     PixmapPtr pixmap;
@@ -80,12 +83,23 @@ struct xwl_eglstream_private {
     GLuint blit_is_rgba_pos;
 };
 
-struct xwl_pixmap {
-    struct wl_buffer *buffer;
-    struct xwl_screen *xwl_screen;
+enum xwl_pixmap_type {
+    XWL_PIXMAP_EGLSTREAM, /* Pixmaps created by glamor. */
+    XWL_PIXMAP_DMA_BUF, /* Pixmaps allocated through DRI3. */
+};
 
+struct xwl_pixmap {
+    enum xwl_pixmap_type type;
+    /* add any new <= 4-byte member here to avoid holes on 64-bit */
+    struct xwl_screen *xwl_screen;
+    struct wl_buffer *buffer;
+
+    /* XWL_PIXMAP_EGLSTREAM. */
     EGLStreamKHR stream;
     EGLSurface surface;
+
+    /* XWL_PIXMAP_DMA_BUF. */
+    EGLImage image;
 };
 
 static DevPrivateKeyRec xwl_eglstream_private_key;
@@ -289,12 +303,18 @@ xwl_eglstream_unref_pixmap_stream(struct xwl_pixmap *xwl_pixmap)
                        xwl_screen->egl_context);
     }
 
-    if (xwl_pixmap->surface)
+    if (xwl_pixmap->surface != EGL_NO_SURFACE)
         eglDestroySurface(xwl_screen->egl_display, xwl_pixmap->surface);
 
-    eglDestroyStreamKHR(xwl_screen->egl_display, xwl_pixmap->stream);
+    if (xwl_pixmap->stream != EGL_NO_STREAM_KHR)
+        eglDestroyStreamKHR(xwl_screen->egl_display, xwl_pixmap->stream);
 
-    wl_buffer_destroy(xwl_pixmap->buffer);
+    if (xwl_pixmap->buffer)
+        wl_buffer_destroy(xwl_pixmap->buffer);
+
+    if (xwl_pixmap->image != EGL_NO_IMAGE_KHR)
+        eglDestroyImageKHR(xwl_screen->egl_display, xwl_pixmap->image);
+
     free(xwl_pixmap);
 }
 
@@ -509,9 +529,13 @@ xwl_eglstream_create_pending_stream(struct xwl_screen *xwl_screen,
         FatalError("Not enough memory to create pixmap\n");
     xwl_pixmap_set_private(pixmap, xwl_pixmap);
 
+    xwl_pixmap->type = XWL_PIXMAP_EGLSTREAM;
+    xwl_pixmap->image = EGL_NO_IMAGE;
+
     xwl_glamor_egl_make_current(xwl_screen);
 
     xwl_pixmap->xwl_screen = xwl_screen;
+    xwl_pixmap->surface = EGL_NO_SURFACE;
     xwl_pixmap->stream = eglCreateStreamKHR(xwl_screen->egl_display, NULL);
     stream_fd = eglGetStreamFileDescriptorKHR(xwl_screen->egl_display,
                                               xwl_pixmap->stream);
@@ -552,6 +576,7 @@ xwl_glamor_eglstream_allow_commits(struct xwl_window *xwl_window)
     struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
 
     if (xwl_pixmap) {
+        assert(xwl_pixmap->type == XWL_PIXMAP_EGLSTREAM);
         if (pending) {
             /* Wait for the compositor to finish connecting the consumer for
              * this eglstream */
@@ -589,6 +614,8 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
         box->x2 - box->x1, box->y2 - box->y1
     };
     GLint saved_vao;
+
+    assert(xwl_pixmap->type == XWL_PIXMAP_EGLSTREAM);
 
     /* Unbind the framebuffer BEFORE binding the EGLSurface, otherwise we
      * won't actually draw to it
@@ -636,7 +663,7 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
 static Bool
 xwl_glamor_eglstream_check_flip(PixmapPtr pixmap)
 {
-    return FALSE;
+    return xwl_pixmap_get(pixmap)->type == XWL_PIXMAP_DMA_BUF;
 }
 
 static void
@@ -680,6 +707,9 @@ xwl_glamor_eglstream_init_wl_registry(struct xwl_screen *xwl_screen,
     } else if (strcmp(name, "wl_eglstream_controller") == 0) {
         xwl_eglstream->controller = wl_registry_bind(
             wl_registry, id, &wl_eglstream_controller_interface, version);
+        return TRUE;
+    } else if (strcmp(name, "zwp_linux_dmabuf_v1") == 0) {
+        xwl_screen_set_dmabuf_interface(xwl_screen, id, version);
         return TRUE;
     }
 
@@ -779,6 +809,163 @@ xwl_eglstream_init_shaders(struct xwl_screen *xwl_screen)
         glGetUniformLocation(xwl_eglstream->blit_prog, "is_rgba");
 }
 
+static int
+xwl_dri3_open_client(ClientPtr client,
+                     ScreenPtr screen,
+                     RRProviderPtr provider,
+                     int *pfd)
+{
+    /* Not supported with this backend. */
+    return BadImplementation;
+}
+
+static PixmapPtr
+xwl_dri3_pixmap_from_fds(ScreenPtr screen,
+                         CARD8 num_fds, const int *fds,
+                         CARD16 width, CARD16 height,
+                         const CARD32 *strides, const CARD32 *offsets,
+                         CARD8 depth, CARD8 bpp,
+                         uint64_t modifier)
+{
+    PixmapPtr pixmap;
+    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
+    struct xwl_pixmap *xwl_pixmap;
+    unsigned int texture;
+    EGLint image_attribs[48];
+    uint32_t mod_hi = modifier >> 32, mod_lo = modifier & 0xffffffff, format;
+    int attrib = 0, i;
+    struct zwp_linux_buffer_params_v1 *params;
+
+    format = wl_drm_format_for_depth(depth);
+    if (!xwl_glamor_is_modifier_supported(xwl_screen, format, modifier)) {
+        ErrorF("glamor: unsupported format modifier\n");
+        return NULL;
+    }
+
+    xwl_pixmap = calloc(1, sizeof (*xwl_pixmap));
+    if (!xwl_pixmap)
+        return NULL;
+    xwl_pixmap->type = XWL_PIXMAP_DMA_BUF;
+    xwl_pixmap->xwl_screen = xwl_screen;
+
+    xwl_pixmap->buffer = NULL;
+    xwl_pixmap->stream = EGL_NO_STREAM_KHR;
+    xwl_pixmap->surface = EGL_NO_SURFACE;
+
+    params = zwp_linux_dmabuf_v1_create_params(xwl_screen->dmabuf);
+    for (i = 0; i < num_fds; i++) {
+        zwp_linux_buffer_params_v1_add(params, fds[i], i,
+                                       offsets[i], strides[i],
+                                       mod_hi, mod_lo);
+    }
+    xwl_pixmap->buffer =
+        zwp_linux_buffer_params_v1_create_immed(params, width, height,
+                                                format, 0);
+    zwp_linux_buffer_params_v1_destroy(params);
+
+
+    image_attribs[attrib++] = EGL_WIDTH;
+    image_attribs[attrib++] = width;
+    image_attribs[attrib++] = EGL_HEIGHT;
+    image_attribs[attrib++] = height;
+    image_attribs[attrib++] = EGL_LINUX_DRM_FOURCC_EXT;
+    image_attribs[attrib++] = drm_format_for_depth(depth, bpp);
+
+    if (num_fds > 0) {
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE0_FD_EXT;
+        image_attribs[attrib++] = fds[0];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
+        image_attribs[attrib++] = offsets[0];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
+        image_attribs[attrib++] = strides[0];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT;
+        image_attribs[attrib++] = mod_hi;
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT;
+        image_attribs[attrib++] = mod_lo;
+    }
+    if (num_fds > 1) {
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE1_FD_EXT;
+        image_attribs[attrib++] = fds[1];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE1_OFFSET_EXT;
+        image_attribs[attrib++] = offsets[1];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE1_PITCH_EXT;
+        image_attribs[attrib++] = strides[1];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT;
+        image_attribs[attrib++] = mod_hi;
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT;
+        image_attribs[attrib++] = mod_lo;
+    }
+    if (num_fds > 2) {
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE2_FD_EXT;
+        image_attribs[attrib++] = fds[2];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE2_OFFSET_EXT;
+        image_attribs[attrib++] = offsets[2];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE2_PITCH_EXT;
+        image_attribs[attrib++] = strides[2];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT;
+        image_attribs[attrib++] = mod_hi;
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT;
+        image_attribs[attrib++] = mod_lo;
+    }
+    if (num_fds > 3) {
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE3_FD_EXT;
+        image_attribs[attrib++] = fds[3];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE3_OFFSET_EXT;
+        image_attribs[attrib++] = offsets[3];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE3_PITCH_EXT;
+        image_attribs[attrib++] = strides[3];
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT;
+        image_attribs[attrib++] = mod_hi;
+        image_attribs[attrib++] = EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT;
+        image_attribs[attrib++] = mod_lo;
+    }
+    image_attribs[attrib++] = EGL_NONE;
+
+    xwl_glamor_egl_make_current(xwl_screen);
+
+    /* eglCreateImageKHR will close fds */
+    xwl_pixmap->image = eglCreateImageKHR(xwl_screen->egl_display,
+                                          EGL_NO_CONTEXT,
+                                          EGL_LINUX_DMA_BUF_EXT,
+                                          NULL, image_attribs);
+    if (xwl_pixmap->image == EGL_NO_IMAGE_KHR) {
+        ErrorF("eglCreateImageKHR failed!\n");
+        if (xwl_pixmap->buffer)
+            wl_buffer_destroy(xwl_pixmap->buffer);
+        free(xwl_pixmap);
+        return NULL;
+    }
+
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, xwl_pixmap->image);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    pixmap = glamor_create_pixmap(screen, width, height, depth,
+                                  GLAMOR_CREATE_PIXMAP_NO_TEXTURE);
+    glamor_set_pixmap_texture(pixmap, texture);
+    glamor_set_pixmap_type(pixmap, GLAMOR_TEXTURE_DRM);
+    wl_buffer_add_listener(xwl_pixmap->buffer,
+                           &xwl_eglstream_buffer_release_listener,
+                           pixmap);
+    xwl_pixmap_set_private(pixmap, xwl_pixmap);
+
+    return pixmap;
+}
+
+static const dri3_screen_info_rec xwl_dri3_info = {
+    .version = 2,
+    .open = NULL,
+    .pixmap_from_fds = xwl_dri3_pixmap_from_fds,
+    .fds_from_pixmap = NULL,
+    .open_client = xwl_dri3_open_client,
+    .get_formats = xwl_glamor_get_formats,
+    .get_modifiers = xwl_glamor_get_modifiers,
+    .get_drawable_modifiers = glamor_get_drawable_modifiers,
+};
+
 static Bool
 xwl_glamor_eglstream_init_egl(struct xwl_screen *xwl_screen)
 {
@@ -857,6 +1044,11 @@ xwl_glamor_eglstream_init_egl(struct xwl_screen *xwl_screen)
                "will be affected\n");
 
     xwl_eglstream_init_shaders(xwl_screen);
+
+    if (epoxy_has_gl_extension("GL_OES_EGL_image") &&
+        !dri3_screen_init(xwl_screen->screen, &xwl_dri3_info)) {
+        ErrorF("DRI3 initialization failed. Performance will be affected.\n");
+    }
 
     return TRUE;
 error:

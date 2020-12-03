@@ -363,16 +363,6 @@ glamor_egl_fd_name_from_pixmap(ScreenPtr screen,
 }
 
 Bool
-xwl_glamor_has_present_flip(struct xwl_screen *xwl_screen)
-{
-    if (!xwl_screen->glamor || !xwl_screen->egl_backend)
-        return FALSE;
-
-    return (xwl_screen->egl_backend->backend_flags &
-                XWL_EGL_BACKEND_HAS_PRESENT_FLIP);
-}
-
-Bool
 xwl_glamor_needs_buffer_flush(struct xwl_screen *xwl_screen)
 {
     if (!xwl_screen->glamor || !xwl_screen->egl_backend)
@@ -430,8 +420,6 @@ xwl_glamor_select_eglstream_backend(struct xwl_screen *xwl_screen)
 #ifdef XWL_HAS_EGLSTREAM
     if (xwl_screen->eglstream_backend.is_available &&
         xwl_glamor_has_wl_interfaces(xwl_screen, &xwl_screen->eglstream_backend)) {
-        ErrorF("glamor: Using nvidia's EGLStream interface, direct rendering impossible.\n");
-        ErrorF("glamor: Performance may be affected. Ask your vendor to support GBM!\n");
         xwl_screen->egl_backend = &xwl_screen->eglstream_backend;
         return TRUE;
     }

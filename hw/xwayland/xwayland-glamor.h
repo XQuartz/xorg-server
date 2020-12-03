@@ -34,9 +34,8 @@
 
 typedef enum _xwl_egl_backend_flags {
     XWL_EGL_BACKEND_NO_FLAG = 0,
-    XWL_EGL_BACKEND_HAS_PRESENT_FLIP = (1 << 0),
-    XWL_EGL_BACKEND_NEEDS_BUFFER_FLUSH = (1 << 1),
-    XWL_EGL_BACKEND_NEEDS_N_BUFFERING = (1 << 2),
+    XWL_EGL_BACKEND_NEEDS_BUFFER_FLUSH = (1 << 0),
+    XWL_EGL_BACKEND_NEEDS_N_BUFFERING = (1 << 1),
 } xwl_egl_backend_flags;
 
 struct xwl_egl_backend {
@@ -122,7 +121,6 @@ void xwl_glamor_post_damage(struct xwl_window *xwl_window,
                             PixmapPtr pixmap, RegionPtr region);
 Bool xwl_glamor_allow_commits(struct xwl_window *xwl_window);
 void xwl_glamor_egl_make_current(struct xwl_screen *xwl_screen);
-Bool xwl_glamor_has_present_flip(struct xwl_screen *xwl_screen);
 Bool xwl_glamor_needs_buffer_flush(struct xwl_screen *xwl_screen);
 Bool xwl_glamor_needs_n_buffering(struct xwl_screen *xwl_screen);
 Bool xwl_glamor_is_modifier_supported(struct xwl_screen *xwl_screen,

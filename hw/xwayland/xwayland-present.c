@@ -404,6 +404,9 @@ xwl_present_check_flip2(RRCrtcPtr crtc,
     if (!xwl_window)
         return FALSE;
 
+    if (!xwl_glamor_check_flip(pixmap))
+        return FALSE;
+
     /* Can't flip if the window pixmap doesn't match the xwl_window parent
      * window's, e.g. because a client redirected this window or one of its
      * parents.
@@ -540,7 +543,7 @@ xwl_present_init(ScreenPtr screen)
 {
     struct xwl_screen *xwl_screen = xwl_screen_get(screen);
 
-    if (!xwl_glamor_has_present_flip(xwl_screen))
+    if (!xwl_screen->glamor || !xwl_screen->egl_backend)
         return FALSE;
 
     if (!dixRegisterPrivateKey(&xwl_present_window_private_key, PRIVATE_WINDOW, 0))

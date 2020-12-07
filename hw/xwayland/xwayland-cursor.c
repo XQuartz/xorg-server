@@ -34,6 +34,7 @@
 
 #include "xwayland-cursor.h"
 #include "xwayland-input.h"
+#include "xwayland-pixmap.h"
 #include "xwayland-screen.h"
 #include "xwayland-shm.h"
 #include "xwayland-types.h"
@@ -136,6 +137,13 @@ static const struct wl_callback_listener frame_listener = {
 };
 
 static void
+xwl_cursor_buffer_release_callback(void *data)
+{
+    /* drop the reference we took in set_cursor */
+    xwl_shm_destroy_pixmap(data);
+}
+
+static void
 xwl_cursor_copy_bits_to_pixmap(CursorPtr cursor, PixmapPtr pixmap)
 {
     int stride;
@@ -160,6 +168,12 @@ xwl_cursor_attach_pixmap(struct xwl_seat *xwl_seat,
 
     xwl_cursor->frame_cb = wl_surface_frame(xwl_cursor->surface);
     wl_callback_add_listener(xwl_cursor->frame_cb, &frame_listener, xwl_cursor);
+
+    /* Hold a reference on the pixmap until it's released by the compositor */
+    pixmap->refcnt++;
+    xwl_pixmap_set_buffer_release_cb(pixmap,
+                                     xwl_cursor_buffer_release_callback,
+                                     pixmap);
 
     wl_surface_commit(xwl_cursor->surface);
 }

@@ -348,7 +348,7 @@ if not libdrm_dep.found() and libdrm_required
     error('DRI requested, but LIBDRM not found')
 endif
 
-build_modesetting = libdrm_dep.found()
+build_modesetting = libdrm_dep.found() and dri2proto_dep.found()
 
 build_vbe = false
 if get_option('vbe') == 'auto'

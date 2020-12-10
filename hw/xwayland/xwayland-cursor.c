@@ -135,13 +135,41 @@ static const struct wl_callback_listener frame_listener = {
     frame_callback
 };
 
+static void
+xwl_cursor_copy_bits_to_pixmap(CursorPtr cursor, PixmapPtr pixmap)
+{
+    int stride;
+
+    stride = cursor->bits->width * 4;
+    if (cursor->bits->argb)
+        memcpy(pixmap->devPrivate.ptr,
+               cursor->bits->argb, cursor->bits->height * stride);
+    else
+        expand_source_and_mask(cursor, pixmap->devPrivate.ptr);
+}
+
+static void
+xwl_cursor_attach_pixmap(struct xwl_seat *xwl_seat,
+                         struct xwl_cursor *xwl_cursor, PixmapPtr pixmap)
+{
+    wl_surface_attach(xwl_cursor->surface,
+                      xwl_shm_pixmap_get_wl_buffer(pixmap), 0, 0);
+    xwl_surface_damage(xwl_seat->xwl_screen, xwl_cursor->surface, 0, 0,
+                       xwl_seat->x_cursor->bits->width,
+                       xwl_seat->x_cursor->bits->height);
+
+    xwl_cursor->frame_cb = wl_surface_frame(xwl_cursor->surface);
+    wl_callback_add_listener(xwl_cursor->frame_cb, &frame_listener, xwl_cursor);
+
+    wl_surface_commit(xwl_cursor->surface);
+}
+
 void
 xwl_seat_set_cursor(struct xwl_seat *xwl_seat)
 {
     struct xwl_cursor *xwl_cursor = &xwl_seat->cursor;
     PixmapPtr pixmap;
     CursorPtr cursor;
-    int stride;
 
     if (!xwl_seat->wl_pointer)
         return;
@@ -164,28 +192,15 @@ xwl_seat_set_cursor(struct xwl_seat *xwl_seat)
     if (!pixmap)
         return;
 
-    stride = cursor->bits->width * 4;
-    if (cursor->bits->argb)
-        memcpy(pixmap->devPrivate.ptr,
-               cursor->bits->argb, cursor->bits->height * stride);
-    else
-        expand_source_and_mask(cursor, pixmap->devPrivate.ptr);
+    xwl_cursor_copy_bits_to_pixmap(cursor, pixmap);
 
     wl_pointer_set_cursor(xwl_seat->wl_pointer,
                           xwl_seat->pointer_enter_serial,
                           xwl_cursor->surface,
                           xwl_seat->x_cursor->bits->xhot,
                           xwl_seat->x_cursor->bits->yhot);
-    wl_surface_attach(xwl_cursor->surface,
-                      xwl_shm_pixmap_get_wl_buffer(pixmap), 0, 0);
-    xwl_surface_damage(xwl_seat->xwl_screen, xwl_cursor->surface, 0, 0,
-                       xwl_seat->x_cursor->bits->width,
-                       xwl_seat->x_cursor->bits->height);
 
-    xwl_cursor->frame_cb = wl_surface_frame(xwl_cursor->surface);
-    wl_callback_add_listener(xwl_cursor->frame_cb, &frame_listener, xwl_cursor);
-
-    wl_surface_commit(xwl_cursor->surface);
+    xwl_cursor_attach_pixmap(xwl_seat, xwl_cursor, pixmap);
 }
 
 void
@@ -195,7 +210,6 @@ xwl_tablet_tool_set_cursor(struct xwl_tablet_tool *xwl_tablet_tool)
     struct xwl_cursor *xwl_cursor = &xwl_tablet_tool->cursor;
     PixmapPtr pixmap;
     CursorPtr cursor;
-    int stride;
 
     if (!xwl_seat->x_cursor) {
         zwp_tablet_tool_v2_set_cursor(xwl_tablet_tool->tool,
@@ -216,28 +230,15 @@ xwl_tablet_tool_set_cursor(struct xwl_tablet_tool *xwl_tablet_tool)
     if (!pixmap)
         return;
 
-    stride = cursor->bits->width * 4;
-    if (cursor->bits->argb)
-        memcpy(pixmap->devPrivate.ptr,
-               cursor->bits->argb, cursor->bits->height * stride);
-    else
-        expand_source_and_mask(cursor, pixmap->devPrivate.ptr);
+    xwl_cursor_copy_bits_to_pixmap(cursor, pixmap);
 
     zwp_tablet_tool_v2_set_cursor(xwl_tablet_tool->tool,
                                   xwl_tablet_tool->proximity_in_serial,
                                   xwl_cursor->surface,
                                   xwl_seat->x_cursor->bits->xhot,
                                   xwl_seat->x_cursor->bits->yhot);
-    wl_surface_attach(xwl_cursor->surface,
-                      xwl_shm_pixmap_get_wl_buffer(pixmap), 0, 0);
-    xwl_surface_damage(xwl_seat->xwl_screen, xwl_cursor->surface, 0, 0,
-                       xwl_seat->x_cursor->bits->width,
-                       xwl_seat->x_cursor->bits->height);
 
-    xwl_cursor->frame_cb = wl_surface_frame(xwl_cursor->surface);
-    wl_callback_add_listener(xwl_cursor->frame_cb, &frame_listener, xwl_cursor);
-
-    wl_surface_commit(xwl_cursor->surface);
+    xwl_cursor_attach_pixmap(xwl_seat, xwl_cursor, pixmap);
 }
 
 static void

@@ -1018,7 +1018,6 @@ xwl_glamor_gbm_init_egl(struct xwl_screen *xwl_screen)
 {
     struct xwl_gbm_private *xwl_gbm = xwl_gbm_get(xwl_screen);
     EGLint major, minor;
-    Bool egl_initialized = FALSE;
     const GLubyte *renderer;
 
     if (!xwl_gbm->fd_render_node && !xwl_gbm->drm_authenticated) {
@@ -1039,8 +1038,7 @@ xwl_glamor_gbm_init_egl(struct xwl_screen *xwl_screen)
         goto error;
     }
 
-    egl_initialized = eglInitialize(xwl_screen->egl_display, &major, &minor);
-    if (!egl_initialized) {
+    if (!eglInitialize(xwl_screen->egl_display, &major, &minor)) {
         ErrorF("eglInitialize() failed\n");
         goto error;
     }

@@ -5,7 +5,6 @@ set -o xtrace
 
 # Packages which are needed by this script, but not for the xserver build
 EPHEMERAL="
-	git
 	libcairo2-dev
 	libevdev-dev
 	libexpat-dev
@@ -27,6 +26,7 @@ apt-get install -y \
 	ca-certificates \
 	ccache \
 	flex \
+	git \
 	libaudit-dev \
 	libbsd-dev \
 	libcairo2 \

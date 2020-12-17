@@ -48,7 +48,7 @@
 #include "xf86-input-inputtest-protocol.h"
 
 #define MAX_POINTER_NUM_AXES 5 /* x, y, hscroll, vscroll, [pressure] */
-#define TOUCH_NUM_AXES 4 /* x, y, hscroll, vscroll */
+#define MAX_TOUCH_NUM_AXES 5 /* x, y, hscroll, vscroll, pressure */
 #define TOUCH_MAX_SLOTS 15
 
 #define TOUCH_AXIS_MAX 0xffff
@@ -288,16 +288,6 @@ init_button_labels(Atom *labels, size_t size)
 }
 
 static void
-init_axis_labels(Atom *labels, size_t size)
-{
-    memset(labels, 0, size * sizeof(Atom));
-    labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_X);
-    labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);
-    labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_HSCROLL);
-    labels[3] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_VSCROLL);
-}
-
-static void
 init_pointer(InputInfoPtr pInfo)
 {
     DeviceIntPtr dev= pInfo->dev;
@@ -439,13 +429,19 @@ init_touch(InputInfoPtr pInfo)
     int min, max, res;
     unsigned char btnmap[MAX_BUTTONS + 1];
     Atom btnlabels[MAX_BUTTONS];
-    Atom axislabels[TOUCH_NUM_AXES];
+    Atom axislabels[MAX_TOUCH_NUM_AXES];
+    int num_axes = 0;
     int nbuttons = 7;
     int ntouches = TOUCH_MAX_SLOTS;
 
     init_button_map(btnmap, ARRAY_SIZE(btnmap));
     init_button_labels(btnlabels, ARRAY_SIZE(btnlabels));
-    init_axis_labels(axislabels, ARRAY_SIZE(axislabels));
+
+    axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_X);
+    axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y);
+    axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_HSCROLL);
+    axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_VSCROLL);
+    axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE);
 
     InitPointerDeviceStruct((DevicePtr)dev,
                             btnmap,
@@ -453,7 +449,7 @@ init_touch(InputInfoPtr pInfo)
                             btnlabels,
                             ptr_ctl,
                             GetMotionHistorySize(),
-                            TOUCH_NUM_AXES,
+                            num_axes,
                             axislabels);
     min = 0;
     max = TOUCH_AXIS_MAX;
@@ -465,7 +461,11 @@ init_touch(InputInfoPtr pInfo)
     xf86InitValuatorAxisStruct(dev, 1,
                                XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y),
                                min, max, res * 1000, 0, res * 1000, Absolute);
-    xf86InitValuatorAxisStruct(dev, 2,
+
+    SetScrollValuator(dev, 2, SCROLL_TYPE_HORIZONTAL, 15, 0);
+    SetScrollValuator(dev, 3, SCROLL_TYPE_VERTICAL, 15, 0);
+
+    xf86InitValuatorAxisStruct(dev, 4,
                                XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE),
                                min, TABLET_PRESSURE_AXIS_MAX, res * 1000, 0, res * 1000, Absolute);
 

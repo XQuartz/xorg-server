@@ -47,7 +47,7 @@
 
 #include "xf86-input-inputtest-protocol.h"
 
-#define MAX_POINTER_NUM_AXES 4 /* x, y, hscroll, vscroll */
+#define MAX_POINTER_NUM_AXES 5 /* x, y, hscroll, vscroll, [pressure] */
 #define TOUCH_NUM_AXES 4 /* x, y, hscroll, vscroll */
 #define TOUCH_MAX_SLOTS 15
 
@@ -303,6 +303,7 @@ init_pointer(InputInfoPtr pInfo)
     DeviceIntPtr dev= pInfo->dev;
     int min, max, res;
     int nbuttons = 7;
+    bool has_pressure = false;
     int num_axes = 0;
 
     unsigned char btnmap[MAX_BUTTONS + 1];
@@ -310,6 +311,8 @@ init_pointer(InputInfoPtr pInfo)
     Atom axislabels[MAX_POINTER_NUM_AXES];
 
     nbuttons = xf86SetIntOption(pInfo->options, "PointerButtonCount", 7);
+    has_pressure = xf86SetBoolOption(pInfo->options, "PointerHasPressure",
+                                     false);
 
     init_button_map(btnmap, ARRAY_SIZE(btnmap));
     init_button_labels(btnlabels, ARRAY_SIZE(btnlabels));
@@ -318,6 +321,8 @@ init_pointer(InputInfoPtr pInfo)
     axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);
     axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_HSCROLL);
     axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_VSCROLL);
+    if (has_pressure)
+        axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_PRESSURE);
 
     InitPointerDeviceStruct((DevicePtr)dev,
                             btnmap,
@@ -338,6 +343,12 @@ init_pointer(InputInfoPtr pInfo)
 
     SetScrollValuator(dev, 2, SCROLL_TYPE_HORIZONTAL, 15, 0);
     SetScrollValuator(dev, 3, SCROLL_TYPE_VERTICAL, 15, 0);
+
+    if (has_pressure) {
+        xf86InitValuatorAxisStruct(dev, 4,
+            XIGetKnownProperty(AXIS_LABEL_PROP_ABS_PRESSURE),
+            0, 1000, 1, 1, 1, Absolute);
+    }
 }
 
 static void
@@ -346,6 +357,7 @@ init_pointer_absolute(InputInfoPtr pInfo)
     DeviceIntPtr dev = pInfo->dev;
     int min, max, res;
     int nbuttons = 7;
+    bool has_pressure = false;
     int num_axes = 0;
 
     unsigned char btnmap[MAX_BUTTONS + 1];
@@ -353,6 +365,8 @@ init_pointer_absolute(InputInfoPtr pInfo)
     Atom axislabels[MAX_POINTER_NUM_AXES];
 
     nbuttons = xf86SetIntOption(pInfo->options, "PointerButtonCount", 7);
+    has_pressure = xf86SetBoolOption(pInfo->options, "PointerHasPressure",
+                                     false);
 
     init_button_map(btnmap, ARRAY_SIZE(btnmap));
     init_button_labels(btnlabels, ARRAY_SIZE(btnlabels));
@@ -361,6 +375,8 @@ init_pointer_absolute(InputInfoPtr pInfo)
     axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y);
     axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_HSCROLL);
     axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_VSCROLL);
+    if (has_pressure)
+        axislabels[num_axes++] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_PRESSURE);
 
     InitPointerDeviceStruct((DevicePtr)dev,
                             btnmap,
@@ -382,6 +398,11 @@ init_pointer_absolute(InputInfoPtr pInfo)
     SetScrollValuator(dev, 2, SCROLL_TYPE_HORIZONTAL, 15, 0);
     SetScrollValuator(dev, 3, SCROLL_TYPE_VERTICAL, 15, 0);
 
+    if (has_pressure) {
+        xf86InitValuatorAxisStruct(dev, 4,
+            XIGetKnownProperty(AXIS_LABEL_PROP_ABS_PRESSURE),
+            0, 1000, 1, 1, 1, Absolute);
+    }
 }
 
 static void

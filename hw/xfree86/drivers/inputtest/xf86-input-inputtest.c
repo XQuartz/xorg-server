@@ -331,8 +331,8 @@ init_pointer(InputInfoPtr pInfo)
     xf86InitValuatorAxisStruct(dev, 1, XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y),
                                min, max, res * 1000, 0, res * 1000, Relative);
 
-    SetScrollValuator(dev, 2, SCROLL_TYPE_HORIZONTAL, 15, 0);
-    SetScrollValuator(dev, 3, SCROLL_TYPE_VERTICAL, 15, 0);
+    SetScrollValuator(dev, 2, SCROLL_TYPE_HORIZONTAL, 120, 0);
+    SetScrollValuator(dev, 3, SCROLL_TYPE_VERTICAL, 120, 0);
 
     if (has_pressure) {
         xf86InitValuatorAxisStruct(dev, 4,
@@ -385,8 +385,8 @@ init_pointer_absolute(InputInfoPtr pInfo)
     xf86InitValuatorAxisStruct(dev, 1, XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y),
                                min, max, res * 1000, 0, res * 1000, Absolute);
 
-    SetScrollValuator(dev, 2, SCROLL_TYPE_HORIZONTAL, 15, 0);
-    SetScrollValuator(dev, 3, SCROLL_TYPE_VERTICAL, 15, 0);
+    SetScrollValuator(dev, 2, SCROLL_TYPE_HORIZONTAL, 120, 0);
+    SetScrollValuator(dev, 3, SCROLL_TYPE_VERTICAL, 120, 0);
 
     if (has_pressure) {
         xf86InitValuatorAxisStruct(dev, 4,
@@ -462,8 +462,8 @@ init_touch(InputInfoPtr pInfo)
                                XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_POSITION_Y),
                                min, max, res * 1000, 0, res * 1000, Absolute);
 
-    SetScrollValuator(dev, 2, SCROLL_TYPE_HORIZONTAL, 15, 0);
-    SetScrollValuator(dev, 3, SCROLL_TYPE_VERTICAL, 15, 0);
+    SetScrollValuator(dev, 2, SCROLL_TYPE_HORIZONTAL, 120, 0);
+    SetScrollValuator(dev, 3, SCROLL_TYPE_VERTICAL, 120, 0);
 
     xf86InitValuatorAxisStruct(dev, 4,
                                XIGetKnownProperty(AXIS_LABEL_PROP_ABS_MT_PRESSURE),

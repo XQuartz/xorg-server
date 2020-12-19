@@ -1373,6 +1373,16 @@ DeliverTouchEmulatedEvent(DeviceIntPtr dev, TouchPointInfoPtr ti,
     int nevents;
     DeviceIntPtr kbd;
 
+    /* There may be a pointer grab on the device */
+    if (!grab) {
+        grab = dev->deviceGrab.grab;
+        if (grab) {
+            win = grab->window;
+            xi2mask = grab->xi2mask;
+            client = rClient(grab);
+        }
+    }
+
     /* We don't deliver pointer events to non-owners */
     if (!TouchResourceIsOwner(ti, listener->listener))
         return !Success;
@@ -1501,16 +1511,6 @@ DeliverEmulatedMotionEvent(DeviceIntPtr dev, TouchPointInfoPtr ti,
                                        &ti->listeners[0], &client, &win, &grab,
                                        &mask))
             return;
-
-        /* There may be a pointer grab on the device */
-        if (!grab) {
-            grab = dev->deviceGrab.grab;
-            if (grab) {
-                win = grab->window;
-                mask = grab->xi2mask;
-                client = rClient(grab);
-            }
-        }
 
         DeliverTouchEmulatedEvent(dev, ti, (InternalEvent*)&motion, &ti->listeners[0], client,
                                   win, grab, mask);

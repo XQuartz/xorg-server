@@ -378,7 +378,7 @@ QuartzModeBundleInit(void);
                 /* FIXME: This is a hack to avoid passing the event to AppKit which
                  *        would result in it raising one of its windows.
                  */
-                _appFlags._active = YES;
+                //_appFlags._active = YES;
 
                 [self set_front_process:nil];
 

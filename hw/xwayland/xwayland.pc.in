@@ -5,3 +5,4 @@ xwayland=@xwayland_path@/Xwayland
 have_glamor=@have_glamor@
 have_eglstream=@have_eglstream@
 have_initfd=true
+have_listenfd=true

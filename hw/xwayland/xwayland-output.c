@@ -832,6 +832,8 @@ xwl_output_remove(struct xwl_output *xwl_output)
 
     xorg_list_del(&xwl_output->link);
 
+    RROutputSetConnection(xwl_output->randr_output, RR_Disconnected);
+
     xorg_list_for_each_entry(it, &xwl_screen->output_list, link)
         output_get_new_size(it, &width, &height);
     update_screen_size(xwl_output, width, height);

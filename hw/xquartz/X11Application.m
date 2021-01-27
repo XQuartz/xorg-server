@@ -48,7 +48,6 @@
 
 #include <mach/mach.h>
 #include <unistd.h>
-#include <AvailabilityMacros.h>
 
 #include <pthread.h>
 

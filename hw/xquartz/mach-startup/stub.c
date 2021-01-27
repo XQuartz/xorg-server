@@ -50,8 +50,6 @@
 
 #include <signal.h>
 
-#include <AvailabilityMacros.h>
-
 #include "launchd_fd.h"
 
 static char x11_path[PATH_MAX + 1];

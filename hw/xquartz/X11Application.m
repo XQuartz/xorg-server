@@ -1082,12 +1082,15 @@ X11ApplicationCanEnterRandR(void)
     if (!XQuartzIsRootless)
         QuartzShowFullscreen(FALSE);
 
-    switch (NSRunAlertPanel(title, @"%@",
-                            NSLocalizedString(@"Allow",
-                                              @""),
-                            NSLocalizedString(@"Cancel",
-                                              @""),
-                            NSLocalizedString(@"Always Allow", @""), msg)) {
+    NSInteger __block alert_result;
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        alert_result = NSRunAlertPanel(title, @"%@",
+                                       NSLocalizedString(@"Allow", @""),
+                                       NSLocalizedString(@"Cancel", @""),
+                                       NSLocalizedString(@"Always Allow", @""), msg);
+    });
+
+    switch (alert_result) {
     case NSAlertOtherReturn:
         [X11App prefs_set_boolean:@PREFS_NO_RANDR_ALERT value:YES];
         [X11App prefs_synchronize];

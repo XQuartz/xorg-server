@@ -1209,11 +1209,6 @@ X11ApplicationMain(int argc, char **argv, char **envp)
 
     /* Calculate the height of the menubar so we can avoid it. */
     aquaMenuBarHeight = [[NSApp mainMenu] menuBarHeight];
-#if ! __LP64__
-    if (!aquaMenuBarHeight) {
-        aquaMenuBarHeight = [NSMenuView menuBarHeight];
-    }
-#endif
     if (!aquaMenuBarHeight) {
         NSScreen* primaryScreen = [[NSScreen screens] objectAtIndex:0];
         aquaMenuBarHeight = NSHeight([primaryScreen frame]) - NSMaxY([primaryScreen visibleFrame]);

@@ -56,11 +56,6 @@
 
 #include "nonsdk_extinit.h"
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
-// From NSApplication.h
-extern const double NSAppKitVersionNumber;
-#endif
-
 /* 10.4's deferred update makes X slower.. have to live with the tearing
  * for now.. */
 #define XP_NO_DEFERRED_UPDATES 8
@@ -172,18 +167,13 @@ displayScreenBounds(CGDirectDisplayID id)
               (int)frame.origin.x, (int)frame.origin.y);
 
     Boolean spacePerDisplay = false;
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
-    if (NSAppKitVersionNumber >= 1265)
-#endif
-    {
-        Boolean ok;
-        (void)CFPreferencesAppSynchronize(CFSTR("com.apple.spaces"));
-        spacePerDisplay = ! CFPreferencesGetAppBooleanValue(CFSTR("spans-displays"),
-                                                            CFSTR("com.apple.spaces"),
-                                                            &ok);
-        if (!ok)
-            spacePerDisplay = true;
-    }
+    Boolean ok;
+    (void)CFPreferencesAppSynchronize(CFSTR("com.apple.spaces"));
+    spacePerDisplay = ! CFPreferencesGetAppBooleanValue(CFSTR("spans-displays"),
+                                                        CFSTR("com.apple.spaces"),
+                                                        &ok);
+    if (!ok)
+        spacePerDisplay = true;
 
     /* Remove menubar to help standard X11 window managers.
      * On Mavericks and later, the menu bar is on all displays when spans-displays is false or unset.

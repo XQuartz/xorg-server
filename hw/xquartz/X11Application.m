@@ -326,14 +326,11 @@ message_kit_thread(SEL selector, NSObject *arg)
                     swallow_keycode = [e keyCode];
                     do_swallow = YES;
                     for_x = NO;
-#if XPLUGIN_VERSION >= 1
-                }
-                else if (XQuartzEnableKeyEquivalents &&
+                } else if (XQuartzEnableKeyEquivalents &&
                          xp_is_symbolic_hotkey_event([e eventRef])) {
                     swallow_keycode = [e keyCode];
                     do_swallow = YES;
                     for_x = NO;
-#endif
                 }
                 else if (XQuartzEnableKeyEquivalents &&
                          [[self mainMenu] performKeyEquivalent:e]) {
@@ -1526,8 +1523,6 @@ handle_mouse:
         }
 
         if (!XQuartzServerVisible && noTestExtensions) {
-#if defined(XPLUGIN_VERSION) && XPLUGIN_VERSION > 0
-            /* Older libXplugin (Tiger/"Stock" Leopard) aren't thread safe, so we can't call xp_find_window from the Appkit thread */
             xp_window_id wid = 0;
             xp_error err;
 
@@ -1540,7 +1535,6 @@ handle_mouse:
             err = xp_find_window(location.x, location.y, 0, &wid);
 
             if (err != XP_Success || (err == XP_Success && wid == 0))
-#endif
             {
                 bgMouseLocation = location;
                 bgMouseLocationUpdated = TRUE;
@@ -1618,17 +1612,6 @@ handle_mouse:
         }
 #endif
         
-#if !defined(XPLUGIN_VERSION) || XPLUGIN_VERSION == 0
-        /* If we're in the background, we need to send a MotionNotify event
-         * first, since we aren't getting them on background mouse motion
-         */
-        if (!XQuartzServerVisible && noTestExtensions) {
-            bgMouseLocationUpdated = FALSE;
-            DarwinSendPointerEvents(darwinPointer, MotionNotify, 0,
-                                    location.x, location.y,
-                                    0.0, 0.0);
-        }
-#endif
         if (NSAppKitVersionNumber >= NSAppKitVersionNumber10_7 &&
             XQuartzScrollInDeviceDirection &&
             [e isDirectionInvertedFromDevice]) {

@@ -1667,15 +1667,12 @@ handle_mouse:
                                     0.0, 0.0);
         }
 #endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
-        // TODO: Change 1117 to NSAppKitVersionNumber10_7 when it is defined
-        if (NSAppKitVersionNumber >= 1117 &&
+        if (NSAppKitVersionNumber >= NSAppKitVersionNumber10_7 &&
             XQuartzScrollInDeviceDirection &&
             [e isDirectionInvertedFromDevice]) {
             deltaX *= -1;
             deltaY *= -1;
         }
-#endif
         /* This hack is in place to better deal with "clicky" scroll wheels:
          * http://xquartz.macosforge.org/trac/ticket/562
          */

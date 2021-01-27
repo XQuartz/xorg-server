@@ -46,10 +46,7 @@
 #undef BOOL
 #endif
 
-@interface X11Controller : NSObject
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
-    <NSTableViewDataSource>
-#endif
+@interface X11Controller : NSObject <NSTableViewDataSource>
 {
     IBOutlet NSPanel *prefs_panel;
 

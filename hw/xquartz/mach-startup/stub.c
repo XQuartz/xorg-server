@@ -61,8 +61,6 @@ aslclient aslc;
 static void
 set_x11_path(void)
 {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
-
     CFURLRef appURL = NULL;
     OSStatus osstatus =
         LSFindApplicationForInfo(kLSUnknownCreator, CFSTR(
@@ -104,11 +102,6 @@ set_x11_path(void)
                 (int)osstatus);
         exit(11);
     }
-#else
-    /* TODO: Make Tiger smarter... but TBH, this should never get called on Tiger... */
-    strlcpy(x11_path, "/Applications/Utilities/X11.app/Contents/MacOS/X11",
-            sizeof(x11_path));
-#endif
 }
 
 static int
@@ -291,15 +284,9 @@ main(int argc, char **argv, char **envp)
         }
 
         if (kr != KERN_SUCCESS) {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
             asl_log(aslc, NULL, ASL_LEVEL_ERR,
                     "Xquartz: bootstrap_look_up(): %s", bootstrap_strerror(
                         kr));
-#else
-            asl_log(aslc, NULL, ASL_LEVEL_ERR,
-                    "Xquartz: bootstrap_look_up(): %ul",
-                    (unsigned long)kr);
-#endif
             return EXIT_FAILURE;
         }
     }

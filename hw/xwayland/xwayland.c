@@ -93,6 +93,7 @@ ddxUseMsg(void)
     ErrorF("-eglstream             use eglstream backend for nvidia GPUs\n");
 #endif
     ErrorF("-shm                   use shared memory for passing buffers\n");
+    ErrorF("-verbose [n]           verbose startup messages\n");
     ErrorF("-version               show the server version and exit\n");
 }
 
@@ -100,6 +101,7 @@ static int init_fd = -1;
 static int wm_fd = -1;
 static int listen_fds[5] = { -1, -1, -1, -1, -1 };
 static int listen_fd_count = 0;
+static int verbosity = 0;
 
 static void
 xwl_show_version(void)
@@ -159,6 +161,21 @@ ddxProcessArgument(int argc, char *argv[], int i)
         return 2;
     }
     else if (strcmp(argv[i], "-shm") == 0) {
+        return 1;
+    }
+    else if (strcmp(argv[i], "-verbose") == 0) {
+        if (++i < argc && argv[i]) {
+            char *end;
+            long val;
+
+            val = strtol(argv[i], &end, 0);
+            if (*end == '\0') {
+                verbosity = val;
+                LogSetParameter(XLOG_VERBOSITY, verbosity);
+                return 2;
+            }
+        }
+        LogSetParameter(XLOG_VERBOSITY, ++verbosity);
         return 1;
     }
     else if (strcmp(argv[i], "-eglstream") == 0) {

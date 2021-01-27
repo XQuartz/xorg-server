@@ -331,10 +331,6 @@ xprAddScreen(int index, ScreenPtr pScreen)
     DEBUG_LOG("index=%d depth=%d\n", index, depth);
 
     if (depth == -1) {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
-        depth = CGDisplaySamplesPerPixel(kCGDirectMainDisplay) *
-                CGDisplayBitsPerSample(kCGDirectMainDisplay);
-#else
         CGDisplayModeRef modeRef;
         CFStringRef encStrRef;
 
@@ -364,12 +360,9 @@ xprAddScreen(int index, ScreenPtr pScreen)
         }
 
         CFRelease(encStrRef);
-#endif
     }
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1060
 have_depth:
-#endif
     switch (depth) {
     case 8:     // pseudo-working
         dfb->visuals = PseudoColorMask;

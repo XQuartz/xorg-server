@@ -32,8 +32,7 @@ libXquartz_la_SOURCES = \
 	quartzCocoa.m \
 	quartzKeyboard.c \
 	quartzStartup.c \
-	quartzRandR.c \
-	console_redirect.c
+	quartzRandR.c
 
 libXquartz_la_LIBADD = $(top_builddir)/pseudoramiX/libPseudoramiX.la
 
@@ -50,5 +49,4 @@ EXTRA_DIST = \
 	quartzKeyboard.h \
 	quartzRandR.h \
 	sanitizedCarbon.h \
-	sanitizedCocoa.h \
-	console_redirect.h
+	sanitizedCocoa.h

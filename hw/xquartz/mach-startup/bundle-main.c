@@ -91,12 +91,8 @@ extern int noPanoramiXExtension;
 static char __crashreporter_info_buff__[4096] = { 0 };
 static const char *__crashreporter_info__ __attribute__((__used__)) =
     &__crashreporter_info_buff__[0];
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
-// This is actually a toolchain requirement, but I'm not sure the correct check,
-// but it should be fine to just only include it for Leopard and later.  This line
-// just tells the linker to never strip this symbol (such as for space optimization)
+// This line just tells the linker to never strip this symbol (such as for space optimization)
 asm (".desc ___crashreporter_info__, 0x10");
-#endif
 
 static const char *__crashreporter_info__base =
     "X.Org X Server " XSERVER_VERSION;
@@ -477,14 +473,9 @@ startup_trigger(int argc, char **argv, char **envp)
 
         kr = bootstrap_look_up(bootstrap_port, server_bootstrap_name, &mp);
         if (kr != KERN_SUCCESS) {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
             ErrorF("bootstrap_look_up(%s): %s\n", server_bootstrap_name,
                    bootstrap_strerror(
                        kr));
-#else
-            ErrorF("bootstrap_look_up(%s): %ul\n", server_bootstrap_name,
-                   (unsigned long)kr);
-#endif
             exit(EXIT_FAILURE);
         }
 

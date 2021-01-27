@@ -85,11 +85,7 @@ static dispatch_queue_t eventTranslationQueue;
 extern Bool noTestExtensions;
 extern Bool noRenderExtension;
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
 static TISInputSourceRef last_key_layout;
-#else
-static KeyboardLayoutRef last_key_layout;
-#endif
 
 /* This preference is only tested on Lion or later as it's not relevant to
  * earlier OS versions.
@@ -1236,18 +1232,11 @@ X11ApplicationMain(int argc, char **argv, char **envp)
 #endif
 
     /* Set the key layout seed before we start the server */
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
     last_key_layout = TISCopyCurrentKeyboardLayoutInputSource();
 
     if (!last_key_layout)
         ErrorF(
             "X11ApplicationMain: Unable to determine TISCopyCurrentKeyboardLayoutInputSource() at startup.\n");
-#else
-    KLGetCurrentKeyboardLayout(&last_key_layout);
-    if (!last_key_layout)
-        ErrorF(
-            "X11ApplicationMain: Unable to determine KLGetCurrentKeyboardLayout() at startup.\n");
-#endif
 
     if (!QuartsResyncKeymap(FALSE)) {
         ErrorF("X11ApplicationMain: Could not build a valid keymap.\n");
@@ -1653,11 +1642,6 @@ handle_mouse:
 
     case NSScrollWheel:
     {
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
-        float deltaX = [e deltaX];
-        float deltaY = [e deltaY];
-        BOOL isContinuous = NO;
-#else
         CGFloat deltaX = [e deltaX];
         CGFloat deltaY = [e deltaY];
         CGEventRef cge = [e CGEvent];
@@ -1678,7 +1662,6 @@ handle_mouse:
             deltaX *= lineHeight / 5.0;
             deltaY *= lineHeight / 5.0;
         }
-#endif
 #endif
         
 #if !defined(XPLUGIN_VERSION) || XPLUGIN_VERSION == 0
@@ -1806,7 +1789,6 @@ handle_mouse:
     }
 
         if (darwinSyncKeymap) {
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
             TISInputSourceRef key_layout = 
                 TISCopyCurrentKeyboardLayoutInputSource();
             TISInputSourceRef clear;
@@ -1818,12 +1800,7 @@ handle_mouse:
                 clear = last_key_layout;
                 last_key_layout = key_layout;
                 CFRelease(clear);
-#else
-            KeyboardLayoutRef key_layout;
-            KLGetCurrentKeyboardLayout(&key_layout);
-            if (key_layout != last_key_layout) {
-                last_key_layout = key_layout;
-#endif
+
                 /* Update keyInfo */
                 if (!QuartsResyncKeymap(TRUE)) {
                     ErrorF(

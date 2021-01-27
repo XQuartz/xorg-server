@@ -57,6 +57,8 @@
 #include "mach_startup.h"
 #include "mach_startupServer.h"
 
+#include <asl.h>
+
 /* From darwinEvents.c ... but don't want to pull in all the server cruft */
 void
 DarwinListenOnOpenFD(int fd);

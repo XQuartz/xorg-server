@@ -35,8 +35,6 @@
 
 #include <asl.h>
 
-#include <AvailabilityMacros.h>
-
 #define  Cursor X_Cursor
 #undef _SHAPE_H_
 #include <X11/Xlib.h>

@@ -64,11 +64,9 @@ xpbproxy_run(void);
 #define XSERVER_VERSION "?"
 #endif
 
-#ifdef HAVE_LIBDISPATCH
 #include <dispatch/dispatch.h>
 
 static dispatch_queue_t eventTranslationQueue;
-#endif
 
 #ifndef __has_feature
 #define __has_feature(x) 0
@@ -486,13 +484,9 @@ message_kit_thread(SEL selector, NSObject *arg)
     if (for_appkit) [super sendEvent:e];
 
     if (for_x) {
-#ifdef HAVE_LIBDISPATCH
         dispatch_async(eventTranslationQueue, ^{
                            [self sendX11NSEvent:e];
                        });
-#else
-        [self sendX11NSEvent:e];
-#endif
     }
 }
 
@@ -1225,11 +1219,9 @@ X11ApplicationMain(int argc, char **argv, char **envp)
         aquaMenuBarHeight = NSHeight([primaryScreen frame]) - NSMaxY([primaryScreen visibleFrame]);
     }
 
-#ifdef HAVE_LIBDISPATCH
     eventTranslationQueue = dispatch_queue_create(
         BUNDLE_ID_PREFIX ".X11.NSEventsToX11EventsQueue", NULL);
     assert(eventTranslationQueue != NULL);
-#endif
 
     /* Set the key layout seed before we start the server */
     last_key_layout = TISCopyCurrentKeyboardLayoutInputSource();

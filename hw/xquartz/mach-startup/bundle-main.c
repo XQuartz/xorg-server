@@ -44,11 +44,7 @@
 #include <stdbool.h>
 #include <signal.h>
 
-#ifdef HAVE_LIBDISPATCH
 #include <dispatch/dispatch.h>
-#else
-#include <pthread.h>
-#endif
 
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -115,23 +111,6 @@ static char *pref_app_to_run;
 static char *pref_login_shell;
 static char *pref_startx_script;
 
-#ifndef HAVE_LIBDISPATCH
-/*** Pthread Magics ***/
-static pthread_t
-create_thread(void *(*func)(void *), void *arg)
-{
-    pthread_attr_t attr;
-    pthread_t tid;
-
-    pthread_attr_init(&attr);
-    pthread_attr_setscope(&attr, PTHREAD_SCOPE_SYSTEM);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthread_create(&tid, &attr, func, arg);
-    pthread_attr_destroy(&attr);
-
-    return tid;
-}
-#endif
 
 /*** Mach-O IPC Stuffs ***/
 
@@ -239,16 +218,9 @@ typedef struct {
 /* This thread accepts an incoming connection and hands off the file
  * descriptor for the new connection to accept_fd_handoff()
  */
-#ifdef HAVE_LIBDISPATCH
 static void
 socket_handoff(socket_handoff_t *handoff_data)
 {
-#else
-static void *
-socket_handoff_thread(void *arg)
-{
-    socket_handoff_t *handoff_data = (socket_handoff_t *)arg;
-#endif
 
     int launchd_fd = -1;
     int connected_fd;
@@ -283,9 +255,6 @@ socket_handoff_thread(void *arg)
         launchd_fd);
     DarwinListenOnOpenFD(launchd_fd);
 
-#ifndef HAVE_LIBDISPATCH
-    return NULL;
-#endif
 }
 
 static int
@@ -369,14 +338,10 @@ do_request_fd_handoff_socket(mach_port_t port, string_t filename)
 
     strlcpy(filename, handoff_data->filename, STRING_T_SIZE);
 
-#ifdef HAVE_LIBDISPATCH
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT,
                                              0), ^ {
                        socket_handoff(handoff_data);
                    });
-#else
-    create_thread(socket_handoff_thread, handoff_data);
-#endif
 
 #ifdef DEBUG
     ErrorF(

@@ -31,7 +31,6 @@
 #include <dix-config.h>
 #else
 #define DEBUG_CONSOLE_REDIRECT 1
-#define HAVE_LIBDISPATCH       1
 #endif
 
 #include <assert.h>
@@ -49,22 +48,10 @@
 
 #define BUF_SIZE 512
 
-#ifdef HAVE_LIBDISPATCH
 #include <dispatch/dispatch.h>
 
 static dispatch_queue_t redirect_serial_q;
 static dispatch_group_t read_source_group;
-#else
-#include <pthread.h>
-
-static pthread_t redirect_pthread;
-static pthread_mutex_t redirect_fds_lock = PTHREAD_MUTEX_INITIALIZER;
-
-static int kq;
-
-/* Notifications to our reader thread */
-#define ASL_REDIRECT_TERMINATE ((void *)(uintptr_t)1)
-#endif
 
 typedef struct {
     int level;
@@ -75,9 +62,7 @@ typedef struct {
     char *buf;
     char *w;
 
-#ifdef HAVE_LIBDISPATCH
     dispatch_source_t read_source;
-#endif
 } asl_redirect;
 
 static asl_redirect *redirect_fds = NULL;
@@ -153,7 +138,6 @@ _read_redirect(int fd, int flush)
     return total_read;
 }
 
-#ifdef HAVE_LIBDISPATCH
 static void
 read_from_source(void *_source)
 {
@@ -181,79 +165,6 @@ cancel_source(void *_source)
     dispatch_group_leave(read_source_group);
 }
 
-#else /* !HAVE_LIBDISPATCH */
-static void *
-redirect_thread(void *ctx __unused)
-{
-    struct kevent ev;
-    int n;
-
-    while (1) {
-        n = kevent(kq, NULL, 0, &ev, 1, NULL);
-
-        /* Bail on errors */
-        if (n < 0) {
-            asl_log(NULL, NULL, ASL_LEVEL_ERR, "kevent failure: %s",
-                    strerror(errno));
-            break;
-        }
-
-        /* This should not happen */
-        if (n == 0)
-            continue;
-
-        switch (ev.filter) {
-        case EVFILT_READ:
-            pthread_mutex_lock(&redirect_fds_lock);
-            {
-                int fd = ev.ident;
-                int close_fd = 0;
-                asl_redirect *aslr = &redirect_fds[fd];
-
-                if (fd < 0 || fd >= n_redirect_fds || aslr->buf == NULL) {
-                    asl_log(NULL, NULL, ASL_LEVEL_ERR,
-                            "Unexpected file descriptor: %d",
-                            fd);
-                    goto next;
-                }
-
-                if (ev.flags & EV_EOF) {
-                    close_fd = 1;
-                    if (EOF != _read_redirect(fd, 1)) {
-                        asl_log(
-                            NULL, NULL, ASL_LEVEL_ERR,
-                            "kevent reported EOF on %d, but read doesn't concur.",
-                            fd);
-                    }
-                }
-                else {
-                    close_fd = (EOF == _read_redirect(fd, 0));
-                }
-
-                if (close_fd) {
-                    EV_SET(&ev, fd, EVFILT_READ, EV_DELETE, 0, 0, 0);
-                    kevent(kq, &ev, 1, NULL, 0, NULL);
-                    close(fd);
-                    free(aslr->buf);
-                    memset(aslr, 0, sizeof(*aslr));
-                }
-            }
-next:
-            pthread_mutex_unlock(&redirect_fds_lock);
-
-        case EVFILT_TIMER:
-            if (ev.udata == ASL_REDIRECT_TERMINATE)
-                return NULL;
-
-        default:
-            ;
-            ;
-        }
-    }
-
-    return NULL;
-}
-#endif
 
 static void
 redirect_atexit(void)
@@ -262,7 +173,6 @@ redirect_atexit(void)
     if (redirect_fds[STDOUT_FILENO].buf)
         fflush(stdout);
 
-#ifdef HAVE_LIBDISPATCH
     {
         int i;
 
@@ -276,42 +186,19 @@ redirect_atexit(void)
                             dispatch_time(DISPATCH_TIME_NOW, 3LL *
                                           NSEC_PER_SEC));
     }
-#else
-    {
-        struct kevent ev;
-
-        /* Tell our reader thread it is time to pack up and go home */
-        EV_SET(&ev, 0, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, 0,
-               ASL_REDIRECT_TERMINATE);
-        kevent(kq, &ev, 1, NULL, 0, NULL);
-
-        pthread_join(redirect_pthread, NULL);
-    }
-#endif
 }
 
-#ifdef HAVE_LIBDISPATCH
 static void
 xq_asl_init(void *ctx __unused)
-#else
-static void
-xq_asl_init(void)
-#endif
 {
     assert((redirect_fds = calloc(16, sizeof(*redirect_fds))) != NULL);
     n_redirect_fds = 16;
 
-#ifdef HAVE_LIBDISPATCH
     redirect_serial_q = dispatch_queue_create("com.apple.asl-redirect", NULL);
     assert(redirect_serial_q != NULL);
 
     read_source_group = dispatch_group_create();
     assert(read_source_group != NULL);
-#else
-    assert((kq = kqueue()) != -1);
-    assert(pthread_create(&redirect_pthread, NULL, redirect_thread,
-                          NULL) == 0);
-#endif
 
     atexit(redirect_atexit);
 }
@@ -319,26 +206,15 @@ xq_asl_init(void)
 int
 xq_asl_log_fd(aslclient asl, aslmsg msg, int level, int fd)
 {
-#ifdef HAVE_LIBDISPATCH
     int err __block = 0;
     static dispatch_once_t once_control;
     dispatch_once_f(&once_control, NULL, xq_asl_init);
-#else
-    int err = 0;
-    static pthread_once_t once_control = PTHREAD_ONCE_INIT;
-    assert(pthread_once(&once_control, xq_asl_init) == 0);
-#endif
 
     if (fd < 0)
         return EBADF;
 
-#ifdef HAVE_LIBDISPATCH
 #define BLOCK_DONE return
     dispatch_sync(redirect_serial_q, ^
-#else
-#define BLOCK_DONE goto done
-    assert(pthread_mutex_lock(&redirect_fds_lock) == 0);
-#endif
                   {
                       /* Reallocate if we need more space */
                       if (fd >= n_redirect_fds) {
@@ -380,7 +256,6 @@ xq_asl_log_fd(aslclient asl, aslmsg msg, int level, int fd)
                             O_NONBLOCK);
 
                       /* Start listening */
-#ifdef HAVE_LIBDISPATCH
                       {
                           dispatch_source_t read_source =
                               dispatch_source_create(
@@ -395,20 +270,8 @@ xq_asl_log_fd(aslclient asl, aslmsg msg, int level, int fd)
                           dispatch_group_enter(read_source_group);
                           dispatch_resume(read_source);
                       }
-#else
-                      {
-                          struct kevent ev;
-                          EV_SET(&ev, fd, EVFILT_READ, EV_ADD, 0, 0, 0);
-                          kevent(kq, &ev, 1, NULL, 0, NULL);
-                      }
-#endif
                   }
-#ifdef HAVE_LIBDISPATCH
                   );
-#else
-done:
-                  assert(pthread_mutex_unlock(&redirect_fds_lock) == 0);
-#endif
 #undef BLOCK_DONE
 
     return err;

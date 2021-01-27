@@ -69,8 +69,6 @@
 #include "x-hook.h"
 #include "driWrap.h"
 
-#include <AvailabilityMacros.h>
-
 static DevPrivateKeyRec DRIScreenPrivKeyRec;
 #define DRIScreenPrivKey       (&DRIScreenPrivKeyRec)
 static DevPrivateKeyRec DRIWindowPrivKeyRec;

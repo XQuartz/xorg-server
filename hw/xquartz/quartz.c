@@ -203,7 +203,9 @@ QuartzInitOutput(int argc,
     // Do display mode specific initialization
     quartzProcs->DisplayInit();
 
-    QuartzExtensionInit();
+    if (serverGeneration == 1) {
+        QuartzExtensionInit();
+    }
 }
 
 /*

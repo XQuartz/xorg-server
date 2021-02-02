@@ -765,7 +765,7 @@ QuartzReadSystemKeymap(darwinKeyboardInfo *info)
     OSStatus err;
     KeySym *k;
 
-    dispatch_sync(dispatch_get_main_queue(), ^{
+    dispatch_block_t getKeyboardData = ^{
         keyboard_type = LMGetKbdType();
 
         TISInputSourceRef currentKeyLayoutRef = TISCopyCurrentKeyboardLayoutInputSource();
@@ -778,7 +778,14 @@ QuartzReadSystemKeymap(darwinKeyboardInfo *info)
 
             CFRelease(currentKeyLayoutRef);
         }
-    });
+    };
+
+    /* This is an ugly ant-pattern, but it is more expedient to address the problem right now. */
+    if (pthread_main_np()) {
+        getKeyboardData();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), getKeyboardData);
+    }
 
     if (chr_data == NULL) {
         ErrorF("Couldn't get uchr or kchr resource\n");

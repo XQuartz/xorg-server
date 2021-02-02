@@ -757,23 +757,33 @@ make_dead_key(KeySym in)
 static Bool
 QuartzReadSystemKeymap(darwinKeyboardInfo *info)
 {
-    const void *chr_data = NULL;
+    __block const void *chr_data = NULL;
     int num_keycodes = NUM_KEYCODES;
-    UInt32 keyboard_type = LMGetKbdType();
+    __block UInt32 keyboard_type;
     int i, j;
     OSStatus err;
     KeySym *k;
-    CFDataRef currentKeyLayoutDataRef = NULL;
 
-    TISInputSourceRef currentKeyLayoutRef =
-        TISCopyCurrentKeyboardLayoutInputSource();
+    dispatch_block_t getKeyboardData = ^{
+        keyboard_type = LMGetKbdType();
 
-    if (currentKeyLayoutRef) {
-        currentKeyLayoutDataRef = (CFDataRef)TISGetInputSourceProperty(
-            currentKeyLayoutRef, kTISPropertyUnicodeKeyLayoutData);
-        if (currentKeyLayoutDataRef)
-            chr_data = CFDataGetBytePtr(currentKeyLayoutDataRef);
-        CFRelease(currentKeyLayoutRef);
+        TISInputSourceRef currentKeyLayoutRef = TISCopyCurrentKeyboardLayoutInputSource();
+
+        if (currentKeyLayoutRef) {
+            CFDataRef currentKeyLayoutDataRef = (CFDataRef)TISGetInputSourceProperty(currentKeyLayoutRef,
+                                                                                     kTISPropertyUnicodeKeyLayoutData);
+            if (currentKeyLayoutDataRef)
+                chr_data = CFDataGetBytePtr(currentKeyLayoutDataRef);
+
+            CFRelease(currentKeyLayoutRef);
+        }
+    };
+
+    /* This is an ugly ant-pattern, but it is more expedient to address the problem right now. */
+    if (pthread_main_np()) {
+        getKeyboardData();
+    } else {
+        dispatch_sync(dispatch_get_main_queue(), getKeyboardData);
     }
 
     if (chr_data == NULL) {

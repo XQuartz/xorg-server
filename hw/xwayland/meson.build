@@ -137,6 +137,8 @@ xwayland_server = executable(
 )
 
 xwayland_data = configuration_data()
+xwayland_data.set('prefix', get_option('prefix'))
+xwayland_data.set('exec_prefix', '${prefix}')
 xwayland_data.set('PACKAGE_VERSION', meson.project_version())
 xwayland_data.set('xwayland_path', xwayland_path)
 xwayland_data.set('have_glamor', build_glamor ? 'true' : 'false')

@@ -477,76 +477,88 @@ pointer_handle_leave(void *data, struct wl_pointer *pointer,
 }
 
 static void
-dispatch_pointer_motion_event(struct xwl_seat *xwl_seat)
+dispatch_relative_motion_with_warp(struct xwl_seat *xwl_seat)
+{
+    double dx, dx_unaccel;
+    double dy, dy_unaccel;
+
+    dx = xwl_seat->pending_pointer_event.dx;
+    dy = xwl_seat->pending_pointer_event.dy;
+    dx_unaccel = xwl_seat->pending_pointer_event.dx_unaccel;
+    dy_unaccel = xwl_seat->pending_pointer_event.dy_unaccel;
+
+    xwl_pointer_warp_emulator_handle_motion(xwl_seat->pointer_warp_emulator,
+                                            dx, dy,
+                                            dx_unaccel, dy_unaccel);
+}
+
+static void
+dispatch_absolute_motion(struct xwl_seat *xwl_seat)
 {
     ValuatorMask mask;
+    DeviceIntPtr device;
+    int flags;
+    int event_x = wl_fixed_to_int(xwl_seat->pending_pointer_event.x);
+    int event_y = wl_fixed_to_int(xwl_seat->pending_pointer_event.y);
+    int drawable_x = xwl_seat->focus_window->window->drawable.x;
+    int drawable_y = xwl_seat->focus_window->window->drawable.y;
+    int x;
+    int y;
 
-    if (xwl_seat->pointer_warp_emulator &&
-        xwl_seat->pending_pointer_event.has_relative) {
-        double dx;
-        double dy;
-        double dx_unaccel;
-        double dy_unaccel;
+    if (xwl_window_has_viewport_enabled(xwl_seat->focus_window)) {
+        event_x *= xwl_seat->focus_window->scale_x;
+        event_y *= xwl_seat->focus_window->scale_y;
+    }
 
-        dx = xwl_seat->pending_pointer_event.dx;
-        dy = xwl_seat->pending_pointer_event.dy;
-        dx_unaccel = xwl_seat->pending_pointer_event.dx_unaccel;
-        dy_unaccel = xwl_seat->pending_pointer_event.dy_unaccel;
-        xwl_pointer_warp_emulator_handle_motion(xwl_seat->pointer_warp_emulator,
-                                                dx, dy,
-                                                dx_unaccel, dy_unaccel);
-    } else if (xwl_seat->pending_pointer_event.has_absolute ||
-               xwl_seat->pending_pointer_event.has_relative) {
-        if (xwl_seat->pending_pointer_event.has_relative) {
-            double dx, dx_unaccel;
-            double dy, dy_unaccel;
+    x = drawable_x + event_x;
+    y = drawable_y + event_y;
 
-            dx = xwl_seat->pending_pointer_event.dx;
-            dy = xwl_seat->pending_pointer_event.dy;
-            dx_unaccel = xwl_seat->pending_pointer_event.dx_unaccel;
-            dy_unaccel = xwl_seat->pending_pointer_event.dy_unaccel;
+    valuator_mask_zero(&mask);
+    valuator_mask_set(&mask, 0, x);
+    valuator_mask_set(&mask, 1, y);
 
-            valuator_mask_zero(&mask);
-            valuator_mask_set_unaccelerated(&mask, 0, dx, dx_unaccel);
-            valuator_mask_set_unaccelerated(&mask, 1, dy, dy_unaccel);
+    if (xwl_seat->pending_pointer_event.has_relative) {
+         flags = POINTER_ABSOLUTE | POINTER_SCREEN | POINTER_NORAW;
+         device = xwl_seat->relative_pointer;
+    } else {
+         flags = POINTER_ABSOLUTE | POINTER_SCREEN;
+         device = xwl_seat->pointer;
+    }
 
-            QueuePointerEvents(xwl_seat->relative_pointer, MotionNotify, 0,
-                               POINTER_RAWONLY, &mask);
-        }
+    QueuePointerEvents(device, MotionNotify, 0, flags, &mask);
+}
 
-        if (xwl_seat->pending_pointer_event.has_absolute) {
-            ValuatorMask mask;
-            DeviceIntPtr device;
-            int flags;
-            int sx = wl_fixed_to_int(xwl_seat->pending_pointer_event.x);
-            int sy = wl_fixed_to_int(xwl_seat->pending_pointer_event.y);
-            int dx = xwl_seat->focus_window->window->drawable.x;
-            int dy = xwl_seat->focus_window->window->drawable.y;
-            int x;
-            int y;
+static void
+dispatch_relative_motion(struct xwl_seat *xwl_seat)
+{
+    ValuatorMask mask;
+    double event_dx = xwl_seat->pending_pointer_event.dx;
+    double event_dy = xwl_seat->pending_pointer_event.dy;
+    double event_dx_unaccel = xwl_seat->pending_pointer_event.dx_unaccel;
+    double event_dy_unaccel = xwl_seat->pending_pointer_event.dy_unaccel;
 
-            if (xwl_window_has_viewport_enabled(xwl_seat->focus_window)) {
-                sx *= xwl_seat->focus_window->scale_x;
-                sy *= xwl_seat->focus_window->scale_y;
-            }
+    valuator_mask_zero(&mask);
+    valuator_mask_set_unaccelerated(&mask, 0, event_dx, event_dx_unaccel);
+    valuator_mask_set_unaccelerated(&mask, 1, event_dy, event_dy_unaccel);
 
-            x = dx + sx;
-            y = dy + sy;
+    QueuePointerEvents(xwl_seat->relative_pointer, MotionNotify, 0,
+                       POINTER_RAWONLY, &mask);
+}
 
-            valuator_mask_zero(&mask);
-            valuator_mask_set(&mask, 0, x);
-            valuator_mask_set(&mask, 1, y);
+static void
+dispatch_pointer_motion_event(struct xwl_seat *xwl_seat)
+{
+    Bool has_relative = xwl_seat->pending_pointer_event.has_relative;
+    Bool has_absolute = xwl_seat->pending_pointer_event.has_absolute;
 
-            if (xwl_seat->pending_pointer_event.has_relative) {
-                 flags = POINTER_ABSOLUTE | POINTER_SCREEN | POINTER_NORAW;
-                 device = xwl_seat->relative_pointer;
-            } else {
-                 flags = POINTER_ABSOLUTE | POINTER_SCREEN;
-                 device = xwl_seat->pointer;
-            }
+    if (xwl_seat->pointer_warp_emulator && has_relative) {
+        dispatch_relative_motion_with_warp(xwl_seat);
+    } else {
+        if (has_relative)
+            dispatch_relative_motion(xwl_seat);
 
-            QueuePointerEvents(device, MotionNotify, 0, flags, &mask);
-        }
+        if (has_absolute)
+            dispatch_absolute_motion(xwl_seat);
     }
 
     xwl_seat->pending_pointer_event.has_absolute = FALSE;

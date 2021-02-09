@@ -200,9 +200,9 @@ xwl_pointer_proc_relative(DeviceIntPtr device, int what)
 
         /* Valuators */
         InitValuatorAxisStruct(device, 0, axes_labels[0],
-                               NO_AXIS_LIMITS, NO_AXIS_LIMITS, 1, 0, 1, Relative);
+                               NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Relative);
         InitValuatorAxisStruct(device, 1, axes_labels[1],
-                               NO_AXIS_LIMITS, NO_AXIS_LIMITS, 1, 0, 1, Relative);
+                               NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Relative);
 
         if (!InitPtrFeedbackClassDeviceStruct(device, xwl_pointer_control))
             return BadValue;

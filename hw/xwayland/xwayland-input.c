@@ -497,14 +497,33 @@ dispatch_pointer_motion_event(struct xwl_seat *xwl_seat)
                                                 dx_unaccel, dy_unaccel);
     } else if (xwl_seat->pending_pointer_event.has_absolute ||
                xwl_seat->pending_pointer_event.has_relative) {
-        int x;
-        int y;
+        if (xwl_seat->pending_pointer_event.has_relative) {
+            double dx, dx_unaccel;
+            double dy, dy_unaccel;
+
+            dx = xwl_seat->pending_pointer_event.dx;
+            dy = xwl_seat->pending_pointer_event.dy;
+            dx_unaccel = xwl_seat->pending_pointer_event.dx_unaccel;
+            dy_unaccel = xwl_seat->pending_pointer_event.dy_unaccel;
+
+            valuator_mask_zero(&mask);
+            valuator_mask_set_unaccelerated(&mask, 0, dx, dx_unaccel);
+            valuator_mask_set_unaccelerated(&mask, 1, dy, dy_unaccel);
+
+            QueuePointerEvents(xwl_seat->relative_pointer, MotionNotify, 0,
+                               POINTER_RAWONLY, &mask);
+        }
 
         if (xwl_seat->pending_pointer_event.has_absolute) {
+            ValuatorMask mask;
+            DeviceIntPtr device;
+            int flags;
             int sx = wl_fixed_to_int(xwl_seat->pending_pointer_event.x);
             int sy = wl_fixed_to_int(xwl_seat->pending_pointer_event.y);
             int dx = xwl_seat->focus_window->window->drawable.x;
             int dy = xwl_seat->focus_window->window->drawable.y;
+            int x;
+            int y;
 
             if (xwl_window_has_viewport_enabled(xwl_seat->focus_window)) {
                 sx *= xwl_seat->focus_window->scale_x;
@@ -513,26 +532,21 @@ dispatch_pointer_motion_event(struct xwl_seat *xwl_seat)
 
             x = dx + sx;
             y = dy + sy;
-        } else {
-            miPointerGetPosition(xwl_seat->pointer, &x, &y);
-        }
 
-        valuator_mask_zero(&mask);
-        if (xwl_seat->pending_pointer_event.has_relative) {
-            double dx_unaccel;
-            double dy_unaccel;
-
-            dx_unaccel = xwl_seat->pending_pointer_event.dx_unaccel;
-            dy_unaccel = xwl_seat->pending_pointer_event.dy_unaccel;
-            valuator_mask_set_absolute_unaccelerated(&mask, 0, x, dx_unaccel);
-            valuator_mask_set_absolute_unaccelerated(&mask, 1, y, dy_unaccel);
-        } else {
+            valuator_mask_zero(&mask);
             valuator_mask_set(&mask, 0, x);
             valuator_mask_set(&mask, 1, y);
-        }
 
-        QueuePointerEvents(xwl_seat->pointer, MotionNotify, 0,
-                           POINTER_ABSOLUTE | POINTER_SCREEN, &mask);
+            if (xwl_seat->pending_pointer_event.has_relative) {
+                 flags = POINTER_ABSOLUTE | POINTER_SCREEN | POINTER_NORAW;
+                 device = xwl_seat->relative_pointer;
+            } else {
+                 flags = POINTER_ABSOLUTE | POINTER_SCREEN;
+                 device = xwl_seat->pointer;
+            }
+
+            QueuePointerEvents(device, MotionNotify, 0, flags, &mask);
+        }
     }
 
     xwl_seat->pending_pointer_event.has_absolute = FALSE;

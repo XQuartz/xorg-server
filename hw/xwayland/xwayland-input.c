@@ -591,6 +591,15 @@ pointer_handle_motion(void *data, struct wl_pointer *pointer,
         dispatch_pointer_motion_event(xwl_seat);
 }
 
+static DeviceIntPtr
+get_pointer_device(struct xwl_seat *xwl_seat)
+{
+    if (xwl_seat->relative_pointer)
+        return xwl_seat->relative_pointer;
+    else
+        return xwl_seat->pointer;
+}
+
 static void
 pointer_handle_button(void *data, struct wl_pointer *pointer, uint32_t serial,
                       uint32_t time, uint32_t button, uint32_t state)
@@ -619,7 +628,7 @@ pointer_handle_button(void *data, struct wl_pointer *pointer, uint32_t serial,
     }
 
     valuator_mask_zero(&mask);
-    QueuePointerEvents(xwl_seat->pointer,
+    QueuePointerEvents(get_pointer_device(xwl_seat),
                        state ? ButtonPress : ButtonRelease, index, 0, &mask);
 }
 
@@ -661,7 +670,9 @@ pointer_handle_axis(void *data, struct wl_pointer *pointer,
     } else {
         valuator_mask_set_double(&mask, index, wl_fixed_to_double(value) / divisor);
     }
-    QueuePointerEvents(xwl_seat->pointer, MotionNotify, 0, POINTER_RELATIVE, &mask);
+
+    QueuePointerEvents(get_pointer_device(xwl_seat),
+                       MotionNotify, 0, POINTER_RELATIVE, &mask);
 }
 
 static void

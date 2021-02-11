@@ -177,7 +177,7 @@ xwl_pointer_proc(DeviceIntPtr device, int what)
 static int
 xwl_pointer_proc_relative(DeviceIntPtr device, int what)
 {
-#define NAXES 2
+#define NAXES 4
     Atom axes_labels[NAXES] = { 0 };
 
     switch (what) {
@@ -186,6 +186,8 @@ xwl_pointer_proc_relative(DeviceIntPtr device, int what)
 
         axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_X);
         axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_Y);
+        axes_labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_HWHEEL);
+        axes_labels[3] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_WHEEL);
 
         /*
          * We'll never send buttons, but XGetPointerMapping might in certain
@@ -203,6 +205,13 @@ xwl_pointer_proc_relative(DeviceIntPtr device, int what)
                                NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Relative);
         InitValuatorAxisStruct(device, 1, axes_labels[1],
                                NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Relative);
+        InitValuatorAxisStruct(device, 2, axes_labels[2],
+                               NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Relative);
+        InitValuatorAxisStruct(device, 3, axes_labels[3],
+                               NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Relative);
+
+        SetScrollValuator(device, 2, SCROLL_TYPE_HORIZONTAL, 1.0, SCROLL_FLAG_NONE);
+        SetScrollValuator(device, 3, SCROLL_TYPE_VERTICAL, 1.0, SCROLL_FLAG_PREFERRED);
 
         if (!InitPtrFeedbackClassDeviceStruct(device, xwl_pointer_control))
             return BadValue;

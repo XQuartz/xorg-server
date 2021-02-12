@@ -97,25 +97,6 @@ gbm_format_for_depth(int depth)
     }
 }
 
-static uint32_t
-wl_drm_format_for_depth(int depth)
-{
-    switch (depth) {
-    case 15:
-        return WL_DRM_FORMAT_XRGB1555;
-    case 16:
-        return WL_DRM_FORMAT_RGB565;
-    case 24:
-        return WL_DRM_FORMAT_XRGB8888;
-    case 30:
-        return WL_DRM_FORMAT_ARGB2101010;
-    default:
-        ErrorF("unexpected depth: %d\n", depth);
-    case 32:
-        return WL_DRM_FORMAT_ARGB8888;
-    }
-}
-
 static char
 is_device_path_render_node (const char *device_path)
 {
@@ -214,7 +195,7 @@ xwl_glamor_gbm_create_pixmap(ScreenPtr screen,
             uint32_t num_modifiers;
             uint64_t *modifiers = NULL;
 
-            glamor_get_modifiers(screen, format, &num_modifiers, &modifiers);
+            xwl_glamor_get_modifiers(screen, format, &num_modifiers, &modifiers);
             bo = gbm_bo_create_with_modifiers(xwl_gbm->gbm, width, height,
                                               format, modifiers, num_modifiers);
             free(modifiers);
@@ -277,8 +258,6 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
     unsigned short width = pixmap->drawable.width;
     unsigned short height = pixmap->drawable.height;
     uint32_t format;
-    struct xwl_format *xwl_format = NULL;
-    Bool modifier_supported = FALSE;
     int prime_fd;
     int num_planes;
     uint32_t strides[4];
@@ -317,23 +296,8 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
     offsets[0] = 0;
 #endif
 
-    for (i = 0; i < xwl_screen->num_formats; i++) {
-       if (xwl_screen->formats[i].format == format) {
-          xwl_format = &xwl_screen->formats[i];
-          break;
-       }
-    }
-
-    if (xwl_format) {
-        for (i = 0; i < xwl_format->num_modifiers; i++) {
-            if (xwl_format->modifiers[i] == modifier) {
-                modifier_supported = TRUE;
-                break;
-            }
-        }
-    }
-
-    if (xwl_screen->dmabuf && modifier_supported) {
+    if (xwl_screen->dmabuf &&
+        xwl_glamor_is_modifier_supported(xwl_screen, format, modifier)) {
         struct zwp_linux_buffer_params_v1 *params;
 
         params = zwp_linux_dmabuf_v1_create_params(xwl_screen->dmabuf);
@@ -592,83 +556,14 @@ glamor_egl_fd_from_pixmap(ScreenPtr screen, PixmapPtr pixmap,
     return -1;
 }
 
-_X_EXPORT Bool
-glamor_get_formats(ScreenPtr screen,
-                   CARD32 *num_formats, CARD32 **formats)
-{
-    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
-    struct xwl_gbm_private *xwl_gbm = xwl_gbm_get(xwl_screen);
-    int i;
-
-    /* Explicitly zero the count as the caller may ignore the return value */
-    *num_formats = 0;
-
-    if (!xwl_gbm->dmabuf_capable || !xwl_screen->dmabuf)
-        return FALSE;
-
-    if (xwl_screen->num_formats == 0)
-       return TRUE;
-
-    *formats = calloc(xwl_screen->num_formats, sizeof(CARD32));
-    if (*formats == NULL)
-        return FALSE;
-
-    for (i = 0; i < xwl_screen->num_formats; i++)
-       (*formats)[i] = xwl_screen->formats[i].format;
-    *num_formats = xwl_screen->num_formats;
-
-    return TRUE;
-}
-
-_X_EXPORT Bool
-glamor_get_modifiers(ScreenPtr screen, uint32_t format,
-                     uint32_t *num_modifiers, uint64_t **modifiers)
-{
-    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
-    struct xwl_gbm_private *xwl_gbm = xwl_gbm_get(xwl_screen);
-    struct xwl_format *xwl_format = NULL;
-    int i;
-
-    /* Explicitly zero the count as the caller may ignore the return value */
-    *num_modifiers = 0;
-
-    if (!xwl_gbm->dmabuf_capable || !xwl_screen->dmabuf)
-        return FALSE;
-
-    if (xwl_screen->num_formats == 0)
-       return TRUE;
-
-    for (i = 0; i < xwl_screen->num_formats; i++) {
-       if (xwl_screen->formats[i].format == format) {
-          xwl_format = &xwl_screen->formats[i];
-          break;
-       }
-    }
-
-    if (!xwl_format ||
-        (xwl_format->num_modifiers == 1 &&
-         xwl_format->modifiers[0] == DRM_FORMAT_MOD_INVALID))
-        return FALSE;
-
-    *modifiers = calloc(xwl_format->num_modifiers, sizeof(uint64_t));
-    if (*modifiers == NULL)
-        return FALSE;
-
-    for (i = 0; i < xwl_format->num_modifiers; i++)
-       (*modifiers)[i] = xwl_format->modifiers[i];
-    *num_modifiers = xwl_format->num_modifiers;
-
-    return TRUE;
-}
-
 static const dri3_screen_info_rec xwl_dri3_info = {
     .version = 2,
     .open = NULL,
     .pixmap_from_fds = glamor_pixmap_from_fds,
     .fds_from_pixmap = glamor_fds_from_pixmap,
     .open_client = xwl_dri3_open_client,
-    .get_formats = glamor_get_formats,
-    .get_modifiers = glamor_get_modifiers,
+    .get_formats = xwl_glamor_get_formats,
+    .get_modifiers = xwl_glamor_get_modifiers,
     .get_drawable_modifiers = glamor_get_drawable_modifiers,
 };
 

@@ -79,6 +79,117 @@ glamor_egl_screen_init(ScreenPtr screen, struct glamor_context *glamor_ctx)
     xwl_screen->glamor_ctx = glamor_ctx;
 }
 
+Bool
+xwl_glamor_is_modifier_supported(struct xwl_screen *xwl_screen,
+                                 uint32_t format, uint64_t modifier)
+{
+    struct xwl_format *xwl_format = NULL;
+    int i;
+
+    for (i = 0; i < xwl_screen->num_formats; i++) {
+        if (xwl_screen->formats[i].format == format) {
+            xwl_format = &xwl_screen->formats[i];
+            break;
+        }
+    }
+
+    if (xwl_format) {
+        for (i = 0; i < xwl_format->num_modifiers; i++) {
+            if (xwl_format->modifiers[i] == modifier) {
+                return TRUE;
+            }
+        }
+    }
+
+    return FALSE;
+}
+
+uint32_t
+wl_drm_format_for_depth(int depth)
+{
+    switch (depth) {
+    case 15:
+        return WL_DRM_FORMAT_XRGB1555;
+    case 16:
+        return WL_DRM_FORMAT_RGB565;
+    case 24:
+        return WL_DRM_FORMAT_XRGB8888;
+    case 30:
+        return WL_DRM_FORMAT_ARGB2101010;
+    default:
+        ErrorF("unexpected depth: %d\n", depth);
+    case 32:
+        return WL_DRM_FORMAT_ARGB8888;
+    }
+}
+
+Bool
+xwl_glamor_get_formats(ScreenPtr screen,
+                       CARD32 *num_formats, CARD32 **formats)
+{
+    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
+    int i;
+
+    /* Explicitly zero the count as the caller may ignore the return value */
+    *num_formats = 0;
+
+    if (!xwl_screen->dmabuf)
+        return FALSE;
+
+    if (xwl_screen->num_formats == 0)
+       return TRUE;
+
+    *formats = calloc(xwl_screen->num_formats, sizeof(CARD32));
+    if (*formats == NULL)
+        return FALSE;
+
+    for (i = 0; i < xwl_screen->num_formats; i++)
+       (*formats)[i] = xwl_screen->formats[i].format;
+    *num_formats = xwl_screen->num_formats;
+
+    return TRUE;
+}
+
+Bool
+xwl_glamor_get_modifiers(ScreenPtr screen, uint32_t format,
+                         uint32_t *num_modifiers, uint64_t **modifiers)
+{
+    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
+    struct xwl_format *xwl_format = NULL;
+    int i;
+
+    /* Explicitly zero the count as the caller may ignore the return value */
+    *num_modifiers = 0;
+
+    if (!xwl_screen->dmabuf)
+        return FALSE;
+
+    if (xwl_screen->num_formats == 0)
+       return TRUE;
+
+    for (i = 0; i < xwl_screen->num_formats; i++) {
+       if (xwl_screen->formats[i].format == format) {
+          xwl_format = &xwl_screen->formats[i];
+          break;
+       }
+    }
+
+    if (!xwl_format ||
+        (xwl_format->num_modifiers == 1 &&
+         xwl_format->modifiers[0] == DRM_FORMAT_MOD_INVALID))
+        return FALSE;
+
+    *modifiers = calloc(xwl_format->num_modifiers, sizeof(uint64_t));
+    if (*modifiers == NULL)
+        return FALSE;
+
+    for (i = 0; i < xwl_format->num_modifiers; i++)
+       (*modifiers)[i] = xwl_format->modifiers[i];
+    *num_modifiers = xwl_format->num_modifiers;
+
+    return TRUE;
+}
+
 static void
 xwl_dmabuf_handle_format(void *data, struct zwp_linux_dmabuf_v1 *dmabuf,
                          uint32_t format)

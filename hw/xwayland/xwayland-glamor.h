@@ -120,7 +120,13 @@ void xwl_glamor_egl_make_current(struct xwl_screen *xwl_screen);
 Bool xwl_glamor_has_present_flip(struct xwl_screen *xwl_screen);
 Bool xwl_glamor_needs_buffer_flush(struct xwl_screen *xwl_screen);
 Bool xwl_glamor_needs_n_buffering(struct xwl_screen *xwl_screen);
-
+Bool xwl_glamor_is_modifier_supported(struct xwl_screen *xwl_screen,
+                                      uint32_t format, uint64_t modifier);
+uint32_t wl_drm_format_for_depth(int depth);
+Bool xwl_glamor_get_formats(ScreenPtr screen,
+                            CARD32 *num_formats, CARD32 **formats);
+Bool xwl_glamor_get_modifiers(ScreenPtr screen, uint32_t format,
+                              uint32_t *num_modifiers, uint64_t **modifiers);
 
 #ifdef XV
 /* glamor Xv Adaptor */

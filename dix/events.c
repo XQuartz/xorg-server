@@ -1480,10 +1480,6 @@ UpdateTouchesForGrab(DeviceIntPtr mouse)
 
         if (ti->active &&
             CLIENT_BITS(listener->listener) == grab->resource) {
-            listener->listener = grab->resource;
-            listener->level = grab->grabtype;
-            listener->window = grab->window;
-
             if (grab->grabtype == CORE || grab->grabtype == XI ||
                 !xi2mask_isset(grab->xi2mask, mouse, XI_TouchBegin)) {
 
@@ -1501,6 +1497,9 @@ UpdateTouchesForGrab(DeviceIntPtr mouse)
                 listener->type = TOUCH_LISTENER_GRAB;
             }
 
+            listener->listener = grab->resource;
+            listener->level = grab->grabtype;
+            listener->window = grab->window;
             listener->state = TOUCH_LISTENER_IS_OWNER;
 
             if (listener->grab)

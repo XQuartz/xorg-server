@@ -279,6 +279,10 @@ xwl_touch_proc(DeviceIntPtr device, int what)
                                0, 0xFFFF, 10000, 0, 10000, Absolute);
         InitValuatorAxisStruct(device, 1, axes_labels[1],
                                0, 0xFFFF, 10000, 0, 10000, Absolute);
+
+        if (!InitPtrFeedbackClassDeviceStruct(device, xwl_pointer_control))
+            return BadValue;
+
         return Success;
 
     case DEVICE_ON:

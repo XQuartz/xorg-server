@@ -92,6 +92,15 @@ xwl_pointer_control(DeviceIntPtr device, PtrCtrl *ctrl)
     /* Nothing to do, dix handles all settings */
 }
 
+static DeviceIntPtr
+get_pointer_device(struct xwl_seat *xwl_seat)
+{
+    if (xwl_seat->relative_pointer)
+        return xwl_seat->relative_pointer;
+    else
+        return xwl_seat->pointer;
+}
+
 static Bool
 init_pointer_buttons(DeviceIntPtr device)
 {
@@ -400,7 +409,7 @@ pointer_handle_enter(void *data, struct wl_pointer *pointer,
                      wl_fixed_t sx_w, wl_fixed_t sy_w)
 {
     struct xwl_seat *xwl_seat = data;
-    DeviceIntPtr dev = xwl_seat->pointer;
+    DeviceIntPtr dev = get_pointer_device(xwl_seat);
     DeviceIntPtr master;
     int i;
     int sx = wl_fixed_to_int(sx_w);
@@ -475,7 +484,7 @@ pointer_handle_leave(void *data, struct wl_pointer *pointer,
                      uint32_t serial, struct wl_surface *surface)
 {
     struct xwl_seat *xwl_seat = data;
-    DeviceIntPtr dev = xwl_seat->pointer;
+    DeviceIntPtr dev = get_pointer_device(xwl_seat);
 
     xwl_seat->xwl_screen->serial = serial;
 
@@ -593,15 +602,6 @@ pointer_handle_motion(void *data, struct wl_pointer *pointer,
 
     if (wl_proxy_get_version((struct wl_proxy *) xwl_seat->wl_pointer) < 5)
         dispatch_pointer_motion_event(xwl_seat);
-}
-
-static DeviceIntPtr
-get_pointer_device(struct xwl_seat *xwl_seat)
-{
-    if (xwl_seat->relative_pointer)
-        return xwl_seat->relative_pointer;
-    else
-        return xwl_seat->pointer;
 }
 
 static void

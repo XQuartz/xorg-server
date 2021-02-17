@@ -14,7 +14,7 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <customObject id="-3" userLabel="Application"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <menu title="MainMenu" systemMenu="main" id="29" userLabel="MainMenu">
             <items>
                 <menuItem title="X11" id="56">
@@ -212,7 +212,7 @@
                                     <rect key="frame" x="10" y="33" width="504" height="279"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
-                                        <button imageHugsTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="363">
+                                        <button fixedFrame="YES" imageHugsTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="363">
                                             <rect key="frame" x="18" y="243" width="402" height="18"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <buttonCell key="cell" type="check" title="Drei Maustasten nachbilden" bezelStyle="regularSquare" imagePosition="leading" alignment="left" inset="2" id="100363">
@@ -223,7 +223,7 @@
                                                 <action selector="prefs_changed:" target="196" id="394"/>
                                             </connections>
                                         </button>
-                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="457" translatesAutoresizingMaskIntoConstraints="NO" id="364">
+                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="457" translatesAutoresizingMaskIntoConstraints="NO" id="364">
                                             <rect key="frame" x="36" y="93" width="461" height="28"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Bei Aktivierung können die Tastenentsprechungen für die Menüleiste die X11-Programme stören, die Meta-Sondertasten verwenden." placeholderString="" id="100364">
@@ -232,7 +232,7 @@
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="457" translatesAutoresizingMaskIntoConstraints="NO" id="365">
+                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="457" translatesAutoresizingMaskIntoConstraints="NO" id="365">
                                             <rect key="frame" x="36" y="203" width="461" height="34"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" placeholderString="" id="100365">
@@ -243,7 +243,7 @@
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <button imageHugsTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="368">
+                                        <button fixedFrame="YES" imageHugsTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="368">
                                             <rect key="frame" x="18" y="127" width="402" height="18"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <buttonCell key="cell" type="check" title="Tastenentsprechungen unter X11 aktivieren" bezelStyle="regularSquare" imagePosition="leading" alignment="left" inset="2" id="100368">
@@ -254,7 +254,7 @@
                                                 <action selector="prefs_changed:" target="196" id="396"/>
                                             </connections>
                                         </button>
-                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="457" translatesAutoresizingMaskIntoConstraints="NO" id="369">
+                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="457" translatesAutoresizingMaskIntoConstraints="NO" id="369">
                                             <rect key="frame" x="36" y="151" width="461" height="28"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Bei Aktivierung kann Ihre aktuelle X11-Keymap durch Änderungen des Tastaturmenüs überschrieben werden." placeholderString="" id="100369">
@@ -263,7 +263,7 @@
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <button imageHugsTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="370">
+                                        <button fixedFrame="YES" imageHugsTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="370">
                                             <rect key="frame" x="18" y="185" width="402" height="18"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <buttonCell key="cell" type="check" title="Tastaturbelegung des Systems verwenden" bezelStyle="regularSquare" imagePosition="leading" alignment="left" inset="2" id="100370">
@@ -274,7 +274,7 @@
                                                 <action selector="prefs_changed:" target="196" id="395"/>
                                             </connections>
                                         </button>
-                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" preferredMaxLayoutWidth="457" translatesAutoresizingMaskIntoConstraints="NO" id="300476">
+                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" preferredMaxLayoutWidth="457" translatesAutoresizingMaskIntoConstraints="NO" id="300476">
                                             <rect key="frame" x="36" y="32" width="461" height="31"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="left" title="Bei Aktivierung entsprechen die Wahltasten Alt_L und Alt_R X11-Tastensymbolen anstatt „Mode_switch“." id="300479">
@@ -283,7 +283,7 @@
                                                 <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                             </textFieldCell>
                                         </textField>
-                                        <button imageHugsTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="300477">
+                                        <button fixedFrame="YES" imageHugsTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="300477">
                                             <rect key="frame" x="18" y="69" width="402" height="18"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <buttonCell key="cell" type="check" title="Wahltasten entsprechen Alt_L und Alt_R" bezelStyle="regularSquare" imagePosition="leading" alignment="left" inset="2" id="300478">
@@ -294,7 +294,7 @@
                                                 <action selector="prefs_changed:" target="196" id="300480"/>
                                             </connections>
                                         </button>
-                                        <button imageHugsTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="300482">
+                                        <button fixedFrame="YES" imageHugsTitle="YES" translatesAutoresizingMaskIntoConstraints="NO" id="300482">
                                             <rect key="frame" x="18" y="8" width="418" height="18"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <buttonCell key="cell" type="check" title="Immer in Bewegungsrichtung der Finger scrollen" bezelStyle="regularSquare" imagePosition="leading" alignment="left" inset="2" id="300483">
@@ -318,7 +318,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <popUpButtonCell key="cell" type="push" title="Vom Monitor" bezelStyle="rounded" alignment="left" lineBreakMode="clipping" state="on" borderStyle="borderAndBezel" tag="-1" inset="2" arrowPosition="arrowAtCenter" preferredEdge="maxY" selectedItem="384" id="100382">
                                                 <behavior key="behavior" lightByBackground="YES" lightByGray="YES"/>
-                                                <font key="font" metaFont="system"/>
+                                                <font key="font" metaFont="menu"/>
                                                 <menu key="menu" title="OtherViews" id="380">
                                                     <items>
                                                         <menuItem title="Vom Monitor" state="on" tag="-1" id="384"/>
@@ -655,17 +655,17 @@
                         <rect key="frame" x="20" y="20" width="318" height="231"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" id="4dU-0f-sWe">
-                            <rect key="frame" x="1" y="29" width="301" height="186"/>
-                            <autoresizingMask key="autoresizingMask"/>
+                            <rect key="frame" x="1" y="1" width="301" height="214"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnReordering="NO" multipleSelection="NO" autosaveColumns="NO" headerView="300295" id="296">
                                     <rect key="frame" x="0.0" y="0.0" width="301" height="186"/>
-                                    <autoresizingMask key="autoresizingMask"/>
+                                    <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <size key="intercellSpacing" width="3" height="2"/>
-                                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                    <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                     <tableColumns>
-                                        <tableColumn width="119.73100280761719" minWidth="62.730998992919922" maxWidth="1000" id="298">
+                                        <tableColumn width="110.23100280761719" minWidth="62.730998992919922" maxWidth="1000" id="298">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Name">
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
@@ -677,7 +677,7 @@
                                             </textFieldCell>
                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                         </tableColumn>
-                                        <tableColumn width="97" minWidth="40" maxWidth="1000" id="297">
+                                        <tableColumn width="87.5" minWidth="40" maxWidth="1000" id="297">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Befehl">
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
@@ -689,7 +689,7 @@
                                             </textFieldCell>
                                             <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                         </tableColumn>
-                                        <tableColumn width="66" minWidth="10" maxWidth="1000" id="535">
+                                        <tableColumn width="56.5" minWidth="10" maxWidth="1000" id="535">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Kurzbefehl">
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
@@ -713,7 +713,7 @@
                             <rect key="frame" x="302" y="29" width="15" height="186"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
-                        <tableHeaderView key="headerView" id="300295">
+                        <tableHeaderView key="headerView" wantsLayer="YES" id="300295">
                             <rect key="frame" x="0.0" y="0.0" width="301" height="28"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </tableHeaderView>
@@ -731,6 +731,7 @@
                     </button>
                 </subviews>
             </view>
+            <point key="canvasLocation" x="27" y="351"/>
         </window>
         <menu title="Menü" id="423" userLabel="DockMenu">
             <items>

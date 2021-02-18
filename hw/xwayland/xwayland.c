@@ -267,10 +267,7 @@ InitOutput(ScreenInfo * screen_info, int argc, char **argv)
         LoadExtensionList(xwayland_extensions,
                           ARRAY_SIZE(xwayland_extensions), FALSE);
 
-    /* Cast away warning from missing printf annotation for
-     * wl_log_func_t.  Wayland 1.5 will have the annotation, so we can
-     * remove the cast and require that when it's released. */
-    wl_log_set_handler_client((void *) xwl_log_handler);
+    wl_log_set_handler_client(xwl_log_handler);
 
     if (AddScreen(xwl_screen_init, argc, argv) == -1) {
         FatalError("Couldn't add screen\n");

@@ -72,12 +72,6 @@
     IBOutlet NSTextField *sync_text2;
     IBOutlet NSPopUpButton *depth;
 
-    IBOutlet NSMenuItem *window_separator;
-    // window_separator is DEPRECATED due to this radar:
-    // <rdar://problem/7088335> NSApplication releases the separator in the Windows menu even though it's an IBOutlet
-    // It is kept around for localization compatibility and is subject to removal "eventually"
-    // If it is !NULL (meaning it is in the nib), it is removed from the menu and released
-
     IBOutlet NSMenuItem *x11_about_item;
     IBOutlet NSMenuItem *dock_window_separator;
     IBOutlet NSMenuItem *apps_separator;

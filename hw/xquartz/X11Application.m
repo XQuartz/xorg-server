@@ -1174,77 +1174,72 @@ xpbproxy_x_thread(void *args)
 void
 X11ApplicationMain(int argc, char **argv, char **envp)
 {
-    NSAutoreleasePool *pool;
-
 #ifdef DEBUG
     while (access("/tmp/x11-block", F_OK) == 0) sleep(1);
 #endif
 
-    pool = [[NSAutoreleasePool alloc] init];
-    X11App = (X11Application *)[X11Application sharedApplication];
-    init_ports();
+    @autoreleasepool {
+        X11App = (X11Application *)[X11Application sharedApplication];
+        init_ports();
 
-    app_prefs_domain_cfstr =
-        (CFStringRef)[[NSBundle mainBundle] bundleIdentifier];
+        app_prefs_domain_cfstr = (CFStringRef)[[NSBundle mainBundle] bundleIdentifier];
 
-    if (app_prefs_domain_cfstr == NULL) {
-        ErrorF(
-            "X11ApplicationMain: Unable to determine bundle identifier.  Your installation of XQuartz may be broken.\n");
-        app_prefs_domain_cfstr = CFSTR(BUNDLE_ID_PREFIX ".X11");
-    }
+        if (app_prefs_domain_cfstr == NULL) {
+            ErrorF("X11ApplicationMain: Unable to determine bundle identifier.  Your installation of XQuartz may be broken.\n");
+            app_prefs_domain_cfstr = CFSTR(BUNDLE_ID_PREFIX ".X11");
+        }
 
-    [NSApp read_defaults];
-    [NSBundle loadNibNamed:@"main" owner:NSApp];
-    [[NSNotificationCenter defaultCenter] addObserver:NSApp
-                                             selector:@selector (became_key:)
-                                                 name:
-     NSWindowDidBecomeKeyNotification object:nil];
+        [NSApp read_defaults];
+        [NSBundle loadNibNamed:@"main" owner:NSApp];
+        [NSNotificationCenter.defaultCenter addObserver:NSApp
+                                               selector:@selector (became_key:)
+                                                   name:NSWindowDidBecomeKeyNotification
+                                                 object:nil];
 
-    /*
-     * The xpr Quartz mode is statically linked into this server.
-     * Initialize all the Quartz functions.
-     */
-    QuartzModeBundleInit();
+        /*
+         * The xpr Quartz mode is statically linked into this server.
+         * Initialize all the Quartz functions.
+         */
+        QuartzModeBundleInit();
 
-    /* Calculate the height of the menubar so we can avoid it. */
-    aquaMenuBarHeight = [[NSApp mainMenu] menuBarHeight];
-    if (!aquaMenuBarHeight) {
-        NSScreen* primaryScreen = [[NSScreen screens] objectAtIndex:0];
-        aquaMenuBarHeight = NSHeight([primaryScreen frame]) - NSMaxY([primaryScreen visibleFrame]);
-    }
+        /* Calculate the height of the menubar so we can avoid it. */
+        aquaMenuBarHeight = NSApp.mainMenu.menuBarHeight;
+        if (!aquaMenuBarHeight) {
+            NSScreen* primaryScreen = NSScreen.screens[0];
+            aquaMenuBarHeight = NSHeight(primaryScreen.frame) - NSMaxY(primaryScreen.visibleFrame);
+        }
 
-    eventTranslationQueue = dispatch_queue_create(
-        BUNDLE_ID_PREFIX ".X11.NSEventsToX11EventsQueue", NULL);
-    assert(eventTranslationQueue != NULL);
+        eventTranslationQueue = dispatch_queue_create(BUNDLE_ID_PREFIX ".X11.NSEventsToX11EventsQueue", NULL);
+        assert(eventTranslationQueue != NULL);
 
-    /* Set the key layout seed before we start the server */
-    last_key_layout = TISCopyCurrentKeyboardLayoutInputSource();
+        /* Set the key layout seed before we start the server */
+        last_key_layout = TISCopyCurrentKeyboardLayoutInputSource();
 
-    if (!last_key_layout)
-        ErrorF(
-            "X11ApplicationMain: Unable to determine TISCopyCurrentKeyboardLayoutInputSource() at startup.\n");
+        if (!last_key_layout) {
+            ErrorF("X11ApplicationMain: Unable to determine TISCopyCurrentKeyboardLayoutInputSource() at startup.\n");
+        }
 
-    if (!QuartsResyncKeymap(FALSE)) {
-        ErrorF("X11ApplicationMain: Could not build a valid keymap.\n");
-    }
+        if (!QuartsResyncKeymap(FALSE)) {
+            ErrorF("X11ApplicationMain: Could not build a valid keymap.\n");
+        }
 
-    /* Tell the server thread that it can proceed */
-    QuartzInitServer(argc, argv, envp);
+        /* Tell the server thread that it can proceed */
+        QuartzInitServer(argc, argv, envp);
 
-    /* This must be done after QuartzInitServer because it can result in
-     * an mieqEnqueue() - <rdar://problem/6300249>
-     */
-    check_xinitrc();
+        /* This must be done after QuartzInitServer because it can result in
+         * an mieqEnqueue() - <rdar://problem/6300249>
+         */
+        check_xinitrc();
 
-    create_thread(xpbproxy_x_thread, NULL);
+        create_thread(xpbproxy_x_thread, NULL);
 
 #if XQUARTZ_SPARKLE
-    [[X11App controller] setup_sparkle];
-    [[SUUpdater sharedUpdater] resetUpdateCycle];
-    //    [[SUUpdater sharedUpdater] checkForUpdates:X11App];
+        [[X11App controller] setup_sparkle];
+        [[SUUpdater sharedUpdater] resetUpdateCycle];
+        //    [[SUUpdater sharedUpdater] checkForUpdates:X11App];
 #endif
+    }
 
-    [pool release];
     [NSApp run];
     /* not reached */
 }

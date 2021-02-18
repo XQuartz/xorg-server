@@ -901,48 +901,28 @@ cfarray_to_nsarray(CFArrayRef in)
 
 @end
 
-static NSArray *
-array_with_strings_and_numbers(int nitems, const char **items,
-                               const char *numbers)
-{
-    NSMutableArray *array, *subarray;
-    NSString *string, *number;
-    int i;
-
-    array = [[[NSMutableArray alloc] initWithCapacity:nitems] autorelease];
-
-    for (i = 0; i < nitems; i++) {
-        subarray = [[NSMutableArray alloc] initWithCapacity:2];
-
-        string = [[NSString alloc] initWithUTF8String:items[i]];
-        [subarray addObject:string];
-        [string release];
-
-        if (numbers[i] != 0) {
-            number = [[NSString alloc] initWithFormat:@"%d", numbers[i]];
-            [subarray addObject:number];
-            [number release];
-        }
-        else
-            [subarray addObject:@""];
-
-        [array addObject:subarray];
-        [subarray release];
-    }
-
-    return array;
-}
-
 void
 X11ApplicationSetWindowMenu(int nitems, const char **items,
                             const char *shortcuts)
 {
     @autoreleasepool {
-        NSArray *array = array_with_strings_and_numbers(nitems, items, shortcuts);
+        NSMutableArray <NSArray <NSString *> *> * const allMenuItems = [NSMutableArray array];
 
-        /* Send the array of strings over to the appkit thread */
+        for (int i = 0; i < nitems; i++) {
+            NSMutableArray <NSString *> * const menuItem = [NSMutableArray array];
+            [menuItem addObject:@(items[i])];
+
+            if (shortcuts[i] == 0) {
+                [menuItem addObject:@""];
+            } else {
+                [menuItem addObject:[NSString stringWithFormat:@"%d", shortcuts[i]]];
+            }
+
+            [allMenuItems addObject:menuItem];
+        }
+
         dispatch_async(dispatch_get_main_queue(), ^{
-            [X11App set_window_menu:array];
+            [X11App set_window_menu:allMenuItems];
         });
     }
 }

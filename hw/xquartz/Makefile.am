@@ -30,7 +30,6 @@ libXquartz_la_SOURCES = \
 	darwinXinput.c \
 	keysym2ucs.c \
 	quartz.c \
-	quartzCocoa.m \
 	quartzKeyboard.c \
 	quartzStartup.c \
 	quartzRandR.c

@@ -46,10 +46,4 @@ extern int aquaMenuBarHeight;
 // Name of GLX bundle for native OpenGL
 extern const char      *quartzOpenGLBundle;
 
-void
-QuartzBlockHandler(void *blockData, void *pTimeout);
-
-void
-QuartzWakeupHandler(void *blockData, int result);
-
 #endif  /* _QUARTZCOMMON_H */

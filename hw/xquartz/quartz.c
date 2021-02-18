@@ -72,6 +72,15 @@
 #include <rootlessCommon.h>
 #include <Xplugin.h>
 
+// These are vended by the Objective-C runtime, but they are unfortunately
+// not available as API in the macOS SDK.  We are following suit with swift
+// and clang in declaring them inline here.  They canot be removed or changed
+// in the OS without major bincompat ramifications.
+//
+// These were added in macOS 10.7.
+void * _Nonnull objc_autoreleasePoolPush(void);
+void objc_autoreleasePoolPop(void * _Nonnull context);
+
 DevPrivateKeyRec quartzScreenKeyRec;
 int aquaMenuBarHeight = 0;
 QuartzModeProcsPtr quartzProcs = NULL;
@@ -141,6 +150,30 @@ QuartzSetupScreen(int index,
 #endif
 
     return TRUE;
+}
+
+/*
+ * QuartzBlockHandler
+ *  Clean out any autoreleased objects.
+ */
+static void
+QuartzBlockHandler(void *blockData, void *pTimeout)
+{
+    static void *poolToken = NULL;
+
+    if (poolToken) {
+        objc_autoreleasePoolPop(poolToken);
+    }
+    poolToken = objc_autoreleasePoolPush();
+}
+
+/*
+ * QuartzWakeupHandler
+ */
+static void
+QuartzWakeupHandler(void *blockData, int result)
+{
+    /* nothing here */
 }
 
 /*

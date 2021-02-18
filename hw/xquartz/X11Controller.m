@@ -104,12 +104,6 @@ extern char *bundle_id_prefix;
             name: NSWindowWillCloseNotification
           object: [apps_table window]];
 
-    // Setup data about our Windows menu
-    if (window_separator) {
-        [[window_separator menu] removeItem:window_separator];
-        window_separator = nil;
-    }
-
     windows_menu_start = [[X11App windowsMenu] numberOfItems];
 }
 

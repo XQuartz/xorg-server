@@ -64,7 +64,7 @@ extern char *bundle_id_prefix;
     NSArray *array;
 
     /* Point X11Application at ourself. */
-    [xapp set_controller:self];
+    xapp.controller = self;
 
     array = [xapp prefs_get_array:@PREFS_APPSMENU];
     if (array != nil) {

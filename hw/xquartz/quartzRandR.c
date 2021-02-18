@@ -35,7 +35,6 @@
 #include <dix-config.h>
 #endif
 
-#include "quartzCommon.h"
 #include "quartzRandR.h"
 #include "quartz.h"
 #include "darwin.h"

@@ -33,7 +33,6 @@
 #include <dix-config.h>
 #endif
 
-#include "quartzCommon.h"
 #include "inputstr.h"
 #include "quartz.h"
 #include "quartzRandR.h"

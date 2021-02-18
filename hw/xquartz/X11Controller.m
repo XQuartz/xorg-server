@@ -56,6 +56,19 @@
 extern aslclient aslc;
 extern char *bundle_id_prefix;
 
+@interface X11Controller ()
+#ifdef XQUARTZ_SPARKLE
+@property (nonatomic, readwrite, strong) NSMenuItem *check_for_updates_item; // Programatically enabled
+#endif
+
+@property (nonatomic, readwrite, strong) NSArray *apps;
+@property (nonatomic, readwrite, strong) NSMutableArray *table_apps;
+@property (nonatomic, readwrite, assign) NSInteger windows_menu_start;
+@property (nonatomic, readwrite, assign) int checked_window_item;
+@property (nonatomic, readwrite, assign) x_list *pending_apps;
+@property (nonatomic, readwrite, assign) OSX_BOOL finished_launching;
+@end
+
 @implementation X11Controller
 
 - (void) awakeFromNib
@@ -100,9 +113,9 @@ extern char *bundle_id_prefix;
      addObserver: self
         selector: @selector(apps_table_done:)
             name: NSWindowWillCloseNotification
-          object: [apps_table window]];
+          object: self.apps_table.window];
 
-    windows_menu_start = [[X11App windowsMenu] numberOfItems];
+    self.windows_menu_start = X11App.windowsMenu.numberOfItems;
 }
 
 - (void) item_selected:sender
@@ -121,10 +134,12 @@ extern char *bundle_id_prefix;
     /* Work backwards so we don't mess up the indices */
     menu = [X11App windowsMenu];
     count = [menu numberOfItems];
-    for (i = count - 1; i >= windows_menu_start; i--)
+    for (i = count - 1; i >= self.windows_menu_start; i--)
         [menu removeItemAtIndex:i];
 
-    count = [dock_menu indexOfItem:dock_window_separator];
+    NSMenu * const dock_menu = self.dock_menu;
+
+    count = [dock_menu indexOfItem:self.dock_window_separator];
     for (i = 0; i < count; i++)
         [dock_menu removeItemAtIndex:0];
 }
@@ -136,7 +151,7 @@ extern char *bundle_id_prefix;
     int first, count, i;
 
     menu = [X11App windowsMenu];
-    first = windows_menu_start + 1;
+    first = self.windows_menu_start + 1;
     count = [list count];
 
     // Push a Separator
@@ -144,6 +159,7 @@ extern char *bundle_id_prefix;
         [menu addItem:[NSMenuItem separatorItem]];
     }
 
+    NSMenu * const dock_menu = self.dock_menu;
     for (i = 0; i < count; i++) {
         NSString *name, *shortcut;
 
@@ -172,6 +188,7 @@ extern char *bundle_id_prefix;
         [item setEnabled:YES];
     }
 
+    int const checked_window_item = self.checked_window_item;
     if (checked_window_item >= 0 && checked_window_item < count) {
         item = (NSMenuItem *)[menu itemAtIndex:first + checked_window_item];
         [item setState:NSOnState];
@@ -186,7 +203,10 @@ extern char *bundle_id_prefix;
     NSMenuItem *item;
     int i;
 
-    if (apps == nil || apps_separator == nil) return;
+    NSMenuItem * const apps_separator = self.apps_separator;
+    NSMenu * const dock_apps_menu = self.dock_apps_menu;
+
+    if (self.apps == nil || apps_separator == nil) return;
 
     menu = [apps_separator menu];
 
@@ -206,8 +226,7 @@ extern char *bundle_id_prefix;
         }
     }
 
-    [apps release];
-    apps = nil;
+    self.apps = nil;
 }
 
 - (void) prepend_apps_item:(NSArray *)list index:(int)i menu:(NSMenu *)menu
@@ -244,6 +263,9 @@ extern char *bundle_id_prefix;
 
     count = [list count];
 
+    NSMenuItem * const apps_separator = self.apps_separator;
+    NSMenu * const dock_apps_menu = self.dock_apps_menu;
+
     if (count == 0 || apps_separator == nil) return;
 
     menu = [apps_separator menu];
@@ -255,7 +277,7 @@ extern char *bundle_id_prefix;
             [self prepend_apps_item:list index:i menu:dock_apps_menu];
     }
 
-    apps = [list retain];
+    self.apps = list;
 }
 
 - (void) set_window_menu:(NSArray *)list
@@ -275,8 +297,11 @@ extern char *bundle_id_prefix;
     int n = [nn intValue];
 
     menu = [X11App windowsMenu];
-    first = windows_menu_start + 1;
+    first = self.windows_menu_start + 1;
     count = [menu numberOfItems] - first;
+
+    NSMenu * const dock_menu = self.dock_menu;
+    int const checked_window_item = self.checked_window_item;
 
     if (checked_window_item >= 0 && checked_window_item < count) {
         item = (NSMenuItem *)[menu itemAtIndex:first + checked_window_item];
@@ -290,7 +315,7 @@ extern char *bundle_id_prefix;
         item = (NSMenuItem *)[dock_menu itemAtIndex:n];
         [item setState:NSOnState];
     }
-    checked_window_item = n;
+    self.checked_window_item = n;
 }
 
 - (void) set_apps_menu:(NSArray *)list
@@ -305,7 +330,7 @@ extern char *bundle_id_prefix;
     if (check_for_updates_item)
         return;  // already did it...
 
-    NSMenu *menu = [x11_about_item menu];
+    NSMenu *menu = [self.x11_about_item menu];
 
     check_for_updates_item =
         [menu insertItemWithTitle:NSLocalizedString(
@@ -326,7 +351,7 @@ extern char *bundle_id_prefix;
 - (void)updater:(SUUpdater *)updater willInstallUpdate:(SUAppcastItem *)
    update
 {
-    //[self set_can_quit:YES];
+    //self.can_quit = YES;
 }
 
 #endif
@@ -438,6 +463,7 @@ extern char *bundle_id_prefix;
 {
     int tag;
     NSString *item;
+    NSArray * const apps = self.apps;
 
     tag = [sender tag] - 1;
     if (apps == nil || tag < 0 || tag >= [apps count])
@@ -451,12 +477,13 @@ extern char *bundle_id_prefix;
 - (IBAction) apps_table_show:sender
 {
     NSArray *columns;
-    NSMutableArray *oldapps = nil;
+    NSMutableArray *oldapps = self.table_apps;
+    NSTableView * const apps_table = self.apps_table;
 
-    if (table_apps != nil)
-        oldapps = table_apps;
+    NSMutableArray * const table_apps = [[NSMutableArray alloc] initWithCapacity:1];
+    self.table_apps = table_apps;
 
-    table_apps = [[NSMutableArray alloc] initWithCapacity:1];
+    NSArray * const apps = self.apps;
     if (apps != nil)
         [table_apps addObjectsFromArray:apps];
 
@@ -477,6 +504,8 @@ extern char *bundle_id_prefix;
 
 - (IBAction) apps_table_done:sender
 {
+    NSMutableArray * const table_apps = self.table_apps;
+    NSTableView * const apps_table = self.apps_table;
     [apps_table deselectAll:sender];    /* flush edits? */
 
     [self remove_apps_menu];
@@ -487,13 +516,14 @@ extern char *bundle_id_prefix;
 
     [[apps_table window] orderOut:sender];
 
-    [table_apps release];
-    table_apps = nil;
+    self.table_apps = nil;
 }
 
 - (IBAction) apps_table_new:sender
 {
     NSMutableArray *item;
+    NSMutableArray * const table_apps = self.table_apps;
+    NSTableView * const apps_table = self.apps_table;
 
     int row = [apps_table selectedRow], i;
 
@@ -521,6 +551,8 @@ extern char *bundle_id_prefix;
 
 - (IBAction) apps_table_duplicate:sender
 {
+    NSMutableArray * const table_apps = self.table_apps;
+    NSTableView * const apps_table = self.apps_table;
     int row = [apps_table selectedRow], i;
     NSObject *item;
 
@@ -545,6 +577,8 @@ extern char *bundle_id_prefix;
 
 - (IBAction) apps_table_delete:sender
 {
+    NSMutableArray * const table_apps = self.table_apps;
+    NSTableView * const apps_table = self.apps_table;
     int row = [apps_table selectedRow];
 
     if (row >= 0) {
@@ -567,6 +601,7 @@ extern char *bundle_id_prefix;
 
 - (NSInteger) numberOfRowsInTableView:(NSTableView *)tableView
 {
+    NSMutableArray * const table_apps = self.table_apps;
     if (table_apps == nil) return 0;
 
     return [table_apps count];
@@ -575,6 +610,7 @@ extern char *bundle_id_prefix;
 - (id)             tableView:(NSTableView *)tableView
    objectValueForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row
 {
+    NSMutableArray * const table_apps = self.table_apps;
     NSArray *item;
     int col;
 
@@ -592,6 +628,7 @@ extern char *bundle_id_prefix;
 - (void) tableView:(NSTableView *)tableView setObjectValue:(id)object
     forTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row
 {
+    NSMutableArray * const table_apps = self.table_apps;
     NSMutableArray *item;
     int col;
 
@@ -652,11 +689,10 @@ extern char *bundle_id_prefix;
 
 - (IBAction) enable_fullscreen_changed:sender
 {
-    XQuartzRootlessDefault = ![enable_fullscreen intValue];
+    XQuartzRootlessDefault = !self.enable_fullscreen.intValue;
 
-    [enable_fullscreen_menu setEnabled:!XQuartzRootlessDefault];
-    [enable_fullscreen_menu_text setTextColor:XQuartzRootlessDefault ?[
-         NSColor disabledControlTextColor] : [NSColor controlTextColor]];
+    [self.enable_fullscreen_menu setEnabled:!XQuartzRootlessDefault];
+    [self.enable_fullscreen_menu_text setTextColor:XQuartzRootlessDefault ? NSColor.disabledControlTextColor : NSColor.controlTextColor];
 
     DarwinSendDDXEvent(kXquartzSetRootless, 1, XQuartzRootlessDefault);
 
@@ -669,102 +705,85 @@ extern char *bundle_id_prefix;
     DarwinSendDDXEvent(kXquartzToggleFullscreen, 0);
 }
 
-- (void) set_can_quit:(OSX_BOOL)state
-{
-    can_quit = state;
-}
-
 - (IBAction)prefs_changed:sender
 {
     if (!sender)
         return;
 
-    if (sender == fake_buttons) {
-        darwinFakeButtons = [fake_buttons intValue];
+    if (sender == self.fake_buttons) {
+        darwinFakeButtons = self.fake_buttons.intValue;
         [NSApp prefs_set_boolean:@PREFS_FAKEBUTTONS value:darwinFakeButtons];
     }
-    else if (sender == enable_keyequivs) {
-        XQuartzEnableKeyEquivalents = [enable_keyequivs intValue];
+    else if (sender == self.enable_keyequivs) {
+        XQuartzEnableKeyEquivalents = self.enable_keyequivs.intValue;
         [NSApp prefs_set_boolean:@PREFS_KEYEQUIVS value:
          XQuartzEnableKeyEquivalents];
     }
-    else if (sender == sync_keymap) {
-        darwinSyncKeymap = [sync_keymap intValue];
+    else if (sender == self.sync_keymap) {
+        darwinSyncKeymap = self.sync_keymap.intValue;
         [NSApp prefs_set_boolean:@PREFS_SYNC_KEYMAP value:darwinSyncKeymap];
     }
-    else if (sender == enable_fullscreen_menu) {
-        XQuartzFullscreenMenu = [enable_fullscreen_menu intValue];
+    else if (sender == self.enable_fullscreen_menu) {
+        XQuartzFullscreenMenu = self.enable_fullscreen_menu.intValue;
         [NSApp prefs_set_boolean:@PREFS_FULLSCREEN_MENU value:
          XQuartzFullscreenMenu];
     }
-    else if (sender == option_sends_alt) {
+    else if (sender == self.option_sends_alt) {
         BOOL prev_opt_sends_alt = XQuartzOptionSendsAlt;
 
-        XQuartzOptionSendsAlt = [option_sends_alt intValue];
+        XQuartzOptionSendsAlt = self.option_sends_alt.intValue;
         [NSApp prefs_set_boolean:@PREFS_OPTION_SENDS_ALT value:
          XQuartzOptionSendsAlt];
 
         if (prev_opt_sends_alt != XQuartzOptionSendsAlt)
             QuartsResyncKeymap(TRUE);
     }
-    else if (sender == click_through) {
-        [NSApp prefs_set_boolean:@PREFS_CLICK_THROUGH value:[click_through
-                                                             intValue]];
+    else if (sender == self.click_through) {
+        [NSApp prefs_set_boolean:@PREFS_CLICK_THROUGH value:self.click_through.intValue];
     }
-    else if (sender == focus_follows_mouse) {
-        [NSApp prefs_set_boolean:@PREFS_FFM value:[focus_follows_mouse
-                                                   intValue]];
+    else if (sender == self.focus_follows_mouse) {
+        [NSApp prefs_set_boolean:@PREFS_FFM value:self.focus_follows_mouse.intValue];
     }
-    else if (sender == focus_on_new_window) {
-        [NSApp prefs_set_boolean:@PREFS_FOCUS_ON_NEW_WINDOW value:[
-             focus_on_new_window intValue]];
+    else if (sender == self.focus_on_new_window) {
+        [NSApp prefs_set_boolean:@PREFS_FOCUS_ON_NEW_WINDOW value:self.focus_on_new_window.intValue];
     }
-    else if (sender == enable_auth) {
-        [NSApp prefs_set_boolean:@PREFS_NO_AUTH value:![enable_auth intValue]
-        ];
+    else if (sender == self.enable_auth) {
+        [NSApp prefs_set_boolean:@PREFS_NO_AUTH value:!self.enable_auth.intValue];
     }
-    else if (sender == enable_tcp) {
-        [NSApp prefs_set_boolean:@PREFS_NO_TCP value:![enable_tcp intValue]];
+    else if (sender == self.enable_tcp) {
+        [NSApp prefs_set_boolean:@PREFS_NO_TCP value:!self.enable_tcp.intValue];
     }
-    else if (sender == depth) {
-        [NSApp prefs_set_integer:@PREFS_DEPTH value:[depth selectedTag]];
+    else if (sender == self.depth) {
+        [NSApp prefs_set_integer:@PREFS_DEPTH value:self.depth.selectedTag];
     }
-    else if (sender == sync_pasteboard) {
-        BOOL pbproxy_active = [sync_pasteboard intValue];
+    else if (sender == self.sync_pasteboard) {
+        BOOL pbproxy_active = self.sync_pasteboard.intValue;
         [NSApp prefs_set_boolean:@PREFS_SYNC_PB value:pbproxy_active];
 
-        [sync_pasteboard_to_clipboard setEnabled:pbproxy_active];
-        [sync_pasteboard_to_primary setEnabled:pbproxy_active];
-        [sync_clipboard_to_pasteboard setEnabled:pbproxy_active];
-        [sync_primary_immediately setEnabled:pbproxy_active];
+        [self.sync_pasteboard_to_clipboard setEnabled:pbproxy_active];
+        [self.sync_pasteboard_to_primary setEnabled:pbproxy_active];
+        [self.sync_clipboard_to_pasteboard setEnabled:pbproxy_active];
+        [self.sync_primary_immediately setEnabled:pbproxy_active];
 
         // setEnabled doesn't do this...
-        [sync_text1 setTextColor:pbproxy_active ?[NSColor controlTextColor] :
-         [NSColor disabledControlTextColor]];
-        [sync_text2 setTextColor:pbproxy_active ?[NSColor controlTextColor] :
-         [NSColor disabledControlTextColor]];
+        [self.sync_text1 setTextColor:pbproxy_active ? NSColor.controlTextColor : NSColor.disabledControlTextColor];
+        [self.sync_text2 setTextColor:pbproxy_active ? NSColor.controlTextColor : NSColor.disabledControlTextColor];
     }
-    else if (sender == sync_pasteboard_to_clipboard) {
-        [NSApp prefs_set_boolean:@PREFS_SYNC_PB_TO_CLIPBOARD value:[
-             sync_pasteboard_to_clipboard intValue]];
+    else if (sender == self.sync_pasteboard_to_clipboard) {
+        [NSApp prefs_set_boolean:@PREFS_SYNC_PB_TO_CLIPBOARD value:self.sync_pasteboard_to_clipboard.intValue];
     }
-    else if (sender == sync_pasteboard_to_primary) {
-        [NSApp prefs_set_boolean:@PREFS_SYNC_PB_TO_PRIMARY value:[
-             sync_pasteboard_to_primary intValue]];
+    else if (sender == self.sync_pasteboard_to_primary) {
+        [NSApp prefs_set_boolean:@PREFS_SYNC_PB_TO_PRIMARY value:self.sync_pasteboard_to_primary.intValue];
     }
-    else if (sender == sync_clipboard_to_pasteboard) {
-        [NSApp prefs_set_boolean:@PREFS_SYNC_CLIPBOARD_TO_PB value:[
-             sync_clipboard_to_pasteboard intValue]];
+    else if (sender == self.sync_clipboard_to_pasteboard) {
+        [NSApp prefs_set_boolean:@PREFS_SYNC_CLIPBOARD_TO_PB value:self.sync_clipboard_to_pasteboard.intValue];
     }
-    else if (sender == sync_primary_immediately) {
-        [NSApp prefs_set_boolean:@PREFS_SYNC_PRIMARY_ON_SELECT value:[
-             sync_primary_immediately intValue]];
+    else if (sender == self.sync_primary_immediately) {
+        [NSApp prefs_set_boolean:@PREFS_SYNC_PRIMARY_ON_SELECT value:self.sync_primary_immediately.intValue];
     }
-    else if (sender == scroll_in_device_direction) {
-        XQuartzScrollInDeviceDirection =
-            [scroll_in_device_direction intValue];
-        [NSApp prefs_set_boolean:@PREFS_SCROLL_IN_DEV_DIRECTION value:
-         XQuartzScrollInDeviceDirection];
+    else if (sender == self.scroll_in_device_direction) {
+        XQuartzScrollInDeviceDirection = self.scroll_in_device_direction.intValue;
+        [NSApp prefs_set_boolean:@PREFS_SCROLL_IN_DEV_DIRECTION value:XQuartzScrollInDeviceDirection];
     }
 
     [NSApp prefs_synchronize];
@@ -777,62 +796,42 @@ extern char *bundle_id_prefix;
     BOOL pbproxy_active =
         [NSApp prefs_get_boolean:@PREFS_SYNC_PB default:YES];
 
-    [scroll_in_device_direction setIntValue:XQuartzScrollInDeviceDirection];
+    [self.scroll_in_device_direction setIntValue:XQuartzScrollInDeviceDirection];
 
-    [fake_buttons setIntValue:darwinFakeButtons];
-    [enable_keyequivs setIntValue:XQuartzEnableKeyEquivalents];
-    [sync_keymap setIntValue:darwinSyncKeymap];
-    [option_sends_alt setIntValue:XQuartzOptionSendsAlt];
-    [click_through setIntValue:[NSApp prefs_get_boolean:@PREFS_CLICK_THROUGH
-                                default:NO]];
-    [focus_follows_mouse setIntValue:[NSApp prefs_get_boolean:@PREFS_FFM
-                                      default:NO]];
-    [focus_on_new_window setIntValue:[NSApp prefs_get_boolean:
-                                      @PREFS_FOCUS_ON_NEW_WINDOW default:YES]
-    ];
+    [self.fake_buttons setIntValue:darwinFakeButtons];
+    [self.enable_keyequivs setIntValue:XQuartzEnableKeyEquivalents];
+    [self.sync_keymap setIntValue:darwinSyncKeymap];
+    [self.option_sends_alt setIntValue:XQuartzOptionSendsAlt];
+    [self.click_through setIntValue:[NSApp prefs_get_boolean:@PREFS_CLICK_THROUGH default:NO]];
+    [self.focus_follows_mouse setIntValue:[NSApp prefs_get_boolean:@PREFS_FFM default:NO]];
+    [self.focus_on_new_window setIntValue:[NSApp prefs_get_boolean:@PREFS_FOCUS_ON_NEW_WINDOW default:YES]];
 
-    [enable_auth setIntValue:![NSApp prefs_get_boolean:@PREFS_NO_AUTH default
-                               :NO]];
-    [enable_tcp setIntValue:![NSApp prefs_get_boolean:@PREFS_NO_TCP default:
-                              NO]];
+    [self.enable_auth setIntValue:![NSApp prefs_get_boolean:@PREFS_NO_AUTH default:NO]];
+    [self.enable_tcp setIntValue:![NSApp prefs_get_boolean:@PREFS_NO_TCP default:NO]];
 
-    [depth selectItemAtIndex:[depth indexOfItemWithTag:[NSApp
-                                                        prefs_get_integer:
-                                                        @PREFS_DEPTH default:
-                                                        -1]]];
+    [self.depth selectItemAtIndex:[self.depth indexOfItemWithTag:[NSApp prefs_get_integer:@PREFS_DEPTH default:-1]]];
 
-    [sync_pasteboard setIntValue:pbproxy_active];
-    [sync_pasteboard_to_clipboard setIntValue:[NSApp prefs_get_boolean:
-                                               @PREFS_SYNC_PB_TO_CLIPBOARD
-                                               default:YES]];
-    [sync_pasteboard_to_primary setIntValue:[NSApp prefs_get_boolean:
-                                             @PREFS_SYNC_PB_TO_PRIMARY
-                                             default:YES]];
-    [sync_clipboard_to_pasteboard setIntValue:[NSApp prefs_get_boolean:
-                                               @PREFS_SYNC_CLIPBOARD_TO_PB
-                                               default:YES]];
-    [sync_primary_immediately setIntValue:[NSApp prefs_get_boolean:
-                                           @PREFS_SYNC_PRIMARY_ON_SELECT
-                                           default:NO]];
+    [self.sync_pasteboard setIntValue:pbproxy_active];
+    [self.sync_pasteboard_to_clipboard setIntValue:[NSApp prefs_get_boolean:@PREFS_SYNC_PB_TO_CLIPBOARD default:YES]];
+    [self.sync_pasteboard_to_primary setIntValue:[NSApp prefs_get_boolean:@PREFS_SYNC_PB_TO_PRIMARY default:YES]];
+    [self.sync_clipboard_to_pasteboard setIntValue:[NSApp prefs_get_boolean:@PREFS_SYNC_CLIPBOARD_TO_PB default:YES]];
+    [self.sync_primary_immediately setIntValue:[NSApp prefs_get_boolean:@PREFS_SYNC_PRIMARY_ON_SELECT default:NO]];
 
-    [sync_pasteboard_to_clipboard setEnabled:pbproxy_active];
-    [sync_pasteboard_to_primary setEnabled:pbproxy_active];
-    [sync_clipboard_to_pasteboard setEnabled:pbproxy_active];
-    [sync_primary_immediately setEnabled:pbproxy_active];
+    [self.sync_pasteboard_to_clipboard setEnabled:pbproxy_active];
+    [self.sync_pasteboard_to_primary setEnabled:pbproxy_active];
+    [self.sync_clipboard_to_pasteboard setEnabled:pbproxy_active];
+    [self.sync_primary_immediately setEnabled:pbproxy_active];
 
     // setEnabled doesn't do this...
-    [sync_text1 setTextColor:pbproxy_active ?[NSColor controlTextColor] : [
-         NSColor disabledControlTextColor]];
-    [sync_text2 setTextColor:pbproxy_active ?[NSColor controlTextColor] : [
-         NSColor disabledControlTextColor]];
+    [self.sync_text1 setTextColor:pbproxy_active ? NSColor.controlTextColor : NSColor.disabledControlTextColor];
+    [self.sync_text2 setTextColor:pbproxy_active ? NSColor.controlTextColor : NSColor.disabledControlTextColor];
 
-    [enable_fullscreen setIntValue:!XQuartzRootlessDefault];
-    [enable_fullscreen_menu setIntValue:XQuartzFullscreenMenu];
-    [enable_fullscreen_menu setEnabled:!XQuartzRootlessDefault];
-    [enable_fullscreen_menu_text setTextColor:XQuartzRootlessDefault ?[
-         NSColor disabledControlTextColor] : [NSColor controlTextColor]];
+    [self.enable_fullscreen setIntValue:!XQuartzRootlessDefault];
+    [self.enable_fullscreen_menu setIntValue:XQuartzFullscreenMenu];
+    [self.enable_fullscreen_menu setEnabled:!XQuartzRootlessDefault];
+    [self.enable_fullscreen_menu_text setTextColor:XQuartzRootlessDefault ? NSColor.disabledControlTextColor : NSColor.controlTextColor];
 
-    [prefs_panel makeKeyAndOrderFront:sender];
+    [self.prefs_panel makeKeyAndOrderFront:sender];
 }
 
 - (IBAction) quit:sender
@@ -848,11 +847,12 @@ extern char *bundle_id_prefix;
 - (OSX_BOOL) validateMenuItem:(NSMenuItem *)item
 {
     NSMenu *menu = [item menu];
+    NSMenu * const dock_menu = self.dock_menu;
 
-    if (item == toggle_fullscreen_item)
+    if (item == self.toggle_fullscreen_item)
         return !XQuartzIsRootless;
     else if (menu == [X11App windowsMenu] || menu == dock_menu
-             || (menu == [x11_about_item menu] && [item tag] == 42))
+             || (menu == [self.x11_about_item menu] && [item tag] == 42))
         return (AppleWMSelectedEvents() & AppleWMControllerNotifyMask) != 0;
     else
         return TRUE;
@@ -880,7 +880,7 @@ extern char *bundle_id_prefix;
     NSString *msg;
     NSString *title;
 
-    if (can_quit ||
+    if (self.can_quit ||
         [X11App prefs_get_boolean:@PREFS_NO_QUIT_ALERT default:NO])
         return NSTerminateNow;
 
@@ -919,26 +919,26 @@ extern char *bundle_id_prefix;
 {
     x_list *node;
 
-    finished_launching = YES;
+    self.finished_launching = YES;
 
-    for (node = pending_apps; node != NULL; node = node->next) {
+    for (node = self.pending_apps; node != NULL; node = node->next) {
         NSString *filename = node->data;
         [self launch_client:filename];
         [filename release];
     }
 
-    x_list_free(pending_apps);
-    pending_apps = NULL;
+    x_list_free(self.pending_apps);
+    self.pending_apps = NULL;
 }
 
 - (OSX_BOOL) application:(NSApplication *)app openFile:(NSString *)filename
 {
     const char *name = [filename UTF8String];
 
-    if (finished_launching)
+    if (self.finished_launching)
         [self launch_client:filename];
     else if (name[0] != ':')            /* ignore display names */
-        pending_apps = x_list_prepend(pending_apps, [filename retain]);
+        self.pending_apps = x_list_prepend(self.pending_apps, [filename retain]);
 
     /* FIXME: report failures. */
     return YES;

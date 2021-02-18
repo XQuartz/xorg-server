@@ -916,7 +916,7 @@ void
 X11ApplicationSetCanQuit(int state)
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [X11App.controller set_can_quit:!!state];
+        X11App.controller.can_quit = !!state;
     });
 }
 

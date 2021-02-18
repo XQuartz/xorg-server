@@ -31,6 +31,8 @@
 #ifndef X11APPLICATION_H
 #define X11APPLICATION_H 1
 
+#include <X11/Xdefs.h>
+
 #if __OBJC__
 
 #import "X11Controller.h"

@@ -44,7 +44,6 @@ EXTRA_DIST = \
 	darwinEvents.h \
 	keysym2ucs.h \
 	quartz.h \
-	quartzCommon.h \
 	quartzKeyboard.h \
 	quartzRandR.h \
 	sanitizedCarbon.h \

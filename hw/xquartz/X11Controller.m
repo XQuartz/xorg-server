@@ -34,8 +34,6 @@
 #include <dix-config.h>
 #endif
 
-#include "quartzCommon.h"
-
 #import "X11Controller.h"
 #import "X11Application.h"
 

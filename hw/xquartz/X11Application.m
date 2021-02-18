@@ -117,59 +117,10 @@ struct message_struct {
     NSObject *arg;
 };
 
-static mach_port_t _port;
-
 /* Quartz mode initialization routine. This is often dynamically loaded
    but is statically linked into this X server. */
 Bool
 QuartzModeBundleInit(void);
-
-static void
-init_ports(void)
-{
-    kern_return_t r;
-    NSPort *p;
-
-    if (_port != MACH_PORT_NULL) return;
-
-    r = mach_port_allocate(mach_task_self(), MACH_PORT_RIGHT_RECEIVE, &_port);
-    if (r != KERN_SUCCESS) return;
-
-    p = [NSMachPort portWithMachPort:_port];
-    [p setDelegate:NSApp];
-    [p scheduleInRunLoop:[NSRunLoop currentRunLoop] forMode:
-     NSDefaultRunLoopMode];
-}
-
-static void
-message_kit_thread(SEL selector, NSObject *arg)
-{
-    message msg;
-    kern_return_t r;
-
-    msg.hdr.msgh_bits = MACH_MSGH_BITS(MACH_MSG_TYPE_MAKE_SEND, 0);
-    msg.hdr.msgh_size = sizeof(msg);
-    msg.hdr.msgh_remote_port = _port;
-    msg.hdr.msgh_local_port = MACH_PORT_NULL;
-    msg.hdr.msgh_reserved = 0;
-    msg.hdr.msgh_id = 0;
-
-    msg.selector = selector;
-    msg.arg = [arg retain];
-
-    r = mach_msg(&msg.hdr, MACH_SEND_MSG, msg.hdr.msgh_size,
-                 0, MACH_PORT_NULL, 0, MACH_PORT_NULL);
-    if (r != KERN_SUCCESS)
-        ErrorF("%s: mach_msg failed: %x\n", __FUNCTION__, r);
-}
-
-- (void) handleMachMessage:(void *)_msg
-{
-    message *msg = _msg;
-
-    [self performSelector:msg->selector withObject:msg->arg];
-    [msg->arg release];
-}
 
 - (void) set_controller:obj
 {
@@ -179,9 +130,6 @@ message_kit_thread(SEL selector, NSObject *arg)
 - (void) dealloc
 {
     if (_controller != nil) [_controller release];
-
-    if (_port != MACH_PORT_NULL)
-        mach_port_deallocate(mach_task_self(), _port);
 
     [super dealloc];
 }
@@ -961,9 +909,7 @@ array_with_strings_and_numbers(int nitems, const char **items,
     NSString *string, *number;
     int i;
 
-    /* (Can't autorelease on the X server thread) */
-
-    array = [[NSMutableArray alloc] initWithCapacity:nitems];
+    array = [[[NSMutableArray alloc] initWithCapacity:nitems] autorelease];
 
     for (i = 0; i < nitems; i++) {
         subarray = [[NSMutableArray alloc] initWithCapacity:2];
@@ -991,73 +937,65 @@ void
 X11ApplicationSetWindowMenu(int nitems, const char **items,
                             const char *shortcuts)
 {
-    NSArray *array;
-    array = array_with_strings_and_numbers(nitems, items, shortcuts);
+    @autoreleasepool {
+        NSArray *array = array_with_strings_and_numbers(nitems, items, shortcuts);
 
-    /* Send the array of strings over to the appkit thread */
-
-    message_kit_thread(@selector (set_window_menu:), array);
-    [array release];
+        /* Send the array of strings over to the appkit thread */
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [X11App set_window_menu:array];
+        });
+    }
 }
 
 void
 X11ApplicationSetWindowMenuCheck(int idx)
 {
-    NSNumber *n;
-
-    n = [[NSNumber alloc] initWithInt:idx];
-
-    message_kit_thread(@selector (set_window_menu_check:), n);
-
-    [n release];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [X11App set_window_menu_check:@(idx)];
+    });
 }
 
 void
 X11ApplicationSetFrontProcess(void)
 {
-    message_kit_thread(@selector (set_front_process:), nil);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [X11App set_front_process:nil];
+    });
 }
 
 void
 X11ApplicationSetCanQuit(int state)
 {
-    NSNumber *n;
-
-    n = [[NSNumber alloc] initWithBool:state];
-
-    message_kit_thread(@selector (set_can_quit:), n);
-
-    [n release];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [X11App set_can_quit:@(state)];
+    });
 }
 
 void
 X11ApplicationServerReady(void)
 {
-    message_kit_thread(@selector (server_ready:), nil);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [X11App server_ready:nil];
+    });
 }
 
 void
 X11ApplicationShowHideMenubar(int state)
 {
-    NSNumber *n;
-
-    n = [[NSNumber alloc] initWithBool:state];
-
-    message_kit_thread(@selector (show_hide_menubar:), n);
-
-    [n release];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [X11App show_hide_menubar:@(state)];
+    });
 }
 
 void
 X11ApplicationLaunchClient(const char *cmd)
 {
-    NSString *string;
-
-    string = [[NSString alloc] initWithUTF8String:cmd];
-
-    message_kit_thread(@selector (launch_client:), string);
-
-    [string release];
+    @autoreleasepool {
+        NSString *string = @(cmd);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [X11App launch_client:string];
+        });
+    }
 }
 
 /* This is a special function in that it is run from the *SERVER* thread and
@@ -1180,7 +1118,6 @@ X11ApplicationMain(int argc, char **argv, char **envp)
 
     @autoreleasepool {
         X11App = (X11Application *)[X11Application sharedApplication];
-        init_ports();
 
         app_prefs_domain_cfstr = (CFStringRef)[[NSBundle mainBundle] bundleIdentifier];
 

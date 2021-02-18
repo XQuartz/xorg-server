@@ -42,7 +42,6 @@
 }
 
 - (void)set_controller:controller;
-- (void)set_window_menu:(NSArray *)list;
 
 - (CFPropertyListRef)prefs_get_copy:(NSString *)key CF_RETURNS_RETAINED;
 - (int)prefs_get_integer:(NSString *)key default:(int)def;

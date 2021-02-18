@@ -104,6 +104,11 @@ CFStringRef app_prefs_domain_cfstr = NULL;
 #define ALL_KEY_MASKS (NSShiftKeyMask | NSControlKeyMask | \
                        NSAlternateKeyMask | NSCommandKeyMask)
 
+@interface NSApplication (Internal)
+- (void)_setKeyWindow:(id)window;
+- (void)_setMainWindow:(id)window;
+@end
+
 @interface X11Application (Private)
 - (void) sendX11NSEvent:(NSEvent *)e;
 @end

@@ -785,16 +785,7 @@ extern char *bundle_id_prefix;
     BOOL pbproxy_active =
         [NSApp prefs_get_boolean:@PREFS_SYNC_PB default:YES];
 
-    // Remove preferences from the GUI which are not supported
-    // TODO: Change 1117 to NSAppKitVersionNumber10_7 when it is defined
-    if (scroll_in_device_direction && NSAppKitVersionNumber < 1117) {
-        [scroll_in_device_direction removeFromSuperview];
-        scroll_in_device_direction = nil;
-    }
-    else {
-        [scroll_in_device_direction setIntValue:
-         XQuartzScrollInDeviceDirection];
-    }
+    [scroll_in_device_direction setIntValue:XQuartzScrollInDeviceDirection];
 
     [fake_buttons setIntValue:darwinFakeButtons];
     [enable_keyequivs setIntValue:XQuartzEnableKeyEquivalents];

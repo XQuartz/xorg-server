@@ -312,29 +312,27 @@ extern char *bundle_id_prefix;
 #ifdef XQUARTZ_SPARKLE
 - (void) setup_sparkle
 {
-    if (check_for_updates_item)
+    if (self.check_for_updates_item)
         return;  // already did it...
 
     NSMenu *menu = [self.x11_about_item menu];
 
-    check_for_updates_item =
-        [menu insertItemWithTitle:NSLocalizedString(
-             @"Check for X11 Updates...",
-             @"Check for X11 Updates...")
-         action:@selector (
-             checkForUpdates:)
-         keyEquivalent:@""
-         atIndex:1];
+    NSMenuItem * const check_for_updates_item =
+        [menu insertItemWithTitle:NSLocalizedString(@"Check for X11 Updates...", @"Check for X11 Updates...")
+                           action:@selector(checkForUpdates:)
+                    keyEquivalent:@""
+                          atIndex:1];
     [check_for_updates_item setTarget:[SUUpdater sharedUpdater]];
     [check_for_updates_item setEnabled:YES];
+
+    self.check_for_updates_item = check_for_updates_item;
 
     // Set X11Controller as the delegate for the updater.
     [[SUUpdater sharedUpdater] setDelegate:self];
 }
 
 // Sent immediately before installing the specified update.
-- (void)updater:(SUUpdater *)updater willInstallUpdate:(SUAppcastItem *)
-   update
+- (void)updater:(SUUpdater *)updater willInstallUpdate:(SUAppcastItem *)update
 {
     //self.can_quit = YES;
 }

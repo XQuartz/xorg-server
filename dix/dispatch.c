@@ -128,6 +128,7 @@ int ProcInitialConnection();
 #include "inputstr.h"
 #include "xkbsrv.h"
 #include "client.h"
+#include "xfixesint.h"
 
 #ifdef XSERVER_DTRACE
 #include "registry.h"
@@ -397,6 +398,22 @@ SmartScheduleClient(void)
         SmartScheduleSlice = SmartScheduleInterval;
     }
     return best;
+}
+
+static Bool
+ShouldDisconnectRemainingClients(void)
+{
+    int i;
+
+    for (i = 1; i < currentMaxClients; i++) {
+        if (clients[i]) {
+            if (!XFixesShouldDisconnectClient(clients[i]))
+                return FALSE;
+        }
+    }
+
+    /* All remaining clients can be safely ignored */
+    return TRUE;
 }
 
 void
@@ -3504,6 +3521,9 @@ CloseDownClient(ClientPtr client)
         while (!clients[currentMaxClients - 1])
             currentMaxClients--;
     }
+
+    if (ShouldDisconnectRemainingClients())
+        dispatchException |= dispatchExceptionAtReset;
 }
 
 static void

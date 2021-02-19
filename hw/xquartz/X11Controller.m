@@ -58,6 +58,10 @@
 extern aslclient aslc;
 extern char *bundle_id_prefix;
 
+@interface X11Controller ()
+@property (nonatomic, readwrite, assign) NSInteger windows_menu_nitems;
+@end
+
 @implementation X11Controller
 
 - (void) awakeFromNib
@@ -103,14 +107,6 @@ extern char *bundle_id_prefix;
         selector: @selector(apps_table_done:)
             name: NSWindowWillCloseNotification
           object: [apps_table window]];
-
-    // Setup data about our Windows menu
-    if (window_separator) {
-        [[window_separator menu] removeItem:window_separator];
-        window_separator = nil;
-    }
-
-    windows_menu_start = [[X11App windowsMenu] numberOfItems];
 }
 
 - (void) item_selected:sender
@@ -119,73 +115,6 @@ extern char *bundle_id_prefix;
 
     DarwinSendDDXEvent(kXquartzControllerNotify, 2,
                        AppleWMWindowMenuItem, [sender tag]);
-}
-
-- (void) remove_window_menu
-{
-    NSMenu *menu;
-    int count, i;
-
-    /* Work backwards so we don't mess up the indices */
-    menu = [X11App windowsMenu];
-    count = [menu numberOfItems];
-    for (i = count - 1; i >= windows_menu_start; i--)
-        [menu removeItemAtIndex:i];
-
-    count = [dock_menu indexOfItem:dock_window_separator];
-    for (i = 0; i < count; i++)
-        [dock_menu removeItemAtIndex:0];
-}
-
-- (void) install_window_menu:(NSArray *)list
-{
-    NSMenu *menu;
-    NSMenuItem *item;
-    int first, count, i;
-
-    menu = [X11App windowsMenu];
-    first = windows_menu_start + 1;
-    count = [list count];
-
-    // Push a Separator
-    if (count) {
-        [menu addItem:[NSMenuItem separatorItem]];
-    }
-
-    for (i = 0; i < count; i++) {
-        NSString *name, *shortcut;
-
-        name = [[list objectAtIndex:i] objectAtIndex:0];
-        shortcut = [[list objectAtIndex:i] objectAtIndex:1];
-
-        if (windowItemModMask == 0 || windowItemModMask == -1)
-            shortcut = @"";
-
-        item =
-            (NSMenuItem *)[menu addItemWithTitle:name action:
-                           @selector
-                           (item_selected:) keyEquivalent:shortcut];
-        [item setKeyEquivalentModifierMask:(NSUInteger)windowItemModMask];
-        [item setTarget:self];
-        [item setTag:i];
-        [item setEnabled:YES];
-
-        item = (NSMenuItem *)[dock_menu  insertItemWithTitle:name
-                                                      action:@selector
-                              (item_selected:) keyEquivalent:shortcut
-                                                     atIndex:i];
-        [item setKeyEquivalentModifierMask:(NSUInteger)windowItemModMask];
-        [item setTarget:self];
-        [item setTag:i];
-        [item setEnabled:YES];
-    }
-
-    if (checked_window_item >= 0 && checked_window_item < count) {
-        item = (NSMenuItem *)[menu itemAtIndex:first + checked_window_item];
-        [item setState:NSOnState];
-        item = (NSMenuItem *)[dock_menu itemAtIndex:checked_window_item];
-        [item setState:NSOnState];
-    }
 }
 
 - (void) remove_apps_menu
@@ -268,23 +197,79 @@ extern char *bundle_id_prefix;
 
 - (void) set_window_menu:(NSArray *)list
 {
-    [self remove_window_menu];
-    [self install_window_menu:list];
+    NSMenu * const menu = X11App.windowsMenu;
 
-    DarwinSendDDXEvent(kXquartzControllerNotify, 1,
-                       AppleWMWindowMenuNotify);
+    /* First, remove the existing items from the Window Menu */
+    NSInteger itemsToRemove = self.windows_menu_nitems;
+    if (itemsToRemove > 0) {
+        NSInteger indexForRemoval = menu.numberOfItems - itemsToRemove - 1; /* we also want to remove the separator */
+
+        for (NSInteger i = 0 ; i < itemsToRemove + 1 ; i++) {
+            [menu removeItemAtIndex:indexForRemoval];
+        }
+
+        for (NSInteger i = 0 ; i < itemsToRemove; i++) {
+            [dock_menu removeItemAtIndex:0];
+        }
+    }
+
+    NSInteger const itemsToAdd = list.count;
+    self.windows_menu_nitems = itemsToAdd;
+
+    if (itemsToAdd > 0) {
+        NSMenuItem *item;
+
+        // Push a Separator
+        [menu addItem:[NSMenuItem separatorItem]];
+
+        for (NSInteger i = 0; i < itemsToAdd; i++) {
+            NSString *name, *shortcut;
+
+            name = list[i][0];
+            shortcut = list[i][1];
+
+            if (windowItemModMask == 0 || windowItemModMask == -1)
+                shortcut = @"";
+
+            item = (NSMenuItem *)[menu addItemWithTitle:name
+                                                 action:@selector(item_selected:)
+                                          keyEquivalent:shortcut];
+            [item setKeyEquivalentModifierMask:(NSUInteger)windowItemModMask];
+            [item setTarget:self];
+            [item setTag:i];
+            [item setEnabled:YES];
+
+            item = (NSMenuItem *)[dock_menu  insertItemWithTitle:name
+                                                          action:@selector(item_selected:)
+                                                   keyEquivalent:shortcut
+                                                         atIndex:i];
+            [item setKeyEquivalentModifierMask:(NSUInteger)windowItemModMask];
+            [item setTarget:self];
+            [item setTag:i];
+            [item setEnabled:YES];
+        }
+
+        if (checked_window_item >= 0 && checked_window_item < itemsToAdd) {
+            NSInteger first = menu.numberOfItems - itemsToAdd;
+            item = (NSMenuItem *)[menu itemAtIndex:first + checked_window_item];
+            [item setState:NSOnState];
+
+            item = (NSMenuItem *)[dock_menu itemAtIndex:checked_window_item];
+            [item setState:NSOnState];
+        }
+    }
+
+    DarwinSendDDXEvent(kXquartzControllerNotify, 1, AppleWMWindowMenuNotify);
 }
 
 - (void) set_window_menu_check:(NSNumber *)nn
 {
-    NSMenu *menu;
+    NSMenu * const menu = X11App.windowsMenu;
     NSMenuItem *item;
-    int first, count;
-    int n = [nn intValue];
+    int n = nn.intValue;
 
-    menu = [X11App windowsMenu];
-    first = windows_menu_start + 1;
-    count = [menu numberOfItems] - first;
+    NSInteger const count = self.windows_menu_nitems;
+    NSInteger const first = menu.numberOfItems - count;
 
     if (checked_window_item >= 0 && checked_window_item < count) {
         item = (NSMenuItem *)[menu itemAtIndex:first + checked_window_item];

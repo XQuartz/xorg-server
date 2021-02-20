@@ -200,6 +200,14 @@ QuartzModeBundleInit(void);
 
 - (void) sendEvent:(NSEvent *)e
 {
+    /* Don't try sending to X if we haven't initialized.  This can happen if AppKit takes over
+     * (eg: uncaught exception) early in launch.
+     */
+    if (!eventTranslationQueue) {
+        [super sendEvent:e];
+        return;
+    }
+
     OSX_BOOL for_appkit, for_x;
     OSX_BOOL const x_active = self.x_active;
 

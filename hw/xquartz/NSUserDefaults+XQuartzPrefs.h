@@ -62,6 +62,8 @@ extern NSString * const XQuartzPrefKeySyncPrimaryOnSelect;
 
 @interface NSUserDefaults (XQuartzPrefs)
 
++ (NSUserDefaults *)globalDefaults;
++ (NSUserDefaults *)dockDefaults;
 + (NSUserDefaults *)xquartzDefaults;
 
 @end

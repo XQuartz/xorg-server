@@ -64,6 +64,44 @@ NSString * const XQuartzPrefKeySyncPrimaryOnSelect = @"sync_primary_on_select";
 
 @implementation NSUserDefaults (XQuartzPrefs)
 
++ (NSUserDefaults *)globalDefaults
+{
+    static dispatch_once_t once;
+    static NSUserDefaults *defaults;
+
+    dispatch_once(&once, ^{
+        NSString * const defaultsDomain = @".GlobalPreferences";
+        defaults = [[[NSUserDefaults alloc] initWithSuiteName:defaultsDomain] retain];
+
+        NSDictionary<NSString *, id> * const defaultDefaultsDict = @{
+            @"AppleSpacesSwitchOnActivate" : @(YES),
+        };
+
+        [defaults registerDefaults:defaultDefaultsDict];
+    });
+
+    return defaults;
+}
+
++ (NSUserDefaults *)dockDefaults
+{
+    static dispatch_once_t once;
+    static NSUserDefaults *defaults;
+
+    dispatch_once(&once, ^{
+        NSString * const defaultsDomain = @"com.apple.dock";
+        defaults = [[[NSUserDefaults alloc] initWithSuiteName:defaultsDomain] retain];
+
+        NSDictionary<NSString *, id> * const defaultDefaultsDict = @{
+            @"workspaces" : @(NO),
+        };
+
+        [defaults registerDefaults:defaultDefaultsDict];
+    });
+
+    return defaults;
+}
+
 + (NSUserDefaults *)xquartzDefaults
 {
     static dispatch_once_t once;

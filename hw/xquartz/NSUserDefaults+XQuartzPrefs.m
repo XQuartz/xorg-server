@@ -1,0 +1,131 @@
+/* Copyright (c) 2021 Apple Inc.
+ *
+ * Permission is hereby granted, free of charge, to any person
+ * obtaining a copy of this software and associated documentation files
+ * (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge,
+ * publish, distribute, sublicense, and/or sell copies of the Software,
+ * and to permit persons to whom the Software is furnished to do so,
+ * subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be
+ * included in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ * NONINFRINGEMENT.  IN NO EVENT SHALL THE ABOVE LISTED COPYRIGHT
+ * HOLDER(S) BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
+ *
+ * Except as contained in this notice, the name(s) of the above
+ * copyright holders shall not be used in advertising or otherwise to
+ * promote the sale, use or other dealings in this Software without
+ * prior written authorization.
+ */
+
+#import "NSUserDefaults+XQuartzPrefs.h"
+#import <dispatch/dispatch.h>
+
+NSString * const XQuartzPrefKeyAppsMenu = @"apps_menu";
+NSString * const XQuartzPrefKeyFakeButtons = @"enable_fake_buttons";
+NSString * const XQuartzPrefKeyFakeButton2 = @"fake_button2";
+NSString * const XQuartzPrefKeyFakeButton3 = @"fake_button3";
+NSString * const XQuartzPrefKeyKeyEquivs = @"enable_key_equivalents";
+NSString * const XQuartzPrefKeyFullscreenHotkeys = @"fullscreen_hotkeys";
+NSString * const XQuartzPrefKeyFullscreenMenu = @"fullscreen_menu";
+NSString * const XQuartzPrefKeySyncKeymap = @"sync_keymap";
+NSString * const XQuartzPrefKeyDepth = @"depth";
+NSString * const XQuartzPrefKeyNoAuth = @"no_auth";
+NSString * const XQuartzPrefKeyNoTCP = @"nolisten_tcp";
+NSString * const XQuartzPrefKeyDoneXinitCheck = @"done_xinit_check";
+NSString * const XQuartzPrefKeyNoQuitAlert = @"no_quit_alert";
+NSString * const XQuartzPrefKeyNoRANDRAlert = @"no_randr_alert";
+NSString * const XQuartzPrefKeyOptionSendsAlt = @"option_sends_alt";
+NSString * const XQuartzPrefKeyAppKitModifiers = @"appkit_modifiers";
+NSString * const XQuartzPrefKeyWindowItemModifiers = @"window_item_modifiers";
+NSString * const XQuartzPrefKeyRootless = @"rootless";
+NSString * const XQuartzPrefKeyRENDERExtension = @"enable_render_extension";
+NSString * const XQuartzPrefKeyTESTExtension = @"enable_test_extensions";
+NSString * const XQuartzPrefKeyLoginShell = @"login_shell";
+NSString * const XQuartzPrefKeyUpdateFeed = @"update_feed";
+NSString * const XQuartzPrefKeyClickThrough = @"wm_click_through";
+NSString * const XQuartzPrefKeyFocusFollowsMouse = @"wm_ffm";
+NSString * const XQuartzPrefKeyFocusOnNewWindow = @"wm_focus_on_new_window";
+
+NSString * const XQuartzPrefKeyScrollInDeviceDirection = @"scroll_in_device_direction";
+NSString * const XQuartzPrefKeySyncPasteboard = @"sync_pasteboard";
+NSString * const XQuartzPrefKeySyncPasteboardToClipboard = @"sync_pasteboard_to_clipboard";
+NSString * const XQuartzPrefKeySyncPasteboardToPrimary = @"sync_pasteboard_to_primary";
+NSString * const XQuartzPrefKeySyncClipboardToPasteBoard = @"sync_clipboard_to_pasteboard";
+NSString * const XQuartzPrefKeySyncPrimaryOnSelect = @"sync_primary_on_select";
+
+@implementation NSUserDefaults (XQuartzPrefs)
+
++ (NSUserDefaults *)xquartzDefaults
+{
+    static dispatch_once_t once;
+    static NSUserDefaults *defaults;
+
+    dispatch_once(&once, ^{
+        NSString * const defaultsDomain = @(BUNDLE_ID_PREFIX ".X11");
+        NSString * const defaultDefaultsDomain = NSBundle.mainBundle.bundleIdentifier;
+        if ([defaultsDomain isEqualToString:defaultDefaultsDomain]) {
+            defaults = [NSUserDefaults.standardUserDefaults retain];
+        } else {
+            defaults = [[[NSUserDefaults alloc] initWithSuiteName:defaultsDomain] retain];
+        }
+
+        NSArray * const defaultAppsMenu = @[
+            @[NSLocalizedString(@"Terminal", @"Terminal"), @"xterm", @"n"],
+        ];
+
+        NSString *defaultWindowItemModifiers = @"command";
+        NSString * const defaultWindowItemModifiersLocalized = NSLocalizedString(@"window item modifiers", @"window item modifiers");
+        if (![defaultWindowItemModifiersLocalized isEqualToString:@"window item modifiers"]) {
+            defaultWindowItemModifiers = defaultWindowItemModifiersLocalized;
+        }
+
+        NSDictionary<NSString *, id> * const defaultDefaultsDict = @{
+            XQuartzPrefKeyAppsMenu : defaultAppsMenu,
+            XQuartzPrefKeyFakeButtons : @(NO),
+            // XQuartzPrefKeyFakeButton2 nil default
+            // XQuartzPrefKeyFakeButton3 nil default
+            XQuartzPrefKeyKeyEquivs : @(YES),
+            XQuartzPrefKeyFullscreenHotkeys : @(NO),
+            XQuartzPrefKeyFullscreenMenu : @(NO),
+            XQuartzPrefKeySyncKeymap : @(NO),
+            XQuartzPrefKeyDepth : @(-1),
+            XQuartzPrefKeyNoAuth : @(NO),
+            XQuartzPrefKeyNoTCP : @(NO),
+            XQuartzPrefKeyDoneXinitCheck : @(NO),
+            XQuartzPrefKeyNoQuitAlert : @(NO),
+            XQuartzPrefKeyNoRANDRAlert : @(NO),
+            XQuartzPrefKeyOptionSendsAlt : @(NO),
+            // XQuartzPrefKeyAppKitModifiers nil default
+            XQuartzPrefKeyWindowItemModifiers : defaultWindowItemModifiers,
+            XQuartzPrefKeyRootless : @(YES),
+            XQuartzPrefKeyRENDERExtension : @(YES),
+            XQuartzPrefKeyTESTExtension : @(NO),
+            XQuartzPrefKeyLoginShell : @"/bin/sh",
+            XQuartzPrefKeyClickThrough : @(NO),
+            XQuartzPrefKeyFocusFollowsMouse : @(NO),
+            XQuartzPrefKeyFocusOnNewWindow : @(YES),
+
+            XQuartzPrefKeyScrollInDeviceDirection : @(NO),
+            XQuartzPrefKeySyncPasteboard : @(YES),
+            XQuartzPrefKeySyncPasteboardToClipboard : @(YES),
+            XQuartzPrefKeySyncPasteboardToPrimary : @(YES),
+            XQuartzPrefKeySyncClipboardToPasteBoard : @(YES),
+            XQuartzPrefKeySyncPrimaryOnSelect : @(NO),
+        };
+
+        [defaults registerDefaults:defaultDefaultsDict];
+    });
+
+    return defaults;
+}
+
+@end

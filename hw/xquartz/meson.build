@@ -20,6 +20,7 @@ endif
 
 # libxquartz
 srcs_libxquartz = [
+    'NSUserDefaults+XQuartzPrefs.m',
     'X11Application.m',
     'X11Controller.m',
     'applewm.c',

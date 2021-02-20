@@ -2,6 +2,7 @@ noinst_LTLIBRARIES = libXquartz.la
 AM_CFLAGS = $(DIX_CFLAGS)
 AM_OBJCFLAGS = $(DIX_CFLAGS)
 AM_CPPFLAGS = \
+	-DBUNDLE_ID_PREFIX=\"$(BUNDLE_ID_PREFIX)\" \
 	-DXSERVER_VERSION=\"$(VERSION)\" \
 	-DUSE_NEW_CLUT \
 	-DXFree86Server \
@@ -21,6 +22,7 @@ DIST_SUBDIRS = bundle . GL xpr pbproxy mach-startup man
 libXquartz_la_SOURCES = \
 	$(top_srcdir)/mi/miinitext.c \
 	$(top_srcdir)/mi/miinitext.h \
+	NSUserDefaults+XQuartzPrefs.m \
 	X11Application.m \
 	X11Controller.m \
 	applewm.c \
@@ -36,6 +38,7 @@ libXquartz_la_SOURCES = \
 libXquartz_la_LIBADD = $(top_builddir)/pseudoramiX/libPseudoramiX.la
 
 EXTRA_DIST = \
+	NSUserDefaults+XQuartzPrefs.h \
 	X11Application.h \
 	X11Controller.h \
 	applewmExt.h \

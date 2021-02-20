@@ -11,6 +11,7 @@ libxpbproxy = static_library('xpbproxy',
     ['main.m',
      'x-input.m',
      'x-selection.m'],
+    include_directories: [inc, '..'],
     dependencies: [applewmproto_dep, libapplewm_dep, dependency('xfixes'), dependency('x11')],
     objc_args: pbproxy_defs,
 )

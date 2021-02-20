@@ -23,9 +23,6 @@ noinst_DATA = $(noinst_PRE:plist.cpp=plist)
 
 CLEANFILES = $(noinst_DATA)
 
-resourcedir=$(libdir)/X11/xserver
-resource_DATA = Xquartz.plist
-
 EXTRA_DIST = \
 	mk_bundke.sh \
 	X11.sh \

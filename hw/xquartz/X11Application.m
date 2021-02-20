@@ -369,7 +369,7 @@ QuartzModeBundleInit(void);
         case NSApplicationActivatedEventType:
             for_x = NO;
             if ([e window] == nil && x_was_active) {
-                BOOL order_all_windows = YES, workspaces, ok;
+                BOOL order_all_windows = YES;
                 for_appkit = NO;
 
                 /* FIXME: This is a hack to avoid passing the event to AppKit which
@@ -380,26 +380,9 @@ QuartzModeBundleInit(void);
                 [self set_front_process:nil];
 
                 /* Get the Spaces preference for SwitchOnActivate */
-                (void)CFPreferencesAppSynchronize(CFSTR("com.apple.dock"));
-                workspaces =
-                    CFPreferencesGetAppBooleanValue(CFSTR("workspaces"),
-                                                    CFSTR(
-                                                        "com.apple.dock"),
-                                                    &ok);
-                if (!ok)
-                    workspaces = NO;
-
+                BOOL const workspaces = [NSUserDefaults.dockDefaults boolForKey:@"workspaces"];
                 if (workspaces) {
-                    (void)CFPreferencesAppSynchronize(CFSTR(
-                                                          ".GlobalPreferences"));
-                    order_all_windows =
-                        CFPreferencesGetAppBooleanValue(CFSTR(
-                                                            "AppleSpacesSwitchOnActivate"),
-                                                        CFSTR(
-                                                            ".GlobalPreferences"),
-                                                        &ok);
-                    if (!ok)
-                        order_all_windows = YES;
+                    order_all_windows = [NSUserDefaults.globalDefaults boolForKey:@"AppleSpacesSwitchOnActivate"];
                 }
 
                 /* TODO: In the workspaces && !AppleSpacesSwitchOnActivate case, the windows are ordered
@@ -410,8 +393,7 @@ QuartzModeBundleInit(void);
                  *       be restoring one of them.
                  */
                 if ([e data2] & 0x10) {         // 0x10 (bfCPSOrderAllWindowsForward) is set when we use cmd-tab or the dock icon
-                    DarwinSendDDXEvent(kXquartzBringAllToFront, 1,
-                                       order_all_windows);
+                    DarwinSendDDXEvent(kXquartzBringAllToFront, 1, order_all_windows);
                 }
             }
             break;

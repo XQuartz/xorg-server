@@ -37,14 +37,18 @@
 
 #if __OBJC__
 
-#include "sanitizedCocoa.h"
 #include "xpr/x-list.h"
 
-#ifdef XQUARTZ_SPARKLE
 #define BOOL OSX_BOOL
-#include <Sparkle/SUUpdater.h>
-#undef BOOL
+
+#import <AppKit/AppKit.h>
+#import <Foundation/Foundation.h>
+
+#ifdef XQUARTZ_SPARKLE
+#import <Sparkle/SUUpdater.h>
 #endif
+
+#undef BOOL
 
 @interface X11Controller : NSObject <NSTableViewDataSource>
 @property (nonatomic, readwrite, strong) IBOutlet NSPanel *prefs_panel;

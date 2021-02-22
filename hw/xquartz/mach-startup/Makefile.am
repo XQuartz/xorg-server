@@ -7,10 +7,13 @@ AM_CPPFLAGS = \
 AM_CFLAGS = $(DIX_CFLAGS)
 
 x11appdir = $(APPLE_APPLICATIONS_DIR)/$(APPLE_APPLICATION_NAME).app/Contents/MacOS
-x11app_PROGRAMS = X11.bin
+x11app_PROGRAMS = X11.bin X11
 
 dist_X11_bin_SOURCES = \
-	bundle-main.c 
+	bundle-main.c
+
+dist_X11_SOURCES = \
+	bundle_trampoline.c
 
 # strndup(3) was added in Mac OS X 10.7, but we do this unconditionally to deal
 # with the case where we build on Lion but target Snow Leopard as the minimum

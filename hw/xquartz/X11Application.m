@@ -1541,8 +1541,7 @@ handle_mouse:
         }
 #endif
         
-        if (NSAppKitVersionNumber >= NSAppKitVersionNumber10_7 &&
-            XQuartzScrollInDeviceDirection &&
+        if (XQuartzScrollInDeviceDirection &&
             [e isDirectionInvertedFromDevice]) {
             deltaX *= -1;
             deltaY *= -1;

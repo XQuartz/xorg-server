@@ -92,6 +92,11 @@ struct xwl_egl_backend {
      * callback is optional.
      */
     Bool (*allow_commits)(struct xwl_window *xwl_window);
+
+    /* Called by Xwayland to check whether the given pixmap can be
+     * presented by xwl_present_flip. If not implemented, assumed TRUE.
+     */
+    Bool (*check_flip)(PixmapPtr pixmap);
 };
 
 #ifdef XWL_HAS_GLAMOR
@@ -127,6 +132,7 @@ Bool xwl_glamor_get_formats(ScreenPtr screen,
                             CARD32 *num_formats, CARD32 **formats);
 Bool xwl_glamor_get_modifiers(ScreenPtr screen, uint32_t format,
                               uint32_t *num_modifiers, uint64_t **modifiers);
+Bool xwl_glamor_check_flip(PixmapPtr pixmap);
 
 #ifdef XV
 /* glamor Xv Adaptor */

@@ -633,6 +633,12 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
     pixmap->refcnt++;
 }
 
+static Bool
+xwl_glamor_eglstream_check_flip(PixmapPtr pixmap)
+{
+    return FALSE;
+}
+
 static void
 xwl_eglstream_display_handle_caps(void *data,
                                   struct wl_eglstream_display *disp,
@@ -942,6 +948,7 @@ xwl_glamor_init_eglstream(struct xwl_screen *xwl_screen)
     xwl_screen->eglstream_backend.get_wl_buffer_for_pixmap = xwl_glamor_eglstream_get_wl_buffer_for_pixmap;
     xwl_screen->eglstream_backend.post_damage = xwl_glamor_eglstream_post_damage;
     xwl_screen->eglstream_backend.allow_commits = xwl_glamor_eglstream_allow_commits;
+    xwl_screen->eglstream_backend.check_flip = xwl_glamor_eglstream_check_flip;
     xwl_screen->eglstream_backend.is_available = TRUE;
     xwl_screen->eglstream_backend.backend_flags = XWL_EGL_BACKEND_NO_FLAG;
 }

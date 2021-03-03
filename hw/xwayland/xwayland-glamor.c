@@ -80,6 +80,17 @@ glamor_egl_screen_init(ScreenPtr screen, struct glamor_context *glamor_ctx)
 }
 
 Bool
+xwl_glamor_check_flip(PixmapPtr pixmap)
+{
+    struct xwl_screen *xwl_screen = xwl_screen_get(pixmap->drawable.pScreen);
+
+    if (xwl_screen->egl_backend->check_flip)
+        return xwl_screen->egl_backend->check_flip(pixmap);
+
+    return TRUE;
+}
+
+Bool
 xwl_glamor_is_modifier_supported(struct xwl_screen *xwl_screen,
                                  uint32_t format, uint64_t modifier)
 {

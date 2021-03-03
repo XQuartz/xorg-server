@@ -967,6 +967,7 @@ xwl_glamor_init_gbm(struct xwl_screen *xwl_screen)
     xwl_screen->gbm_backend.init_egl = xwl_glamor_gbm_init_egl;
     xwl_screen->gbm_backend.init_screen = xwl_glamor_gbm_init_screen;
     xwl_screen->gbm_backend.get_wl_buffer_for_pixmap = xwl_glamor_gbm_get_wl_buffer_for_pixmap;
+    xwl_screen->gbm_backend.check_flip = NULL;
     xwl_screen->gbm_backend.is_available = TRUE;
     xwl_screen->gbm_backend.backend_flags = XWL_EGL_BACKEND_HAS_PRESENT_FLIP |
                                             XWL_EGL_BACKEND_NEEDS_BUFFER_FLUSH |

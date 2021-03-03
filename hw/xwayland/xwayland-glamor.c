@@ -35,6 +35,10 @@
 #include "glx_extinit.h"
 #endif
 
+#include "linux-dmabuf-unstable-v1-client-protocol.h"
+#include "drm-client-protocol.h"
+#include <drm_fourcc.h>
+
 #include "xwayland-glamor.h"
 #include "xwayland-glx.h"
 #include "xwayland-screen.h"
@@ -75,6 +79,68 @@ glamor_egl_screen_init(ScreenPtr screen, struct glamor_context *glamor_ctx)
     xwl_screen->glamor_ctx = glamor_ctx;
 }
 
+static void
+xwl_dmabuf_handle_format(void *data, struct zwp_linux_dmabuf_v1 *dmabuf,
+                         uint32_t format)
+{
+}
+
+static void
+xwl_dmabuf_handle_modifier(void *data, struct zwp_linux_dmabuf_v1 *dmabuf,
+                           uint32_t format, uint32_t modifier_hi,
+                           uint32_t modifier_lo)
+{
+    struct xwl_screen *xwl_screen = data;
+    struct xwl_format *xwl_format = NULL;
+    int i;
+
+    for (i = 0; i < xwl_screen->num_formats; i++) {
+        if (xwl_screen->formats[i].format == format) {
+            xwl_format = &xwl_screen->formats[i];
+            break;
+        }
+    }
+
+    if (xwl_format == NULL) {
+        xwl_screen->num_formats++;
+        xwl_screen->formats = realloc(xwl_screen->formats,
+                                      xwl_screen->num_formats * sizeof(*xwl_format));
+        if (!xwl_screen->formats)
+            return;
+        xwl_format = &xwl_screen->formats[xwl_screen->num_formats - 1];
+        xwl_format->format = format;
+        xwl_format->num_modifiers = 0;
+        xwl_format->modifiers = NULL;
+    }
+
+    xwl_format->num_modifiers++;
+    xwl_format->modifiers = realloc(xwl_format->modifiers,
+                                    xwl_format->num_modifiers * sizeof(uint64_t));
+    if (!xwl_format->modifiers)
+        return;
+    xwl_format->modifiers[xwl_format->num_modifiers - 1]  = (uint64_t) modifier_lo;
+    xwl_format->modifiers[xwl_format->num_modifiers - 1] |= (uint64_t) modifier_hi << 32;
+}
+
+static const struct zwp_linux_dmabuf_v1_listener xwl_dmabuf_listener = {
+    .format = xwl_dmabuf_handle_format,
+    .modifier = xwl_dmabuf_handle_modifier
+};
+
+Bool
+xwl_screen_set_dmabuf_interface(struct xwl_screen *xwl_screen,
+                                uint32_t id, uint32_t version)
+{
+    if (version < 3)
+        return FALSE;
+
+    xwl_screen->dmabuf =
+        wl_registry_bind(xwl_screen->registry, id, &zwp_linux_dmabuf_v1_interface, 3);
+    zwp_linux_dmabuf_v1_add_listener(xwl_screen->dmabuf, &xwl_dmabuf_listener, xwl_screen);
+
+    return TRUE;
+}
+
 void
 xwl_glamor_init_wl_registry(struct xwl_screen *xwl_screen,
                             struct wl_registry *registry,
@@ -89,11 +155,11 @@ xwl_glamor_init_wl_registry(struct xwl_screen *xwl_screen,
                                                  version)) {
         /* no-op */
     } else if (xwl_screen->eglstream_backend.is_available &&
-             xwl_screen->eglstream_backend.init_wl_registry(xwl_screen,
-                                                            registry,
-                                                            id,
-                                                            interface,
-                                                            version)) {
+               xwl_screen->eglstream_backend.init_wl_registry(xwl_screen,
+                                                              registry,
+                                                              id,
+                                                              interface,
+                                                              version)) {
         /* no-op */
     }
 }

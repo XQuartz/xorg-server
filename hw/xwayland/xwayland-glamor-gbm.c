@@ -56,7 +56,6 @@ struct xwl_gbm_private {
     char *device_name;
     struct gbm_device *gbm;
     struct wl_drm *drm;
-    struct zwp_linux_dmabuf_v1 *dmabuf;
     int drm_fd;
     int fd_render_node;
     Bool drm_authenticated;
@@ -334,10 +333,10 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
         }
     }
 
-    if (xwl_gbm->dmabuf && modifier_supported) {
+    if (xwl_screen->dmabuf && modifier_supported) {
         struct zwp_linux_buffer_params_v1 *params;
 
-        params = zwp_linux_dmabuf_v1_create_params(xwl_gbm->dmabuf);
+        params = zwp_linux_dmabuf_v1_create_params(xwl_screen->dmabuf);
         for (i = 0; i < num_planes; i++) {
             zwp_linux_buffer_params_v1_add(params, prime_fd, i,
                                            offsets[i], strides[i],
@@ -604,7 +603,7 @@ glamor_get_formats(ScreenPtr screen,
     /* Explicitly zero the count as the caller may ignore the return value */
     *num_formats = 0;
 
-    if (!xwl_gbm->dmabuf_capable || !xwl_gbm->dmabuf)
+    if (!xwl_gbm->dmabuf_capable || !xwl_screen->dmabuf)
         return FALSE;
 
     if (xwl_screen->num_formats == 0)
@@ -633,7 +632,7 @@ glamor_get_modifiers(ScreenPtr screen, uint32_t format,
     /* Explicitly zero the count as the caller may ignore the return value */
     *num_modifiers = 0;
 
-    if (!xwl_gbm->dmabuf_capable || !xwl_gbm->dmabuf)
+    if (!xwl_gbm->dmabuf_capable || !xwl_screen->dmabuf)
         return FALSE;
 
     if (xwl_screen->num_formats == 0)
@@ -797,54 +796,6 @@ static const struct wl_drm_listener xwl_drm_listener = {
     xwl_drm_handle_capabilities
 };
 
-static void
-xwl_dmabuf_handle_format(void *data, struct zwp_linux_dmabuf_v1 *dmabuf,
-                         uint32_t format)
-{
-}
-
-static void
-xwl_dmabuf_handle_modifier(void *data, struct zwp_linux_dmabuf_v1 *dmabuf,
-                           uint32_t format, uint32_t modifier_hi,
-                           uint32_t modifier_lo)
-{
-   struct xwl_screen *xwl_screen = data;
-    struct xwl_format *xwl_format = NULL;
-    int i;
-
-    for (i = 0; i < xwl_screen->num_formats; i++) {
-        if (xwl_screen->formats[i].format == format) {
-            xwl_format = &xwl_screen->formats[i];
-            break;
-        }
-    }
-
-    if (xwl_format == NULL) {
-       xwl_screen->num_formats++;
-       xwl_screen->formats = realloc(xwl_screen->formats,
-                                     xwl_screen->num_formats * sizeof(*xwl_format));
-       if (!xwl_screen->formats)
-          return;
-       xwl_format = &xwl_screen->formats[xwl_screen->num_formats - 1];
-       xwl_format->format = format;
-       xwl_format->num_modifiers = 0;
-       xwl_format->modifiers = NULL;
-    }
-
-    xwl_format->num_modifiers++;
-    xwl_format->modifiers = realloc(xwl_format->modifiers,
-                                    xwl_format->num_modifiers * sizeof(uint64_t));
-    if (!xwl_format->modifiers)
-       return;
-    xwl_format->modifiers[xwl_format->num_modifiers - 1]  = (uint64_t) modifier_lo;
-    xwl_format->modifiers[xwl_format->num_modifiers - 1] |= (uint64_t) modifier_hi << 32;
-}
-
-static const struct zwp_linux_dmabuf_v1_listener xwl_dmabuf_listener = {
-    .format   = xwl_dmabuf_handle_format,
-    .modifier = xwl_dmabuf_handle_modifier
-};
-
 Bool
 xwl_screen_set_drm_interface(struct xwl_screen *xwl_screen,
                              uint32_t id, uint32_t version)
@@ -858,22 +809,6 @@ xwl_screen_set_drm_interface(struct xwl_screen *xwl_screen,
         wl_registry_bind(xwl_screen->registry, id, &wl_drm_interface, 2);
     wl_drm_add_listener(xwl_gbm->drm, &xwl_drm_listener, xwl_screen);
     xwl_screen->expecting_event++;
-
-    return TRUE;
-}
-
-Bool
-xwl_screen_set_dmabuf_interface(struct xwl_screen *xwl_screen,
-                                uint32_t id, uint32_t version)
-{
-    struct xwl_gbm_private *xwl_gbm = xwl_gbm_get(xwl_screen);
-
-    if (version < 3)
-        return FALSE;
-
-    xwl_gbm->dmabuf =
-        wl_registry_bind(xwl_screen->registry, id, &zwp_linux_dmabuf_v1_interface, 3);
-    zwp_linux_dmabuf_v1_add_listener(xwl_gbm->dmabuf, &xwl_dmabuf_listener, xwl_screen);
 
     return TRUE;
 }

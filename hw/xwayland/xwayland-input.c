@@ -2652,7 +2652,7 @@ sprite_check_lost_focus(SpritePtr sprite, WindowPtr window)
      * devices so we can find out the xwl_seat, but those don't actually own
      * their sprite, so the match doesn't mean a lot.
      */
-    if (master->lastSlave != xwl_seat->pointer)
+    if (master->lastSlave != get_pointer_device(xwl_seat))
         return FALSE;
 
     if (xwl_seat->focus_window != NULL &&

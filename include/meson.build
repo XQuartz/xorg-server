@@ -318,6 +318,7 @@ configure_file(output : 'dix-config.h',
 configure_file(output : 'xorg-server.h',
                input : 'xorg-server.h.meson.in',
                configuration : conf_data,
+               install: build_xorg,
                install_dir: xorgsdkdir)
 
 version_data = configuration_data()

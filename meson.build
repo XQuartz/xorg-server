@@ -819,7 +819,7 @@ if build_xorg
                                 get_option('libdir'),
                                 'pkgconfig'),
     )
-endif
 
-install_data('xorg-server.m4',
-             install_dir: join_paths(get_option('datadir'), 'aclocal'))
+    install_data('xorg-server.m4',
+                 install_dir: join_paths(get_option('datadir'), 'aclocal'))
+endif

@@ -77,6 +77,10 @@ static dispatch_queue_t eventTranslationQueue;
 #endif
 #endif
 
+#ifndef APPKIT_APPFLAGS_HACK
+#define APPKIT_APPFLAGS_HACK 1
+#endif
+
 extern Bool noTestExtensions;
 extern Bool noRenderExtension;
 
@@ -101,6 +105,50 @@ CFStringRef app_prefs_domain_cfstr = NULL;
 
 #define ALL_KEY_MASKS (NSShiftKeyMask | NSControlKeyMask | \
                        NSAlternateKeyMask | NSCommandKeyMask)
+
+#if APPKIT_APPFLAGS_HACK && __MAC_OS_X_VERSION_MAX_ALLOWED >= 101500
+// This was removed from the SDK in 10.15
+@interface NSApplication () {
+@protected
+    /* All instance variables are private */
+    short               _running;
+    struct __appFlags {
+        unsigned int        _hidden:1;
+        unsigned int        _appleEventActivationInProgress:1;
+        unsigned int        _active:1;
+        unsigned int        _hasBeenRun:1;
+        unsigned int        _doingUnhide:1;
+        unsigned int        _delegateReturnsValidRequestor:1;
+        unsigned int        _deactPending:1;
+        unsigned int        _invalidState:1;
+        unsigned int        _invalidEvent:1;
+        unsigned int        _postedWindowsNeedUpdateNote:1;
+        unsigned int        _wantsToActivate:1;
+        unsigned int        _doingHide:1;
+        unsigned int        _dontSendShouldTerminate:1;
+        unsigned int        _ignoresFullScreen:1;
+        unsigned int        _finishedLaunching:1;
+        unsigned int        _hasEventDelegate:1;
+        unsigned int        _appTerminating:1;
+        unsigned int        _didNSOpenOrPrint:1;
+        unsigned int        _inDealloc:1;
+        unsigned int        _pendingDidFinish:1;
+        unsigned int        _hasKeyFocus:1;
+        unsigned int        _panelsNonactivating:1;
+        unsigned int        _hiddenOnLaunch:1;
+        unsigned int        _openStatus:2;
+        unsigned int        _batchOrdering:1;
+        unsigned int        _waitingForTerminationReply:1;
+        unsigned int        _unused:1;
+        unsigned int        _enumeratingMemoryPressureHandlers:1;
+        unsigned int        _didTryRestoringPersistentState:1;
+        unsigned int        _windowDragging:1;
+        unsigned int        _mightBeSwitching:1;
+    }                   _appFlags;
+    id                  _mainMenu;
+}
+@end
+#endif
 
 @interface NSApplication (Internal)
 - (void)_setKeyWindow:(id)window;
@@ -375,10 +423,12 @@ QuartzModeBundleInit(void);
                 BOOL order_all_windows = YES, workspaces, ok;
                 for_appkit = NO;
 
+#if APPKIT_APPFLAGS_HACK
                 /* FIXME: This is a hack to avoid passing the event to AppKit which
                  *        would result in it raising one of its windows.
                  */
                 _appFlags._active = YES;
+#endif
 
                 [self set_front_process:nil];
 

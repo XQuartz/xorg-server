@@ -192,6 +192,7 @@ if (host_machine.system() != 'darwin' and
     endif
 endif
 xorgsdkdir = join_paths(get_option('prefix'), get_option('includedir'), 'xorg')
+libxcvt_dep = dependency('libxcvt', required: build_xorg)
 
 build_xwayland = false
 if (host_machine.system() != 'darwin' and
@@ -208,6 +209,7 @@ if (host_machine.system() != 'darwin' and
         xwayland_dep = [
             dependency('wayland-client', version: wayland_req, required: xwayland_required),
             dependency('wayland-protocols', version: wayland_protocols_req, required: xwayland_required),
+            dependency('libxcvt', required: xwayland_required),
         ]
 
         if build_glamor

@@ -146,7 +146,7 @@ if get_option('suid_wrapper')
         c_args: xorg_c_args,
         install: true,
         install_dir: get_option('libexecdir'),
-        # install_mode: ['r-sr-xr-x', 0, 0],
+        install_mode: ['r-sr-xr-x', 0, 0],
     )
 
     # meson gets confused when there are two targets of the same name

@@ -138,6 +138,12 @@ if get_option('xf86-input-inputtest')
     subdir('drivers/inputtest')
 endif
 
+meson.add_install_script(
+    'sh', '-c',
+    'ln -fs Xorg @0@@1@'.format(
+        '${DESTDIR}',
+        join_paths(get_option('prefix'), get_option('bindir'), 'X')))
+
 if get_option('suid_wrapper')
     executable('Xorg.wrap',
         'xorg-wrapper.c',

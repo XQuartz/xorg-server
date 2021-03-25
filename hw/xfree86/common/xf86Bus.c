@@ -296,7 +296,8 @@ xf86IsEntityPrimary(int entityIndex)
 
 #ifdef XSERVER_LIBPCIACCESS
     if (primaryBus.type == BUS_PLATFORM && pEnt->bus.type == BUS_PCI)
-	return MATCH_PCI_DEVICES(pEnt->bus.id.pci, primaryBus.id.plat->pdev);
+        if (primaryBus.id.plat->pdev)
+            return MATCH_PCI_DEVICES(pEnt->bus.id.pci, primaryBus.id.plat->pdev);
 #endif
 
     if (primaryBus.type != pEnt->bus.type)

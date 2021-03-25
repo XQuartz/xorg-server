@@ -148,11 +148,20 @@ if get_option('suid_wrapper')
         install_dir: get_option('libexecdir'),
         # install_mode: ['r-sr-xr-x', 0, 0],
     )
-    configure_file(
+
+    # meson gets confused when there are two targets of the same name
+    # within the same directory, so we use a different intermediate name.
+    xorg_sh = configure_file(
         input: 'Xorg.sh.in',
-        output: 'Xorg',
+        output: 'Xorg.sh',
         configuration: conf_data,
+    )
+
+    install_data(
+        xorg_sh,
+        install_mode: 'rwxr-xr-x',
         install_dir: join_paths(get_option('prefix'), get_option('bindir')),
+        rename: ['Xorg']
     )
 endif
 

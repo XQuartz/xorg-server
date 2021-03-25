@@ -15,8 +15,8 @@ endif
 
 xorg_modes = static_library('xorg_modes',
     srcs_xorg_modes,
-    include_directories: [inc, xorg_inc],
-    dependencies: common_dep,
+    include_directories: [ inc, xorg_inc ],
+    dependencies: [ common_dep, libxcvt_dep ],
     c_args: xorg_c_args,
 )
 

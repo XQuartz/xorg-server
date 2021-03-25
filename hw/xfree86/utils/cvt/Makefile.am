@@ -33,3 +33,4 @@ cvt_SOURCES = cvt.c \
 	$(top_srcdir)/os/xprintf.c
 
 cvt_CFLAGS = $(DIX_CFLAGS) $(XORG_CFLAGS)
+cvt_LDADD = $(LIBXCVT_LIBS)

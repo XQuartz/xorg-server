@@ -174,7 +174,7 @@ endif
 executable('cvt',
     ['utils/cvt/cvt.c', 'modes/xf86cvt.c'],
     include_directories: [inc, xorg_inc],
-    dependencies: xorg_deps,
+    dependencies: [ xorg_deps, libxcvt_dep ],
     link_with: libxserver_os,
     c_args: xorg_c_args,
     install: true,

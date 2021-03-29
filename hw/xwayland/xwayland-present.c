@@ -443,6 +443,12 @@ xwl_present_flip(WindowPtr present_window,
     if (!xwl_window)
         return FALSE;
 
+    buffer = xwl_glamor_pixmap_get_wl_buffer(pixmap);
+    if (!buffer) {
+        ErrorF("present: Error getting buffer\n");
+        return FALSE;
+    }
+
     damage_box = RegionExtents(damage);
 
     event = malloc(sizeof *event);
@@ -450,7 +456,6 @@ xwl_present_flip(WindowPtr present_window,
         return FALSE;
 
     pixmap->refcnt++;
-    buffer = xwl_glamor_pixmap_get_wl_buffer(pixmap);
 
     event->event_id = event_id;
     event->xwl_present_window = xwl_present_window;

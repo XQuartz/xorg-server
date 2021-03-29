@@ -548,6 +548,10 @@ xwl_eglstream_create_pending_stream(struct xwl_screen *xwl_screen,
                                            stream_fd,
                                            WL_EGLSTREAM_HANDLE_TYPE_FD,
                                            &stream_attribs);
+    if (!xwl_pixmap->buffer) {
+        ErrorF("eglstream: Failed to create buffer\n");
+        goto fail;
+    }
 
     wl_buffer_add_listener(xwl_pixmap->buffer,
                            &xwl_eglstream_buffer_release_listener,
@@ -562,7 +566,9 @@ xwl_eglstream_create_pending_stream(struct xwl_screen *xwl_screen,
 
     xwl_eglstream_queue_pending_stream(xwl_screen, window, pixmap);
 
-    close(stream_fd);
+fail:
+    if (stream_fd >= 0)
+        close(stream_fd);
 }
 
 static Bool

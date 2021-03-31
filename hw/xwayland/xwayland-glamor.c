@@ -304,14 +304,16 @@ xwl_glamor_pixmap_get_wl_buffer(PixmapPtr pixmap)
     return NULL;
 }
 
-void
+Bool
 xwl_glamor_post_damage(struct xwl_window *xwl_window,
                        PixmapPtr pixmap, RegionPtr region)
 {
     struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
 
     if (xwl_screen->egl_backend->post_damage)
-        xwl_screen->egl_backend->post_damage(xwl_window, pixmap, region);
+        return xwl_screen->egl_backend->post_damage(xwl_window, pixmap, region);
+
+    return TRUE;
 }
 
 Bool

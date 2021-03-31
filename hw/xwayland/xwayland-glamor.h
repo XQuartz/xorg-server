@@ -83,7 +83,7 @@ struct xwl_egl_backend {
      * you should implement blitting from the glamor pixmap to the wayland
      * pixmap here. Otherwise, this callback is optional.
      */
-    void (*post_damage)(struct xwl_window *xwl_window,
+    Bool (*post_damage)(struct xwl_window *xwl_window,
                         PixmapPtr pixmap, RegionPtr region);
 
     /* Called by Xwayland to confirm with the egl backend that the given
@@ -117,7 +117,7 @@ void xwl_glamor_init_wl_registry(struct xwl_screen *xwl_screen,
                                  uint32_t version);
 Bool xwl_glamor_has_wl_interfaces(struct xwl_screen *xwl_screen,
                                  struct xwl_egl_backend *xwl_egl_backend);
-void xwl_glamor_post_damage(struct xwl_window *xwl_window,
+Bool xwl_glamor_post_damage(struct xwl_window *xwl_window,
                             PixmapPtr pixmap, RegionPtr region);
 Bool xwl_glamor_allow_commits(struct xwl_window *xwl_window);
 void xwl_glamor_egl_make_current(struct xwl_screen *xwl_screen);

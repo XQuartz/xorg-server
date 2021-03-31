@@ -605,7 +605,7 @@ xwl_glamor_eglstream_allow_commits(struct xwl_window *xwl_window)
     return FALSE;
 }
 
-static void
+static Bool
 xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
                                  PixmapPtr pixmap, RegionPtr region)
 {
@@ -625,7 +625,7 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
          * flipping OpenGL or Vulkan window. In that case, we don't
          * need to do the copy below.
          */
-        return;
+        return TRUE;
 
     /* Unbind the framebuffer BEFORE binding the EGLSurface, otherwise we
      * won't actually draw to it
@@ -668,6 +668,8 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
 
     /* hang onto the pixmap until the compositor has released it */
     pixmap->refcnt++;
+
+    return TRUE;
 }
 
 static Bool

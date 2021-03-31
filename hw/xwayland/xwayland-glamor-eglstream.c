@@ -619,6 +619,7 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
         box->x2 - box->x1, box->y2 - box->y1
     };
     GLint saved_vao;
+    int status;
 
     if (xwl_pixmap->type != XWL_PIXMAP_EGLSTREAM)
         /* This can happen if a client does X11 rendering on a
@@ -652,6 +653,13 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
     glUniform1i(xwl_eglstream->blit_is_rgba_pos,
                 pixmap->drawable.depth >= 32);
 
+    status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        ErrorF("eglstream: Framebuffer incomplete 0x%X, not posting damage\n", status);
+        status = FALSE;
+        goto out;
+    }
+
     /* Blit rendered image into EGLStream surface */
     glDrawBuffer(GL_BACK);
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -662,14 +670,16 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
     else
         eglSwapBuffers(xwl_screen->egl_display, xwl_pixmap->surface);
 
+    /* hang onto the pixmap until the compositor has released it */
+    pixmap->refcnt++;
+    status = TRUE;
+
+out:
     /* Restore previous state */
     glBindVertexArray(saved_vao);
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    /* hang onto the pixmap until the compositor has released it */
-    pixmap->refcnt++;
-
-    return TRUE;
+    return status;
 }
 
 static Bool

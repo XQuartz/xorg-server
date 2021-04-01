@@ -387,6 +387,84 @@ xwl_eglstream_set_window_pixmap(WindowPtr window, PixmapPtr pixmap)
     xwl_screen->screen->SetWindowPixmap = xwl_eglstream_set_window_pixmap;
 }
 
+static const char *
+xwl_eglstream_get_error_str(EGLint error)
+{
+    switch (error) {
+    case EGL_BAD_PARAMETER:
+        return "EGL_BAD_PARAMETER";
+    case EGL_BAD_ATTRIBUTE:
+        return "EGL_BAD_ATTRIBUTE";
+    case EGL_BAD_MATCH:
+        return "EGL_BAD_MATCH";
+    case EGL_BAD_ACCESS:
+        return "EGL_BAD_ACCESS";
+    case EGL_BAD_STATE_KHR:
+        return "EGL_BAD_STATE_KHR";
+    case EGL_BAD_STREAM_KHR:
+        return "EGL_BAD_STREAM_KHR";
+    case EGL_BAD_DISPLAY:
+        return "EGL_BAD_DISPLAY";
+    case EGL_NOT_INITIALIZED:
+        return "EGL_NOT_INITIALIZED";
+    default:
+        return "Unknown error";
+    }
+}
+
+static const char *
+xwl_eglstream_get_stream_state_str(EGLint state)
+{
+    switch (state) {
+    case EGL_STREAM_STATE_CREATED_KHR:
+        return "EGL_STREAM_STATE_CREATED_KHR";
+    case EGL_STREAM_STATE_CONNECTING_KHR:
+        return "EGL_STREAM_STATE_CONNECTING_KHR";
+    case EGL_STREAM_STATE_EMPTY_KHR:
+        return "EGL_STREAM_STATE_EMPTY_KHR";
+    case EGL_STREAM_STATE_NEW_FRAME_AVAILABLE_KHR:
+        return "EGL_STREAM_STATE_NEW_FRAME_AVAILABLE_KHR";
+    case EGL_STREAM_STATE_OLD_FRAME_AVAILABLE_KHR:
+        return "EGL_STREAM_STATE_OLD_FRAME_AVAILABLE_KHR";
+    case EGL_STREAM_STATE_DISCONNECTED_KHR:
+        return "EGL_STREAM_STATE_DISCONNECTED_KHR";
+    default:
+        return "Unknown state";
+    }
+}
+
+static EGLint
+xwl_eglstream_get_state(EGLDisplay egl_display, EGLStreamKHR egl_stream)
+{
+    EGLint state;
+
+    eglQueryStreamKHR(egl_display, egl_stream, EGL_STREAM_STATE_KHR, &state);
+    if (!eglQueryStreamKHR(egl_display, egl_stream,
+                           EGL_STREAM_STATE_KHR, &state)) {
+        EGLint state_error = eglGetError();
+        ErrorF("eglstream: Failed to query state - error 0x%X: %s\n",
+               state_error, xwl_eglstream_get_error_str(state_error));
+        return EGL_FALSE;
+    }
+
+    return state;
+}
+
+
+static void
+xwl_eglstream_print_error(EGLDisplay egl_display,
+                          EGLStreamKHR egl_stream, EGLint error)
+{
+    ErrorF("eglstream: error 0x%X: %s\n", error,
+           xwl_eglstream_get_error_str(error));
+
+    if (error == EGL_BAD_STATE_KHR) {
+        EGLint state = xwl_eglstream_get_state(egl_display, egl_stream);
+        ErrorF("eglstream: stream state 0x%X: %s\n", state,
+               xwl_eglstream_get_stream_state_str(state));
+    }
+}
+
 /* Because we run asynchronously with our wayland compositor, it's possible
  * that an X client event could cause us to begin creating a stream for a
  * pixmap/window combo before the stream for the pixmap this window
@@ -466,6 +544,13 @@ xwl_eglstream_consumer_ready_callback(void *data,
             EGL_NONE
         });
 
+    if (xwl_pixmap->surface == EGL_NO_SURFACE) {
+        ErrorF("eglstream: Failed to create EGLSurface for pixmap\n");
+        xwl_eglstream_print_error(xwl_screen->egl_display,
+                                  xwl_pixmap->stream, eglGetError());
+        goto out;
+    }
+
     DebugF("eglstream: win %d completes eglstream for pixmap %p, congrats!\n",
            pending->window->drawable.id, pending->pixmap);
 
@@ -543,8 +628,16 @@ xwl_eglstream_create_pixmap_and_stream(struct xwl_screen *xwl_screen,
     xwl_pixmap->xwl_screen = xwl_screen;
     xwl_pixmap->surface = EGL_NO_SURFACE;
     xwl_pixmap->stream = eglCreateStreamKHR(xwl_screen->egl_display, NULL);
+    if (xwl_pixmap->stream == EGL_NO_STREAM_KHR) {
+        ErrorF("eglstream: Couldn't create EGL stream.\n");
+        goto fail;
+    }
     stream_fd = eglGetStreamFileDescriptorKHR(xwl_screen->egl_display,
                                               xwl_pixmap->stream);
+    if (stream_fd == EGL_NO_FILE_DESCRIPTOR_KHR) {
+        ErrorF("eglstream: Couldn't get EGL stream file descriptor.\n");
+        goto fail;
+    }
 
     wl_array_init(&stream_attribs);
     xwl_pixmap->buffer =

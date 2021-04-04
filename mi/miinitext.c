@@ -100,9 +100,6 @@ SOFTWARE.
 #include "misc.h"
 #include "extension.h"
 #include "extinit.h"
-#ifdef INXQUARTZ
-#include "nonsdk_extinit.h"
-#endif
 #include "micmap.h"
 #include "os.h"
 #include "globals.h"
@@ -127,12 +124,6 @@ static const ExtensionModule staticExtensions[] = {
 #endif
 #ifdef PANORAMIX
     {PanoramiXExtensionInit, "XINERAMA", &noPanoramiXExtension},
-#endif
-#ifdef INXQUARTZ
-    /* PseudoramiXExtensionInit must be done before RRExtensionInit, or
-     * XQuartz will render windows offscreen.
-     */
-    {PseudoramiXExtensionInit, "PseudoramiX", &noPseudoramiXExtension},
 #endif
     /* must be before Render to layer DisplayCursor correctly */
     {XFixesExtensionInit, "XFIXES", &noXFixesExtension},

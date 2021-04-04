@@ -4,7 +4,6 @@ AM_OBJCFLAGS = $(DIX_CFLAGS)
 AM_CPPFLAGS = \
 	-DBUILD_DATE=\"$(BUILD_DATE)\" \
 	-DXSERVER_VERSION=\"$(VERSION)\" \
-	-DINXQUARTZ \
 	-DUSE_NEW_CLUT \
 	-DXFree86Server \
 	-I$(top_srcdir)/miext/rootless \

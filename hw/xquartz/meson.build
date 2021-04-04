@@ -33,7 +33,6 @@ executable(
         '-DXFree86Server',
         # XXXX: BUILD_DATE
         '-DXSERVER_VERSION="' + meson_project.version() + '"',
-        '-DINXQUARTZ',
         '-DUSE_NEW_CLUT',
     ],
     install: true,

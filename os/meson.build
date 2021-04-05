@@ -87,6 +87,10 @@ if srcs_libc.length() > 0
     )
 endif
 
+if enable_input_thread
+    os_dep += cc.find_library('pthread')
+endif
+
 libxserver_os = static_library('libxserver_os',
     srcs_os,
     include_directories: inc,

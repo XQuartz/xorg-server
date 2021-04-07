@@ -268,7 +268,7 @@ supports_syscons = false
 supports_wscons = false
 csrg_based = false
 
-if host_machine.system() == 'freebsd' or host_machine.system() == 'dragonflybsd'
+if host_machine.system() == 'freebsd' or host_machine.system() == 'dragonfly'
   supports_pccons = true
   supports_pcvt = true
   supports_syscons = true
@@ -366,7 +366,7 @@ xorg_data.set('HAVE_STROPTS_H', cc.has_header('stropts.h'))
 xorg_data.set('HAVE_SYS_KD_H', cc.has_header('sys/kd.h'))
 xorg_data.set('HAVE_SYS_VT_H', cc.has_header('sys/vt.h'))
 
-if host_machine.system() == 'freebsd' or host_machine.system() == 'dragonflybsd'
+if host_machine.system() == 'freebsd' or host_machine.system() == 'dragonfly'
     if host_machine.cpu_family() == 'x86' or host_machine.cpu_family() == 'x86_64'
         xorg_data.set('USE_DEV_IO', true)
     endif

@@ -2,11 +2,6 @@ version_split = meson.project_version().split('.')
 major = version_split[0].to_int()
 minor = version_split[1].to_int()
 patch = version_split[2].to_int()
-if version_split.length() == 4
-    subpatch = version_split[3].to_int()
-else
-    subpatch = 0
-endif
 
 # convert to the old-style 1.x.y version scheme used up to 1.20.x for backwards compatibility
 release = 1 * 10000000 + major * 100000 + minor * 1000 + patch

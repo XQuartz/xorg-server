@@ -67,6 +67,7 @@ if cc.compiles('''
     #include <pthread.h>
     void foo(int bar) { pthread_setname_np(pthread_self(), "example"); }
 ''',
+    args: '-Werror-implicit-function-declaration',
     name: 'pthread_setname_np(tid, name)')
     conf_data.set('HAVE_PTHREAD_SETNAME_NP_WITH_TID', 1)
 elif cc.compiles('''
@@ -74,6 +75,7 @@ elif cc.compiles('''
     #include <pthread.h>
     void foo(int bar) { pthread_setname_np("example"); }
 ''',
+    args: '-Werror-implicit-function-declaration',
     name: 'pthread_setname_np(name)')
     conf_data.set('HAVE_PTHREAD_SETNAME_NP_WITHOUT_TID', 1)
 endif

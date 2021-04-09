@@ -181,7 +181,7 @@ if cc.has_header_symbol('sys/socket.h', 'SCM_RIGHTS')
   conf_data.set('XTRANS_SEND_FDS', '1')
 endif
 
-if not conf_data.get('HAVE_GETPEEREID') and not conf_data.get('HAVE_GETPEERUCRED')
+if conf_data.get('HAVE_GETPEEREID') == false and conf_data.get('HAVE_GETPEERUCRED') == false
     if not cc.has_header_symbol('sys/socket.h', 'SO_PEERCRED')
         conf_data.set('NO_LOCAL_CLIENT_CRED', 1)
     endif

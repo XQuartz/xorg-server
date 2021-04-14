@@ -355,6 +355,13 @@ xwl_eglstream_maybe_set_pending_stream_invalid(PixmapPtr pixmap)
         return;
 
     pending->is_valid = FALSE;
+
+    /* The compositor may still be using the stream, so we can't destroy
+     * it yet. We'll only have a guarantee that the stream is safe to
+     * destroy once we receive the pending wl_display_sync() for this
+     * stream
+     */
+    pending->pixmap->refcnt++;
 }
 
 static void
@@ -530,8 +537,9 @@ xwl_eglstream_consumer_ready_callback(void *data,
     pixmap = pending->pixmap;
 
     if (!pending->is_valid) {
-        xwl_eglstream_destroy_pixmap_stream(pending->xwl_pixmap);
-        goto out;
+        xwl_glamor_eglstream_remove_pending_stream(xwl_pixmap);
+        dixDestroyPixmap(pixmap, 0);
+        return;
     }
 
     xwl_glamor_egl_make_current(xwl_screen);

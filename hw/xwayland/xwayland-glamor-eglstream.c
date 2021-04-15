@@ -287,7 +287,7 @@ xwl_glamor_egl_device_has_egl_extensions(void *device,
 }
 
 static void
-xwl_eglstream_unref_pixmap_stream(struct xwl_pixmap *xwl_pixmap)
+xwl_eglstream_destroy_pixmap_stream(struct xwl_pixmap *xwl_pixmap)
 {
     struct xwl_screen *xwl_screen = xwl_pixmap->xwl_screen;
 
@@ -319,7 +319,17 @@ xwl_eglstream_unref_pixmap_stream(struct xwl_pixmap *xwl_pixmap)
 }
 
 static void
-xwl_glamor_eglstream_del_pending_stream_cb(struct xwl_pixmap *xwl_pixmap)
+xwl_glamor_eglstream_destroy_pending_stream(struct xwl_eglstream_pending_stream *pending)
+{
+    if (pending->cb)
+        wl_callback_destroy(pending->cb);
+    xwl_eglstream_window_set_pending(pending->window, NULL);
+    xorg_list_del(&pending->link);
+    free(pending);
+}
+
+static void
+xwl_glamor_eglstream_remove_pending_stream(struct xwl_pixmap *xwl_pixmap)
 {
     struct xwl_eglstream_private *xwl_eglstream =
         xwl_eglstream_get(xwl_pixmap->xwl_screen);
@@ -328,10 +338,7 @@ xwl_glamor_eglstream_del_pending_stream_cb(struct xwl_pixmap *xwl_pixmap)
     xorg_list_for_each_entry(pending,
                              &xwl_eglstream->pending_streams, link) {
         if (pending->xwl_pixmap == xwl_pixmap) {
-            wl_callback_destroy(pending->cb);
-            xwl_eglstream_window_set_pending(pending->window, NULL);
-            xorg_list_del(&pending->link);
-            free(pending);
+            xwl_glamor_eglstream_destroy_pending_stream(pending);
             break;
         }
     }
@@ -343,9 +350,9 @@ xwl_glamor_eglstream_destroy_pixmap(PixmapPtr pixmap)
     struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
 
     if (xwl_pixmap && pixmap->refcnt == 1) {
-        xwl_glamor_eglstream_del_pending_stream_cb(xwl_pixmap);
+        xwl_glamor_eglstream_remove_pending_stream(xwl_pixmap);
+        xwl_eglstream_destroy_pixmap_stream(xwl_pixmap);
         xwl_pixmap_del_buffer_release_cb(pixmap);
-        xwl_eglstream_unref_pixmap_stream(xwl_pixmap);
     }
     return glamor_destroy_pixmap(pixmap);
 }
@@ -432,8 +439,6 @@ xwl_eglstream_consumer_ready_callback(void *data,
     struct xwl_eglstream_pending_stream *pending;
     Bool found = FALSE;
 
-    wl_callback_destroy(callback);
-
     xorg_list_for_each_entry(pending, &xwl_eglstream->pending_streams, link) {
         if (pending->cb == callback) {
             found = TRUE;
@@ -442,8 +447,11 @@ xwl_eglstream_consumer_ready_callback(void *data,
     }
     assert(found);
 
+    wl_callback_destroy(callback);
+    pending->cb = NULL;
+
     if (!pending->is_valid) {
-        xwl_eglstream_unref_pixmap_stream(pending->xwl_pixmap);
+        xwl_eglstream_destroy_pixmap_stream(pending->xwl_pixmap);
         goto out;
     }
 
@@ -462,9 +470,7 @@ xwl_eglstream_consumer_ready_callback(void *data,
            pending->window->drawable.id, pending->pixmap);
 
 out:
-    xwl_eglstream_window_set_pending(pending->window, NULL);
-    xorg_list_del(&pending->link);
-    free(pending);
+    xwl_glamor_eglstream_destroy_pending_stream(pending);
 }
 
 static const struct wl_callback_listener consumer_ready_listener = {
@@ -514,8 +520,8 @@ static const struct wl_buffer_listener xwl_eglstream_buffer_release_listener = {
 };
 
 static void
-xwl_eglstream_create_pending_stream(struct xwl_screen *xwl_screen,
-                                    WindowPtr window, PixmapPtr pixmap)
+xwl_eglstream_create_pixmap_and_stream(struct xwl_screen *xwl_screen,
+                                       WindowPtr window, PixmapPtr pixmap)
 {
     struct xwl_eglstream_private *xwl_eglstream =
         xwl_eglstream_get(xwl_screen);
@@ -599,8 +605,8 @@ xwl_glamor_eglstream_allow_commits(struct xwl_window *xwl_window)
     /* Glamor pixmap has no backing stream yet; begin making one and disallow
      * commits until then
      */
-    xwl_eglstream_create_pending_stream(xwl_screen, xwl_window->window,
-                                        pixmap);
+    xwl_eglstream_create_pixmap_and_stream(xwl_screen, xwl_window->window,
+                                           pixmap);
 
     return FALSE;
 }

@@ -93,6 +93,7 @@ struct xwl_pixmap {
     /* add any new <= 4-byte member here to avoid holes on 64-bit */
     struct xwl_screen *xwl_screen;
     struct wl_buffer *buffer;
+    struct xwl_eglstream_pending_stream *pending_stream;
 
     /* XWL_PIXMAP_EGLSTREAM. */
     EGLStreamKHR stream;
@@ -103,28 +104,12 @@ struct xwl_pixmap {
 };
 
 static DevPrivateKeyRec xwl_eglstream_private_key;
-static DevPrivateKeyRec xwl_eglstream_window_private_key;
 
 static inline struct xwl_eglstream_private *
 xwl_eglstream_get(struct xwl_screen *xwl_screen)
 {
     return dixLookupPrivate(&xwl_screen->screen->devPrivates,
                             &xwl_eglstream_private_key);
-}
-
-static inline struct xwl_eglstream_pending_stream *
-xwl_eglstream_window_get_pending(WindowPtr window)
-{
-    return dixLookupPrivate(&window->devPrivates,
-                            &xwl_eglstream_window_private_key);
-}
-
-static inline void
-xwl_eglstream_window_set_pending(WindowPtr window,
-                                 struct xwl_eglstream_pending_stream *stream)
-{
-    dixSetPrivate(&window->devPrivates,
-                  &xwl_eglstream_window_private_key, stream);
 }
 
 static GLint
@@ -323,7 +308,6 @@ xwl_glamor_eglstream_destroy_pending_stream(struct xwl_eglstream_pending_stream 
 {
     if (pending->cb)
         wl_callback_destroy(pending->cb);
-    xwl_eglstream_window_set_pending(pending->window, NULL);
     xorg_list_del(&pending->link);
     free(pending);
 }
@@ -331,16 +315,9 @@ xwl_glamor_eglstream_destroy_pending_stream(struct xwl_eglstream_pending_stream 
 static void
 xwl_glamor_eglstream_remove_pending_stream(struct xwl_pixmap *xwl_pixmap)
 {
-    struct xwl_eglstream_private *xwl_eglstream =
-        xwl_eglstream_get(xwl_pixmap->xwl_screen);
-    struct xwl_eglstream_pending_stream *pending;
-
-    xorg_list_for_each_entry(pending,
-                             &xwl_eglstream->pending_streams, link) {
-        if (pending->xwl_pixmap == xwl_pixmap) {
-            xwl_glamor_eglstream_destroy_pending_stream(pending);
-            break;
-        }
+    if (xwl_pixmap->pending_stream) {
+        xwl_glamor_eglstream_destroy_pending_stream(xwl_pixmap->pending_stream);
+        xwl_pixmap->pending_stream = NULL;
     }
 }
 
@@ -364,22 +341,40 @@ xwl_glamor_eglstream_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
 }
 
 static void
-xwl_eglstream_set_window_pixmap(WindowPtr window, PixmapPtr pixmap)
+xwl_eglstream_maybe_set_pending_stream_invalid(PixmapPtr pixmap)
 {
-    struct xwl_screen *xwl_screen = xwl_screen_get(window->drawable.pScreen);
-    struct xwl_eglstream_private *xwl_eglstream =
-        xwl_eglstream_get(xwl_screen);
+    struct xwl_pixmap *xwl_pixmap;
     struct xwl_eglstream_pending_stream *pending;
 
-    pending = xwl_eglstream_window_get_pending(window);
-    if (pending) {
-        /* The pixmap for this window has changed before the compositor
-         * finished attaching the consumer for the window's pixmap's original
-         * eglstream. A producer can no longer be attached, so the stream's
-         * useless
-         */
-        pending->is_valid = FALSE;
-    }
+    xwl_pixmap = xwl_pixmap_get(pixmap);
+    if (!xwl_pixmap)
+        return;
+
+    pending = xwl_pixmap->pending_stream;
+    if (!pending)
+        return;
+
+    pending->is_valid = FALSE;
+}
+
+static void
+xwl_eglstream_set_window_pixmap(WindowPtr window, PixmapPtr pixmap)
+{
+    ScreenPtr screen = window->drawable.pScreen;
+    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
+    struct xwl_eglstream_private *xwl_eglstream =
+        xwl_eglstream_get(xwl_screen);
+    PixmapPtr old_pixmap;
+
+    /* The pixmap for this window has changed.
+     * If that occurs while there is a stream pending, i.e. before the
+     * compositor has finished attaching the consumer for the window's
+     * pixmap's original eglstream, then a producer could no longer be
+     * attached, so the stream would be useless.
+     */
+    old_pixmap = (*screen->GetWindowPixmap) (window);
+    if (old_pixmap)
+        xwl_eglstream_maybe_set_pending_stream_invalid(old_pixmap);
 
     xwl_screen->screen->SetWindowPixmap = xwl_eglstream->SetWindowPixmap;
     (*xwl_screen->screen->SetWindowPixmap)(window, pixmap);
@@ -489,16 +484,18 @@ xwl_eglstream_print_error(EGLDisplay egl_display,
  * - Receive pixmap B's stream callback, fall over and fail because the
  *   window's surface now incorrectly has pixmap A's stream attached to it.
  *
- * We work around this problem by keeping a queue of pending streams, and
- * only allowing one queue entry to exist for each window. In the scenario
- * listed above, this should happen:
+ * We work around this problem by keeping a pending stream associated with
+ * the xwl_pixmap, which itself is associated with the window pixmap.
+ * In the scenario listed above, this should happen:
  *
  * - Begin processing X events...
- * - A window is resized, causing us to add an eglstream (known as eglstream
- *   A) waiting for its consumer to finish attachment to be added to the
- *   queue.
+ * - A window is resized, a new window pixmap is created causing us to
+ *   add an eglstream (known as eglstream A) waiting for its consumer
+ *   to finish attachment.
  * - Resize on same window happens. We invalidate the previously pending
- *   stream and add another one to the pending queue (known as eglstream B).
+ *   stream on the old window pixmap.
+ *   A new window pixmap is attached to the window and another pending
+ *   stream is created for that new pixmap (known as eglstream B).
  * - Begin processing Wayland events...
  * - Receive invalidated callback from compositor for eglstream A, destroy
  *   stream.
@@ -515,6 +512,7 @@ xwl_eglstream_consumer_ready_callback(void *data,
         xwl_eglstream_get(xwl_screen);
     struct xwl_pixmap *xwl_pixmap;
     struct xwl_eglstream_pending_stream *pending;
+    PixmapPtr pixmap;
     Bool found = FALSE;
 
     xorg_list_for_each_entry(pending, &xwl_eglstream->pending_streams, link) {
@@ -528,6 +526,9 @@ xwl_eglstream_consumer_ready_callback(void *data,
     wl_callback_destroy(callback);
     pending->cb = NULL;
 
+    xwl_pixmap = pending->xwl_pixmap;
+    pixmap = pending->pixmap;
+
     if (!pending->is_valid) {
         xwl_eglstream_destroy_pixmap_stream(pending->xwl_pixmap);
         goto out;
@@ -535,12 +536,11 @@ xwl_eglstream_consumer_ready_callback(void *data,
 
     xwl_glamor_egl_make_current(xwl_screen);
 
-    xwl_pixmap = pending->xwl_pixmap;
     xwl_pixmap->surface = eglCreateStreamProducerSurfaceKHR(
         xwl_screen->egl_display, xwl_eglstream->config,
         xwl_pixmap->stream, (int[]) {
-            EGL_WIDTH,  pending->pixmap->drawable.width,
-            EGL_HEIGHT, pending->pixmap->drawable.height,
+            EGL_WIDTH,  pixmap->drawable.width,
+            EGL_HEIGHT, pixmap->drawable.height,
             EGL_NONE
         });
 
@@ -555,14 +555,14 @@ xwl_eglstream_consumer_ready_callback(void *data,
            pending->window->drawable.id, pending->pixmap);
 
 out:
-    xwl_glamor_eglstream_destroy_pending_stream(pending);
+    xwl_glamor_eglstream_remove_pending_stream(xwl_pixmap);
 }
 
 static const struct wl_callback_listener consumer_ready_listener = {
     xwl_eglstream_consumer_ready_callback
 };
 
-static void
+static struct xwl_eglstream_pending_stream *
 xwl_eglstream_queue_pending_stream(struct xwl_screen *xwl_screen,
                                    WindowPtr window, PixmapPtr pixmap)
 {
@@ -570,14 +570,8 @@ xwl_eglstream_queue_pending_stream(struct xwl_screen *xwl_screen,
         xwl_eglstream_get(xwl_screen);
     struct xwl_eglstream_pending_stream *pending_stream;
 
-#ifdef DEBUG
-    if (!xwl_eglstream_window_get_pending(window))
-        DebugF("eglstream: win %d begins new eglstream for pixmap %p\n",
-               window->drawable.id, pixmap);
-    else
-        DebugF("eglstream: win %d interrupts and replaces pending eglstream for pixmap %p\n",
-               window->drawable.id, pixmap);
-#endif
+    DebugF("eglstream: win %d queues new pending stream for pixmap %p\n",
+           window->drawable.id, pixmap);
 
     pending_stream = malloc(sizeof(*pending_stream));
     pending_stream->window = window;
@@ -586,11 +580,12 @@ xwl_eglstream_queue_pending_stream(struct xwl_screen *xwl_screen,
     pending_stream->is_valid = TRUE;
     xorg_list_init(&pending_stream->link);
     xorg_list_add(&pending_stream->link, &xwl_eglstream->pending_streams);
-    xwl_eglstream_window_set_pending(window, pending_stream);
 
     pending_stream->cb = wl_display_sync(xwl_screen->display);
     wl_callback_add_listener(pending_stream->cb, &consumer_ready_listener,
                              xwl_screen);
+
+    return pending_stream;
 }
 
 static void
@@ -663,7 +658,8 @@ xwl_eglstream_create_pixmap_and_stream(struct xwl_screen *xwl_screen,
     wl_eglstream_controller_attach_eglstream_consumer(
         xwl_eglstream->controller, xwl_window->surface, xwl_pixmap->buffer);
 
-    xwl_eglstream_queue_pending_stream(xwl_screen, window, pixmap);
+    xwl_pixmap->pending_stream =
+        xwl_eglstream_queue_pending_stream(xwl_screen, window, pixmap);
 
 fail:
     if (stream_fd >= 0)
@@ -674,22 +670,19 @@ static Bool
 xwl_glamor_eglstream_allow_commits(struct xwl_window *xwl_window)
 {
     struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
-    struct xwl_eglstream_pending_stream *pending =
-        xwl_eglstream_window_get_pending(xwl_window->window);
     PixmapPtr pixmap =
         (*xwl_screen->screen->GetWindowPixmap)(xwl_window->window);
     struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
 
     if (xwl_pixmap) {
+        struct xwl_eglstream_pending_stream *pending = xwl_pixmap->pending_stream;
+
         if (pending) {
             /* Wait for the compositor to finish connecting the consumer for
              * this eglstream */
-            if (pending->is_valid)
-                return FALSE;
+            assert(pending->is_valid);
 
-            /* The pixmap for this window was changed before the compositor
-             * finished connecting the eglstream for the window's previous
-             * pixmap. Begin creating a new eglstream. */
+            return FALSE;
         } else {
             return TRUE;
         }
@@ -1189,10 +1182,6 @@ xwl_glamor_eglstream_init_screen(struct xwl_screen *xwl_screen)
 
     xwl_eglstream->SetWindowPixmap = screen->SetWindowPixmap;
     screen->SetWindowPixmap = xwl_eglstream_set_window_pixmap;
-
-    if (!dixRegisterPrivateKey(&xwl_eglstream_window_private_key,
-                               PRIVATE_WINDOW, 0))
-        return FALSE;
 
     return TRUE;
 }

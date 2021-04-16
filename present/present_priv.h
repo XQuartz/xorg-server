@@ -481,10 +481,4 @@ present_vblank_scrap(present_vblank_ptr vblank);
 void
 present_vblank_destroy(present_vblank_ptr vblank);
 
-/*
- * present_wnmd.c
- */
-void
-present_wnmd_init_mode_hooks(present_screen_priv_ptr screen_priv);
-
 #endif /*  _PRESENT_PRIV_H_ */

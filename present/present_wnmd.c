@@ -708,9 +708,26 @@ present_wnmd_flush(WindowPtr window)
     (*screen_priv->wnmd_info->flush) (window);
 }
 
-void
-present_wnmd_init_mode_hooks(present_screen_priv_ptr screen_priv)
+/*
+ * Initialize a screen for use with present in window flip mode (wnmd)
+ */
+int
+present_wnmd_screen_init(ScreenPtr screen, present_wnmd_info_ptr info)
 {
+    present_screen_priv_ptr screen_priv;
+
+    if (!present_screen_register_priv_keys())
+        return FALSE;
+
+    if (present_screen_priv(screen))
+        return TRUE;
+
+    screen_priv = present_screen_priv_init(screen);
+    if (!screen_priv)
+        return FALSE;
+
+    screen_priv->wnmd_info = info;
+
     screen_priv->query_capabilities =   &present_wnmd_query_capabilities;
     screen_priv->get_crtc           =   &present_wnmd_get_crtc;
 
@@ -724,25 +741,6 @@ present_wnmd_init_mode_hooks(present_screen_priv_ptr screen_priv)
     screen_priv->re_execute         =   &present_wnmd_re_execute;
 
     screen_priv->abort_vblank       =   &present_wnmd_abort_vblank;
-}
-
-/*
- * Initialize a screen for use with present in window flip mode (wnmd)
- */
-int
-present_wnmd_screen_init(ScreenPtr screen, present_wnmd_info_ptr info)
-{
-    if (!present_screen_register_priv_keys())
-        return FALSE;
-
-    if (!present_screen_priv(screen)) {
-        present_screen_priv_ptr screen_priv = present_screen_priv_init(screen);
-        if (!screen_priv)
-            return FALSE;
-
-        screen_priv->wnmd_info = info;
-        present_wnmd_init_mode_hooks(screen_priv);
-    }
 
     return TRUE;
 }

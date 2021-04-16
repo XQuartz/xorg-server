@@ -225,6 +225,76 @@ queue_flip_on_crtc(ScreenPtr screen, xf86CrtcPtr crtc,
 }
 
 
+#define MS_ASYNC_FLIP_LOG_ENABLE_LOGS_INTERVAL_MS 10000
+#define MS_ASYNC_FLIP_LOG_FREQUENT_LOGS_INTERVAL_MS 1000
+#define MS_ASYNC_FLIP_FREQUENT_LOG_COUNT 10
+
+static void
+ms_print_pageflip_error(int screen_index, const char *log_prefix,
+                        int crtc_index, int flags, int err)
+{
+    /* In certain circumstances we will have a lot of flip errors without a
+     * reasonable way to prevent them. In such case we reduce the number of
+     * logged messages to at least not fill the error logs.
+     *
+     * The details are as follows:
+     *
+     * At least on i915 hardware support for async page flip support depends
+     * on the used modifiers which themselves can change dynamically for a
+     * screen. This results in the following problems:
+     *
+     *  - We can't know about whether a particular CRTC will be able to do an
+     *    async flip without hardcoding the same logic as the kernel as there's
+     *    no interface to query this information.
+     *
+     *  - There is no way to give this information to an application, because
+     *    the protocol of the present extension does not specify anything about
+     *    changing of the capabilities on runtime or the need to re-query them.
+     *
+     * Even if the above was solved, the only benefit would be avoiding a
+     * roundtrip to the kernel and reduced amount of error logs. The former
+     * does not seem to be a good enough benefit compared to the amount of work
+     * that would need to be done. The latter is solved below. */
+
+    static CARD32 error_last_time_ms;
+    static int frequent_logs;
+    static Bool logs_disabled;
+
+    if (flags & DRM_MODE_PAGE_FLIP_ASYNC) {
+        CARD32 curr_time_ms = GetTimeInMillis();
+        int clocks_since_last_log = curr_time_ms - error_last_time_ms;
+
+        if (clocks_since_last_log >
+                MS_ASYNC_FLIP_LOG_ENABLE_LOGS_INTERVAL_MS) {
+            frequent_logs = 0;
+            logs_disabled = FALSE;
+        }
+        if (!logs_disabled) {
+            if (clocks_since_last_log <
+                    MS_ASYNC_FLIP_LOG_FREQUENT_LOGS_INTERVAL_MS) {
+                frequent_logs++;
+            }
+
+            if (frequent_logs > MS_ASYNC_FLIP_FREQUENT_LOG_COUNT) {
+                xf86DrvMsg(screen_index, X_WARNING,
+                           "%s: detected too frequent flip errors, disabling "
+                           "logs until frequency is reduced\n", log_prefix);
+                logs_disabled = TRUE;
+            } else {
+                xf86DrvMsg(screen_index, X_WARNING,
+                           "%s: queue async flip during flip on CRTC %d failed: %s\n",
+                           log_prefix, crtc_index, strerror(err));
+            }
+        }
+        error_last_time_ms = curr_time_ms;
+    } else {
+        xf86DrvMsg(screen_index, X_WARNING,
+                   "%s: queue flip during flip on CRTC %d failed: %s\n",
+                   log_prefix, crtc_index, strerror(err));
+    }
+}
+
+
 Bool
 ms_do_pageflip(ScreenPtr screen,
                PixmapPtr new_front,
@@ -334,9 +404,7 @@ ms_do_pageflip(ScreenPtr screen,
                            log_prefix, i);
                 goto error_undo;
             case QUEUE_FLIP_DRM_FLUSH_FAILED:
-                xf86DrvMsg(scrn->scrnIndex, X_WARNING,
-                           "%s: queue flip during flip on CRTC %d failed: %s\n",
-                           log_prefix, i, strerror(errno));
+                ms_print_pageflip_error(scrn->scrnIndex, log_prefix, i, flags, errno);
                 goto error_undo;
             case QUEUE_FLIP_SUCCESS:
                 break;

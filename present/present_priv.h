@@ -445,6 +445,11 @@ present_scmd_init_mode_hooks(present_screen_priv_ptr screen_priv);
 /*
  * present_screen.c
  */
+Bool
+present_screen_register_priv_keys(void);
+
+present_screen_priv_ptr
+present_screen_priv_init(ScreenPtr screen);
 
 /*
  * present_vblank.c

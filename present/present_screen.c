@@ -155,7 +155,7 @@ present_clip_notify(WindowPtr window, int dx, int dy)
     wrap(screen_priv, screen, ClipNotify, present_clip_notify);
 }
 
-static Bool
+Bool
 present_screen_register_priv_keys(void)
 {
     if (!dixRegisterPrivateKey(&present_screen_private_key, PRIVATE_SCREEN, 0))
@@ -167,7 +167,7 @@ present_screen_register_priv_keys(void)
     return TRUE;
 }
 
-static present_screen_priv_ptr
+present_screen_priv_ptr
 present_screen_priv_init(ScreenPtr screen)
 {
     present_screen_priv_ptr screen_priv;
@@ -184,27 +184,6 @@ present_screen_priv_init(ScreenPtr screen)
     dixSetPrivate(&screen->devPrivates, &present_screen_private_key, screen_priv);
 
     return screen_priv;
-}
-
-/*
- * Initialize a screen for use with present in window flip mode (wnmd)
- */
-int
-present_wnmd_screen_init(ScreenPtr screen, present_wnmd_info_ptr info)
-{
-    if (!present_screen_register_priv_keys())
-        return FALSE;
-
-    if (!present_screen_priv(screen)) {
-        present_screen_priv_ptr screen_priv = present_screen_priv_init(screen);
-        if (!screen_priv)
-            return FALSE;
-
-        screen_priv->wnmd_info = info;
-        present_wnmd_init_mode_hooks(screen_priv);
-    }
-
-    return TRUE;
 }
 
 /*

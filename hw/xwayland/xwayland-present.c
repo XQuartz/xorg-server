@@ -147,12 +147,6 @@ xwl_present_query_capabilities(present_screen_priv_ptr screen_priv)
     return XWL_PRESENT_CAPS;
 }
 
-static RRCrtcPtr
-present_wnmd_get_crtc(present_screen_priv_ptr screen_priv, WindowPtr window)
-{
-    return (*screen_priv->wnmd_info->get_crtc)(window);
-}
-
 static int
 present_wnmd_get_ust_msc(ScreenPtr screen, WindowPtr window, uint64_t *ust, uint64_t *msc)
 {
@@ -422,116 +416,6 @@ present_wnmd_update_window_crtc(WindowPtr window, RRCrtcPtr crtc, uint64_t new_m
     window_priv->crtc = crtc;
 }
 
-static int
-present_wnmd_pixmap(WindowPtr window,
-                    PixmapPtr pixmap,
-                    CARD32 serial,
-                    RegionPtr valid,
-                    RegionPtr update,
-                    int16_t x_off,
-                    int16_t y_off,
-                    RRCrtcPtr target_crtc,
-                    SyncFence *wait_fence,
-                    SyncFence *idle_fence,
-                    uint32_t options,
-                    uint64_t target_window_msc,
-                    uint64_t divisor,
-                    uint64_t remainder,
-                    present_notify_ptr notifies,
-                    int num_notifies)
-{
-    uint64_t                    ust = 0;
-    uint64_t                    target_msc;
-    uint64_t                    crtc_msc = 0;
-    int                         ret;
-    present_vblank_ptr          vblank, tmp;
-    ScreenPtr                   screen = window->drawable.pScreen;
-    struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
-    present_window_priv_ptr     window_priv = present_get_window_priv(window, TRUE);
-    present_screen_priv_ptr     screen_priv = present_screen_priv(screen);
-
-    if (!window_priv)
-        return BadAlloc;
-
-    target_crtc = present_wnmd_get_crtc(screen_priv, window);
-
-    ret = present_wnmd_get_ust_msc(screen, window, &ust, &crtc_msc);
-
-    present_wnmd_update_window_crtc(window, target_crtc, crtc_msc);
-
-    if (ret == Success) {
-        /* Stash the current MSC away in case we need it later
-         */
-        window_priv->msc = crtc_msc;
-    }
-
-    target_msc = present_get_target_msc(target_window_msc + window_priv->msc_offset,
-                                        crtc_msc,
-                                        divisor,
-                                        remainder,
-                                        options);
-
-    /*
-     * Look for a matching presentation already on the list...
-     */
-
-    if (!update && pixmap) {
-        xorg_list_for_each_entry_safe(vblank, tmp, &window_priv->vblank, window_list) {
-
-            if (!vblank->pixmap)
-                continue;
-
-            if (!vblank->queued)
-                continue;
-
-            if (vblank->target_msc != target_msc)
-                continue;
-
-            present_vblank_scrap(vblank);
-            if (vblank->flip_ready)
-                present_wnmd_re_execute(vblank);
-        }
-    }
-
-    vblank = present_vblank_create(window,
-                                   pixmap,
-                                   serial,
-                                   valid,
-                                   update,
-                                   x_off,
-                                   y_off,
-                                   target_crtc,
-                                   wait_fence,
-                                   idle_fence,
-                                   options,
-                                   XWL_PRESENT_CAPS,
-                                   notifies,
-                                   num_notifies,
-                                   target_msc,
-                                   crtc_msc);
-    if (!vblank)
-        return BadAlloc;
-
-    vblank->event_id = ++present_wnmd_event_id;
-
-    /* WNMD presentations always complete (at least) one frame after they
-     * are executed
-     */
-    vblank->exec_msc = vblank->target_msc - 1;
-
-    xorg_list_append(&vblank->event_queue, &xwl_present_window->exec_queue);
-    vblank->queued = TRUE;
-    if (crtc_msc < vblank->exec_msc) {
-        if (present_wnmd_queue_vblank(screen, window, target_crtc, vblank->event_id, vblank->exec_msc) == Success) {
-            return Success;
-        }
-        DebugPresent(("present_queue_vblank failed\n"));
-    }
-
-    present_wnmd_execute(vblank, ust, crtc_msc);
-    return Success;
-}
-
 
 static void
 xwl_present_release_pixmap(struct xwl_present_event *event)
@@ -702,7 +586,8 @@ static const struct wl_callback_listener xwl_present_sync_listener = {
 };
 
 static RRCrtcPtr
-xwl_present_get_crtc(WindowPtr present_window)
+xwl_present_get_crtc(present_screen_priv_ptr screen_priv,
+                     WindowPtr present_window)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(present_window);
     rrScrPrivPtr rr_private;
@@ -1133,6 +1018,116 @@ present_wnmd_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
     present_execute_post(vblank, ust, crtc_msc);
 }
 
+static int
+present_wnmd_pixmap(WindowPtr window,
+                    PixmapPtr pixmap,
+                    CARD32 serial,
+                    RegionPtr valid,
+                    RegionPtr update,
+                    int16_t x_off,
+                    int16_t y_off,
+                    RRCrtcPtr target_crtc,
+                    SyncFence *wait_fence,
+                    SyncFence *idle_fence,
+                    uint32_t options,
+                    uint64_t target_window_msc,
+                    uint64_t divisor,
+                    uint64_t remainder,
+                    present_notify_ptr notifies,
+                    int num_notifies)
+{
+    uint64_t                    ust = 0;
+    uint64_t                    target_msc;
+    uint64_t                    crtc_msc = 0;
+    int                         ret;
+    present_vblank_ptr          vblank, tmp;
+    ScreenPtr                   screen = window->drawable.pScreen;
+    struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
+    present_window_priv_ptr     window_priv = present_get_window_priv(window, TRUE);
+    present_screen_priv_ptr     screen_priv = present_screen_priv(screen);
+
+    if (!window_priv)
+        return BadAlloc;
+
+    target_crtc = xwl_present_get_crtc(screen_priv, window);
+
+    ret = present_wnmd_get_ust_msc(screen, window, &ust, &crtc_msc);
+
+    present_wnmd_update_window_crtc(window, target_crtc, crtc_msc);
+
+    if (ret == Success) {
+        /* Stash the current MSC away in case we need it later
+         */
+        window_priv->msc = crtc_msc;
+    }
+
+    target_msc = present_get_target_msc(target_window_msc + window_priv->msc_offset,
+                                        crtc_msc,
+                                        divisor,
+                                        remainder,
+                                        options);
+
+    /*
+     * Look for a matching presentation already on the list...
+     */
+
+    if (!update && pixmap) {
+        xorg_list_for_each_entry_safe(vblank, tmp, &window_priv->vblank, window_list) {
+
+            if (!vblank->pixmap)
+                continue;
+
+            if (!vblank->queued)
+                continue;
+
+            if (vblank->target_msc != target_msc)
+                continue;
+
+            present_vblank_scrap(vblank);
+            if (vblank->flip_ready)
+                present_wnmd_re_execute(vblank);
+        }
+    }
+
+    vblank = present_vblank_create(window,
+                                   pixmap,
+                                   serial,
+                                   valid,
+                                   update,
+                                   x_off,
+                                   y_off,
+                                   target_crtc,
+                                   wait_fence,
+                                   idle_fence,
+                                   options,
+                                   XWL_PRESENT_CAPS,
+                                   notifies,
+                                   num_notifies,
+                                   target_msc,
+                                   crtc_msc);
+    if (!vblank)
+        return BadAlloc;
+
+    vblank->event_id = ++present_wnmd_event_id;
+
+    /* WNMD presentations always complete (at least) one frame after they
+     * are executed
+     */
+    vblank->exec_msc = vblank->target_msc - 1;
+
+    xorg_list_append(&vblank->event_queue, &xwl_present_window->exec_queue);
+    vblank->queued = TRUE;
+    if (crtc_msc < vblank->exec_msc) {
+        if (present_wnmd_queue_vblank(screen, window, target_crtc, vblank->event_id, vblank->exec_msc) == Success) {
+            return Success;
+        }
+        DebugPresent(("present_queue_vblank failed\n"));
+    }
+
+    present_wnmd_execute(vblank, ust, crtc_msc);
+    return Success;
+}
+
 void
 xwl_present_unrealize_window(struct xwl_present_window *xwl_present_window)
 {
@@ -1145,7 +1140,6 @@ xwl_present_unrealize_window(struct xwl_present_window *xwl_present_window)
 
 static present_wnmd_info_rec xwl_present_info = {
     .version = PRESENT_SCREEN_INFO_VERSION,
-    .get_crtc = xwl_present_get_crtc,
 
     .get_ust_msc = xwl_present_get_ust_msc,
     .queue_vblank = xwl_present_queue_vblank,
@@ -1178,7 +1172,7 @@ xwl_present_init(ScreenPtr screen)
     screen_priv->wnmd_info = &xwl_present_info;
 
     screen_priv->query_capabilities = xwl_present_query_capabilities;
-    screen_priv->get_crtc = present_wnmd_get_crtc;
+    screen_priv->get_crtc = xwl_present_get_crtc;
 
     screen_priv->check_flip = xwl_present_check_flip;
     screen_priv->check_flip_window = present_wnmd_check_flip_window;

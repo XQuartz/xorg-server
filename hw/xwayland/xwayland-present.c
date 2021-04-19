@@ -137,10 +137,19 @@ xwl_present_query_capabilities(present_screen_priv_ptr screen_priv)
 }
 
 static int
-present_wnmd_get_ust_msc(ScreenPtr screen, WindowPtr window, uint64_t *ust, uint64_t *msc)
+xwl_present_get_ust_msc(ScreenPtr screen,
+                        WindowPtr present_window,
+                        uint64_t *ust,
+                        uint64_t *msc)
 {
-    present_screen_priv_ptr screen_priv = present_screen_priv(screen);
-    return (*screen_priv->wnmd_info->get_ust_msc)(window, ust, msc);
+    struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(present_window);
+    if (!xwl_present_window)
+        return BadAlloc;
+
+    *ust = xwl_present_window->ust;
+    *msc = xwl_present_window->msc;
+
+    return Success;
 }
 
 /*
@@ -152,7 +161,7 @@ present_wnmd_re_execute(present_vblank_ptr vblank)
 {
     uint64_t ust = 0, crtc_msc = 0;
 
-    (void) present_wnmd_get_ust_msc(vblank->screen, vblank->window, &ust, &crtc_msc);
+    (void) xwl_present_get_ust_msc(vblank->screen, vblank->window, &ust, &crtc_msc);
     present_wnmd_execute(vblank, ust, crtc_msc);
 }
 
@@ -592,19 +601,6 @@ xwl_present_get_crtc(present_screen_priv_ptr screen_priv,
     return rr_private->crtcs[0];
 }
 
-static int
-xwl_present_get_ust_msc(WindowPtr present_window, uint64_t *ust, uint64_t *msc)
-{
-    struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(present_window);
-    if (!xwl_present_window)
-        return BadAlloc;
-
-    *ust = xwl_present_window->ust;
-    *msc = xwl_present_window->msc;
-
-    return Success;
-}
-
 /*
  * Queue an event to report back to the Present extension when the specified
  * MSC has passed
@@ -1041,7 +1037,7 @@ present_wnmd_pixmap(WindowPtr window,
 
     target_crtc = xwl_present_get_crtc(screen_priv, window);
 
-    ret = present_wnmd_get_ust_msc(screen, window, &ust, &crtc_msc);
+    ret = xwl_present_get_ust_msc(screen, window, &ust, &crtc_msc);
 
     present_wnmd_update_window_crtc(window, target_crtc, crtc_msc);
 
@@ -1130,8 +1126,6 @@ xwl_present_unrealize_window(struct xwl_present_window *xwl_present_window)
 
 static present_wnmd_info_rec xwl_present_info = {
     .version = PRESENT_SCREEN_INFO_VERSION,
-
-    .get_ust_msc = xwl_present_get_ust_msc,
 
     .flips_stop = xwl_present_flips_stop
 };

@@ -130,17 +130,6 @@ xwl_present_reset_timer(struct xwl_present_window *xwl_present_window)
 static void
 present_wnmd_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc);
 
-static int
-present_wnmd_queue_vblank(ScreenPtr screen,
-                          WindowPtr window,
-                          RRCrtcPtr crtc,
-                          uint64_t event_id,
-                          uint64_t msc)
-{
-    present_screen_priv_ptr screen_priv = present_screen_priv(screen);
-    return (*screen_priv->wnmd_info->queue_vblank) (window, crtc, event_id, msc);
-}
-
 static uint32_t
 xwl_present_query_capabilities(present_screen_priv_ptr screen_priv)
 {
@@ -618,10 +607,11 @@ xwl_present_get_ust_msc(WindowPtr present_window, uint64_t *ust, uint64_t *msc)
 
 /*
  * Queue an event to report back to the Present extension when the specified
- * MSC has past
+ * MSC has passed
  */
 static int
-xwl_present_queue_vblank(WindowPtr present_window,
+xwl_present_queue_vblank(ScreenPtr screen,
+                         WindowPtr present_window,
                          RRCrtcPtr crtc,
                          uint64_t event_id,
                          uint64_t msc)
@@ -1005,8 +995,8 @@ present_wnmd_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
         present_execute_copy(vblank, crtc_msc);
         assert(!vblank->queued);
 
-        if (present_wnmd_queue_vblank(screen, window, vblank->crtc,
-                                      vblank->event_id, crtc_msc + 1)
+        if (xwl_present_queue_vblank(screen, window, vblank->crtc,
+                                     vblank->event_id, crtc_msc + 1)
             == Success) {
             xorg_list_add(&vblank->event_queue, &xwl_present_window->idle_queue);
             xorg_list_append(&vblank->window_list, &window_priv->vblank);
@@ -1118,9 +1108,9 @@ present_wnmd_pixmap(WindowPtr window,
     xorg_list_append(&vblank->event_queue, &xwl_present_window->exec_queue);
     vblank->queued = TRUE;
     if (crtc_msc < vblank->exec_msc) {
-        if (present_wnmd_queue_vblank(screen, window, target_crtc, vblank->event_id, vblank->exec_msc) == Success) {
+        if (xwl_present_queue_vblank(screen, window, target_crtc, vblank->event_id, vblank->exec_msc) == Success)
             return Success;
-        }
+
         DebugPresent(("present_queue_vblank failed\n"));
     }
 
@@ -1142,7 +1132,6 @@ static present_wnmd_info_rec xwl_present_info = {
     .version = PRESENT_SCREEN_INFO_VERSION,
 
     .get_ust_msc = xwl_present_get_ust_msc,
-    .queue_vblank = xwl_present_queue_vblank,
 
     .flips_stop = xwl_present_flips_stop
 };
@@ -1179,7 +1168,7 @@ xwl_present_init(ScreenPtr screen)
     screen_priv->clear_window_flip = present_wnmd_clear_window_flip;
 
     screen_priv->present_pixmap = present_wnmd_pixmap;
-    screen_priv->queue_vblank = present_wnmd_queue_vblank;
+    screen_priv->queue_vblank = xwl_present_queue_vblank;
     screen_priv->flush = xwl_present_flush;
     screen_priv->re_execute = present_wnmd_re_execute;
 

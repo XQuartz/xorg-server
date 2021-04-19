@@ -360,113 +360,6 @@ present_wnmd_idle_notify(WindowPtr window, uint64_t event_id)
     }
 }
 
-static Bool
-present_wnmd_check_flip(RRCrtcPtr           crtc,
-                        WindowPtr           window,
-                        PixmapPtr           pixmap,
-                        Bool                sync_flip,
-                        RegionPtr           valid,
-                        int16_t             x_off,
-                        int16_t             y_off,
-                        PresentFlipReason   *reason)
-{
-    ScreenPtr               screen = window->drawable.pScreen;
-    present_screen_priv_ptr screen_priv = present_screen_priv(screen);
-    WindowPtr               toplvl_window = present_wnmd_toplvl_pixmap_window(window);
-
-    if (reason)
-        *reason = PRESENT_FLIP_REASON_UNKNOWN;
-
-    if (!screen_priv)
-        return FALSE;
-
-    if (!screen_priv->wnmd_info)
-        return FALSE;
-
-    if (!crtc)
-        return FALSE;
-
-    /* Check to see if the driver supports flips at all */
-    if (!screen_priv->wnmd_info->flip)
-        return FALSE;
-
-    /* Source pixmap must align with window exactly */
-    if (x_off || y_off)
-        return FALSE;
-
-    /* Valid area must contain window (for simplicity for now just never flip when one is set). */
-    if (valid)
-        return FALSE;
-
-    /* Flip pixmap must have same dimensions as window */
-    if (window->drawable.width != pixmap->drawable.width ||
-            window->drawable.height != pixmap->drawable.height)
-        return FALSE;
-
-    /* Window must be same region as toplevel window */
-    if ( !RegionEqual(&window->winSize, &toplvl_window->winSize) )
-        return FALSE;
-
-    /* Can't flip if window clipped by children */
-    if (!RegionEqual(&window->clipList, &window->winSize))
-        return FALSE;
-
-    /* Ask the driver for permission */
-    if (screen_priv->wnmd_info->check_flip2) {
-        if (!(*screen_priv->wnmd_info->check_flip2) (crtc, window, pixmap, sync_flip, reason)) {
-            DebugPresent(("\td %08" PRIx32 " -> %08" PRIx32 "\n",
-                          window->drawable.id, pixmap ? pixmap->drawable.id : 0));
-            return FALSE;
-        }
-    }
-
-    return TRUE;
-}
-
-/*
- * 'window' is being reconfigured. Check to see if it is involved
- * in flipping and clean up as necessary.
- */
-static void
-present_wnmd_check_flip_window (WindowPtr window)
-{
-    struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
-    present_window_priv_ptr window_priv = present_window_priv(window);
-    present_vblank_ptr      flip_pending;
-    present_vblank_ptr      flip_active;
-    present_vblank_ptr      vblank;
-    PresentFlipReason       reason;
-
-    /* If this window hasn't ever been used with Present, it can't be
-     * flipping
-     */
-    if (!xwl_present_window || !window_priv)
-        return;
-
-    flip_pending = xwl_present_window->flip_pending;
-    flip_active = xwl_present_window->flip_active;
-
-    if (flip_pending) {
-        if (!present_wnmd_check_flip(flip_pending->crtc, flip_pending->window, flip_pending->pixmap,
-                                flip_pending->sync_flip, flip_pending->valid, 0, 0, NULL))
-            xwl_present_window->flip_pending->abort_flip = TRUE;
-    } else if (flip_active) {
-        if (!present_wnmd_check_flip(flip_active->crtc, flip_active->window, flip_active->pixmap,
-                                     flip_active->sync_flip, flip_active->valid, 0, 0, NULL))
-            present_wnmd_flips_stop(window);
-    }
-
-    /* Now check any queued vblanks */
-    xorg_list_for_each_entry(vblank, &window_priv->vblank, window_list) {
-        if (vblank->queued && vblank->flip &&
-                !present_wnmd_check_flip(vblank->crtc, window, vblank->pixmap,
-                                         vblank->sync_flip, vblank->valid, 0, 0, &reason)) {
-            vblank->flip = FALSE;
-            vblank->reason = reason;
-        }
-    }
-}
-
 /*
  * Clean up any pending or current flips for this window
  */
@@ -931,16 +824,47 @@ xwl_present_flush(WindowPtr window)
 }
 
 static Bool
-xwl_present_check_flip2(RRCrtcPtr crtc,
-                        WindowPtr present_window,
-                        PixmapPtr pixmap,
-                        Bool sync_flip,
-                        PresentFlipReason *reason)
+xwl_present_check_flip(RRCrtcPtr crtc,
+                       WindowPtr present_window,
+                       PixmapPtr pixmap,
+                       Bool sync_flip,
+                       RegionPtr valid,
+                       int16_t x_off,
+                       int16_t y_off,
+                       PresentFlipReason *reason)
 {
+    WindowPtr toplvl_window = present_wnmd_toplvl_pixmap_window(present_window);
     struct xwl_window *xwl_window = xwl_window_from_window(present_window);
     ScreenPtr screen = pixmap->drawable.pScreen;
 
+    if (reason)
+        *reason = PRESENT_FLIP_REASON_UNKNOWN;
+
     if (!xwl_window)
+        return FALSE;
+
+    if (!crtc)
+        return FALSE;
+
+    /* Source pixmap must align with window exactly */
+    if (x_off || y_off)
+        return FALSE;
+
+    /* Valid area must contain window (for simplicity for now just never flip when one is set). */
+    if (valid)
+        return FALSE;
+
+    /* Flip pixmap must have same dimensions as window */
+    if (present_window->drawable.width != pixmap->drawable.width ||
+            present_window->drawable.height != pixmap->drawable.height)
+        return FALSE;
+
+    /* Window must be same region as toplevel window */
+    if ( !RegionEqual(&present_window->winSize, &toplvl_window->winSize) )
+        return FALSE;
+
+    /* Can't flip if window clipped by children */
+    if (!RegionEqual(&present_window->clipList, &present_window->winSize))
         return FALSE;
 
     if (!xwl_glamor_check_flip(pixmap))
@@ -962,6 +886,50 @@ xwl_present_check_flip2(RRCrtcPtr crtc,
         return FALSE;
 
     return TRUE;
+}
+
+/*
+ * 'window' is being reconfigured. Check to see if it is involved
+ * in flipping and clean up as necessary.
+ */
+static void
+present_wnmd_check_flip_window (WindowPtr window)
+{
+    struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
+    present_window_priv_ptr window_priv = present_window_priv(window);
+    present_vblank_ptr      flip_pending;
+    present_vblank_ptr      flip_active;
+    present_vblank_ptr      vblank;
+    PresentFlipReason       reason;
+
+    /* If this window hasn't ever been used with Present, it can't be
+     * flipping
+     */
+    if (!xwl_present_window || !window_priv)
+        return;
+
+    flip_pending = xwl_present_window->flip_pending;
+    flip_active = xwl_present_window->flip_active;
+
+    if (flip_pending) {
+        if (!xwl_present_check_flip(flip_pending->crtc, flip_pending->window, flip_pending->pixmap,
+                                    flip_pending->sync_flip, flip_pending->valid, 0, 0, NULL))
+            xwl_present_window->flip_pending->abort_flip = TRUE;
+    } else if (flip_active) {
+        if (!xwl_present_check_flip(flip_active->crtc, flip_active->window, flip_active->pixmap,
+                                    flip_active->sync_flip, flip_active->valid, 0, 0, NULL))
+            present_wnmd_flips_stop(window);
+    }
+
+    /* Now check any queued vblanks */
+    xorg_list_for_each_entry(vblank, &window_priv->vblank, window_list) {
+        if (vblank->queued && vblank->flip &&
+                !xwl_present_check_flip(vblank->crtc, window, vblank->pixmap,
+                                        vblank->sync_flip, vblank->valid, 0, 0, &reason)) {
+            vblank->flip = FALSE;
+            vblank->reason = reason;
+        }
+    }
 }
 
 static Bool
@@ -1182,7 +1150,6 @@ static present_wnmd_info_rec xwl_present_info = {
     .get_ust_msc = xwl_present_get_ust_msc,
     .queue_vblank = xwl_present_queue_vblank,
 
-    .check_flip2 = xwl_present_check_flip2,
     .flips_stop = xwl_present_flips_stop
 };
 
@@ -1213,7 +1180,7 @@ xwl_present_init(ScreenPtr screen)
     screen_priv->query_capabilities = xwl_present_query_capabilities;
     screen_priv->get_crtc = present_wnmd_get_crtc;
 
-    screen_priv->check_flip = present_wnmd_check_flip;
+    screen_priv->check_flip = xwl_present_check_flip;
     screen_priv->check_flip_window = present_wnmd_check_flip_window;
     screen_priv->clear_window_flip = present_wnmd_clear_window_flip;
 

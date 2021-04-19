@@ -635,31 +635,6 @@ present_wnmd_pixmap(WindowPtr window,
     return Success;
 }
 
-static void
-present_wnmd_abort_vblank(ScreenPtr screen, WindowPtr window, RRCrtcPtr crtc, uint64_t event_id, uint64_t msc)
-{
-    struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
-    present_screen_priv_ptr screen_priv = present_screen_priv(screen);
-    present_vblank_ptr      vblank;
-
-    (*screen_priv->wnmd_info->abort_vblank) (window, crtc, event_id, msc);
-
-    xorg_list_for_each_entry(vblank, &xwl_present_window->exec_queue, event_queue) {
-        if (vblank->event_id == event_id) {
-            xorg_list_del(&vblank->event_queue);
-            vblank->queued = FALSE;
-            return;
-        }
-    }
-    xorg_list_for_each_entry(vblank, &xwl_present_window->flip_queue, event_queue) {
-        if (vblank->event_id == event_id) {
-            xorg_list_del(&vblank->event_queue);
-            vblank->queued = FALSE;
-            return;
-        }
-    }
-}
-
 
 static void
 xwl_present_release_pixmap(struct xwl_present_event *event)
@@ -903,27 +878,43 @@ xwl_present_queue_vblank(WindowPtr present_window,
  * to the extension
  */
 static void
-xwl_present_abort_vblank(WindowPtr present_window,
+xwl_present_abort_vblank(ScreenPtr screen,
+                         WindowPtr present_window,
                          RRCrtcPtr crtc,
                          uint64_t event_id,
                          uint64_t msc)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(present_window);
     struct xwl_present_event *event, *tmp;
+    present_vblank_ptr vblank;
 
-    if (!xwl_present_window)
-        return;
+    if (xwl_present_window) {
+        xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->wait_list, list) {
+            if (event->event_id == event_id) {
+                xwl_present_free_event(event);
+                break;
+            }
+        }
 
-    xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->wait_list, list) {
-        if (event->event_id == event_id) {
-            xwl_present_free_event(event);
-            return;
+        xorg_list_for_each_entry(event, &xwl_present_window->release_list, list) {
+            if (event->event_id == event_id) {
+                event->abort = TRUE;
+                break;
+            }
         }
     }
 
-    xorg_list_for_each_entry(event, &xwl_present_window->release_list, list) {
-        if (event->event_id == event_id) {
-            event->abort = TRUE;
+    xorg_list_for_each_entry(vblank, &xwl_present_window->exec_queue, event_queue) {
+        if (vblank->event_id == event_id) {
+            xorg_list_del(&vblank->event_queue);
+            vblank->queued = FALSE;
+            return;
+        }
+    }
+    xorg_list_for_each_entry(vblank, &xwl_present_window->flip_queue, event_queue) {
+        if (vblank->event_id == event_id) {
+            xorg_list_del(&vblank->event_queue);
+            vblank->queued = FALSE;
             return;
         }
     }
@@ -1186,7 +1177,6 @@ static present_wnmd_info_rec xwl_present_info = {
 
     .get_ust_msc = xwl_present_get_ust_msc,
     .queue_vblank = xwl_present_queue_vblank,
-    .abort_vblank = xwl_present_abort_vblank,
 
     .capabilities = PresentCapabilityAsync,
     .check_flip2 = xwl_present_check_flip2,
@@ -1229,7 +1219,7 @@ xwl_present_init(ScreenPtr screen)
     screen_priv->flush = xwl_present_flush;
     screen_priv->re_execute = present_wnmd_re_execute;
 
-    screen_priv->abort_vblank = present_wnmd_abort_vblank;
+    screen_priv->abort_vblank = xwl_present_abort_vblank;
 
     return TRUE;
 }

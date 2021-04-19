@@ -660,15 +660,6 @@ present_wnmd_abort_vblank(ScreenPtr screen, WindowPtr window, RRCrtcPtr crtc, ui
     }
 }
 
-static void
-present_wnmd_flush(WindowPtr window)
-{
-    ScreenPtr               screen = window->drawable.pScreen;
-    present_screen_priv_ptr screen_priv = present_screen_priv(screen);
-
-    (*screen_priv->wnmd_info->flush) (window);
-}
-
 
 static void
 xwl_present_release_pixmap(struct xwl_present_event *event)
@@ -1197,8 +1188,6 @@ static present_wnmd_info_rec xwl_present_info = {
     .queue_vblank = xwl_present_queue_vblank,
     .abort_vblank = xwl_present_abort_vblank,
 
-    .flush = xwl_present_flush,
-
     .capabilities = PresentCapabilityAsync,
     .check_flip2 = xwl_present_check_flip2,
     .flips_stop = xwl_present_flips_stop
@@ -1237,7 +1226,7 @@ xwl_present_init(ScreenPtr screen)
 
     screen_priv->present_pixmap = present_wnmd_pixmap;
     screen_priv->queue_vblank = present_wnmd_queue_vblank;
-    screen_priv->flush = present_wnmd_flush;
+    screen_priv->flush = xwl_present_flush;
     screen_priv->re_execute = present_wnmd_re_execute;
 
     screen_priv->abort_vblank = present_wnmd_abort_vblank;

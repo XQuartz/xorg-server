@@ -47,7 +47,7 @@
 #define TIMER_LEN_COPY      17  // ~60fps
 #define TIMER_LEN_FLIP    1000  // 1fps
 
-static uint64_t present_wnmd_event_id;
+static uint64_t xwl_present_event_id;
 
 static DevPrivateKeyRec xwl_present_window_private_key;
 
@@ -128,7 +128,7 @@ xwl_present_reset_timer(struct xwl_present_window *xwl_present_window)
 
 
 static void
-present_wnmd_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc);
+xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc);
 
 static uint32_t
 xwl_present_query_capabilities(present_screen_priv_ptr screen_priv)
@@ -157,30 +157,30 @@ xwl_present_get_ust_msc(ScreenPtr screen,
  * to re-try the request
  */
 static void
-present_wnmd_re_execute(present_vblank_ptr vblank)
+xwl_present_re_execute(present_vblank_ptr vblank)
 {
     uint64_t ust = 0, crtc_msc = 0;
 
     (void) xwl_present_get_ust_msc(vblank->screen, vblank->window, &ust, &crtc_msc);
-    present_wnmd_execute(vblank, ust, crtc_msc);
+    xwl_present_execute(vblank, ust, crtc_msc);
 }
 
 static void
-present_wnmd_flip_try_ready(WindowPtr window)
+xwl_present_flip_try_ready(WindowPtr window)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
     present_vblank_ptr      vblank;
 
     xorg_list_for_each_entry(vblank, &xwl_present_window->flip_queue, event_queue) {
         if (vblank->queued) {
-            present_wnmd_re_execute(vblank);
+            xwl_present_re_execute(vblank);
             return;
         }
     }
 }
 
 static void
-present_wnmd_free_idle_vblank(present_vblank_ptr vblank)
+xwl_present_free_idle_vblank(present_vblank_ptr vblank)
 {
     present_pixmap_idle(vblank->pixmap, vblank->window, vblank->serial, vblank->idle_fence);
     present_vblank_destroy(vblank);
@@ -190,23 +190,23 @@ present_wnmd_free_idle_vblank(present_vblank_ptr vblank)
  * Free any left over idle vblanks
  */
 static void
-present_wnmd_free_idle_vblanks(WindowPtr window)
+xwl_present_free_idle_vblanks(WindowPtr window)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
     present_vblank_ptr              vblank, tmp;
 
     xorg_list_for_each_entry_safe(vblank, tmp, &xwl_present_window->idle_queue, event_queue) {
-        present_wnmd_free_idle_vblank(vblank);
+        xwl_present_free_idle_vblank(vblank);
     }
 
     if (xwl_present_window->flip_active) {
-        present_wnmd_free_idle_vblank(xwl_present_window->flip_active);
+        xwl_present_free_idle_vblank(xwl_present_window->flip_active);
         xwl_present_window->flip_active = NULL;
     }
 }
 
 static WindowPtr
-present_wnmd_toplvl_pixmap_window(WindowPtr window)
+xwl_present_toplvl_pixmap_window(WindowPtr window)
 {
     ScreenPtr       screen = window->drawable.pScreen;
     PixmapPtr       pixmap = (*screen->GetWindowPixmap)(window);
@@ -233,12 +233,12 @@ xwl_present_flips_stop(WindowPtr window)
     /* Change back to the fast refresh rate */
     xwl_present_reset_timer(xwl_present_window);
 
-    present_wnmd_free_idle_vblanks(window);
-    present_wnmd_flip_try_ready(window);
+    xwl_present_free_idle_vblanks(window);
+    xwl_present_flip_try_ready(window);
 }
 
 static void
-present_wnmd_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
+xwl_present_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
 {
     WindowPtr                   window = vblank->window;
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
@@ -254,7 +254,7 @@ present_wnmd_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_
 
     if (xwl_present_window->flip_active) {
         if (xwl_present_window->flip_active->flip_idler)
-            present_wnmd_free_idle_vblank(xwl_present_window->flip_active);
+            xwl_present_free_idle_vblank(xwl_present_window->flip_active);
         else
             /* Put the previous flip in the idle_queue and wait for further notice from
              * the Wayland compositor
@@ -270,11 +270,11 @@ present_wnmd_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_
     if (vblank->abort_flip)
         xwl_present_flips_stop(window);
 
-    present_wnmd_flip_try_ready(window);
+    xwl_present_flip_try_ready(window);
 }
 
 static void
-present_wnmd_event_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uint64_t msc)
+xwl_present_event_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uint64_t msc)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
     present_window_priv_ptr     window_priv = present_window_priv(window);
@@ -288,14 +288,14 @@ present_wnmd_event_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uin
     DebugPresent(("\te %" PRIu64 " ust %" PRIu64 " msc %" PRIu64 "\n", event_id, ust, msc));
     xorg_list_for_each_entry(vblank, &xwl_present_window->exec_queue, event_queue) {
         if (event_id == vblank->event_id) {
-            present_wnmd_execute(vblank, ust, msc);
+            xwl_present_execute(vblank, ust, msc);
             return;
         }
     }
     xorg_list_for_each_entry(vblank, &xwl_present_window->flip_queue, event_queue) {
         if (vblank->event_id == event_id) {
             assert(vblank->queued);
-            present_wnmd_execute(vblank, ust, msc);
+            xwl_present_execute(vblank, ust, msc);
             return;
         }
     }
@@ -310,7 +310,7 @@ present_wnmd_event_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uin
 }
 
 static void
-present_wnmd_flip_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uint64_t msc)
+xwl_present_flip_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uint64_t msc)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
     present_vblank_ptr          vblank;
@@ -319,14 +319,14 @@ present_wnmd_flip_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uint
         if (vblank->event_id == event_id) {
             assert(!vblank->queued);
             assert(vblank->window);
-            present_wnmd_flip_notify_vblank(vblank, ust, msc);
+            xwl_present_flip_notify_vblank(vblank, ust, msc);
             return;
         }
     }
 }
 
 static void
-present_wnmd_idle_notify(WindowPtr window, uint64_t event_id)
+xwl_present_idle_notify(WindowPtr window, uint64_t event_id)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
     present_vblank_ptr          vblank;
@@ -339,7 +339,7 @@ present_wnmd_idle_notify(WindowPtr window, uint64_t event_id)
 
     xorg_list_for_each_entry(vblank, &xwl_present_window->idle_queue, event_queue) {
         if (vblank->event_id == event_id) {
-            present_wnmd_free_idle_vblank(vblank);
+            xwl_present_free_idle_vblank(vblank);
             return;
         }
     }
@@ -356,7 +356,7 @@ present_wnmd_idle_notify(WindowPtr window, uint64_t event_id)
  * Clean up any pending or current flips for this window
  */
 static void
-present_wnmd_clear_window_flip(WindowPtr window)
+xwl_present_clear_window_flip(WindowPtr window)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
     present_vblank_ptr          vblank, tmp;
@@ -380,7 +380,7 @@ present_wnmd_clear_window_flip(WindowPtr window)
 }
 
 static void
-present_wnmd_cancel_flip(WindowPtr window)
+xwl_present_cancel_flip(WindowPtr window)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
 
@@ -391,7 +391,7 @@ present_wnmd_cancel_flip(WindowPtr window)
 }
 
 static void
-present_wnmd_update_window_crtc(WindowPtr window, RRCrtcPtr crtc, uint64_t new_msc)
+xwl_present_update_window_crtc(WindowPtr window, RRCrtcPtr crtc, uint64_t new_msc)
 {
     present_window_priv_ptr window_priv = present_get_window_priv(window, TRUE);
 
@@ -484,7 +484,7 @@ xwl_present_buffer_release(void *data)
     xwl_present_release_pixmap(event);
 
     if (!event->abort)
-        present_wnmd_idle_notify(event->xwl_present_window->window, event->event_id);
+        xwl_present_idle_notify(event->xwl_present_window->window, event->event_id);
 
     if (!event->pending)
         xwl_present_free_event(event);
@@ -503,8 +503,8 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
     if (event) {
         event->pending = FALSE;
 
-        present_wnmd_flip_notify(xwl_present_window->window, event->event_id,
-                                 xwl_present_window->ust, msc);
+        xwl_present_flip_notify(xwl_present_window->window, event->event_id,
+                                xwl_present_window->ust, msc);
 
         if (!event->pixmap) {
             /* If the buffer was already released, clean up now */
@@ -518,10 +518,10 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
                                   &xwl_present_window->wait_list,
                                   list) {
         if (event->target_msc <= msc) {
-            present_wnmd_event_notify(xwl_present_window->window,
-                                      event->event_id,
-                                      xwl_present_window->ust,
-                                      msc);
+            xwl_present_event_notify(xwl_present_window->window,
+                                     event->event_id,
+                                     xwl_present_window->ust,
+                                     msc);
             xwl_present_free_event(event);
         }
     }
@@ -572,8 +572,8 @@ xwl_present_sync_callback(void *data,
     event->pending = FALSE;
 
     if (!event->abort)
-        present_wnmd_flip_notify(xwl_present_window->window, event->event_id,
-                                 xwl_present_window->ust, xwl_present_window->msc);
+        xwl_present_flip_notify(xwl_present_window->window, event->event_id,
+                                xwl_present_window->ust, xwl_present_window->msc);
 
     if (!event->pixmap)
         xwl_present_free_event(event);
@@ -704,7 +704,7 @@ xwl_present_check_flip(RRCrtcPtr crtc,
                        int16_t y_off,
                        PresentFlipReason *reason)
 {
-    WindowPtr toplvl_window = present_wnmd_toplvl_pixmap_window(present_window);
+    WindowPtr toplvl_window = xwl_present_toplvl_pixmap_window(present_window);
     struct xwl_window *xwl_window = xwl_window_from_window(present_window);
     ScreenPtr screen = pixmap->drawable.pScreen;
 
@@ -764,7 +764,7 @@ xwl_present_check_flip(RRCrtcPtr crtc,
  * in flipping and clean up as necessary.
  */
 static void
-present_wnmd_check_flip_window (WindowPtr window)
+xwl_present_check_flip_window (WindowPtr window)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
     present_window_priv_ptr window_priv = present_window_priv(window);
@@ -896,7 +896,7 @@ xwl_present_flip(WindowPtr present_window,
  * go straight to event delivery.
  */
 static void
-present_wnmd_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
+xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
 {
     WindowPtr               window = vblank->window;
     struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
@@ -950,7 +950,7 @@ present_wnmd_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
             xwl_present_window->flip_pending = vblank;
             if (xwl_present_flip(vblank->window, vblank->crtc, vblank->event_id,
                                  vblank->target_msc, vblank->pixmap, vblank->sync_flip, damage)) {
-                WindowPtr toplvl_window = present_wnmd_toplvl_pixmap_window(vblank->window);
+                WindowPtr toplvl_window = xwl_present_toplvl_pixmap_window(vblank->window);
                 PixmapPtr old_pixmap = screen->GetWindowPixmap(window);
 
                 /* Replace window pixmap with flip pixmap */
@@ -977,7 +977,7 @@ present_wnmd_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
         DebugPresent(("\tc %p %" PRIu64 ": %08" PRIx32 " -> %08" PRIx32 "\n",
                       vblank, crtc_msc, vblank->pixmap->drawable.id, vblank->window->drawable.id));
 
-        present_wnmd_cancel_flip(window);
+        xwl_present_cancel_flip(window);
 
         present_execute_copy(vblank, crtc_msc);
         assert(!vblank->queued);
@@ -996,22 +996,22 @@ present_wnmd_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
 }
 
 static int
-present_wnmd_pixmap(WindowPtr window,
-                    PixmapPtr pixmap,
-                    CARD32 serial,
-                    RegionPtr valid,
-                    RegionPtr update,
-                    int16_t x_off,
-                    int16_t y_off,
-                    RRCrtcPtr target_crtc,
-                    SyncFence *wait_fence,
-                    SyncFence *idle_fence,
-                    uint32_t options,
-                    uint64_t target_window_msc,
-                    uint64_t divisor,
-                    uint64_t remainder,
-                    present_notify_ptr notifies,
-                    int num_notifies)
+xwl_present_pixmap(WindowPtr window,
+                   PixmapPtr pixmap,
+                   CARD32 serial,
+                   RegionPtr valid,
+                   RegionPtr update,
+                   int16_t x_off,
+                   int16_t y_off,
+                   RRCrtcPtr target_crtc,
+                   SyncFence *wait_fence,
+                   SyncFence *idle_fence,
+                   uint32_t options,
+                   uint64_t target_window_msc,
+                   uint64_t divisor,
+                   uint64_t remainder,
+                   present_notify_ptr notifies,
+                   int num_notifies)
 {
     uint64_t                    ust = 0;
     uint64_t                    target_msc;
@@ -1030,7 +1030,7 @@ present_wnmd_pixmap(WindowPtr window,
 
     ret = xwl_present_get_ust_msc(screen, window, &ust, &crtc_msc);
 
-    present_wnmd_update_window_crtc(window, target_crtc, crtc_msc);
+    xwl_present_update_window_crtc(window, target_crtc, crtc_msc);
 
     if (ret == Success) {
         /* Stash the current MSC away in case we need it later
@@ -1062,7 +1062,7 @@ present_wnmd_pixmap(WindowPtr window,
 
             present_vblank_scrap(vblank);
             if (vblank->flip_ready)
-                present_wnmd_re_execute(vblank);
+                xwl_present_re_execute(vblank);
         }
     }
 
@@ -1085,9 +1085,9 @@ present_wnmd_pixmap(WindowPtr window,
     if (!vblank)
         return BadAlloc;
 
-    vblank->event_id = ++present_wnmd_event_id;
+    vblank->event_id = ++xwl_present_event_id;
 
-    /* WNMD presentations always complete (at least) one frame after they
+    /* Xwayland presentations always complete (at least) one frame after they
      * are executed
      */
     vblank->exec_msc = vblank->target_msc - 1;
@@ -1101,7 +1101,7 @@ present_wnmd_pixmap(WindowPtr window,
         DebugPresent(("present_queue_vblank failed\n"));
     }
 
-    present_wnmd_execute(vblank, ust, crtc_msc);
+    xwl_present_execute(vblank, ust, crtc_msc);
     return Success;
 }
 
@@ -1141,13 +1141,13 @@ xwl_present_init(ScreenPtr screen)
     screen_priv->get_crtc = xwl_present_get_crtc;
 
     screen_priv->check_flip = xwl_present_check_flip;
-    screen_priv->check_flip_window = present_wnmd_check_flip_window;
-    screen_priv->clear_window_flip = present_wnmd_clear_window_flip;
+    screen_priv->check_flip_window = xwl_present_check_flip_window;
+    screen_priv->clear_window_flip = xwl_present_clear_window_flip;
 
-    screen_priv->present_pixmap = present_wnmd_pixmap;
+    screen_priv->present_pixmap = xwl_present_pixmap;
     screen_priv->queue_vblank = xwl_present_queue_vblank;
     screen_priv->flush = xwl_present_flush;
-    screen_priv->re_execute = present_wnmd_re_execute;
+    screen_priv->re_execute = xwl_present_re_execute;
 
     screen_priv->abort_vblank = xwl_present_abort_vblank;
 

@@ -224,14 +224,14 @@ present_wnmd_toplvl_pixmap_window(WindowPtr window)
 }
 
 static void
-present_wnmd_flips_stop(WindowPtr window)
+xwl_present_flips_stop(WindowPtr window)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
-    present_screen_priv_ptr screen_priv = present_screen_priv(window->drawable.pScreen);
 
     assert (!xwl_present_window->flip_pending);
 
-    (*screen_priv->wnmd_info->flips_stop) (window);
+    /* Change back to the fast refresh rate */
+    xwl_present_reset_timer(xwl_present_window);
 
     present_wnmd_free_idle_vblanks(window);
     present_wnmd_flip_try_ready(window);
@@ -268,7 +268,7 @@ present_wnmd_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_
     present_vblank_notify(vblank, PresentCompleteKindPixmap, PresentCompleteModeFlip, ust, crtc_msc);
 
     if (vblank->abort_flip)
-        present_wnmd_flips_stop(window);
+        xwl_present_flips_stop(window);
 
     present_wnmd_flip_try_ready(window);
 }
@@ -387,7 +387,7 @@ present_wnmd_cancel_flip(WindowPtr window)
     if (xwl_present_window->flip_pending)
         xwl_present_window->flip_pending->abort_flip = TRUE;
     else if (xwl_present_window->flip_active)
-        present_wnmd_flips_stop(window);
+        xwl_present_flips_stop(window);
 }
 
 static void
@@ -789,7 +789,7 @@ present_wnmd_check_flip_window (WindowPtr window)
     } else if (flip_active) {
         if (!xwl_present_check_flip(flip_active->crtc, flip_active->window, flip_active->pixmap,
                                     flip_active->sync_flip, flip_active->valid, 0, 0, NULL))
-            present_wnmd_flips_stop(window);
+            xwl_present_flips_stop(window);
     }
 
     /* Now check any queued vblanks */
@@ -884,15 +884,6 @@ xwl_present_flip(WindowPtr present_window,
     wl_display_flush(xwl_window->xwl_screen->display);
     xwl_window->present_flipped = TRUE;
     return TRUE;
-}
-
-static void
-xwl_present_flips_stop(WindowPtr window)
-{
-    struct xwl_present_window   *xwl_present_window = xwl_present_window_priv(window);
-
-    /* Change back to the fast refresh rate */
-    xwl_present_reset_timer(xwl_present_window);
 }
 
 /*
@@ -1126,8 +1117,6 @@ xwl_present_unrealize_window(struct xwl_present_window *xwl_present_window)
 
 static present_wnmd_info_rec xwl_present_info = {
     .version = PRESENT_SCREEN_INFO_VERSION,
-
-    .flips_stop = xwl_present_flips_stop
 };
 
 Bool

@@ -670,7 +670,14 @@ xwl_glamor_eglstream_allow_commits(struct xwl_window *xwl_window)
 
             return FALSE;
         } else {
-            return TRUE;
+            if (xwl_pixmap->surface != EGL_NO_SURFACE)
+                return TRUE;
+
+            /* The pending stream got removed, we have a xwl_pixmap and
+             * yet we do not have a surface.
+             * So something went wrong with the surface creation, retry.
+             */
+            xwl_eglstream_destroy_pixmap_stream(xwl_pixmap);
         }
     }
 

@@ -34,6 +34,10 @@
 #include "xwayland-pixmap.h"
 #include "glamor.h"
 
+
+#define XWL_PRESENT_CAPS PresentCapabilityAsync
+
+
 /*
  * When not flipping let Present copy with 60fps.
  * When flipping wait on frame_callback, otherwise
@@ -138,9 +142,9 @@ present_wnmd_queue_vblank(ScreenPtr screen,
 }
 
 static uint32_t
-present_wnmd_query_capabilities(present_screen_priv_ptr screen_priv)
+xwl_present_query_capabilities(present_screen_priv_ptr screen_priv)
 {
-    return screen_priv->wnmd_info->capabilities;
+    return XWL_PRESENT_CAPS;
 }
 
 static RRCrtcPtr
@@ -607,7 +611,7 @@ present_wnmd_pixmap(WindowPtr window,
                                    wait_fence,
                                    idle_fence,
                                    options,
-                                   screen_priv->wnmd_info->capabilities,
+                                   XWL_PRESENT_CAPS,
                                    notifies,
                                    num_notifies,
                                    target_msc,
@@ -1178,7 +1182,6 @@ static present_wnmd_info_rec xwl_present_info = {
     .get_ust_msc = xwl_present_get_ust_msc,
     .queue_vblank = xwl_present_queue_vblank,
 
-    .capabilities = PresentCapabilityAsync,
     .check_flip2 = xwl_present_check_flip2,
     .flips_stop = xwl_present_flips_stop
 };
@@ -1207,7 +1210,7 @@ xwl_present_init(ScreenPtr screen)
 
     screen_priv->wnmd_info = &xwl_present_info;
 
-    screen_priv->query_capabilities = present_wnmd_query_capabilities;
+    screen_priv->query_capabilities = xwl_present_query_capabilities;
     screen_priv->get_crtc = present_wnmd_get_crtc;
 
     screen_priv->check_flip = present_wnmd_check_flip;

@@ -490,27 +490,6 @@ present_wnmd_clear_window_flip(WindowPtr window)
     xwl_present_window->flip_active = NULL;
 }
 
-static Bool
-present_wnmd_flip(WindowPtr window,
-                  RRCrtcPtr crtc,
-                  uint64_t event_id,
-                  uint64_t target_msc,
-                  PixmapPtr pixmap,
-                  Bool sync_flip,
-                  RegionPtr damage)
-{
-    ScreenPtr                   screen = window->drawable.pScreen;
-    present_screen_priv_ptr     screen_priv = present_screen_priv(screen);
-
-    return (*screen_priv->wnmd_info->flip) (window,
-                                            crtc,
-                                            event_id,
-                                            target_msc,
-                                            pixmap,
-                                            sync_flip,
-                                            damage);
-}
-
 static void
 present_wnmd_cancel_flip(WindowPtr window)
 {
@@ -520,116 +499,6 @@ present_wnmd_cancel_flip(WindowPtr window)
         xwl_present_window->flip_pending->abort_flip = TRUE;
     else if (xwl_present_window->flip_active)
         present_wnmd_flips_stop(window);
-}
-
-/*
- * Once the required MSC has been reached, execute the pending request.
- *
- * For requests to actually present something, either blt contents to
- * the window pixmap or queue a window buffer swap on the backend.
- *
- * For requests to just get the current MSC/UST combo, skip that part and
- * go straight to event delivery.
- */
-static void
-present_wnmd_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
-{
-    WindowPtr               window = vblank->window;
-    struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
-    present_window_priv_ptr window_priv = present_window_priv(window);
-
-    if (present_execute_wait(vblank, crtc_msc))
-        return;
-
-    if (vblank->flip && vblank->pixmap && vblank->window) {
-        if (xwl_present_window->flip_pending) {
-            DebugPresent(("\tr %" PRIu64 " %p (pending %p)\n",
-                          vblank->event_id, vblank,
-                          xwl_present_window->flip_pending));
-            xorg_list_del(&vblank->event_queue);
-            xorg_list_append(&vblank->event_queue, &xwl_present_window->flip_queue);
-            vblank->flip_ready = TRUE;
-            return;
-        }
-    }
-
-    xorg_list_del(&vblank->event_queue);
-    xorg_list_del(&vblank->window_list);
-    vblank->queued = FALSE;
-
-    if (vblank->pixmap && vblank->window) {
-        ScreenPtr screen = window->drawable.pScreen;
-
-        if (vblank->flip) {
-            RegionPtr damage;
-
-            DebugPresent(("\tf %" PRIu64 " %p %" PRIu64 ": %08" PRIx32 " -> %08" PRIx32 "\n",
-                          vblank->event_id, vblank, crtc_msc,
-                          vblank->pixmap->drawable.id, vblank->window->drawable.id));
-
-            /* Prepare to flip by placing it in the flip queue
-             */
-            xorg_list_add(&vblank->event_queue, &xwl_present_window->flip_queue);
-
-            /* Set update region as damaged */
-            if (vblank->update) {
-                damage = RegionDuplicate(vblank->update);
-                /* Translate update region to screen space */
-                assert(vblank->x_off == 0 && vblank->y_off == 0);
-                RegionTranslate(damage, window->drawable.x, window->drawable.y);
-                RegionIntersect(damage, damage, &window->clipList);
-            } else
-                damage = RegionDuplicate(&window->clipList);
-
-            /* Try to flip - the vblank is now pending
-             */
-            xwl_present_window->flip_pending = vblank;
-            // ask the driver
-            if (present_wnmd_flip(vblank->window, vblank->crtc, vblank->event_id,
-                                     vblank->target_msc, vblank->pixmap, vblank->sync_flip, damage)) {
-                WindowPtr toplvl_window = present_wnmd_toplvl_pixmap_window(vblank->window);
-                PixmapPtr old_pixmap = screen->GetWindowPixmap(window);
-
-                /* Replace window pixmap with flip pixmap */
-#ifdef COMPOSITE
-                vblank->pixmap->screen_x = old_pixmap->screen_x;
-                vblank->pixmap->screen_y = old_pixmap->screen_y;
-#endif
-                present_set_tree_pixmap(toplvl_window, old_pixmap, vblank->pixmap);
-                vblank->pixmap->refcnt++;
-                dixDestroyPixmap(old_pixmap, old_pixmap->drawable.id);
-
-                /* Report damage */
-                DamageDamageRegion(&vblank->window->drawable, damage);
-                RegionDestroy(damage);
-                return;
-            }
-
-            xorg_list_del(&vblank->event_queue);
-            /* Flip failed. Clear the flip_pending field
-              */
-            xwl_present_window->flip_pending = NULL;
-            vblank->flip = FALSE;
-        }
-        DebugPresent(("\tc %p %" PRIu64 ": %08" PRIx32 " -> %08" PRIx32 "\n",
-                      vblank, crtc_msc, vblank->pixmap->drawable.id, vblank->window->drawable.id));
-
-        present_wnmd_cancel_flip(window);
-
-        present_execute_copy(vblank, crtc_msc);
-        assert(!vblank->queued);
-
-        if (present_wnmd_queue_vblank(screen, window, vblank->crtc,
-                                      vblank->event_id, crtc_msc + 1)
-            == Success) {
-            xorg_list_add(&vblank->event_queue, &xwl_present_window->idle_queue);
-            xorg_list_append(&vblank->window_list, &window_priv->vblank);
-
-            return;
-        }
-    }
-
-    present_execute_post(vblank, ust, crtc_msc);
 }
 
 static void
@@ -1201,6 +1070,115 @@ xwl_present_flips_stop(WindowPtr window)
     xwl_present_reset_timer(xwl_present_window);
 }
 
+/*
+ * Once the required MSC has been reached, execute the pending request.
+ *
+ * For requests to actually present something, either blt contents to
+ * the window pixmap or queue a window buffer swap on the backend.
+ *
+ * For requests to just get the current MSC/UST combo, skip that part and
+ * go straight to event delivery.
+ */
+static void
+present_wnmd_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
+{
+    WindowPtr               window = vblank->window;
+    struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
+    present_window_priv_ptr window_priv = present_window_priv(window);
+
+    if (present_execute_wait(vblank, crtc_msc))
+        return;
+
+    if (vblank->flip && vblank->pixmap && vblank->window) {
+        if (xwl_present_window->flip_pending) {
+            DebugPresent(("\tr %" PRIu64 " %p (pending %p)\n",
+                          vblank->event_id, vblank,
+                          xwl_present_window->flip_pending));
+            xorg_list_del(&vblank->event_queue);
+            xorg_list_append(&vblank->event_queue, &xwl_present_window->flip_queue);
+            vblank->flip_ready = TRUE;
+            return;
+        }
+    }
+
+    xorg_list_del(&vblank->event_queue);
+    xorg_list_del(&vblank->window_list);
+    vblank->queued = FALSE;
+
+    if (vblank->pixmap && vblank->window) {
+        ScreenPtr screen = window->drawable.pScreen;
+
+        if (vblank->flip) {
+            RegionPtr damage;
+
+            DebugPresent(("\tf %" PRIu64 " %p %" PRIu64 ": %08" PRIx32 " -> %08" PRIx32 "\n",
+                          vblank->event_id, vblank, crtc_msc,
+                          vblank->pixmap->drawable.id, vblank->window->drawable.id));
+
+            /* Prepare to flip by placing it in the flip queue
+             */
+            xorg_list_add(&vblank->event_queue, &xwl_present_window->flip_queue);
+
+            /* Set update region as damaged */
+            if (vblank->update) {
+                damage = RegionDuplicate(vblank->update);
+                /* Translate update region to screen space */
+                assert(vblank->x_off == 0 && vblank->y_off == 0);
+                RegionTranslate(damage, window->drawable.x, window->drawable.y);
+                RegionIntersect(damage, damage, &window->clipList);
+            } else
+                damage = RegionDuplicate(&window->clipList);
+
+            /* Try to flip - the vblank is now pending
+             */
+            xwl_present_window->flip_pending = vblank;
+            if (xwl_present_flip(vblank->window, vblank->crtc, vblank->event_id,
+                                 vblank->target_msc, vblank->pixmap, vblank->sync_flip, damage)) {
+                WindowPtr toplvl_window = present_wnmd_toplvl_pixmap_window(vblank->window);
+                PixmapPtr old_pixmap = screen->GetWindowPixmap(window);
+
+                /* Replace window pixmap with flip pixmap */
+#ifdef COMPOSITE
+                vblank->pixmap->screen_x = old_pixmap->screen_x;
+                vblank->pixmap->screen_y = old_pixmap->screen_y;
+#endif
+                present_set_tree_pixmap(toplvl_window, old_pixmap, vblank->pixmap);
+                vblank->pixmap->refcnt++;
+                dixDestroyPixmap(old_pixmap, old_pixmap->drawable.id);
+
+                /* Report damage */
+                DamageDamageRegion(&vblank->window->drawable, damage);
+                RegionDestroy(damage);
+                return;
+            }
+
+            xorg_list_del(&vblank->event_queue);
+            /* Flip failed. Clear the flip_pending field
+              */
+            xwl_present_window->flip_pending = NULL;
+            vblank->flip = FALSE;
+        }
+        DebugPresent(("\tc %p %" PRIu64 ": %08" PRIx32 " -> %08" PRIx32 "\n",
+                      vblank, crtc_msc, vblank->pixmap->drawable.id, vblank->window->drawable.id));
+
+        present_wnmd_cancel_flip(window);
+
+        present_execute_copy(vblank, crtc_msc);
+        assert(!vblank->queued);
+
+        if (present_wnmd_queue_vblank(screen, window, vblank->crtc,
+                                      vblank->event_id, crtc_msc + 1)
+            == Success) {
+            xorg_list_add(&vblank->event_queue, &xwl_present_window->idle_queue);
+            xorg_list_append(&vblank->window_list, &window_priv->vblank);
+
+            return;
+        }
+    }
+
+    present_execute_post(vblank, ust, crtc_msc);
+}
+
 void
 xwl_present_unrealize_window(struct xwl_present_window *xwl_present_window)
 {
@@ -1223,7 +1201,6 @@ static present_wnmd_info_rec xwl_present_info = {
 
     .capabilities = PresentCapabilityAsync,
     .check_flip2 = xwl_present_check_flip2,
-    .flip = xwl_present_flip,
     .flips_stop = xwl_present_flips_stop
 };
 

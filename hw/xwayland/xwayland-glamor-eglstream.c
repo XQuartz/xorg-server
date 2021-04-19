@@ -562,7 +562,7 @@ xwl_eglstream_queue_pending_stream(WindowPtr window, PixmapPtr pixmap)
     DebugF("eglstream: win %d queues new pending stream for pixmap %p\n",
            window->drawable.id, pixmap);
 
-    pending_stream = malloc(sizeof(*pending_stream));
+    pending_stream = calloc(1, sizeof(*pending_stream));
     pending_stream->window = window;
     pending_stream->pixmap = pixmap;
     pending_stream->is_valid = TRUE;
@@ -596,7 +596,7 @@ xwl_eglstream_create_pixmap_and_stream(struct xwl_screen *xwl_screen,
     struct wl_array stream_attribs;
     int stream_fd = -1;
 
-    xwl_pixmap = calloc(sizeof(*xwl_pixmap), 1);
+    xwl_pixmap = calloc(1, sizeof(*xwl_pixmap));
     if (!xwl_pixmap)
         FatalError("Not enough memory to create pixmap\n");
     xwl_pixmap_set_private(pixmap, xwl_pixmap);

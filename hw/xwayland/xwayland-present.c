@@ -800,43 +800,6 @@ present_wnmd_flush(WindowPtr window)
     (*screen_priv->wnmd_info->flush) (window);
 }
 
-/*
- * Initialize a screen for use with present in window flip mode (wnmd)
- */
-static int
-present_wnmd_screen_init(ScreenPtr screen, present_wnmd_info_ptr info)
-{
-    present_screen_priv_ptr screen_priv;
-
-    if (!present_screen_register_priv_keys())
-        return FALSE;
-
-    if (present_screen_priv(screen))
-        return TRUE;
-
-    screen_priv = present_screen_priv_init(screen);
-    if (!screen_priv)
-        return FALSE;
-
-    screen_priv->wnmd_info = info;
-
-    screen_priv->query_capabilities =   &present_wnmd_query_capabilities;
-    screen_priv->get_crtc           =   &present_wnmd_get_crtc;
-
-    screen_priv->check_flip         =   &present_wnmd_check_flip;
-    screen_priv->check_flip_window  =   &present_wnmd_check_flip_window;
-    screen_priv->clear_window_flip  =   &present_wnmd_clear_window_flip;
-
-    screen_priv->present_pixmap     =   &present_wnmd_pixmap;
-    screen_priv->queue_vblank       =   &present_wnmd_queue_vblank;
-    screen_priv->flush              =   &present_wnmd_flush;
-    screen_priv->re_execute         =   &present_wnmd_re_execute;
-
-    screen_priv->abort_vblank       =   &present_wnmd_abort_vblank;
-
-    return TRUE;
-}
-
 
 static void
 xwl_present_release_pixmap(struct xwl_present_event *event)
@@ -1268,12 +1231,39 @@ Bool
 xwl_present_init(ScreenPtr screen)
 {
     struct xwl_screen *xwl_screen = xwl_screen_get(screen);
+    present_screen_priv_ptr screen_priv;
 
     if (!xwl_screen->glamor || !xwl_screen->egl_backend)
+        return FALSE;
+
+    if (!present_screen_register_priv_keys())
+        return FALSE;
+
+    if (present_screen_priv(screen))
+        return TRUE;
+
+    screen_priv = present_screen_priv_init(screen);
+    if (!screen_priv)
         return FALSE;
 
     if (!dixRegisterPrivateKey(&xwl_present_window_private_key, PRIVATE_WINDOW, 0))
         return FALSE;
 
-    return present_wnmd_screen_init(screen, &xwl_present_info);
+    screen_priv->wnmd_info = &xwl_present_info;
+
+    screen_priv->query_capabilities = present_wnmd_query_capabilities;
+    screen_priv->get_crtc = present_wnmd_get_crtc;
+
+    screen_priv->check_flip = present_wnmd_check_flip;
+    screen_priv->check_flip_window = present_wnmd_check_flip_window;
+    screen_priv->clear_window_flip = present_wnmd_clear_window_flip;
+
+    screen_priv->present_pixmap = present_wnmd_pixmap;
+    screen_priv->queue_vblank = present_wnmd_queue_vblank;
+    screen_priv->flush = present_wnmd_flush;
+    screen_priv->re_execute = present_wnmd_re_execute;
+
+    screen_priv->abort_vblank = present_wnmd_abort_vblank;
+
+    return TRUE;
 }

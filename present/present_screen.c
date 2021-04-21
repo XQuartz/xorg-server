@@ -42,10 +42,6 @@ present_get_window_priv(WindowPtr window, Bool create)
     xorg_list_init(&window_priv->vblank);
     xorg_list_init(&window_priv->notifies);
 
-    xorg_list_init(&window_priv->exec_queue);
-    xorg_list_init(&window_priv->flip_queue);
-    xorg_list_init(&window_priv->idle_queue);
-
     window_priv->window = window;
     window_priv->crtc = PresentCrtcNeverSet;
     dixSetPrivate(&window->devPrivates, &present_window_private_key, window_priv);

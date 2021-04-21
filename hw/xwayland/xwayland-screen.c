@@ -687,6 +687,9 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     if (!xwl_screen_init_cursor(xwl_screen))
         return FALSE;
 
+    xwl_screen->DestroyWindow = pScreen->DestroyWindow;
+    pScreen->DestroyWindow = xwl_destroy_window;
+
 #ifdef XWL_HAS_GLAMOR
     if (xwl_screen->glamor) {
         xwl_glamor_select_backend(xwl_screen, use_eglstreams);
@@ -713,9 +716,6 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
 
     xwl_screen->UnrealizeWindow = pScreen->UnrealizeWindow;
     pScreen->UnrealizeWindow = xwl_unrealize_window;
-
-    xwl_screen->DestroyWindow = pScreen->DestroyWindow;
-    pScreen->DestroyWindow = xwl_destroy_window;
 
     xwl_screen->CloseScreen = pScreen->CloseScreen;
     pScreen->CloseScreen = xwl_close_screen;

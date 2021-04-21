@@ -219,14 +219,6 @@ struct present_window_priv {
     uint64_t               msc;         /* Last reported MSC from the current crtc */
     struct xorg_list       vblank;
     struct xorg_list       notifies;
-
-    /* Used for window flips */
-    struct xorg_list       exec_queue;
-    struct xorg_list       flip_queue;
-    struct xorg_list       idle_queue;
-
-    present_vblank_ptr     flip_pending;
-    present_vblank_ptr     flip_active;
 };
 
 #define PresentCrtcNeverSet     ((RRCrtcPtr) 1)

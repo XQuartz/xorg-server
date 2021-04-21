@@ -29,6 +29,7 @@
 #include <xwayland-config.h>
 
 #include <dix.h>
+#include <present_priv.h>
 
 #include "xwayland-types.h"
 
@@ -47,6 +48,12 @@ struct xwl_present_window {
 
     struct xorg_list wait_list;
     struct xorg_list release_list;
+    struct xorg_list exec_queue;
+    struct xorg_list flip_queue;
+    struct xorg_list idle_queue;
+
+    present_vblank_ptr flip_pending;
+    present_vblank_ptr flip_active;
 };
 
 struct xwl_present_event {

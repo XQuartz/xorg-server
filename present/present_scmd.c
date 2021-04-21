@@ -496,6 +496,26 @@ present_scmd_can_window_flip(WindowPtr window)
 }
 
 /*
+ * Clean up any pending or current flips for this window
+ */
+static void
+present_scmd_clear_window_flip(WindowPtr window)
+{
+    ScreenPtr                   screen = window->drawable.pScreen;
+    present_screen_priv_ptr     screen_priv = present_screen_priv(screen);
+    present_vblank_ptr          flip_pending = screen_priv->flip_pending;
+
+    if (flip_pending && flip_pending->window == window) {
+        present_set_abort_flip(screen);
+        flip_pending->window = NULL;
+    }
+    if (screen_priv->flip_window == window) {
+        present_restore_screen_pixmap(screen);
+        screen_priv->flip_window = NULL;
+    }
+}
+
+/*
  * Once the required MSC has been reached, execute the pending request.
  *
  * For requests to actually present something, either blt contents to
@@ -812,6 +832,7 @@ present_scmd_init_mode_hooks(present_screen_priv_ptr screen_priv)
     screen_priv->check_flip         =   &present_check_flip;
     screen_priv->check_flip_window  =   &present_check_flip_window;
     screen_priv->can_window_flip    =   &present_scmd_can_window_flip;
+    screen_priv->clear_window_flip  =   &present_scmd_clear_window_flip;
 
     screen_priv->present_pixmap     =   &present_scmd_pixmap;
 

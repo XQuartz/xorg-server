@@ -373,6 +373,33 @@ present_wnmd_check_flip_window (WindowPtr window)
     }
 }
 
+/*
+ * Clean up any pending or current flips for this window
+ */
+static void
+present_wnmd_clear_window_flip(WindowPtr window)
+{
+    present_window_priv_ptr     window_priv = present_window_priv(window);
+    present_vblank_ptr          vblank, tmp;
+
+    xorg_list_for_each_entry_safe(vblank, tmp, &window_priv->flip_queue, event_queue) {
+        present_pixmap_idle(vblank->pixmap, vblank->window, vblank->serial, vblank->idle_fence);
+        present_vblank_destroy(vblank);
+    }
+
+    xorg_list_for_each_entry_safe(vblank, tmp, &window_priv->idle_queue, event_queue) {
+        present_pixmap_idle(vblank->pixmap, vblank->window, vblank->serial, vblank->idle_fence);
+        present_vblank_destroy(vblank);
+    }
+
+    vblank = window_priv->flip_active;
+    if (vblank) {
+        present_pixmap_idle(vblank->pixmap, vblank->window, vblank->serial, vblank->idle_fence);
+        present_vblank_destroy(vblank);
+    }
+    window_priv->flip_active = NULL;
+}
+
 static Bool
 present_wnmd_flip(WindowPtr window,
                   RRCrtcPtr crtc,
@@ -689,6 +716,7 @@ present_wnmd_init_mode_hooks(present_screen_priv_ptr screen_priv)
 
     screen_priv->check_flip         =   &present_wnmd_check_flip;
     screen_priv->check_flip_window  =   &present_wnmd_check_flip_window;
+    screen_priv->clear_window_flip  =   &present_wnmd_clear_window_flip;
 
     screen_priv->present_pixmap     =   &present_wnmd_pixmap;
     screen_priv->queue_vblank       =   &present_wnmd_queue_vblank;

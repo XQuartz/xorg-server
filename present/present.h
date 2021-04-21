@@ -139,21 +139,6 @@ typedef struct present_screen_info {
 
 } present_screen_info_rec, *present_screen_info_ptr;
 
-typedef struct present_wnmd_info {
-    uint32_t                            version;
-
-    present_get_crtc_ptr                get_crtc;
-    present_wnmd_get_ust_msc_ptr        get_ust_msc;
-    present_wnmd_queue_vblank_ptr       queue_vblank;
-    present_wnmd_abort_vblank_ptr       abort_vblank;
-    present_flush_ptr                   flush;
-    uint32_t                            capabilities;
-    present_check_flip2_ptr             check_flip2;
-    present_wnmd_flip_ptr               flip;
-    present_wnmd_flips_stop_ptr         flips_stop;
-
-} present_wnmd_info_rec, *present_wnmd_info_ptr;
-
 /*
  * Called when 'event_id' occurs. 'ust' and 'msc' indicate when the
  * event actually happened

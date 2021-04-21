@@ -1115,10 +1115,6 @@ xwl_present_unrealize_window(struct xwl_present_window *xwl_present_window)
     xwl_present_reset_timer(xwl_present_window);
 }
 
-static present_wnmd_info_rec xwl_present_info = {
-    .version = PRESENT_SCREEN_INFO_VERSION,
-};
-
 Bool
 xwl_present_init(ScreenPtr screen)
 {
@@ -1140,8 +1136,6 @@ xwl_present_init(ScreenPtr screen)
 
     if (!dixRegisterPrivateKey(&xwl_present_window_private_key, PRIVATE_WINDOW, 0))
         return FALSE;
-
-    screen_priv->wnmd_info = &xwl_present_info;
 
     screen_priv->query_capabilities = xwl_present_query_capabilities;
     screen_priv->get_crtc = xwl_present_get_crtc;

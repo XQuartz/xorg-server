@@ -35,19 +35,13 @@
  *
  */
 
-static uint64_t         present_event_id;
+static uint64_t present_scmd_event_id;
+
 static struct xorg_list present_exec_queue;
 static struct xorg_list present_flip_queue;
 
 static void
 present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc);
-
-static void
-present_scmd_create_event_id(present_window_priv_ptr window_priv,
-                             present_vblank_ptr vblank)
-{
-    vblank->event_id = ++present_event_id;
-}
 
 static inline PixmapPtr
 present_flip_pending_pixmap(ScreenPtr screen)
@@ -326,7 +320,7 @@ present_unflip(ScreenPtr screen)
 
     present_restore_screen_pixmap(screen);
 
-    screen_priv->unflip_event_id = ++present_event_id;
+    screen_priv->unflip_event_id = ++present_scmd_event_id;
     DebugPresent(("u %" PRIu64 "\n", screen_priv->unflip_event_id));
     (*screen_priv->info->unflip) (screen, screen_priv->unflip_event_id);
 }
@@ -745,6 +739,8 @@ present_scmd_pixmap(WindowPtr window,
     if (!vblank)
         return BadAlloc;
 
+    vblank->event_id = ++present_scmd_event_id;
+
     if (vblank->flip && vblank->sync_flip)
         vblank->exec_msc--;
 
@@ -818,7 +814,6 @@ present_scmd_init_mode_hooks(present_screen_priv_ptr screen_priv)
     screen_priv->can_window_flip    =   &present_scmd_can_window_flip;
 
     screen_priv->present_pixmap     =   &present_scmd_pixmap;
-    screen_priv->create_event_id    =   &present_scmd_create_event_id;
 
     screen_priv->queue_vblank       =   &present_queue_vblank;
     screen_priv->flush              =   &present_flush;

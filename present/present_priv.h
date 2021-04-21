@@ -126,9 +126,6 @@ typedef int (*present_priv_pixmap_ptr)(WindowPtr window,
                                        present_notify_ptr notifies,
                                        int num_notifies);
 
-typedef void (*present_priv_create_event_id_ptr)(present_window_priv_ptr window_priv,
-                                                 present_vblank_ptr vblank);
-
 typedef int (*present_priv_queue_vblank_ptr)(ScreenPtr screen,
                                              WindowPtr window,
                                              RRCrtcPtr crtc,
@@ -175,7 +172,6 @@ struct present_screen_priv {
     present_priv_can_window_flip_ptr    can_window_flip;
 
     present_priv_pixmap_ptr             present_pixmap;
-    present_priv_create_event_id_ptr    create_event_id;
 
     present_priv_queue_vblank_ptr       queue_vblank;
     present_priv_flush_ptr              flush;
@@ -223,7 +219,6 @@ struct present_window_priv {
     struct xorg_list       notifies;
 
     /* Used for window flips */
-    uint64_t               event_id;
     struct xorg_list       exec_queue;
     struct xorg_list       flip_queue;
     struct xorg_list       idle_queue;

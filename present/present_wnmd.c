@@ -35,6 +35,8 @@
  *
  */
 
+static uint64_t present_wnmd_event_id;
+
 static void
 present_wnmd_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc);
 
@@ -47,12 +49,6 @@ present_wnmd_queue_vblank(ScreenPtr screen,
 {
     present_screen_priv_ptr screen_priv = present_screen_priv(screen);
     return (*screen_priv->wnmd_info->queue_vblank) (window, crtc, event_id, msc);
-}
-
-static void
-present_wnmd_create_event_id(present_window_priv_ptr window_priv, present_vblank_ptr vblank)
-{
-    vblank->event_id = ++window_priv->event_id;
 }
 
 static uint32_t
@@ -631,6 +627,8 @@ present_wnmd_pixmap(WindowPtr window,
     if (!vblank)
         return BadAlloc;
 
+    vblank->event_id = ++present_wnmd_event_id;
+
     /* WNMD presentations always complete (at least) one frame after they
      * are executed
      */
@@ -693,7 +691,6 @@ present_wnmd_init_mode_hooks(present_screen_priv_ptr screen_priv)
     screen_priv->check_flip_window  =   &present_wnmd_check_flip_window;
 
     screen_priv->present_pixmap     =   &present_wnmd_pixmap;
-    screen_priv->create_event_id    =   &present_wnmd_create_event_id;
     screen_priv->queue_vblank       =   &present_wnmd_queue_vblank;
     screen_priv->flush              =   &present_wnmd_flush;
     screen_priv->re_execute         =   &present_wnmd_re_execute;

@@ -77,8 +77,6 @@ present_vblank_create(WindowPtr window,
     vblank->window = window;
     vblank->pixmap = pixmap;
 
-    screen_priv->create_event_id(window_priv, vblank);
-
     if (pixmap) {
         vblank->kind = PresentCompleteKindPixmap;
         pixmap->refcnt++;

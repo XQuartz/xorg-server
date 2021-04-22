@@ -1873,7 +1873,7 @@ DoGetDrawableAttributes(__GLXclientState * cl, XID drawId)
         int err = dixLookupWindow((WindowPtr *)&pDraw, drawId, client,
                                   DixGetAttrAccess);
         if (err != Success)
-            return error;
+            return __glXError(GLXBadDrawable);
     }
     if (pGlxDraw)
         pDraw = pGlxDraw->pDraw;

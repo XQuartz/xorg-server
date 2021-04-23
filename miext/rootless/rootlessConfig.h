@@ -41,7 +41,11 @@
 /*# define ROOTLESSDEBUG*/
 
 #define ROOTLESS_PROTECT_ALPHA TRUE
-#define ROOTLESS_REDISPLAY_DELAY 10
+
+/* 17 is slightly slower than 60Hz to avoid scheduling two redraws in the same frame.
+ * See https://gitlab.freedesktop.org/xorg/xserver/-/issues/1167
+ */
+#define ROOTLESS_REDISPLAY_DELAY 17
 
 /* Bit mask for alpha channel with a particular number of bits per
    pixel. Note that we only care for 32bpp data. Mac OS X uses planar

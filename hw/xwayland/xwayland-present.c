@@ -47,8 +47,6 @@
 #define TIMER_LEN_COPY      17  // ~60fps
 #define TIMER_LEN_FLIP    1000  // 1fps
 
-static uint64_t xwl_present_event_id;
-
 static DevPrivateKeyRec xwl_present_window_private_key;
 
 static struct xwl_present_window *
@@ -74,7 +72,6 @@ xwl_present_window_get_priv(WindowPtr window)
 
         xorg_list_init(&xwl_present_window->frame_callback_list);
         xorg_list_init(&xwl_present_window->wait_list);
-        xorg_list_init(&xwl_present_window->release_list);
         xorg_list_init(&xwl_present_window->exec_queue);
         xorg_list_init(&xwl_present_window->flip_queue);
         xorg_list_init(&xwl_present_window->idle_queue);
@@ -85,6 +82,12 @@ xwl_present_window_get_priv(WindowPtr window)
     }
 
     return xwl_present_window;
+}
+
+static struct xwl_present_event *
+xwl_present_event_from_id(uint64_t event_id)
+{
+    return (struct xwl_present_event*)(uintptr_t)event_id;
 }
 
 static void
@@ -179,10 +182,35 @@ xwl_present_flip_try_ready(struct xwl_present_window *xwl_present_window)
 }
 
 static void
+xwl_present_release_pixmap(struct xwl_present_event *event)
+{
+    if (!event->pixmap)
+        return;
+
+    xwl_pixmap_del_buffer_release_cb(event->pixmap);
+    dixDestroyPixmap(event->pixmap, event->pixmap->drawable.id);
+    event->pixmap = NULL;
+}
+
+static void
+xwl_present_release_event(struct xwl_present_event *event)
+{
+    xwl_present_release_pixmap(event);
+    xorg_list_del(&event->list);
+}
+
+static void
+xwl_present_free_event(struct xwl_present_event *event)
+{
+    xwl_present_release_event(event);
+    present_vblank_destroy(&event->vblank);
+}
+
+static void
 xwl_present_free_idle_vblank(present_vblank_ptr vblank)
 {
     present_pixmap_idle(vblank->pixmap, vblank->window, vblank->serial, vblank->idle_fence);
-    present_vblank_destroy(vblank);
+    xwl_present_free_event(xwl_present_event_from_id((uintptr_t)vblank));
 }
 
 static WindowPtr
@@ -341,33 +369,6 @@ xwl_present_idle_notify(WindowPtr window, uint64_t event_id)
     }
 }
 
-/*
- * Clean up any pending or current flips for this window
- */
-static void
-xwl_present_clear_window_flip(WindowPtr window)
-{
-    struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
-    present_vblank_ptr          vblank, tmp;
-
-    xorg_list_for_each_entry_safe(vblank, tmp, &xwl_present_window->flip_queue, event_queue) {
-        present_pixmap_idle(vblank->pixmap, vblank->window, vblank->serial, vblank->idle_fence);
-        present_vblank_destroy(vblank);
-    }
-
-    xorg_list_for_each_entry_safe(vblank, tmp, &xwl_present_window->idle_queue, event_queue) {
-        present_pixmap_idle(vblank->pixmap, vblank->window, vblank->serial, vblank->idle_fence);
-        present_vblank_destroy(vblank);
-    }
-
-    vblank = xwl_present_window->flip_active;
-    if (vblank) {
-        present_pixmap_idle(vblank->pixmap, vblank->window, vblank->serial, vblank->idle_fence);
-        present_vblank_destroy(vblank);
-    }
-    xwl_present_window->flip_active = NULL;
-}
-
 static void
 xwl_present_update_window_crtc(present_window_priv_ptr window_priv, RRCrtcPtr crtc, uint64_t new_msc)
 {
@@ -391,32 +392,11 @@ xwl_present_update_window_crtc(present_window_priv_ptr window_priv, RRCrtcPtr cr
 }
 
 
-static void
-xwl_present_release_pixmap(struct xwl_present_event *event)
-{
-    if (!event->pixmap)
-        return;
-
-    xwl_pixmap_del_buffer_release_cb(event->pixmap);
-    dixDestroyPixmap(event->pixmap, event->pixmap->drawable.id);
-    event->pixmap = NULL;
-}
-
-static void
-xwl_present_free_event(struct xwl_present_event *event)
-{
-    if (!event)
-        return;
-
-    xwl_present_release_pixmap(event);
-    xorg_list_del(&event->list);
-    free(event);
-}
-
 void
 xwl_present_cleanup(WindowPtr window)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
+    present_window_priv_ptr window_priv = present_window_priv(window);
     struct xwl_present_event *event, *tmp;
 
     if (!xwl_present_window)
@@ -430,12 +410,7 @@ xwl_present_cleanup(WindowPtr window)
     }
 
     /* Clear remaining events */
-    xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->wait_list, list)
-        xwl_present_free_event(event);
-
-    xwl_present_free_event(xwl_present_window->sync_flip);
-
-    xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->release_list, list)
+    xorg_list_for_each_entry_safe(event, tmp, &window_priv->vblank, vblank.window_list)
         xwl_present_free_event(event);
 
     /* Clear timer */
@@ -457,12 +432,13 @@ xwl_present_buffer_release(void *data)
     if (!event)
         return;
 
-    xwl_present_release_pixmap(event);
+    if (event->pending)
+        xwl_present_release_pixmap(event);
+    else
+        xwl_present_release_event(event);
 
-    xwl_present_idle_notify(event->xwl_present_window->window, event->event_id);
-
-    if (!event->pending)
-        xwl_present_free_event(event);
+    /* event/vblank memory will be freed in xwl_present_free_idle_vblank */
+    xwl_present_idle_notify(event->vblank.window, (uintptr_t)event);
 }
 
 static void
@@ -478,14 +454,12 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
     if (event) {
         event->pending = FALSE;
 
-        xwl_present_flip_notify(xwl_present_window->window, event->event_id,
+        xwl_present_flip_notify(xwl_present_window->window, (uintptr_t)event,
                                 xwl_present_window->ust, msc);
 
         if (!event->pixmap) {
             /* If the buffer was already released, clean up now */
-            xwl_present_free_event(event);
-        } else {
-            xorg_list_add(&event->list, &xwl_present_window->release_list);
+            xwl_present_release_event(event);
         }
     }
 
@@ -493,11 +467,11 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
                                   &xwl_present_window->wait_list,
                                   list) {
         if (event->target_msc <= msc) {
+            xorg_list_del(&event->list);
             xwl_present_event_notify(xwl_present_window->window,
-                                     event->event_id,
+                                     (uintptr_t)event,
                                      xwl_present_window->ust,
                                      msc);
-            xwl_present_free_event(event);
         }
     }
 }
@@ -539,18 +513,16 @@ xwl_present_sync_callback(void *data,
                uint32_t time)
 {
     struct xwl_present_event *event = data;
-    struct xwl_present_window *xwl_present_window = event->xwl_present_window;
+    struct xwl_present_window *xwl_present_window =
+        xwl_present_window_get_priv(event->vblank.window);
 
     wl_callback_destroy(xwl_present_window->sync_callback);
     xwl_present_window->sync_callback = NULL;
 
     event->pending = FALSE;
 
-    xwl_present_flip_notify(xwl_present_window->window, event->event_id,
+    xwl_present_flip_notify(xwl_present_window->window, (uintptr_t)event,
                             xwl_present_window->ust, xwl_present_window->msc);
-
-    if (!event->pixmap)
-        xwl_present_free_event(event);
 }
 
 static const struct wl_callback_listener xwl_present_sync_listener = {
@@ -588,17 +560,11 @@ xwl_present_queue_vblank(ScreenPtr screen,
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(present_window);
     struct xwl_window *xwl_window = xwl_window_from_window(present_window);
-    struct xwl_present_event *event;
+    struct xwl_present_event *event = xwl_present_event_from_id(event_id);
 
-    event = malloc(sizeof *event);
-    if (!event)
-        return BadAlloc;
-
-    event->event_id = event_id;
-    event->pixmap = NULL;
-    event->xwl_present_window = xwl_present_window;
     event->target_msc = msc;
 
+    xorg_list_del(&event->list);
     xorg_list_append(&event->list, &xwl_present_window->wait_list);
 
     /* If there's a pending frame callback, use that */
@@ -626,40 +592,16 @@ xwl_present_abort_vblank(ScreenPtr screen,
                          uint64_t event_id,
                          uint64_t msc)
 {
-    struct xwl_present_window *xwl_present_window = xwl_present_window_priv(present_window);
-    struct xwl_present_event *event, *tmp;
-    present_vblank_ptr vblank;
+    static Bool called;
 
-    if (xwl_present_window) {
-        xorg_list_for_each_entry_safe(event, tmp, &xwl_present_window->wait_list, list) {
-            if (event->event_id == event_id) {
-                xwl_present_free_event(event);
-                break;
-            }
-        }
+    if (called)
+        return;
 
-        xorg_list_for_each_entry(event, &xwl_present_window->release_list, list) {
-            if (event->event_id == event_id) {
-                xwl_present_free_event(event);
-                break;
-            }
-        }
-    }
-
-    xorg_list_for_each_entry(vblank, &xwl_present_window->exec_queue, event_queue) {
-        if (vblank->event_id == event_id) {
-            xorg_list_del(&vblank->event_queue);
-            vblank->queued = FALSE;
-            return;
-        }
-    }
-    xorg_list_for_each_entry(vblank, &xwl_present_window->flip_queue, event_queue) {
-        if (vblank->event_id == event_id) {
-            xorg_list_del(&vblank->event_queue);
-            vblank->queued = FALSE;
-            return;
-        }
-    }
+    /* xwl_present_cleanup should have cleaned up everything,
+     * present_free_window_vblank shouldn't need to call this.
+     */
+    ErrorF("Unexpected call to %s:\n", __func__);
+    xorg_backtrace();
 }
 
 static void
@@ -777,6 +719,15 @@ xwl_present_check_flip_window (WindowPtr window)
     }
 }
 
+/*
+ * Clean up any pending or current flips for this window
+ */
+static void
+xwl_present_clear_window_flip(WindowPtr window)
+{
+    /* xwl_present_cleanup cleaned up everything */
+}
+
 static Bool
 xwl_present_flip(WindowPtr present_window,
                  RRCrtcPtr crtc,
@@ -790,7 +741,7 @@ xwl_present_flip(WindowPtr present_window,
     struct xwl_present_window   *xwl_present_window = xwl_present_window_priv(present_window);
     BoxPtr                      damage_box;
     struct wl_buffer            *buffer;
-    struct xwl_present_event    *event;
+    struct xwl_present_event    *event = xwl_present_event_from_id(event_id);
 
     if (!xwl_window)
         return FALSE;
@@ -803,24 +754,15 @@ xwl_present_flip(WindowPtr present_window,
 
     damage_box = RegionExtents(damage);
 
-    event = malloc(sizeof *event);
-    if (!event)
-        return FALSE;
-
     pixmap->refcnt++;
 
-    event->event_id = event_id;
-    event->xwl_present_window = xwl_present_window;
     event->pixmap = pixmap;
     event->target_msc = target_msc;
     event->pending = TRUE;
 
-    if (sync_flip) {
-        xorg_list_init(&event->list);
+    xorg_list_init(&event->list);
+    if (sync_flip)
         xwl_present_window->sync_flip = event;
-    } else {
-        xorg_list_add(&event->list, &xwl_present_window->release_list);
-    }
 
     xwl_pixmap_set_buffer_release_cb(pixmap, xwl_present_buffer_release, event);
 
@@ -873,7 +815,6 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
 {
     WindowPtr               window = vblank->window;
     struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
-    present_window_priv_ptr window_priv = present_window_priv(window);
 
     if (present_execute_wait(vblank, crtc_msc))
         return;
@@ -891,7 +832,6 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
     }
 
     xorg_list_del(&vblank->event_queue);
-    xorg_list_del(&vblank->window_list);
     vblank->queued = FALSE;
 
     if (vblank->pixmap && vblank->window) {
@@ -962,8 +902,6 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
                                      vblank->event_id, crtc_msc + 1)
             == Success) {
             xorg_list_add(&vblank->event_queue, &xwl_present_window->idle_queue);
-            xorg_list_append(&vblank->window_list, &window_priv->vblank);
-
             return;
         }
     }
@@ -998,6 +936,7 @@ xwl_present_pixmap(WindowPtr window,
     struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
     present_window_priv_ptr     window_priv = present_get_window_priv(window, TRUE);
     present_screen_priv_ptr     screen_priv = present_screen_priv(screen);
+    struct xwl_present_event *event;
 
     if (!window_priv)
         return BadAlloc;
@@ -1042,26 +981,21 @@ xwl_present_pixmap(WindowPtr window,
         }
     }
 
-    vblank = present_vblank_create(window,
-                                   pixmap,
-                                   serial,
-                                   valid,
-                                   update,
-                                   x_off,
-                                   y_off,
-                                   target_crtc,
-                                   wait_fence,
-                                   idle_fence,
-                                   options,
-                                   XWL_PRESENT_CAPS,
-                                   notifies,
-                                   num_notifies,
-                                   target_msc,
-                                   crtc_msc);
-    if (!vblank)
+    event = calloc(1, sizeof(*event));
+    if (!event)
         return BadAlloc;
 
-    vblank->event_id = ++xwl_present_event_id;
+    vblank = &event->vblank;
+    if (!present_vblank_init(vblank, window, pixmap, serial, valid, update, x_off, y_off,
+                             target_crtc, wait_fence, idle_fence, options, XWL_PRESENT_CAPS,
+                             notifies, num_notifies, target_msc, crtc_msc)) {
+        present_vblank_destroy(vblank);
+        return BadAlloc;
+    }
+
+    vblank->event_id = (uintptr_t)event;
+
+    xorg_list_init(&event->list);
 
     /* Xwayland presentations always complete (at least) one frame after they
      * are executed

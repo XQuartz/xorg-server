@@ -47,7 +47,6 @@ struct xwl_present_window {
     struct wl_callback *sync_callback;
 
     struct xorg_list wait_list;
-    struct xorg_list release_list;
     struct xorg_list exec_queue;
     struct xorg_list flip_queue;
     struct xorg_list idle_queue;
@@ -57,12 +56,11 @@ struct xwl_present_window {
 };
 
 struct xwl_present_event {
-    uint64_t event_id;
+    present_vblank_rec vblank;
     uint64_t target_msc;
 
     Bool pending;
 
-    struct xwl_present_window *xwl_present_window;
     PixmapPtr pixmap;
 
     struct xorg_list list;

@@ -576,7 +576,6 @@ xwl_glamor_eglstream_allow_commits(struct xwl_window *xwl_window)
     struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
 
     if (xwl_pixmap) {
-        assert(xwl_pixmap->type == XWL_PIXMAP_EGLSTREAM);
         if (pending) {
             /* Wait for the compositor to finish connecting the consumer for
              * this eglstream */
@@ -615,7 +614,12 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
     };
     GLint saved_vao;
 
-    assert(xwl_pixmap->type == XWL_PIXMAP_EGLSTREAM);
+    if (xwl_pixmap->type != XWL_PIXMAP_EGLSTREAM)
+        /* This can happen if a client does X11 rendering on a
+         * flipping OpenGL or Vulkan window. In that case, we don't
+         * need to do the copy below.
+         */
+        return;
 
     /* Unbind the framebuffer BEFORE binding the EGLSurface, otherwise we
      * won't actually draw to it

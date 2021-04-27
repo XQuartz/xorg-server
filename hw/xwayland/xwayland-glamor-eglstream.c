@@ -55,12 +55,9 @@ struct xwl_eglstream_pending_stream {
     PixmapPtr pixmap;
     WindowPtr window;
 
-    struct xwl_pixmap *xwl_pixmap;
     struct wl_callback *cb;
 
     Bool is_valid;
-
-    struct xorg_list link;
 };
 
 struct xwl_eglstream_private {
@@ -72,8 +69,6 @@ struct xwl_eglstream_private {
     EGLConfig config;
 
     SetWindowPixmapProcPtr SetWindowPixmap;
-
-    struct xorg_list pending_streams;
 
     Bool have_egl_damage;
 
@@ -308,7 +303,6 @@ xwl_glamor_eglstream_destroy_pending_stream(struct xwl_eglstream_pending_stream 
 {
     if (pending->cb)
         wl_callback_destroy(pending->cb);
-    xorg_list_del(&pending->link);
     free(pending);
 }
 
@@ -514,27 +508,15 @@ xwl_eglstream_consumer_ready_callback(void *data,
                                       struct wl_callback *callback,
                                       uint32_t time)
 {
-    struct xwl_screen *xwl_screen = data;
+    struct xwl_eglstream_pending_stream *pending = data;
+    PixmapPtr pixmap = pending->pixmap;
+    struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
+    struct xwl_screen *xwl_screen = xwl_pixmap->xwl_screen;
     struct xwl_eglstream_private *xwl_eglstream =
         xwl_eglstream_get(xwl_screen);
-    struct xwl_pixmap *xwl_pixmap;
-    struct xwl_eglstream_pending_stream *pending;
-    PixmapPtr pixmap;
-    Bool found = FALSE;
-
-    xorg_list_for_each_entry(pending, &xwl_eglstream->pending_streams, link) {
-        if (pending->cb == callback) {
-            found = TRUE;
-            break;
-        }
-    }
-    assert(found);
 
     wl_callback_destroy(callback);
     pending->cb = NULL;
-
-    xwl_pixmap = pending->xwl_pixmap;
-    pixmap = pending->pixmap;
 
     if (!pending->is_valid) {
         xwl_glamor_eglstream_remove_pending_stream(xwl_pixmap);
@@ -571,11 +553,10 @@ static const struct wl_callback_listener consumer_ready_listener = {
 };
 
 static struct xwl_eglstream_pending_stream *
-xwl_eglstream_queue_pending_stream(struct xwl_screen *xwl_screen,
-                                   WindowPtr window, PixmapPtr pixmap)
+xwl_eglstream_queue_pending_stream(WindowPtr window, PixmapPtr pixmap)
 {
-    struct xwl_eglstream_private *xwl_eglstream =
-        xwl_eglstream_get(xwl_screen);
+    struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
+    struct xwl_screen *xwl_screen = xwl_pixmap->xwl_screen;
     struct xwl_eglstream_pending_stream *pending_stream;
 
     DebugF("eglstream: win %d queues new pending stream for pixmap %p\n",
@@ -584,14 +565,11 @@ xwl_eglstream_queue_pending_stream(struct xwl_screen *xwl_screen,
     pending_stream = malloc(sizeof(*pending_stream));
     pending_stream->window = window;
     pending_stream->pixmap = pixmap;
-    pending_stream->xwl_pixmap = xwl_pixmap_get(pixmap);
     pending_stream->is_valid = TRUE;
-    xorg_list_init(&pending_stream->link);
-    xorg_list_add(&pending_stream->link, &xwl_eglstream->pending_streams);
 
     pending_stream->cb = wl_display_sync(xwl_screen->display);
     wl_callback_add_listener(pending_stream->cb, &consumer_ready_listener,
-                             xwl_screen);
+                             pending_stream);
 
     return pending_stream;
 }
@@ -667,7 +645,7 @@ xwl_eglstream_create_pixmap_and_stream(struct xwl_screen *xwl_screen,
         xwl_eglstream->controller, xwl_window->surface, xwl_pixmap->buffer);
 
     xwl_pixmap->pending_stream =
-        xwl_eglstream_queue_pending_stream(xwl_screen, window, pixmap);
+        xwl_eglstream_queue_pending_stream(window, pixmap);
 
 fail:
     if (stream_fd >= 0)
@@ -1249,7 +1227,6 @@ xwl_glamor_init_eglstream(struct xwl_screen *xwl_screen)
                   &xwl_eglstream_private_key, xwl_eglstream);
 
     xwl_eglstream->egl_device = egl_device;
-    xorg_list_init(&xwl_eglstream->pending_streams);
 
     xwl_screen->eglstream_backend.init_egl = xwl_glamor_eglstream_init_egl;
     xwl_screen->eglstream_backend.init_wl_registry = xwl_glamor_eglstream_init_wl_registry;

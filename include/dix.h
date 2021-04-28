@@ -130,6 +130,7 @@ extern _X_EXPORT ClientPtr clients[MAXCLIENTS];
 extern _X_EXPORT ClientPtr serverClient;
 extern _X_EXPORT int currentMaxClients;
 extern _X_EXPORT char dispatchExceptionAtReset;
+extern _X_EXPORT int terminateDelay;
 
 typedef int HWEventQueueType;
 typedef HWEventQueueType *HWEventQueuePtr;

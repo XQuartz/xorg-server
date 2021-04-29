@@ -60,7 +60,6 @@ struct xwl_present_event {
     uint64_t event_id;
     uint64_t target_msc;
 
-    Bool abort;
     Bool pending;
 
     struct xwl_present_window *xwl_present_window;

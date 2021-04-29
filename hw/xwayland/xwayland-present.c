@@ -459,8 +459,7 @@ xwl_present_buffer_release(void *data)
 
     xwl_present_release_pixmap(event);
 
-    if (!event->abort)
-        xwl_present_idle_notify(event->xwl_present_window->window, event->event_id);
+    xwl_present_idle_notify(event->xwl_present_window->window, event->event_id);
 
     if (!event->pending)
         xwl_present_free_event(event);
@@ -547,9 +546,8 @@ xwl_present_sync_callback(void *data,
 
     event->pending = FALSE;
 
-    if (!event->abort)
-        xwl_present_flip_notify(xwl_present_window->window, event->event_id,
-                                xwl_present_window->ust, xwl_present_window->msc);
+    xwl_present_flip_notify(xwl_present_window->window, event->event_id,
+                            xwl_present_window->ust, xwl_present_window->msc);
 
     if (!event->pixmap)
         xwl_present_free_event(event);
@@ -642,7 +640,7 @@ xwl_present_abort_vblank(ScreenPtr screen,
 
         xorg_list_for_each_entry(event, &xwl_present_window->release_list, list) {
             if (event->event_id == event_id) {
-                event->abort = TRUE;
+                xwl_present_free_event(event);
                 break;
             }
         }
@@ -816,7 +814,6 @@ xwl_present_flip(WindowPtr present_window,
     event->pixmap = pixmap;
     event->target_msc = target_msc;
     event->pending = TRUE;
-    event->abort = FALSE;
 
     if (sync_flip) {
         xorg_list_init(&event->list);

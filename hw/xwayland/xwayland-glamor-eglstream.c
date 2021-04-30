@@ -750,14 +750,20 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
     glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
     if (xwl_eglstream->have_egl_damage)
-        eglSwapBuffersWithDamageKHR(xwl_screen->egl_display,
-                                    xwl_pixmap->surface, egl_damage, 1);
+        status = eglSwapBuffersWithDamageKHR(xwl_screen->egl_display,
+                                             xwl_pixmap->surface,
+                                             egl_damage, 1);
     else
-        eglSwapBuffers(xwl_screen->egl_display, xwl_pixmap->surface);
+        status = eglSwapBuffers(xwl_screen->egl_display,
+                                xwl_pixmap->surface);
+
+    if (!status) {
+        ErrorF("eglstream: buffer swap failed, not posting damage\n");
+        goto out;
+    }
 
     /* hang onto the pixmap until the compositor has released it */
     pixmap->refcnt++;
-    status = TRUE;
 
 out:
     /* Restore previous state */

@@ -33,6 +33,7 @@
 #define EGL_NO_X11
 #include <glamor_egl.h>
 #include <glamor.h>
+#include <glamor_priv.h>
 #include <glamor_transform.h>
 #include <glamor_transfer.h>
 
@@ -727,6 +728,8 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
      * won't actually draw to it
      */
     xwl_glamor_egl_make_current(xwl_screen);
+    glamor_set_alu(xwl_screen->screen, GXcopy);
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     if (eglGetCurrentSurface(EGL_READ) != xwl_pixmap->surface ||

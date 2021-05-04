@@ -89,6 +89,7 @@ struct xwl_pixmap {
     struct xwl_screen *xwl_screen;
     struct wl_buffer *buffer;
     struct xwl_eglstream_pending_stream *pending_stream;
+    Bool wait_for_buffer_release;
 
     /* XWL_PIXMAP_EGLSTREAM. */
     EGLStreamKHR stream;
@@ -577,8 +578,16 @@ xwl_eglstream_queue_pending_stream(WindowPtr window, PixmapPtr pixmap)
 static void
 xwl_eglstream_buffer_release_callback(void *data)
 {
-    /* drop the reference we took in post_damage, freeing if necessary */
-    dixDestroyPixmap(data, 0);
+    PixmapPtr pixmap = data;
+    struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
+
+    assert(xwl_pixmap);
+
+    if (xwl_pixmap->wait_for_buffer_release) {
+        xwl_pixmap->wait_for_buffer_release = FALSE;
+        /* drop the reference we took in the ready callback, freeing if necessary */
+        dixDestroyPixmap(pixmap, 0);
+    }
 }
 
 static const struct wl_buffer_listener xwl_eglstream_buffer_release_listener = {
@@ -606,6 +615,7 @@ xwl_eglstream_create_pixmap_and_stream(struct xwl_screen *xwl_screen,
 
     xwl_glamor_egl_make_current(xwl_screen);
 
+    xwl_pixmap->wait_for_buffer_release = FALSE;
     xwl_pixmap->xwl_screen = xwl_screen;
     xwl_pixmap->surface = EGL_NO_SURFACE;
     xwl_pixmap->stream = eglCreateStreamKHR(xwl_screen->egl_display, NULL);
@@ -762,8 +772,11 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
         goto out;
     }
 
-    /* hang onto the pixmap until the compositor has released it */
-    pixmap->refcnt++;
+    if (!xwl_pixmap->wait_for_buffer_release) {
+        /* hang onto the pixmap until the compositor has released it */
+        pixmap->refcnt++;
+        xwl_pixmap->wait_for_buffer_release = TRUE;
+    }
 
 out:
     /* Restore previous state */

@@ -448,6 +448,25 @@ present_screen_priv_init(ScreenPtr screen);
 void
 present_vblank_notify(present_vblank_ptr vblank, CARD8 kind, CARD8 mode, uint64_t ust, uint64_t crtc_msc);
 
+Bool
+present_vblank_init(present_vblank_ptr vblank,
+                    WindowPtr window,
+                    PixmapPtr pixmap,
+                    CARD32 serial,
+                    RegionPtr valid,
+                    RegionPtr update,
+                    int16_t x_off,
+                    int16_t y_off,
+                    RRCrtcPtr target_crtc,
+                    SyncFence *wait_fence,
+                    SyncFence *idle_fence,
+                    uint32_t options,
+                    const uint32_t capabilities,
+                    present_notify_ptr notifies,
+                    int num_notifies,
+                    uint64_t target_msc,
+                    uint64_t crtc_msc);
+
 present_vblank_ptr
 present_vblank_create(WindowPtr window,
                       PixmapPtr pixmap,

@@ -102,6 +102,23 @@ xwl_present_timer_callback(OsTimerPtr timer,
                            CARD32 time,
                            void *arg);
 
+static present_vblank_ptr
+xwl_present_get_pending_flip(struct xwl_present_window *xwl_present_window)
+{
+    present_vblank_ptr flip_pending;
+
+    if (xorg_list_is_empty(&xwl_present_window->flip_queue))
+        return NULL;
+
+    flip_pending = xorg_list_first_entry(&xwl_present_window->flip_queue, present_vblank_rec,
+                                         event_queue);
+
+    if (flip_pending->queued)
+        return NULL;
+
+    return flip_pending;
+}
+
 static inline Bool
 xwl_present_has_pending_events(struct xwl_present_window *xwl_present_window)
 {
@@ -237,8 +254,6 @@ xwl_present_flips_stop(WindowPtr window)
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
     present_vblank_ptr vblank, tmp;
 
-    assert (!xwl_present_window->flip_pending);
-
     /* Change back to the fast refresh rate */
     xwl_present_reset_timer(xwl_present_window);
 
@@ -265,7 +280,7 @@ xwl_present_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_t
                   vblank->pixmap ? vblank->pixmap->drawable.id : 0,
                   vblank->window ? vblank->window->drawable.id : 0));
 
-    assert (vblank == xwl_present_window->flip_pending);
+    assert (&vblank->event_queue == xwl_present_window->flip_queue.next);
 
     xorg_list_del(&vblank->event_queue);
 
@@ -280,7 +295,6 @@ xwl_present_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_t
     }
 
     xwl_present_window->flip_active = vblank;
-    xwl_present_window->flip_pending = NULL;
 
     present_vblank_notify(vblank, PresentCompleteKindPixmap, PresentCompleteModeFlip, ust, crtc_msc);
 
@@ -677,13 +691,13 @@ xwl_present_check_flip_window (WindowPtr window)
     if (!xwl_present_window || !window_priv)
         return;
 
-    flip_pending = xwl_present_window->flip_pending;
+    flip_pending = xwl_present_get_pending_flip(xwl_present_window);
     flip_active = xwl_present_window->flip_active;
 
     if (flip_pending) {
         if (!xwl_present_check_flip(flip_pending->crtc, flip_pending->window, flip_pending->pixmap,
                                     flip_pending->sync_flip, flip_pending->valid, 0, 0, NULL))
-            xwl_present_window->flip_pending->abort_flip = TRUE;
+            flip_pending->abort_flip = TRUE;
     } else if (flip_active) {
         if (!xwl_present_check_flip(flip_active->crtc, flip_active->window, flip_active->pixmap,
                                     flip_active->sync_flip, flip_active->valid, 0, 0, NULL))
@@ -797,20 +811,18 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
 {
     WindowPtr               window = vblank->window;
     struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
+    present_vblank_ptr flip_pending = xwl_present_get_pending_flip(xwl_present_window);
 
     if (present_execute_wait(vblank, crtc_msc))
         return;
 
-    if (vblank->flip && vblank->pixmap && vblank->window) {
-        if (xwl_present_window->flip_pending) {
-            DebugPresent(("\tr %" PRIu64 " %p (pending %p)\n",
-                          vblank->event_id, vblank,
-                          xwl_present_window->flip_pending));
-            xorg_list_del(&vblank->event_queue);
-            xorg_list_append(&vblank->event_queue, &xwl_present_window->flip_queue);
-            vblank->flip_ready = TRUE;
-            return;
-        }
+    if (flip_pending && vblank->flip && vblank->pixmap && vblank->window) {
+        DebugPresent(("\tr %" PRIu64 " %p (pending %p)\n",
+                      vblank->event_id, vblank, flip_pending));
+        xorg_list_del(&vblank->event_queue);
+        xorg_list_append(&vblank->event_queue, &xwl_present_window->flip_queue);
+        vblank->flip_ready = TRUE;
+        return;
     }
 
     xorg_list_del(&vblank->event_queue);
@@ -826,10 +838,6 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
                           vblank->event_id, vblank, crtc_msc,
                           vblank->pixmap->drawable.id, vblank->window->drawable.id));
 
-            /* Prepare to flip by placing it in the flip queue
-             */
-            xorg_list_add(&vblank->event_queue, &xwl_present_window->flip_queue);
-
             /* Set update region as damaged */
             if (vblank->update) {
                 damage = RegionDuplicate(vblank->update);
@@ -840,9 +848,6 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
             } else
                 damage = RegionDuplicate(&window->clipList);
 
-            /* Try to flip - the vblank is now pending
-             */
-            xwl_present_window->flip_pending = vblank;
             if (xwl_present_flip(vblank->window, vblank->crtc, vblank->event_id,
                                  vblank->target_msc, vblank->pixmap, vblank->sync_flip, damage)) {
                 WindowPtr toplvl_window = xwl_present_toplvl_pixmap_window(vblank->window);
@@ -860,20 +865,19 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
                 /* Report damage */
                 DamageDamageRegion(&vblank->window->drawable, damage);
                 RegionDestroy(damage);
+
+                /* Put pending flip at the flip queue head */
+                xorg_list_add(&vblank->event_queue, &xwl_present_window->flip_queue);
                 return;
             }
 
-            xorg_list_del(&vblank->event_queue);
-            /* Flip failed. Clear the flip_pending field
-              */
-            xwl_present_window->flip_pending = NULL;
             vblank->flip = FALSE;
         }
         DebugPresent(("\tc %p %" PRIu64 ": %08" PRIx32 " -> %08" PRIx32 "\n",
                       vblank, crtc_msc, vblank->pixmap->drawable.id, vblank->window->drawable.id));
 
-        if (xwl_present_window->flip_pending)
-            xwl_present_window->flip_pending->abort_flip = TRUE;
+        if (flip_pending)
+            flip_pending->abort_flip = TRUE;
         else if (xwl_present_window->flip_active)
             xwl_present_flips_stop(window);
 

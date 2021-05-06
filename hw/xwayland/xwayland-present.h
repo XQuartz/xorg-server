@@ -51,7 +51,6 @@ struct xwl_present_window {
     struct xorg_list flip_queue;
     struct xorg_list idle_queue;
 
-    present_vblank_ptr flip_pending;
     present_vblank_ptr flip_active;
 };
 

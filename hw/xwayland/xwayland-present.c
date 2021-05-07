@@ -343,33 +343,6 @@ xwl_present_event_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uint
 }
 
 static void
-xwl_present_idle_notify(WindowPtr window, uint64_t event_id)
-{
-    struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
-    present_vblank_ptr          vblank;
-
-    if (xwl_present_window->flip_active && xwl_present_window->flip_active->event_id == event_id) {
-        /* Active flip is allowed to become idle directly when it becomes unactive again. */
-        xwl_present_window->flip_active->flip_idler = TRUE;
-        return;
-    }
-
-    xorg_list_for_each_entry(vblank, &xwl_present_window->idle_queue, event_queue) {
-        if (vblank->event_id == event_id) {
-            xwl_present_free_idle_vblank(vblank);
-            return;
-        }
-    }
-
-    xorg_list_for_each_entry(vblank, &xwl_present_window->flip_queue, event_queue) {
-        if (vblank->event_id == event_id) {
-            vblank->flip_idler = TRUE;
-            return;
-        }
-    }
-}
-
-static void
 xwl_present_update_window_crtc(present_window_priv_ptr window_priv, RRCrtcPtr crtc, uint64_t new_msc)
 {
     /* Crtc unchanged, no offset. */
@@ -427,18 +400,26 @@ xwl_present_cleanup(WindowPtr window)
 static void
 xwl_present_buffer_release(void *data)
 {
+    struct xwl_present_window *xwl_present_window;
     struct xwl_present_event *event = data;
 
     if (!event)
         return;
 
-    if (event->pending)
-        xwl_present_release_pixmap(event);
-    else
-        xwl_present_release_event(event);
+    xwl_present_window = xwl_present_window_priv(event->vblank.window);
+    if (xwl_present_window->flip_active == &event->vblank ||
+        xwl_present_get_pending_flip(xwl_present_window) == &event->vblank) {
+        event->vblank.flip_idler = TRUE;
 
-    /* event/vblank memory will be freed in xwl_present_free_idle_vblank */
-    xwl_present_idle_notify(event->vblank.window, (uintptr_t)event);
+        if (event->pending)
+            xwl_present_release_pixmap(event);
+        else
+            xwl_present_release_event(event);
+
+        return;
+    }
+
+    xwl_present_free_idle_vblank(&event->vblank);
 }
 
 static void

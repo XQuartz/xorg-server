@@ -332,14 +332,6 @@ xwl_present_event_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uint
             return;
         }
     }
-
-    /* Copies which were executed but need their completion event sent */
-    xorg_list_for_each_entry(vblank, &xwl_present_window->idle_queue, event_queue) {
-        if (vblank->event_id == event_id) {
-            present_execute_post(vblank, ust, msc);
-            return;
-        }
-    }
 }
 
 static void
@@ -868,7 +860,11 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
         if (xwl_present_queue_vblank(screen, window, vblank->crtc,
                                      vblank->event_id, crtc_msc + 1)
             == Success) {
-            xorg_list_add(&vblank->event_queue, &xwl_present_window->idle_queue);
+            /* Clear the pixmap field, so this will fall through to present_execute_post next time */
+            dixDestroyPixmap(vblank->pixmap, vblank->pixmap->drawable.id);
+            vblank->pixmap = NULL;
+
+            xorg_list_add(&vblank->event_queue, &xwl_present_window->exec_queue);
             return;
         }
     }

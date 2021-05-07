@@ -327,22 +327,6 @@ xwl_present_event_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uint
 }
 
 static void
-xwl_present_flip_notify(WindowPtr window, uint64_t event_id, uint64_t ust, uint64_t msc)
-{
-    struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
-    present_vblank_ptr          vblank;
-
-    xorg_list_for_each_entry(vblank, &xwl_present_window->flip_queue, event_queue) {
-        if (vblank->event_id == event_id) {
-            assert(!vblank->queued);
-            assert(vblank->window);
-            xwl_present_flip_notify_vblank(vblank, ust, msc);
-            return;
-        }
-    }
-}
-
-static void
 xwl_present_idle_notify(WindowPtr window, uint64_t event_id)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
@@ -454,8 +438,7 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
     if (event) {
         event->pending = FALSE;
 
-        xwl_present_flip_notify(xwl_present_window->window, (uintptr_t)event,
-                                xwl_present_window->ust, msc);
+        xwl_present_flip_notify_vblank(&event->vblank, xwl_present_window->ust, msc);
 
         if (!event->pixmap) {
             /* If the buffer was already released, clean up now */
@@ -521,8 +504,7 @@ xwl_present_sync_callback(void *data,
 
     event->pending = FALSE;
 
-    xwl_present_flip_notify(xwl_present_window->window, (uintptr_t)event,
-                            xwl_present_window->ust, xwl_present_window->msc);
+    xwl_present_flip_notify_vblank(&event->vblank, xwl_present_window->ust, xwl_present_window->msc);
 }
 
 static const struct wl_callback_listener xwl_present_sync_listener = {

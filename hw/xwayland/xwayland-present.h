@@ -35,7 +35,6 @@
 
 #ifdef GLAMOR_HAS_GBM
 struct xwl_present_window {
-    WindowPtr window;
     struct xorg_list frame_callback_list;
 
     uint64_t msc;

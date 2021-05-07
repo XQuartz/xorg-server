@@ -213,7 +213,7 @@ static void
 xwl_present_release_event(struct xwl_present_event *event)
 {
     xwl_present_release_pixmap(event);
-    xorg_list_del(&event->list);
+    xorg_list_del(&event->vblank.event_queue);
 }
 
 static void
@@ -407,10 +407,8 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
 
     xorg_list_for_each_entry_safe(event, tmp,
                                   &xwl_present_window->wait_list,
-                                  list) {
+                                  vblank.event_queue) {
         if (event->target_msc <= msc) {
-            xorg_list_del(&event->list);
-
             DebugPresent(("\te %" PRIu64 " ust %" PRIu64 " msc %" PRIu64 "\n",
                           event->vblank.event_id, xwl_present_window->ust, msc));
 
@@ -506,8 +504,8 @@ xwl_present_queue_vblank(ScreenPtr screen,
 
     event->target_msc = msc;
 
-    xorg_list_del(&event->list);
-    xorg_list_append(&event->list, &xwl_present_window->wait_list);
+    xorg_list_del(&event->vblank.event_queue);
+    xorg_list_append(&event->vblank.event_queue, &xwl_present_window->wait_list);
 
     /* If there's a pending frame callback, use that */
     if (xwl_window && xwl_window->frame_callback &&
@@ -702,8 +700,6 @@ xwl_present_flip(WindowPtr present_window,
     event->target_msc = target_msc;
     event->pending = TRUE;
 
-    xorg_list_init(&event->list);
-
     xwl_pixmap_set_buffer_release_cb(pixmap, xwl_present_buffer_release, event);
 
     /* We can flip directly to the main surface (full screen window without clips) */
@@ -757,19 +753,19 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
     struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
     present_vblank_ptr flip_pending = xwl_present_get_pending_flip(xwl_present_window);
 
+    xorg_list_del(&vblank->event_queue);
+
     if (present_execute_wait(vblank, crtc_msc))
         return;
 
     if (flip_pending && vblank->flip && vblank->pixmap && vblank->window) {
         DebugPresent(("\tr %" PRIu64 " %p (pending %p)\n",
                       vblank->event_id, vblank, flip_pending));
-        xorg_list_del(&vblank->event_queue);
         xorg_list_append(&vblank->event_queue, &xwl_present_window->flip_queue);
         vblank->flip_ready = TRUE;
         return;
     }
 
-    xorg_list_del(&vblank->event_queue);
     vblank->queued = FALSE;
 
     if (vblank->pixmap && vblank->window) {
@@ -925,8 +921,6 @@ xwl_present_pixmap(WindowPtr window,
     }
 
     vblank->event_id = (uintptr_t)event;
-
-    xorg_list_init(&event->list);
 
     /* Xwayland presentations always complete (at least) one frame after they
      * are executed

@@ -58,8 +58,6 @@ struct xwl_present_event {
     Bool pending;
 
     PixmapPtr pixmap;
-
-    struct xorg_list list;
 };
 
 void xwl_present_frame_callback(struct xwl_present_window *xwl_present_window);

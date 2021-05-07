@@ -122,7 +122,9 @@ xwl_present_get_pending_flip(struct xwl_present_window *xwl_present_window)
 static inline Bool
 xwl_present_has_pending_events(struct xwl_present_window *xwl_present_window)
 {
-    return !!xwl_present_window->sync_flip ||
+    present_vblank_ptr flip_pending = xwl_present_get_pending_flip(xwl_present_window);
+
+    return (flip_pending && flip_pending->sync_flip) ||
            !xorg_list_is_empty(&xwl_present_window->wait_list);
 }
 
@@ -442,17 +444,17 @@ xwl_present_buffer_release(void *data)
 static void
 xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
 {
+    present_vblank_ptr flip_pending = xwl_present_get_pending_flip(xwl_present_window);
     uint64_t msc = ++xwl_present_window->msc;
     struct xwl_present_event    *event, *tmp;
 
     xwl_present_window->ust = GetTimeInMicros();
 
-    event = xwl_present_window->sync_flip;
-    xwl_present_window->sync_flip = NULL;
-    if (event) {
+    if (flip_pending && flip_pending->sync_flip) {
+        event = xwl_present_event_from_id((uintptr_t)flip_pending);
         event->pending = FALSE;
 
-        xwl_present_flip_notify_vblank(&event->vblank, xwl_present_window->ust, msc);
+        xwl_present_flip_notify_vblank(flip_pending, xwl_present_window->ust, msc);
 
         if (!event->pixmap) {
             /* If the buffer was already released, clean up now */
@@ -757,8 +759,6 @@ xwl_present_flip(WindowPtr present_window,
     event->pending = TRUE;
 
     xorg_list_init(&event->list);
-    if (sync_flip)
-        xwl_present_window->sync_flip = event;
 
     xwl_pixmap_set_buffer_release_cb(pixmap, xwl_present_buffer_release, event);
 

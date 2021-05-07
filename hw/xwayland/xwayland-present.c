@@ -71,7 +71,6 @@ xwl_present_window_get_priv(WindowPtr window)
 
         xorg_list_init(&xwl_present_window->frame_callback_list);
         xorg_list_init(&xwl_present_window->wait_list);
-        xorg_list_init(&xwl_present_window->exec_queue);
         xorg_list_init(&xwl_present_window->flip_queue);
         xorg_list_init(&xwl_present_window->idle_queue);
 
@@ -835,8 +834,6 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
             /* Clear the pixmap field, so this will fall through to present_execute_post next time */
             dixDestroyPixmap(vblank->pixmap, vblank->pixmap->drawable.id);
             vblank->pixmap = NULL;
-
-            xorg_list_add(&vblank->event_queue, &xwl_present_window->exec_queue);
             return;
         }
     }
@@ -868,7 +865,6 @@ xwl_present_pixmap(WindowPtr window,
     int                         ret;
     present_vblank_ptr          vblank, tmp;
     ScreenPtr                   screen = window->drawable.pScreen;
-    struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(window);
     present_window_priv_ptr     window_priv = present_get_window_priv(window, TRUE);
     present_screen_priv_ptr     screen_priv = present_screen_priv(screen);
     struct xwl_present_event *event;
@@ -937,7 +933,6 @@ xwl_present_pixmap(WindowPtr window,
      */
     vblank->exec_msc = vblank->target_msc - 1;
 
-    xorg_list_append(&vblank->event_queue, &xwl_present_window->exec_queue);
     vblank->queued = TRUE;
     if (crtc_msc < vblank->exec_msc) {
         if (xwl_present_queue_vblank(screen, window, target_crtc, vblank->event_id, vblank->exec_msc) == Success)

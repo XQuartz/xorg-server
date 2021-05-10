@@ -55,8 +55,6 @@ struct xwl_present_event {
     present_vblank_rec vblank;
     uint64_t target_msc;
 
-    Bool pending;
-
     PixmapPtr pixmap;
 };
 

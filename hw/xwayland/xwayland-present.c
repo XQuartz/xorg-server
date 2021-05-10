@@ -373,10 +373,7 @@ xwl_present_buffer_release(void *data)
         xwl_present_get_pending_flip(xwl_present_window) == &event->vblank) {
         event->vblank.flip_idler = TRUE;
 
-        if (event->pending)
-            xwl_present_release_pixmap(event);
-        else
-            xwl_present_release_event(event);
+        xwl_present_release_pixmap(event);
 
         return;
     }
@@ -395,8 +392,6 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
 
     if (flip_pending && flip_pending->sync_flip) {
         event = xwl_present_event_from_id((uintptr_t)flip_pending);
-        event->pending = FALSE;
-
         xwl_present_flip_notify_vblank(flip_pending, xwl_present_window->ust, msc);
 
         if (!event->pixmap) {
@@ -459,8 +454,6 @@ xwl_present_sync_callback(void *data,
 
     wl_callback_destroy(xwl_present_window->sync_callback);
     xwl_present_window->sync_callback = NULL;
-
-    event->pending = FALSE;
 
     xwl_present_flip_notify_vblank(&event->vblank, xwl_present_window->ust, xwl_present_window->msc);
 }
@@ -698,7 +691,6 @@ xwl_present_flip(WindowPtr present_window,
 
     event->pixmap = pixmap;
     event->target_msc = target_msc;
-    event->pending = TRUE;
 
     xwl_pixmap_set_buffer_release_cb(pixmap, xwl_present_buffer_release, event);
 

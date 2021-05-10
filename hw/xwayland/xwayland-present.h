@@ -53,7 +53,6 @@ struct xwl_present_window {
 
 struct xwl_present_event {
     present_vblank_rec vblank;
-    uint64_t target_msc;
 
     PixmapPtr pixmap;
 };

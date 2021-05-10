@@ -403,7 +403,7 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
     xorg_list_for_each_entry_safe(event, tmp,
                                   &xwl_present_window->wait_list,
                                   vblank.event_queue) {
-        if (event->target_msc <= msc) {
+        if (event->vblank.exec_msc <= msc) {
             DebugPresent(("\te %" PRIu64 " ust %" PRIu64 " msc %" PRIu64 "\n",
                           event->vblank.event_id, xwl_present_window->ust, msc));
 
@@ -495,7 +495,7 @@ xwl_present_queue_vblank(ScreenPtr screen,
     struct xwl_window *xwl_window = xwl_window_from_window(present_window);
     struct xwl_present_event *event = xwl_present_event_from_id(event_id);
 
-    event->target_msc = msc;
+    event->vblank.exec_msc = msc;
 
     xorg_list_del(&event->vblank.event_queue);
     xorg_list_append(&event->vblank.event_queue, &xwl_present_window->wait_list);
@@ -665,7 +665,6 @@ static Bool
 xwl_present_flip(WindowPtr present_window,
                  RRCrtcPtr crtc,
                  uint64_t event_id,
-                 uint64_t target_msc,
                  PixmapPtr pixmap,
                  Bool sync_flip,
                  RegionPtr damage)
@@ -690,7 +689,6 @@ xwl_present_flip(WindowPtr present_window,
     pixmap->refcnt++;
 
     event->pixmap = pixmap;
-    event->target_msc = target_msc;
 
     xwl_pixmap_set_buffer_release_cb(pixmap, xwl_present_buffer_release, event);
 
@@ -781,7 +779,7 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
                 damage = RegionDuplicate(&window->clipList);
 
             if (xwl_present_flip(vblank->window, vblank->crtc, vblank->event_id,
-                                 vblank->target_msc, vblank->pixmap, vblank->sync_flip, damage)) {
+                                 vblank->pixmap, vblank->sync_flip, damage)) {
                 WindowPtr toplvl_window = xwl_present_toplvl_pixmap_window(vblank->window);
                 PixmapPtr old_pixmap = screen->GetWindowPixmap(window);
 

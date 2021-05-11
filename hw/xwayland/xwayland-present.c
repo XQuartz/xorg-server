@@ -166,10 +166,9 @@ xwl_present_re_execute(present_vblank_ptr vblank)
 }
 
 static void
-xwl_present_flip_try_ready(WindowPtr window)
+xwl_present_flip_try_ready(struct xwl_present_window *xwl_present_window)
 {
-    struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
-    present_vblank_ptr      vblank;
+    present_vblank_ptr vblank;
 
     xorg_list_for_each_entry(vblank, &xwl_present_window->flip_queue, event_queue) {
         if (vblank->queued) {
@@ -184,25 +183,6 @@ xwl_present_free_idle_vblank(present_vblank_ptr vblank)
 {
     present_pixmap_idle(vblank->pixmap, vblank->window, vblank->serial, vblank->idle_fence);
     present_vblank_destroy(vblank);
-}
-
-/*
- * Free any left over idle vblanks
- */
-static void
-xwl_present_free_idle_vblanks(WindowPtr window)
-{
-    struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
-    present_vblank_ptr              vblank, tmp;
-
-    xorg_list_for_each_entry_safe(vblank, tmp, &xwl_present_window->idle_queue, event_queue) {
-        xwl_present_free_idle_vblank(vblank);
-    }
-
-    if (xwl_present_window->flip_active) {
-        xwl_present_free_idle_vblank(xwl_present_window->flip_active);
-        xwl_present_window->flip_active = NULL;
-    }
 }
 
 static WindowPtr
@@ -227,14 +207,23 @@ static void
 xwl_present_flips_stop(WindowPtr window)
 {
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
+    present_vblank_ptr vblank, tmp;
 
     assert (!xwl_present_window->flip_pending);
 
     /* Change back to the fast refresh rate */
     xwl_present_reset_timer(xwl_present_window);
 
-    xwl_present_free_idle_vblanks(window);
-    xwl_present_flip_try_ready(window);
+    /* Free any left over idle vblanks */
+    xorg_list_for_each_entry_safe(vblank, tmp, &xwl_present_window->idle_queue, event_queue)
+        xwl_present_free_idle_vblank(vblank);
+
+    if (xwl_present_window->flip_active) {
+        xwl_present_free_idle_vblank(xwl_present_window->flip_active);
+        xwl_present_window->flip_active = NULL;
+    }
+
+    xwl_present_flip_try_ready(xwl_present_window);
 }
 
 static void
@@ -270,7 +259,7 @@ xwl_present_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_t
     if (vblank->abort_flip)
         xwl_present_flips_stop(window);
 
-    xwl_present_flip_try_ready(window);
+    xwl_present_flip_try_ready(xwl_present_window);
 }
 
 static void
@@ -380,21 +369,8 @@ xwl_present_clear_window_flip(WindowPtr window)
 }
 
 static void
-xwl_present_cancel_flip(WindowPtr window)
+xwl_present_update_window_crtc(present_window_priv_ptr window_priv, RRCrtcPtr crtc, uint64_t new_msc)
 {
-    struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
-
-    if (xwl_present_window->flip_pending)
-        xwl_present_window->flip_pending->abort_flip = TRUE;
-    else if (xwl_present_window->flip_active)
-        xwl_present_flips_stop(window);
-}
-
-static void
-xwl_present_update_window_crtc(WindowPtr window, RRCrtcPtr crtc, uint64_t new_msc)
-{
-    present_window_priv_ptr window_priv = present_get_window_priv(window, TRUE);
-
     /* Crtc unchanged, no offset. */
     if (crtc == window_priv->crtc)
         return;
@@ -977,7 +953,10 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
         DebugPresent(("\tc %p %" PRIu64 ": %08" PRIx32 " -> %08" PRIx32 "\n",
                       vblank, crtc_msc, vblank->pixmap->drawable.id, vblank->window->drawable.id));
 
-        xwl_present_cancel_flip(window);
+        if (xwl_present_window->flip_pending)
+            xwl_present_window->flip_pending->abort_flip = TRUE;
+        else if (xwl_present_window->flip_active)
+            xwl_present_flips_stop(window);
 
         present_execute_copy(vblank, crtc_msc);
         assert(!vblank->queued);
@@ -1030,7 +1009,7 @@ xwl_present_pixmap(WindowPtr window,
 
     ret = xwl_present_get_ust_msc(screen, window, &ust, &crtc_msc);
 
-    xwl_present_update_window_crtc(window, target_crtc, crtc_msc);
+    xwl_present_update_window_crtc(window_priv, target_crtc, crtc_msc);
 
     if (ret == Success) {
         /* Stash the current MSC away in case we need it later

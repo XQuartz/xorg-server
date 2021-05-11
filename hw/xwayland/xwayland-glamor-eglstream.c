@@ -72,6 +72,7 @@ struct xwl_eglstream_private {
     SetWindowPixmapProcPtr SetWindowPixmap;
 
     Bool have_egl_damage;
+    Bool have_egl_stream_flush;
 
     GLint blit_prog;
     GLuint blit_vao;
@@ -776,6 +777,13 @@ xwl_glamor_eglstream_post_damage(struct xwl_window *xwl_window,
         goto out;
     }
 
+#ifdef EGL_NV_stream_flush
+    if (xwl_eglstream->have_egl_stream_flush)
+        /* block until stream state is updated on the compositor's side */
+        eglStreamFlushNV(xwl_screen->egl_display,
+                         xwl_pixmap->stream);
+#endif
+
     if (!xwl_pixmap->wait_for_buffer_release) {
         /* hang onto the pixmap until the compositor has released it */
         pixmap->refcnt++;
@@ -1172,6 +1180,18 @@ xwl_glamor_eglstream_init_egl(struct xwl_screen *xwl_screen)
     if (!xwl_eglstream->have_egl_damage)
         ErrorF("Driver lacks EGL_KHR_swap_buffers_with_damage, performance "
                "will be affected\n");
+
+#ifdef EGL_NV_stream_flush
+    xwl_eglstream->have_egl_stream_flush =
+        epoxy_has_egl_extension(xwl_screen->egl_display,
+                                "EGL_NV_stream_flush");
+#else
+    xwl_eglstream->have_egl_stream_flush = FALSE;
+#endif /* EGL_NV_stream_flush */
+
+    if (!xwl_eglstream->have_egl_stream_flush)
+        ErrorF("EGL_NV_stream_flush not available, "
+               "this may cause visible corruption.\n");
 
     xwl_eglstream_init_shaders(xwl_screen);
 

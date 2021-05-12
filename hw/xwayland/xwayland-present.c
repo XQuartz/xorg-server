@@ -210,16 +210,10 @@ xwl_present_release_pixmap(struct xwl_present_event *event)
 }
 
 static void
-xwl_present_release_event(struct xwl_present_event *event)
+xwl_present_free_event(struct xwl_present_event *event)
 {
     xwl_present_release_pixmap(event);
     xorg_list_del(&event->vblank.event_queue);
-}
-
-static void
-xwl_present_free_event(struct xwl_present_event *event)
-{
-    xwl_present_release_event(event);
     present_vblank_destroy(&event->vblank);
 }
 
@@ -390,15 +384,8 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
 
     xwl_present_window->ust = GetTimeInMicros();
 
-    if (flip_pending && flip_pending->sync_flip) {
-        event = xwl_present_event_from_id((uintptr_t)flip_pending);
+    if (flip_pending && flip_pending->sync_flip)
         xwl_present_flip_notify_vblank(flip_pending, xwl_present_window->ust, msc);
-
-        if (!event->pixmap) {
-            /* If the buffer was already released, clean up now */
-            xwl_present_release_event(event);
-        }
-    }
 
     xorg_list_for_each_entry_safe(event, tmp,
                                   &xwl_present_window->wait_list,

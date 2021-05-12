@@ -380,21 +380,19 @@ xwl_present_msc_bump(struct xwl_present_window *xwl_present_window)
 {
     present_vblank_ptr flip_pending = xwl_present_get_pending_flip(xwl_present_window);
     uint64_t msc = ++xwl_present_window->msc;
-    struct xwl_present_event    *event, *tmp;
+    present_vblank_ptr vblank, tmp;
 
     xwl_present_window->ust = GetTimeInMicros();
 
     if (flip_pending && flip_pending->sync_flip)
         xwl_present_flip_notify_vblank(flip_pending, xwl_present_window->ust, msc);
 
-    xorg_list_for_each_entry_safe(event, tmp,
-                                  &xwl_present_window->wait_list,
-                                  vblank.event_queue) {
-        if (event->vblank.exec_msc <= msc) {
+    xorg_list_for_each_entry_safe(vblank, tmp, &xwl_present_window->wait_list, event_queue) {
+        if (vblank->exec_msc <= msc) {
             DebugPresent(("\te %" PRIu64 " ust %" PRIu64 " msc %" PRIu64 "\n",
-                          event->vblank.event_id, xwl_present_window->ust, msc));
+                          vblank->event_id, xwl_present_window->ust, msc));
 
-            xwl_present_execute(&event->vblank, xwl_present_window->ust, msc);
+            xwl_present_execute(vblank, xwl_present_window->ust, msc);
         }
     }
 }
@@ -435,14 +433,13 @@ xwl_present_sync_callback(void *data,
                struct wl_callback *callback,
                uint32_t time)
 {
-    struct xwl_present_event *event = data;
-    struct xwl_present_window *xwl_present_window =
-        xwl_present_window_get_priv(event->vblank.window);
+    present_vblank_ptr vblank = data;
+    struct xwl_present_window *xwl_present_window = xwl_present_window_get_priv(vblank->window);
 
     wl_callback_destroy(xwl_present_window->sync_callback);
     xwl_present_window->sync_callback = NULL;
 
-    xwl_present_flip_notify_vblank(&event->vblank, xwl_present_window->ust, xwl_present_window->msc);
+    xwl_present_flip_notify_vblank(vblank, xwl_present_window->ust, xwl_present_window->msc);
 }
 
 static const struct wl_callback_listener xwl_present_sync_listener = {
@@ -706,7 +703,7 @@ xwl_present_flip(WindowPtr present_window,
             wl_display_sync(xwl_window->xwl_screen->display);
         wl_callback_add_listener(xwl_present_window->sync_callback,
                                  &xwl_present_sync_listener,
-                                 event);
+                                 &event->vblank);
     }
 
     wl_display_flush(xwl_window->xwl_screen->display);

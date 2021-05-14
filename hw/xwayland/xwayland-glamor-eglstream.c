@@ -681,7 +681,8 @@ xwl_glamor_eglstream_allow_commits(struct xwl_window *xwl_window)
 
             return FALSE;
         } else {
-            if (xwl_pixmap->surface != EGL_NO_SURFACE)
+            if (xwl_pixmap->surface != EGL_NO_SURFACE ||
+                xwl_pixmap->type == XWL_PIXMAP_DMA_BUF)
                 return TRUE;
 
             /* The pending stream got removed, we have a xwl_pixmap and

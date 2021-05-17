@@ -1195,9 +1195,11 @@ xwl_glamor_eglstream_init_egl(struct xwl_screen *xwl_screen)
 
     xwl_eglstream_init_shaders(xwl_screen);
 
-    if (epoxy_has_gl_extension("GL_OES_EGL_image") &&
-        !dri3_screen_init(xwl_screen->screen, &xwl_dri3_info)) {
-        ErrorF("DRI3 initialization failed. Performance will be affected.\n");
+    if (epoxy_has_gl_extension("GL_OES_EGL_image")) {
+        if (dri3_screen_init(xwl_screen->screen, &xwl_dri3_info))
+            xwl_screen->glvnd_vendor = "nvidia";
+        else
+            ErrorF("DRI3 initialization failed. Performance will be affected.\n");
     }
 
     return TRUE;

@@ -107,6 +107,9 @@ struct xwl_screen {
     struct glamor_context *glamor_ctx;
 
     Atom allow_commits_prop;
+
+    /* The preferred GLVND vendor. If NULL, "mesa" is assumed. */
+    const char *glvnd_vendor;
 };
 
 /* Apps which use randr/vidmode to change the mode when going fullscreen,

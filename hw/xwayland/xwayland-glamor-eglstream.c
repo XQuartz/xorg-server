@@ -1200,6 +1200,8 @@ xwl_glamor_eglstream_init_egl(struct xwl_screen *xwl_screen)
             xwl_screen->glvnd_vendor = "nvidia";
         else
             ErrorF("DRI3 initialization failed. Performance will be affected.\n");
+    } else {
+        ErrorF("Driver lacks GL_OES_EGL_image, performance will be affected.\n");
     }
 
     return TRUE;

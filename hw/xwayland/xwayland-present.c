@@ -279,8 +279,11 @@ xwl_present_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_t
     xorg_list_del(&vblank->event_queue);
 
     if (xwl_present_window->flip_active) {
-        if (xwl_present_window->flip_active->flip_idler)
-            xwl_present_free_idle_vblank(xwl_present_window->flip_active);
+        struct xwl_present_event *event =
+            xwl_present_event_from_id((uintptr_t)xwl_present_window->flip_active);
+
+        if (!event->pixmap)
+            xwl_present_free_event(event);
         else
             /* Put the previous flip in the idle_queue and wait for further notice from
              * the Wayland compositor
@@ -358,21 +361,20 @@ xwl_present_buffer_release(void *data)
 {
     struct xwl_present_window *xwl_present_window;
     struct xwl_present_event *event = data;
+    present_vblank_ptr vblank;
 
     if (!event)
         return;
 
-    xwl_present_window = xwl_present_window_priv(event->vblank.window);
-    if (xwl_present_window->flip_active == &event->vblank ||
-        xwl_present_get_pending_flip(xwl_present_window) == &event->vblank) {
-        event->vblank.flip_idler = TRUE;
+    vblank = &event->vblank;
+    present_pixmap_idle(vblank->pixmap, vblank->window, vblank->serial, vblank->idle_fence);
 
+    xwl_present_window = xwl_present_window_priv(vblank->window);
+    if (xwl_present_window->flip_active == vblank ||
+        xwl_present_get_pending_flip(xwl_present_window) == vblank)
         xwl_present_release_pixmap(event);
-
-        return;
-    }
-
-    xwl_present_free_idle_vblank(&event->vblank);
+    else
+        xwl_present_free_event(event);
 }
 
 static void

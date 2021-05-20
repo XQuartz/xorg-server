@@ -81,7 +81,6 @@ struct present_vblank {
     Bool                queued;         /* on present_exec_queue */
     Bool                flip;           /* planning on using flip */
     Bool                flip_ready;     /* wants to flip, but waiting for previous flip or unflip */
-    Bool                flip_idler;     /* driver explicitly permitted idling */
     Bool                sync_flip;      /* do flip synchronous to vblank */
     Bool                abort_flip;     /* aborting this flip */
     PresentFlipReason   reason;         /* reason for which flip is not possible */

@@ -97,9 +97,14 @@ xorg_backtrace(void)
         else
             filename = "?";
 
-        ErrorFSigSafe("%u: %s (%s%s+0x%x) [%p]\n", i++, filename, procname,
-            ret == -UNW_ENOMEM ? "..." : "", (int)off,
-            (void *)(uintptr_t)(ip));
+
+        if (unw_is_signal_frame(&cursor)) {
+            ErrorFSigSafe("%u: <signal handler called>\n", i++);
+        } else {
+            ErrorFSigSafe("%u: %s (%s%s+0x%x) [%p]\n", i++, filename, procname,
+                ret == -UNW_ENOMEM ? "..." : "", (int)off,
+                (void *)(uintptr_t)(ip));
+        }
 
         ret = unw_step(&cursor);
         if (ret < 0)

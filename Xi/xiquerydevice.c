@@ -43,6 +43,9 @@
 #include "xace.h"
 #include "inpututils.h"
 
+#include "exglobals.h"
+#include "privates.h"
+
 #include "xiquerydevice.h"
 
 static Bool ShouldSkipDevice(ClientPtr client, int deviceid, DeviceIntPtr d);
@@ -467,6 +470,22 @@ SwapTouchInfo(DeviceIntPtr dev, xXITouchInfo * touch)
     swaps(&touch->sourceid);
 }
 
+static Bool ShouldListGestureInfo(ClientPtr client)
+{
+    /* libxcb 14.1 and older are not forwards-compatible with new device classes as it does not
+     * properly ignore unknown device classes. Since breaking libxcb would break quite a lot of
+     * applications, we instead report Gesture device class only if the client advertised support
+     * for XI 2.4. Clients may still not work in cases when a client advertises XI 2.4 support
+     * and then a completely separate module within the client uses broken libxcb to call
+     * XIQueryDevice.
+     */
+    XIClientPtr pXIClient = dixLookupPrivate(&client->devPrivates, XIClientPrivateKey);
+    if (pXIClient->major_version) {
+        return version_compare(pXIClient->major_version, pXIClient->minor_version, 2, 4) >= 0;
+    }
+    return FALSE;
+}
+
 /**
  * List gesture information
  *
@@ -594,7 +613,7 @@ ListDeviceClasses(ClientPtr client, DeviceIntPtr dev,
         total_len += len;
     }
 
-    if (dev->gesture) {
+    if (dev->gesture && ShouldListGestureInfo(client)) {
         (*nclasses)++;
         len = ListGestureInfo(dev, (xXIGestureInfo *) any);
         any += len;

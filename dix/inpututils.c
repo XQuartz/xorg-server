@@ -809,6 +809,24 @@ event_set_state(DeviceIntPtr mouse, DeviceIntPtr kbd, DeviceEvent *event)
     }
 }
 
+void
+event_set_state_gesture(DeviceIntPtr kbd, GestureEvent *event)
+{
+    if (kbd && kbd->key) {
+        XkbStatePtr state= &kbd->key->xkbInfo->state;
+
+        event->mods.base = state->base_mods;
+        event->mods.latched = state->latched_mods;
+        event->mods.locked = state->locked_mods;
+        event->mods.effective = state->mods;
+
+        event->group.base = state->base_group;
+        event->group.latched = state->latched_group;
+        event->group.locked = state->locked_group;
+        event->group.effective = state->group;
+    }
+}
+
 /**
  * Return the event filter mask for the given device and the given core or
  * XI1 protocol type.

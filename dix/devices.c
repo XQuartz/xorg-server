@@ -458,6 +458,7 @@ DisableDevice(DeviceIntPtr dev, BOOL sendevent)
         return FALSE;
 
     TouchEndPhysicallyActiveTouches(dev);
+    GestureEndActiveGestures(dev);
     ReleaseButtonsAndKeys(dev);
     SyncRemoveDeviceIdleTime(dev->idle_counter);
     dev->idle_counter = NULL;

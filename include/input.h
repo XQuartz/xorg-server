@@ -660,6 +660,21 @@ extern void TouchEmitTouchEnd(DeviceIntPtr dev, TouchPointInfoPtr ti, int flags,
 extern void TouchAcceptAndEnd(DeviceIntPtr dev, int touchid);
 
 extern Bool GestureInitGestureInfo(GestureInfoPtr gesture);
+extern GestureInfoPtr GestureBeginGesture(DeviceIntPtr dev, InternalEvent *ev);
+extern GestureInfoPtr GestureFindActiveByEventType(DeviceIntPtr dev, int type);
+extern void GestureEndGesture(GestureInfoPtr gi);
+extern Bool GestureResourceIsOwner(GestureInfoPtr gi, XID resource);
+extern void GestureAddListener(GestureInfoPtr gi, XID resource, int resource_type,
+                               enum GestureListenerType type,
+                               WindowPtr window, GrabPtr grab);
+extern void GestureSetupListener(DeviceIntPtr dev, GestureInfoPtr gi,
+                                 InternalEvent *ev);
+extern Bool GestureBuildSprite(DeviceIntPtr sourcedev, GestureInfoPtr gi);
+extern void GestureListenerGone(XID resource);
+extern void GestureEndActiveGestures(DeviceIntPtr dev);
+extern void GestureEmitGestureEndToOwner(DeviceIntPtr dev, GestureInfoPtr gi);
+extern void ProcessGestureEvent(InternalEvent *ev, DeviceIntPtr dev);
+
 /* misc event helpers */
 extern Mask GetEventMask(DeviceIntPtr dev, xEvent *ev, InputClientsPtr clients);
 extern Mask GetEventFilter(DeviceIntPtr dev, xEvent *event);

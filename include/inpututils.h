@@ -50,6 +50,7 @@ extern void init_gesture_event(GestureEvent *event, DeviceIntPtr dev, Time ms);
 extern int event_get_corestate(DeviceIntPtr mouse, DeviceIntPtr kbd);
 extern void event_set_state(DeviceIntPtr mouse, DeviceIntPtr kbd,
                             DeviceEvent *event);
+extern void event_set_state_gesture(DeviceIntPtr kbd, GestureEvent *event);
 extern Mask event_get_filter_from_type(DeviceIntPtr dev, int evtype);
 extern Mask event_get_filter_from_xi2type(int evtype);
 

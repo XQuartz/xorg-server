@@ -421,6 +421,10 @@ DeliverTouchEvents(DeviceIntPtr /* dev */ ,
                    InternalEvent * /* ev */ ,
                    XID /* resource */ );
 
+extern Bool
+DeliverGestureEventToOwner(DeviceIntPtr dev, GestureInfoPtr gi,
+                           InternalEvent *ev);
+
 extern void
 InitializeSprite(DeviceIntPtr /* pDev */ ,
                  WindowPtr /* pWin */ );

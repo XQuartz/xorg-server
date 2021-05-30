@@ -2427,8 +2427,8 @@ GrabWindow(ClientPtr client, DeviceIntPtr dev, int type,
 
 /* Touch grab */
 int
-GrabTouch(ClientPtr client, DeviceIntPtr dev, DeviceIntPtr mod_dev,
-          GrabParameters *param, GrabMask *mask)
+GrabTouchOrGesture(ClientPtr client, DeviceIntPtr dev, DeviceIntPtr mod_dev,
+                   int type, GrabParameters *param, GrabMask *mask)
 {
     WindowPtr pWin;
     GrabPtr grab;
@@ -2446,7 +2446,7 @@ GrabTouch(ClientPtr client, DeviceIntPtr dev, DeviceIntPtr mod_dev,
         return rc;
 
     grab = CreateGrab(client->index, dev, mod_dev, pWin, XI2,
-                      mask, param, XI_TouchBegin, 0, NullWindow, NullCursor);
+                      mask, param, type, 0, NullWindow, NullCursor);
     if (!grab)
         return BadAlloc;
 

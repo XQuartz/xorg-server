@@ -98,7 +98,6 @@ apt-get install -y \
 	python3-mako \
 	python3-numpy \
 	python3-six \
-	x11proto-dev \
 	xfonts-utils \
 	xkb-data \
 	xtrans-dev \
@@ -107,6 +106,14 @@ apt-get install -y \
 .gitlab-ci/cross-prereqs-build.sh i686-w64-mingw32
 
 cd /root
+
+# xserver requires xorgproto >= 2021.4.99.2 for XI 2.3.99.1
+git clone https://gitlab.freedesktop.org/xorg/proto/xorgproto.git --depth 1 --branch=xorgproto-2021.4.99.2
+pushd xorgproto
+./autogen.sh
+make -j${FDO_CI_CONCURRENT:-4} install
+popd
+rm -rf xorgproto
 
 # weston 9.0 requires libwayland >= 1.18
 git clone https://gitlab.freedesktop.org/wayland/wayland.git --depth 1 --branch=1.18.0

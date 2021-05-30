@@ -234,6 +234,9 @@ SizeDeviceClasses(DeviceIntPtr dev)
     if (dev->touch)
         len += sizeof(xXITouchInfo);
 
+    if (dev->gesture)
+        len += sizeof(xXIGestureInfo);
+
     return len;
 }
 
@@ -464,6 +467,30 @@ SwapTouchInfo(DeviceIntPtr dev, xXITouchInfo * touch)
     swaps(&touch->sourceid);
 }
 
+/**
+ * List gesture information
+ *
+ * @return The number of bytes written into info.
+ */
+static int
+ListGestureInfo(DeviceIntPtr dev, xXIGestureInfo * gesture)
+{
+    gesture->type = XIGestureClass;
+    gesture->length = sizeof(xXIGestureInfo) >> 2;
+    gesture->sourceid = dev->gesture->sourceid;
+    gesture->num_touches = dev->gesture->max_touches;
+
+    return gesture->length << 2;
+}
+
+static void
+SwapGestureInfo(DeviceIntPtr dev, xXIGestureInfo * gesture)
+{
+    swaps(&gesture->type);
+    swaps(&gesture->length);
+    swaps(&gesture->sourceid);
+}
+
 int
 GetDeviceUse(DeviceIntPtr dev, uint16_t * attachment)
 {
@@ -567,6 +594,13 @@ ListDeviceClasses(ClientPtr client, DeviceIntPtr dev,
         total_len += len;
     }
 
+    if (dev->gesture) {
+        (*nclasses)++;
+        len = ListGestureInfo(dev, (xXIGestureInfo *) any);
+        any += len;
+        total_len += len;
+    }
+
     return total_len;
 }
 
@@ -598,7 +632,9 @@ SwapDeviceInfo(DeviceIntPtr dev, xXIDeviceInfo * info)
         case XITouchClass:
             SwapTouchInfo(dev, (xXITouchInfo *) any);
             break;
-
+        case XIGestureClass:
+            SwapGestureInfo(dev, (xXIGestureInfo *) any);
+            break;
         }
 
         any += len * 4;

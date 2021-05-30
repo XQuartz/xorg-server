@@ -496,6 +496,33 @@ void QueueTouchEvents(DeviceIntPtr device,
                       uint32_t ddx_touchid,
                       int flags, const ValuatorMask *mask);
 
+void InitGestureEvent(InternalEvent *ievent, DeviceIntPtr dev, CARD32 ms,
+                      int type, uint16_t num_touches, uint32_t flags,
+                      double delta_x, double delta_y,
+                      double delta_unaccel_x, double delta_unaccel_y,
+                      double scale, double delta_angle);
+
+int GetGestureEvents(InternalEvent *events, DeviceIntPtr dev,
+                     uint16_t type, uint16_t num_touches, uint32_t flags,
+                     double delta_x, double delta_y,
+                     double delta_unaccel_x,
+                     double delta_unaccel_y,
+                     double scale, double delta_angle);
+
+
+void QueueGesturePinchEvents(DeviceIntPtr dev, uint16_t type,
+                             uint16_t num_touches, uint32_t flags,
+                             double delta_x, double delta_y,
+                             double delta_unaccel_x,
+                             double delta_unaccel_y,
+                             double scale, double delta_angle);
+
+void QueueGestureSwipeEvents(DeviceIntPtr dev, uint16_t type,
+                             uint16_t num_touches, uint32_t flags,
+                             double delta_x, double delta_y,
+                             double delta_unaccel_x,
+                             double delta_unaccel_y);
+
 extern int GetTouchOwnershipEvents(InternalEvent *events,
                                    DeviceIntPtr pDev,
                                    TouchPointInfoPtr ti,

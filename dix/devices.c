@@ -1670,6 +1670,32 @@ InitTouchClassDeviceStruct(DeviceIntPtr device, unsigned int max_touches,
     return FALSE;
 }
 
+/**
+ * Sets up gesture capabilities on @device.
+ *
+ * @max_touches The maximum number of simultaneous touches, or 0 for unlimited.
+ */
+Bool
+InitGestureClassDeviceStruct(DeviceIntPtr device, unsigned int max_touches)
+{
+    GestureClassPtr g;
+
+    BUG_RETURN_VAL(device == NULL, FALSE);
+    BUG_RETURN_VAL(device->gesture != NULL, FALSE);
+
+    g = calloc(1, sizeof(*g));
+    if (!g)
+        return FALSE;
+
+    g->sourceid = device->id;
+    g->max_touches = max_touches;
+    GestureInitGestureInfo(&g->gesture);
+
+    device->gesture = g;
+
+    return TRUE;
+}
+
 /*
  * Check if the given buffer contains elements between low (inclusive) and
  * high (inclusive) only.

@@ -59,6 +59,8 @@ static int eventToDeviceEvent(DeviceEvent *ev, xEvent **xi);
 static int eventToRawEvent(RawDeviceEvent *ev, xEvent **xi);
 static int eventToBarrierEvent(BarrierEvent *ev, xEvent **xi);
 static int eventToTouchOwnershipEvent(TouchOwnershipEvent *ev, xEvent **xi);
+static int eventToGestureSwipeEvent(GestureEvent *ev, xEvent **xi);
+static int eventToGesturePinchEvent(GestureEvent *ev, xEvent **xi);
 
 /* Do not use, read comments below */
 BOOL EventIsKeyRepeat(xEvent *event);
@@ -163,6 +165,12 @@ EventToCore(InternalEvent *event, xEvent **core_out, int *count_out)
     case ET_TouchOwnership:
     case ET_BarrierHit:
     case ET_BarrierLeave:
+    case ET_GesturePinchBegin:
+    case ET_GesturePinchUpdate:
+    case ET_GesturePinchEnd:
+    case ET_GestureSwipeBegin:
+    case ET_GestureSwipeUpdate:
+    case ET_GestureSwipeEnd:
         ret = BadMatch;
         break;
     default:
@@ -221,6 +229,12 @@ EventToXI(InternalEvent *ev, xEvent **xi, int *count)
     case ET_TouchOwnership:
     case ET_BarrierHit:
     case ET_BarrierLeave:
+    case ET_GesturePinchBegin:
+    case ET_GesturePinchUpdate:
+    case ET_GesturePinchEnd:
+    case ET_GestureSwipeBegin:
+    case ET_GestureSwipeUpdate:
+    case ET_GestureSwipeEnd:
         *count = 0;
         *xi = NULL;
         return BadMatch;
@@ -285,6 +299,14 @@ EventToXI2(InternalEvent *ev, xEvent **xi)
     case ET_BarrierHit:
     case ET_BarrierLeave:
         return eventToBarrierEvent(&ev->barrier_event, xi);
+    case ET_GesturePinchBegin:
+    case ET_GesturePinchUpdate:
+    case ET_GesturePinchEnd:
+        return eventToGesturePinchEvent(&ev->gesture_event, xi);
+    case ET_GestureSwipeBegin:
+    case ET_GestureSwipeUpdate:
+    case ET_GestureSwipeEnd:
+        return eventToGestureSwipeEvent(&ev->gesture_event, xi);
     default:
         break;
     }
@@ -812,6 +834,88 @@ eventToBarrierEvent(BarrierEvent *ev, xEvent **xi)
     barrier->barrier = ev->barrierid;
     barrier->root_x = double_to_fp1616(ev->root_x);
     barrier->root_y = double_to_fp1616(ev->root_y);
+
+    return Success;
+}
+
+int
+eventToGesturePinchEvent(GestureEvent *ev, xEvent **xi)
+{
+    int len = sizeof(xXIGesturePinchEvent);
+    xXIGesturePinchEvent *xpe;
+
+    *xi = calloc(1, len);
+    xpe = (xXIGesturePinchEvent *) * xi;
+    xpe->type = GenericEvent;
+    xpe->extension = IReqCode;
+    xpe->evtype = GetXI2Type(ev->type);
+    xpe->time = ev->time;
+    xpe->length = bytes_to_int32(len - sizeof(xEvent));
+    xpe->detail = ev->num_touches;
+
+    xpe->root = ev->root;
+    xpe->deviceid = ev->deviceid;
+    xpe->sourceid = ev->sourceid;
+    xpe->root_x = double_to_fp1616(ev->root_x);
+    xpe->root_y = double_to_fp1616(ev->root_y);
+    xpe->flags |= (ev->flags & GESTURE_CANCELLED) ? XIGesturePinchEventCancelled : 0;
+
+    xpe->delta_x = double_to_fp1616(ev->delta_x);
+    xpe->delta_y = double_to_fp1616(ev->delta_y);
+    xpe->delta_unaccel_x = double_to_fp1616(ev->delta_unaccel_x);
+    xpe->delta_unaccel_y = double_to_fp1616(ev->delta_unaccel_y);
+    xpe->scale = double_to_fp1616(ev->scale);
+    xpe->delta_angle = double_to_fp1616(ev->delta_angle);
+
+    xpe->mods.base_mods = ev->mods.base;
+    xpe->mods.latched_mods = ev->mods.latched;
+    xpe->mods.locked_mods = ev->mods.locked;
+    xpe->mods.effective_mods = ev->mods.effective;
+
+    xpe->group.base_group = ev->group.base;
+    xpe->group.latched_group = ev->group.latched;
+    xpe->group.locked_group = ev->group.locked;
+    xpe->group.effective_group = ev->group.effective;
+
+    return Success;
+}
+
+int
+eventToGestureSwipeEvent(GestureEvent *ev, xEvent **xi)
+{
+    int len = sizeof(xXIGestureSwipeEvent);
+    xXIGestureSwipeEvent *xde;
+
+    *xi = calloc(1, len);
+    xde = (xXIGestureSwipeEvent *) * xi;
+    xde->type = GenericEvent;
+    xde->extension = IReqCode;
+    xde->evtype = GetXI2Type(ev->type);
+    xde->time = ev->time;
+    xde->length = bytes_to_int32(len - sizeof(xEvent));
+    xde->detail = ev->num_touches;
+
+    xde->root = ev->root;
+    xde->deviceid = ev->deviceid;
+    xde->sourceid = ev->sourceid;
+    xde->root_x = double_to_fp1616(ev->root_x);
+    xde->root_y = double_to_fp1616(ev->root_y);
+    xde->flags |= (ev->flags & GESTURE_CANCELLED) ? XIGestureSwipeEventCancelled : 0;
+
+    xde->delta_x = double_to_fp1616(ev->delta_x);
+    xde->delta_y = double_to_fp1616(ev->delta_y);
+    xde->delta_unaccel_x = double_to_fp1616(ev->delta_unaccel_x);
+    xde->delta_unaccel_y = double_to_fp1616(ev->delta_unaccel_y);
+
+    xde->mods.base_mods = ev->mods.base;
+    xde->mods.latched_mods = ev->mods.latched;
+    xde->mods.locked_mods = ev->mods.locked;
+    xde->mods.effective_mods = ev->mods.effective;
+
+    xde->group.base_group = ev->group.base;
+    xde->group.latched_group = ev->group.latched;
+    xde->group.locked_group = ev->group.locked;
+    xde->group.effective_group = ev->group.effective;
 
     return Success;
 }

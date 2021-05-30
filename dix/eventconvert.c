@@ -969,8 +969,68 @@ GetXI2Type(enum EventType type)
     case ET_BarrierLeave:
         xi2type = XI_BarrierLeave;
         break;
+    case ET_GesturePinchBegin:
+        xi2type = XI_GesturePinchBegin;
+        break;
+    case ET_GesturePinchUpdate:
+        xi2type = XI_GesturePinchUpdate;
+        break;
+    case ET_GesturePinchEnd:
+        xi2type = XI_GesturePinchEnd;
+        break;
+    case ET_GestureSwipeBegin:
+        xi2type = XI_GestureSwipeBegin;
+        break;
+    case ET_GestureSwipeUpdate:
+        xi2type = XI_GestureSwipeUpdate;
+        break;
+    case ET_GestureSwipeEnd:
+        xi2type = XI_GestureSwipeEnd;
+        break;
     default:
         break;
     }
     return xi2type;
+}
+
+/**
+ * Converts a gesture type to corresponding Gesture{Pinch,Swipe}Begin.
+ * Returns 0 if the input type is not a gesture.
+ */
+enum EventType
+GestureTypeToBegin(enum EventType type)
+{
+    switch (type) {
+    case ET_GesturePinchBegin:
+    case ET_GesturePinchUpdate:
+    case ET_GesturePinchEnd:
+        return ET_GesturePinchBegin;
+    case ET_GestureSwipeBegin:
+    case ET_GestureSwipeUpdate:
+    case ET_GestureSwipeEnd:
+        return ET_GestureSwipeBegin;
+    default:
+        return 0;
+    }
+}
+
+/**
+ * Converts a gesture type to corresponding Gesture{Pinch,Swipe}End.
+ * Returns 0 if the input type is not a gesture.
+ */
+enum EventType
+GestureTypeToEnd(enum EventType type)
+{
+    switch (type) {
+    case ET_GesturePinchBegin:
+    case ET_GesturePinchUpdate:
+    case ET_GesturePinchEnd:
+        return ET_GesturePinchEnd;
+    case ET_GestureSwipeBegin:
+    case ET_GestureSwipeUpdate:
+    case ET_GestureSwipeEnd:
+        return ET_GestureSwipeEnd;
+    default:
+        return 0;
+    }
 }

@@ -95,6 +95,7 @@ SOFTWARE.
 #include "exevents.h"
 #include "extnsionst.h"
 #include "exglobals.h"
+#include "eventstr.h"
 #include "dixevents.h"          /* DeliverFocusedEvent */
 #include "dixgrabs.h"           /* CreateGrab() */
 #include "scrnintstr.h"
@@ -161,6 +162,49 @@ IsTouchEvent(InternalEvent *event)
     case ET_TouchBegin:
     case ET_TouchUpdate:
     case ET_TouchEnd:
+        return TRUE;
+    default:
+        break;
+    }
+    return FALSE;
+}
+
+Bool
+IsGestureEvent(InternalEvent *event)
+{
+    switch (event->any.type) {
+    case ET_GesturePinchBegin:
+    case ET_GesturePinchUpdate:
+    case ET_GesturePinchEnd:
+    case ET_GestureSwipeBegin:
+    case ET_GestureSwipeUpdate:
+    case ET_GestureSwipeEnd:
+        return TRUE;
+    default:
+        break;
+    }
+    return FALSE;
+}
+
+Bool
+IsGestureBeginEvent(InternalEvent *event)
+{
+    switch (event->any.type) {
+    case ET_GesturePinchBegin:
+    case ET_GestureSwipeBegin:
+        return TRUE;
+    default:
+        break;
+    }
+    return FALSE;
+}
+
+Bool
+IsGestureEndEvent(InternalEvent *event)
+{
+    switch (event->any.type) {
+    case ET_GesturePinchEnd:
+    case ET_GestureSwipeEnd:
         return TRUE;
     default:
         break;

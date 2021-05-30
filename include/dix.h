@@ -610,6 +610,13 @@ extern Bool
 IsPointerEvent(InternalEvent *event);
 extern Bool
 IsTouchEvent(InternalEvent *event);
+Bool
+IsGestureEvent(InternalEvent *event);
+Bool
+IsGestureBeginEvent(InternalEvent *event);
+Bool
+IsGestureEndEvent(InternalEvent *event);
+
 extern _X_EXPORT Bool
 IsMaster(DeviceIntPtr dev);
 extern _X_EXPORT Bool

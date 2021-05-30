@@ -75,6 +75,12 @@ enum EventType {
     ET_XQuartz,
     ET_BarrierHit,
     ET_BarrierLeave,
+    ET_GesturePinchBegin,
+    ET_GesturePinchUpdate,
+    ET_GesturePinchEnd,
+    ET_GestureSwipeBegin,
+    ET_GestureSwipeUpdate,
+    ET_GestureSwipeEnd,
     ET_Internal = 0xFF          /* First byte */
 };
 

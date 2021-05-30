@@ -124,6 +124,16 @@ _set_bit(unsigned char *bits, int bit)
         SetBit(bits, XI_TouchUpdate);
         SetBit(bits, XI_TouchEnd);
     }
+    if (bit >= XI_GesturePinchBegin && bit <= XI_GesturePinchEnd) {
+        SetBit(bits, XI_GesturePinchBegin);
+        SetBit(bits, XI_GesturePinchUpdate);
+        SetBit(bits, XI_GesturePinchEnd);
+    }
+    if (bit >= XI_GestureSwipeBegin && bit <= XI_GestureSwipeEnd) {
+        SetBit(bits, XI_GestureSwipeBegin);
+        SetBit(bits, XI_GestureSwipeUpdate);
+        SetBit(bits, XI_GestureSwipeEnd);
+    }
 }
 
 static void
@@ -134,6 +144,16 @@ _clear_bit(unsigned char *bits, int bit)
         ClearBit(bits, XI_TouchBegin);
         ClearBit(bits, XI_TouchUpdate);
         ClearBit(bits, XI_TouchEnd);
+    }
+    if (bit >= XI_GesturePinchBegin && bit <= XI_GesturePinchEnd) {
+        ClearBit(bits, XI_GesturePinchBegin);
+        ClearBit(bits, XI_GesturePinchUpdate);
+        ClearBit(bits, XI_GesturePinchEnd);
+    }
+    if (bit >= XI_GestureSwipeBegin && bit <= XI_GestureSwipeEnd) {
+        ClearBit(bits, XI_GestureSwipeBegin);
+        ClearBit(bits, XI_GestureSwipeUpdate);
+        ClearBit(bits, XI_GestureSwipeEnd);
     }
 }
 

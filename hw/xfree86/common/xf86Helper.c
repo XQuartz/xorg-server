@@ -525,8 +525,8 @@ xf86SetDepthBpp(ScrnInfoPtr scrp, int depth, int dummy, int fbbpp,
      * Find the Display subsection matching the depth/fbbpp and initialise
      * scrp->display with it.
      */
-    for (i = 0, disp = scrp->confScreen->displays;
-         i < scrp->confScreen->numdisplays; i++, disp++) {
+    for (i = 0; i < scrp->confScreen->numdisplays; i++) {
+        disp = scrp->confScreen->displays[i];
         if ((disp->depth == scrp->depth && disp->fbbpp == scrp->bitsPerPixel)
             || (disp->depth == scrp->depth && disp->fbbpp <= 0)
             || (disp->fbbpp == scrp->bitsPerPixel && disp->depth <= 0)) {
@@ -540,8 +540,8 @@ xf86SetDepthBpp(ScrnInfoPtr scrp, int depth, int dummy, int fbbpp,
      * depth or fbbpp specified.
      */
     if (i == scrp->confScreen->numdisplays) {
-        for (i = 0, disp = scrp->confScreen->displays;
-             i < scrp->confScreen->numdisplays; i++, disp++) {
+        for (i = 0; i < scrp->confScreen->numdisplays; i++) {
+            disp = scrp->confScreen->displays[i];
             if (disp->depth <= 0 && disp->fbbpp <= 0) {
                 scrp->display = disp;
                 break;
@@ -556,24 +556,25 @@ xf86SetDepthBpp(ScrnInfoPtr scrp, int depth, int dummy, int fbbpp,
         scrp->confScreen->numdisplays++;
         scrp->confScreen->displays =
             xnfreallocarray(scrp->confScreen->displays,
-                            scrp->confScreen->numdisplays, sizeof(DispRec));
+                            scrp->confScreen->numdisplays, sizeof(DispPtr));
         xf86DrvMsg(scrp->scrnIndex, X_INFO,
                    "Creating default Display subsection in Screen section\n"
                    "\t\"%s\" for depth/fbbpp %d/%d\n",
                    scrp->confScreen->id, scrp->depth, scrp->bitsPerPixel);
-        memset(&scrp->confScreen->displays[i], 0, sizeof(DispRec));
-        scrp->confScreen->displays[i].blackColour.red = -1;
-        scrp->confScreen->displays[i].blackColour.green = -1;
-        scrp->confScreen->displays[i].blackColour.blue = -1;
-        scrp->confScreen->displays[i].whiteColour.red = -1;
-        scrp->confScreen->displays[i].whiteColour.green = -1;
-        scrp->confScreen->displays[i].whiteColour.blue = -1;
-        scrp->confScreen->displays[i].defaultVisual = -1;
-        scrp->confScreen->displays[i].modes = xnfalloc(sizeof(char *));
-        scrp->confScreen->displays[i].modes[0] = NULL;
-        scrp->confScreen->displays[i].depth = depth;
-        scrp->confScreen->displays[i].fbbpp = fbbpp;
-        scrp->display = &scrp->confScreen->displays[i];
+        scrp->confScreen->displays[i] = xnfcalloc(1, sizeof(DispRec));
+        memset(scrp->confScreen->displays[i], 0, sizeof(DispRec));
+        scrp->confScreen->displays[i]->blackColour.red = -1;
+        scrp->confScreen->displays[i]->blackColour.green = -1;
+        scrp->confScreen->displays[i]->blackColour.blue = -1;
+        scrp->confScreen->displays[i]->whiteColour.red = -1;
+        scrp->confScreen->displays[i]->whiteColour.green = -1;
+        scrp->confScreen->displays[i]->whiteColour.blue = -1;
+        scrp->confScreen->displays[i]->defaultVisual = -1;
+        scrp->confScreen->displays[i]->modes = xnfalloc(sizeof(char *));
+        scrp->confScreen->displays[i]->modes[0] = NULL;
+        scrp->confScreen->displays[i]->depth = depth;
+        scrp->confScreen->displays[i]->fbbpp = fbbpp;
+        scrp->display = scrp->confScreen->displays[i];
     }
 
     /*

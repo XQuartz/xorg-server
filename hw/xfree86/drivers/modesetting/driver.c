@@ -515,9 +515,41 @@ GetRec(ScrnInfoPtr pScrn)
     return TRUE;
 }
 
+static void
+rotate_clip(PixmapPtr pixmap, BoxPtr rect, drmModeClip *clip, Rotation rotation)
+{
+    int w = pixmap->drawable.width;
+    int h = pixmap->drawable.height;
+
+    if (rotation == RR_Rotate_90) {
+	/* Rotate 90 degrees counter clockwise */
+        clip->x1 = rect->y1;
+	clip->x2 = rect->y2;
+	clip->y1 = w - rect->x2;
+	clip->y2 = w - rect->x1;
+    } else if (rotation == RR_Rotate_180) {
+	/* Rotate 180 degrees */
+        clip->x1 = w - rect->x2;
+	clip->x2 = w - rect->x1;
+	clip->y1 = h - rect->y2;
+	clip->y2 = h - rect->y1;
+    } else if (rotation == RR_Rotate_270) {
+	/* Rotate 90 degrees clockwise */
+        clip->x1 = h - rect->y2;
+	clip->x2 = h - rect->y1;
+	clip->y1 = rect->x1;
+	clip->y2 = rect->x2;
+    } else {
+	clip->x1 = rect->x1;
+	clip->x2 = rect->x2;
+	clip->y1 = rect->y1;
+	clip->y2 = rect->y2;
+    }
+}
+
 static int
-dispatch_dirty_region(ScrnInfoPtr scrn,
-                      PixmapPtr pixmap, DamagePtr damage, int fb_id)
+dispatch_dirty_region(ScrnInfoPtr scrn, xf86CrtcPtr crtc,
+		      PixmapPtr pixmap, DamagePtr damage, int fb_id)
 {
     modesettingPtr ms = modesettingPTR(scrn);
     RegionPtr dirty = DamageRegion(damage);
@@ -532,13 +564,9 @@ dispatch_dirty_region(ScrnInfoPtr scrn,
         if (!clip)
             return -ENOMEM;
 
-        /* XXX no need for copy? */
-        for (i = 0; i < num_cliprects; i++, rect++) {
-            clip[i].x1 = rect->x1;
-            clip[i].y1 = rect->y1;
-            clip[i].x2 = rect->x2;
-            clip[i].y2 = rect->y2;
-        }
+        /* Rotate and copy rects into clips */
+        for (i = 0; i < num_cliprects; i++, rect++)
+	    rotate_clip(pixmap, rect, &clip[i], crtc->rotation);
 
         /* TODO query connector property to see if this is needed */
         ret = drmModeDirtyFB(ms->fd, fb_id, clip, num_cliprects);
@@ -561,20 +589,31 @@ static void
 dispatch_dirty(ScreenPtr pScreen)
 {
     ScrnInfoPtr scrn = xf86ScreenToScrn(pScreen);
+    xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
     modesettingPtr ms = modesettingPTR(scrn);
     PixmapPtr pixmap = pScreen->GetScreenPixmap(pScreen);
-    int fb_id = ms->drmmode.fb_id;
-    int ret;
+    uint32_t fb_id;
+    int ret, c, x, y ;
 
-    ret = dispatch_dirty_region(scrn, pixmap, ms->damage, fb_id);
-    if (ret == -EINVAL || ret == -ENOSYS) {
-        ms->dirty_enabled = FALSE;
-        DamageUnregister(ms->damage);
-        DamageDestroy(ms->damage);
-        ms->damage = NULL;
-        xf86DrvMsg(scrn->scrnIndex, X_INFO,
-                   "Disabling kernel dirty updates, not required.\n");
-        return;
+    for (c = 0; c < xf86_config->num_crtc; c++) {
+        xf86CrtcPtr crtc = xf86_config->crtc[c];
+        drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+
+        if (!drmmode_crtc)
+            continue;
+
+	drmmode_crtc_get_fb_id(crtc, &fb_id, &x, &y);
+
+        ret = dispatch_dirty_region(scrn, crtc, pixmap, ms->damage, fb_id);
+        if (ret == -EINVAL || ret == -ENOSYS) {
+            ms->dirty_enabled = FALSE;
+            DamageUnregister(ms->damage);
+            DamageDestroy(ms->damage);
+            ms->damage = NULL;
+            xf86DrvMsg(scrn->scrnIndex, X_INFO,
+                       "Disabling kernel dirty updates, not required.\n");
+            return;
+        }
     }
 }
 
@@ -586,7 +625,7 @@ dispatch_dirty_pixmap(ScrnInfoPtr scrn, xf86CrtcPtr crtc, PixmapPtr ppix)
     DamagePtr damage = ppriv->secondary_damage;
     int fb_id = ppriv->fb_id;
 
-    dispatch_dirty_region(scrn, ppix, damage, fb_id);
+    dispatch_dirty_region(scrn, crtc, ppix, damage, fb_id);
 }
 
 static void

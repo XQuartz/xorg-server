@@ -627,7 +627,7 @@ drmmode_crtc_can_test_mode(xf86CrtcPtr crtc)
     return ms->atomic_modeset;
 }
 
-static Bool
+Bool
 drmmode_crtc_get_fb_id(xf86CrtcPtr crtc, uint32_t *fb_id, int *x, int *y)
 {
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;

@@ -162,4 +162,6 @@ present_register_complete_notify(present_complete_notify_proc proc);
 extern _X_EXPORT Bool
 present_can_window_flip(WindowPtr window);
 
+extern _X_EXPORT uint32_t FakeScreenFps;
+
 #endif /* _PRESENT_H_ */

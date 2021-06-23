@@ -382,7 +382,7 @@ xwl_eglstream_set_window_pixmap(WindowPtr window, PixmapPtr pixmap)
      * attached, so the stream would be useless.
      */
     old_pixmap = (*screen->GetWindowPixmap) (window);
-    if (old_pixmap)
+    if (old_pixmap && old_pixmap != pixmap)
         xwl_eglstream_maybe_set_pending_stream_invalid(old_pixmap);
 
     xwl_screen->screen->SetWindowPixmap = xwl_eglstream->SetWindowPixmap;

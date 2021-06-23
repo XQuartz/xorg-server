@@ -525,8 +525,8 @@ xf86GetDevFromEntity(int entityIndex, int instance)
 
     for (i = 0; i < xf86Entities[entityIndex]->numInstances; i++)
         if (xf86Entities[entityIndex]->devices[i]->screen == instance)
-            break;
-    return xf86Entities[entityIndex]->devices[i];
+            return xf86Entities[entityIndex]->devices[i];
+    return NULL;
 }
 
 /*

@@ -213,6 +213,7 @@ typedef struct glamor_screen_private {
     Bool has_texture_swizzle;
     Bool is_core_profile;
     Bool can_copyplane;
+    Bool use_gpu_shader4;
     int max_fbo_size;
 
     struct glamor_format formats[33];

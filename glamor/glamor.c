@@ -772,6 +772,10 @@ glamor_init(ScreenPtr screen, unsigned int flags)
         goto fail;
     }
 
+    if (!glamor_priv->is_gles && glamor_priv->glsl_version == 120 &&
+        epoxy_has_gl_extension("GL_ARB_instanced_arrays"))
+        glamor_priv->use_gpu_shader4 = epoxy_has_gl_extension("GL_EXT_gpu_shader4");
+
     glamor_priv->has_rw_pbo = FALSE;
     if (!glamor_priv->is_gles)
         glamor_priv->has_rw_pbo = TRUE;

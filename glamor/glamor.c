@@ -746,7 +746,7 @@ glamor_init(ScreenPtr screen, unsigned int flags)
          * have instanced arrays, but this is not always the case.
          * etnaviv offers GLSL 140 with OpenGL 2.1.
          */
-        if (glamor_priv->glsl_version >= 130 &&
+        if (glamor_glsl_has_ints(glamor_priv) &&
             !epoxy_has_gl_extension("GL_ARB_instanced_arrays"))
                 glamor_priv->glsl_version = 120;
     } else {
@@ -799,7 +799,7 @@ glamor_init(ScreenPtr screen, unsigned int flags)
         epoxy_gl_version() >= 30 ||
         epoxy_has_gl_extension("GL_NV_pack_subimage");
     glamor_priv->has_dual_blend =
-        glamor_priv->glsl_version >= 130 &&
+        glamor_glsl_has_ints(glamor_priv) &&
         epoxy_has_gl_extension("GL_ARB_blend_func_extended");
     glamor_priv->has_clear_texture =
         epoxy_gl_version() >= 44 ||

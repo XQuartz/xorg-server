@@ -21,25 +21,20 @@
  * IN THE SOFTWARE.
  */
 
-/** @file ephyr_glamor_glx.c
+/** @file ephyr_glamor.c
  *
- * Separate file for hiding Xlib and GLX-using parts of xephyr from
- * the rest of the server-struct-aware build.
+ * Glamor support and EGL setup.
  */
 
 #include <stdlib.h>
-#include <X11/Xlib.h>
-#include <X11/Xlibint.h>
-#undef Xcalloc
-#undef Xrealloc
-#undef Xfree
-#include <X11/Xlib-xcb.h>
+#include <stdint.h>
+#include <xcb/xcb.h>
 #include <xcb/xcb_aux.h>
 #include <pixman.h>
-#include <epoxy/glx.h>
-#include "ephyr_glamor_glx.h"
+#include "glamor_egl.h"
+#include "glamor_priv.h"
+#include "ephyr_glamor.h"
 #include "os.h"
-#include <X11/Xproto.h>
 
 /* until we need geometry shaders GL3.1 should suffice. */
 /* Xephyr has its own copy of this for build reasons */
@@ -47,15 +42,8 @@
 #define GLAMOR_GL_CORE_VER_MINOR 1
 /** @{
  *
- * global state for Xephyr with glamor.
- *
- * Xephyr can render with multiple windows, but all the windows have
- * to be on the same X connection and all have to have the same
- * visual.
+ * global state for Xephyr with glamor, all of which is arguably a bug.
  */
-static Display *dpy;
-static XVisualInfo *visual_info;
-static GLXFBConfig fb_config;
 Bool ephyr_glamor_gles2;
 Bool ephyr_glamor_skip_present;
 /** @} */
@@ -64,9 +52,10 @@ Bool ephyr_glamor_skip_present;
  * Per-screen state for Xephyr with glamor.
  */
 struct ephyr_glamor {
-    GLXContext ctx;
-    Window win;
-    GLXWindow glx_win;
+    EGLDisplay dpy;
+    EGLContext ctx;
+    xcb_window_t win;
+    EGLSurface egl_win;
 
     GLuint tex;
 
@@ -178,16 +167,86 @@ ephyr_glamor_setup_texturing_shader(struct ephyr_glamor *glamor)
     assert(glamor->texture_shader_texcoord_loc != -1);
 }
 
+#ifndef EGL_PLATFORM_XCB_EXT
+#define EGL_PLATFORM_XCB_EXT 0x31DC
+#endif
+
+#include <dlfcn.h>
+#ifndef RTLD_DEFAULT
+#define RTLD_DEFAULT NULL
+#endif
+
+/* (loud booing)
+ *
+ * keeping this as a static variable is bad form, we _could_ have zaphod heads
+ * on different displays (for example). but other bits of Xephyr are already
+ * broken for that case, and fixing that would entail fixing the rest of the
+ * contortions with hostx.c anyway, so this works for now.
+ */
+static EGLDisplay edpy = EGL_NO_DISPLAY;
+
 xcb_connection_t *
 ephyr_glamor_connect(void)
 {
-    dpy = XOpenDisplay(NULL);
-    if (!dpy)
-        return NULL;
+    int major = 0, minor = 0;
 
-    XSetEventQueueOwner(dpy, XCBOwnsEventQueue);
+    /*
+     * Try pure xcb first. If that doesn't work but we can find XOpenDisplay,
+     * fall back to xlib. This lets us potentially not load libX11 at all, if
+     * the EGL is also pure xcb.
+     */
 
-    return XGetXCBConnection(dpy);
+    if (epoxy_has_egl_extension(EGL_NO_DISPLAY, "EGL_EXT_platform_xcb")) {
+        xcb_connection_t *conn = xcb_connect(NULL, NULL);
+        EGLDisplay dpy = glamor_egl_get_display(EGL_PLATFORM_XCB_EXT, conn);
+
+        if (dpy == EGL_NO_DISPLAY) {
+            xcb_disconnect(conn);
+            return NULL;
+        }
+
+        edpy = dpy;
+        eglInitialize(dpy, &major, &minor);
+        return conn;
+    }
+
+    if (epoxy_has_egl_extension(EGL_NO_DISPLAY, "EGL_EXT_platform_x11") ||
+        epoxy_has_egl_extension(EGL_NO_DISPLAY, "EGL_KHR_platform_x11)")) {
+        void *lib = NULL;
+        xcb_connection_t *ret = NULL;
+        void *(*x_open_display)(void *) =
+            (void *) dlsym(RTLD_DEFAULT, "XOpenDisplay");
+        xcb_connection_t *(*x_get_xcb_connection)(void *) =
+            (void *) dlsym(RTLD_DEFAULT, "XGetXCBConnection");
+
+        if (x_open_display == NULL)
+            return NULL;
+
+        if (x_get_xcb_connection == NULL) {
+            lib = dlopen("libX11-xcb.so.1", RTLD_LOCAL | RTLD_LAZY);
+            x_get_xcb_connection =
+                (void *) dlsym(lib, "XGetXCBConnection");
+        }
+
+        if (x_get_xcb_connection == NULL)
+            goto out;
+
+        void *xdpy = x_open_display(NULL);
+        EGLDisplay dpy = glamor_egl_get_display(EGL_PLATFORM_X11_KHR, xdpy);
+        if (dpy == EGL_NO_DISPLAY)
+            goto out;
+
+        edpy = dpy;
+        eglInitialize(dpy, &major, &minor);
+        ret = x_get_xcb_connection(xdpy);
+out:
+        if (lib)
+            dlclose(lib);
+
+        return ret;
+    }
+
+    return NULL;
 }
 
 void
@@ -221,7 +280,7 @@ ephyr_glamor_damage_redisplay(struct ephyr_glamor *glamor,
     if (ephyr_glamor_skip_present)
         return;
 
-    glXMakeCurrent(dpy, glamor->glx_win, glamor->ctx);
+    eglMakeCurrent(glamor->dpy, glamor->egl_win, glamor->egl_win, glamor->ctx);
 
     glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &old_vao);
     glBindVertexArray(glamor->vao);
@@ -238,53 +297,12 @@ ephyr_glamor_damage_redisplay(struct ephyr_glamor *glamor,
 
     glBindVertexArray(old_vao);
 
-    glXSwapBuffers(dpy, glamor->glx_win);
-}
-
-/**
- * Xlib-based handling of xcb events for glamor.
- *
- * We need to let the Xlib event filtering run on the event so that
- * Mesa's dri2_glx.c userspace event mangling gets run, and we
- * correctly get our invalidate events propagated into the driver.
- */
-void
-ephyr_glamor_process_event(xcb_generic_event_t *xev)
-{
-
-    uint32_t response_type = xev->response_type & 0x7f;
-    /* Note the types on wire_to_event: there's an Xlib XEvent (with
-     * the broken types) that it returns, and a protocol xEvent that
-     * it inspects.
-     */
-    Bool (*wire_to_event)(Display *dpy, XEvent *ret, xEvent *event);
-
-    XLockDisplay(dpy);
-    /* Set the event handler to NULL to get access to the current one. */
-    wire_to_event = XESetWireToEvent(dpy, response_type, NULL);
-    if (wire_to_event) {
-        XEvent processed_event;
-
-        /* OK they had an event handler.  Plug it back in, and call
-         * through to it.
-         */
-        XESetWireToEvent(dpy, response_type, wire_to_event);
-        xev->sequence = LastKnownRequestProcessed(dpy);
-        wire_to_event(dpy, &processed_event, (xEvent *)xev);
-    }
-    XUnlockDisplay(dpy);
-}
-
-static int
-ephyr_glx_error_handler(Display * _dpy, XErrorEvent * ev)
-{
-    return 0;
+    eglSwapBuffers(glamor->dpy, glamor->egl_win);
 }
 
 struct ephyr_glamor *
-ephyr_glamor_glx_screen_init(xcb_window_t win)
+ephyr_glamor_screen_init(xcb_window_t win, xcb_visualid_t vid)
 {
-    int (*oldErrorHandler) (Display *, XErrorEvent *);
     static const float position[] = {
         -1, -1,
          1, -1,
@@ -297,9 +315,9 @@ ephyr_glamor_glx_screen_init(xcb_window_t win)
     };
     GLint old_vao;
 
-    GLXContext ctx;
+    EGLContext ctx;
     struct ephyr_glamor *glamor;
-    GLXWindow glx_win;
+    EGLSurface egl_win;
 
     glamor = calloc(1, sizeof(struct ephyr_glamor));
     if (!glamor) {
@@ -307,56 +325,49 @@ ephyr_glamor_glx_screen_init(xcb_window_t win)
         return NULL;
     }
 
-    glx_win = glXCreateWindow(dpy, fb_config, win, NULL);
+    const EGLint config_attribs[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_NATIVE_VISUAL_ID, vid,
+        EGL_NONE,
+    };
+    EGLConfig config = EGL_NO_CONFIG_KHR;
+    int num_configs = 0;
 
-    if (ephyr_glamor_gles2) {
-        static const int context_attribs[] = {
-            GLX_CONTEXT_MAJOR_VERSION_ARB, 2,
-            GLX_CONTEXT_MINOR_VERSION_ARB, 0,
-            GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_ES_PROFILE_BIT_EXT,
-            0,
-        };
-        if (epoxy_has_glx_extension(dpy, DefaultScreen(dpy),
-                                    "GLX_EXT_create_context_es2_profile")) {
-            ctx = glXCreateContextAttribsARB(dpy, fb_config, NULL, True,
-                                             context_attribs);
-        } else {
-            FatalError("Xephyr -glamor_gles2 requires "
-                       "GLX_EXT_create_context_es2_profile\n");
-        }
-    } else {
-        if (epoxy_has_glx_extension(dpy, DefaultScreen(dpy),
-                                    "GLX_ARB_create_context")) {
-            static const int context_attribs[] = {
-                GLX_CONTEXT_PROFILE_MASK_ARB,
-                GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
-                GLX_CONTEXT_MAJOR_VERSION_ARB,
-                GLAMOR_GL_CORE_VER_MAJOR,
-                GLX_CONTEXT_MINOR_VERSION_ARB,
-                GLAMOR_GL_CORE_VER_MINOR,
-                0,
-            };
-            oldErrorHandler = XSetErrorHandler(ephyr_glx_error_handler);
-            ctx = glXCreateContextAttribsARB(dpy, fb_config, NULL, True,
-                                             context_attribs);
-            XSync(dpy, False);
-            XSetErrorHandler(oldErrorHandler);
-        } else {
-            ctx = NULL;
-        }
+    /* (loud booing (see above)) */
+    glamor->dpy = edpy;
 
-        if (!ctx)
-            ctx = glXCreateContext(dpy, visual_info, NULL, True);
-    }
+    eglChooseConfig(glamor->dpy, config_attribs, &config, 1, &num_configs);
+    if (num_configs != 1)
+        FatalError("Unable to find an EGLConfig for vid %#x\n", vid);
+
+    egl_win = eglCreatePlatformWindowSurfaceEXT(glamor->dpy, config,
+                                                &win, NULL);
+
+    if (ephyr_glamor_gles2)
+        eglBindAPI(EGL_OPENGL_ES_API);
+    else
+        eglBindAPI(EGL_OPENGL_API);
+
+    EGLint context_attribs[5];
+    int i = 0;
+    context_attribs[i++] = EGL_CONTEXT_MAJOR_VERSION;
+    context_attribs[i++] = ephyr_glamor_gles2 ? 2 : 3;
+    context_attribs[i++] = EGL_CONTEXT_MINOR_VERSION;
+    context_attribs[i++] = ephyr_glamor_gles2 ? 0 : 1;
+    context_attribs[i++] = EGL_NONE;
+
+    ctx = eglCreateContext(glamor->dpy, config, EGL_NO_CONTEXT,
+                           context_attribs);
+
     if (ctx == NULL)
-        FatalError("glXCreateContext failed\n");
+        FatalError("eglCreateContext failed\n");
 
-    if (!glXMakeCurrent(dpy, glx_win, ctx))
-        FatalError("glXMakeCurrent failed\n");
+    if (!eglMakeCurrent(glamor->dpy, egl_win, egl_win, ctx))
+        FatalError("eglMakeCurrent failed\n");
 
     glamor->ctx = ctx;
     glamor->win = win;
-    glamor->glx_win = glx_win;
+    glamor->egl_win = egl_win;
     ephyr_glamor_setup_texturing_shader(glamor);
 
     glGenVertexArrays(1, &glamor->vao);
@@ -375,46 +386,15 @@ ephyr_glamor_glx_screen_init(xcb_window_t win)
 }
 
 void
-ephyr_glamor_glx_screen_fini(struct ephyr_glamor *glamor)
+ephyr_glamor_screen_fini(struct ephyr_glamor *glamor)
 {
-    glXMakeCurrent(dpy, None, NULL);
-    glXDestroyContext(dpy, glamor->ctx);
-    glXDestroyWindow(dpy, glamor->glx_win);
+    eglMakeCurrent(glamor->dpy,
+                   EGL_NO_SURFACE, EGL_NO_SURFACE,
+                   EGL_NO_CONTEXT);
+    eglDestroyContext(glamor->dpy, glamor->ctx);
+    eglDestroySurface(glamor->dpy, glamor->egl_win);
 
     free(glamor);
-}
-
-xcb_visualtype_t *
-ephyr_glamor_get_visual(void)
-{
-    xcb_screen_t *xscreen =
-        xcb_aux_get_screen(XGetXCBConnection(dpy), DefaultScreen(dpy));
-    int attribs[] = {
-        GLX_RENDER_TYPE, GLX_RGBA_BIT,
-        GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
-        GLX_RED_SIZE, 1,
-        GLX_GREEN_SIZE, 1,
-        GLX_BLUE_SIZE, 1,
-        GLX_DOUBLEBUFFER, 1,
-        None
-    };
-    int event_base = 0, error_base = 0, nelements;
-    GLXFBConfig *fbconfigs;
-
-    if (!glXQueryExtension (dpy, &error_base, &event_base))
-        FatalError("Couldn't find GLX extension\n");
-
-    fbconfigs = glXChooseFBConfig(dpy, DefaultScreen(dpy), attribs, &nelements);
-    if (!nelements)
-        FatalError("Couldn't choose an FBConfig\n");
-    fb_config = fbconfigs[0];
-    free(fbconfigs);
-
-    visual_info = glXGetVisualFromFBConfig(dpy, fb_config);
-    if (visual_info == NULL)
-        FatalError("Couldn't get RGB visual\n");
-
-    return xcb_aux_find_visual_by_id(xscreen, visual_info->visualid);
 }
 
 void

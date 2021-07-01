@@ -21,13 +21,6 @@
  * IN THE SOFTWARE.
  */
 
-/**
- * ephyr_glamor_glx.h
- *
- * Prototypes exposed by ephyr_glamor_glx.c, without including any
- * server headers.
- */
-
 #include <xcb/xcb.h>
 #include "dix-config.h"
 
@@ -40,14 +33,11 @@ ephyr_glamor_connect(void);
 void
 ephyr_glamor_set_texture(struct ephyr_glamor *ephyr_glamor, uint32_t tex);
 
-xcb_visualtype_t *
-ephyr_glamor_get_visual(void);
-
 struct ephyr_glamor *
-ephyr_glamor_glx_screen_init(xcb_window_t win);
+ephyr_glamor_screen_init(xcb_window_t win, xcb_visualid_t vid);
 
 void
-ephyr_glamor_glx_screen_fini(struct ephyr_glamor *glamor);
+ephyr_glamor_screen_fini(struct ephyr_glamor *glamor);
 
 #ifdef GLAMOR
 void
@@ -57,9 +47,6 @@ ephyr_glamor_set_window_size(struct ephyr_glamor *glamor,
 void
 ephyr_glamor_damage_redisplay(struct ephyr_glamor *glamor,
                               struct pixman_region16 *damage);
-
-void
-ephyr_glamor_process_event(xcb_generic_event_t *xev);
 
 #else /* !GLAMOR */
 
@@ -72,11 +59,6 @@ ephyr_glamor_set_window_size(struct ephyr_glamor *glamor,
 static inline void
 ephyr_glamor_damage_redisplay(struct ephyr_glamor *glamor,
                               struct pixman_region16 *damage)
-{
-}
-
-static inline void
-ephyr_glamor_process_event(xcb_generic_event_t *xev)
 {
 }
 

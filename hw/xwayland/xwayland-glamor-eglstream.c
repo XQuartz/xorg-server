@@ -60,8 +60,6 @@ struct xwl_eglstream_private {
 
     EGLConfig config;
 
-    SetWindowPixmapProcPtr SetWindowPixmap;
-
     Bool have_egl_damage;
     Bool have_egl_stream_flush;
 
@@ -325,31 +323,6 @@ xwl_glamor_eglstream_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
         return NULL;
 
     return xwl_pixmap->buffer;
-}
-
-static void
-xwl_eglstream_set_window_pixmap(WindowPtr window, PixmapPtr pixmap)
-{
-    ScreenPtr screen = window->drawable.pScreen;
-    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
-    struct xwl_eglstream_private *xwl_eglstream =
-        xwl_eglstream_get(xwl_screen);
-    PixmapPtr old_pixmap;
-
-    /* The pixmap for this window has changed.
-     * If that occurs while there is a stream pending, i.e. before the
-     * compositor has finished attaching the consumer for the window's
-     * pixmap's original eglstream, then a producer could no longer be
-     * attached, so the stream would be useless.
-     */
-    old_pixmap = (*screen->GetWindowPixmap) (window);
-    if (old_pixmap && old_pixmap != pixmap)
-        xwl_eglstream_destroy_pending_cb(old_pixmap);
-
-    xwl_screen->screen->SetWindowPixmap = xwl_eglstream->SetWindowPixmap;
-    (*xwl_screen->screen->SetWindowPixmap)(window, pixmap);
-    xwl_eglstream->SetWindowPixmap = xwl_screen->screen->SetWindowPixmap;
-    xwl_screen->screen->SetWindowPixmap = xwl_eglstream_set_window_pixmap;
 }
 
 static const char *
@@ -1100,15 +1073,10 @@ error:
 static Bool
 xwl_glamor_eglstream_init_screen(struct xwl_screen *xwl_screen)
 {
-    struct xwl_eglstream_private *xwl_eglstream =
-        xwl_eglstream_get(xwl_screen);
     ScreenPtr screen = xwl_screen->screen;
 
     /* We can just let glamor handle CreatePixmap */
     screen->DestroyPixmap = xwl_glamor_eglstream_destroy_pixmap;
-
-    xwl_eglstream->SetWindowPixmap = screen->SetWindowPixmap;
-    screen->SetWindowPixmap = xwl_eglstream_set_window_pixmap;
 
     return TRUE;
 }

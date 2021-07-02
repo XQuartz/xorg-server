@@ -618,10 +618,7 @@ glamor_init(ScreenPtr screen, unsigned int flags)
 {
     glamor_screen_private *glamor_priv;
     int gl_version;
-    int glsl_major, glsl_minor;
     int max_viewport_size[2];
-    const char *shading_version_string;
-    int shading_version_offset;
 
     PictureScreenPtr ps = GetPictureScreenIfSet(screen);
 
@@ -683,29 +680,7 @@ glamor_init(ScreenPtr screen, unsigned int flags)
     glamor_priv->is_core_profile =
         gl_version >= 31 && !epoxy_has_gl_extension("GL_ARB_compatibility");
 
-    shading_version_string = (char *) glGetString(GL_SHADING_LANGUAGE_VERSION);
-
-    if (!shading_version_string) {
-        LogMessage(X_WARNING,
-                   "glamor%d: Failed to get GLSL version\n",
-                   screen->myNum);
-        goto fail;
-    }
-
-    shading_version_offset = 0;
-    if (strncmp("OpenGL ES GLSL ES ", shading_version_string, 18) == 0)
-        shading_version_offset = 18;
-
-    if (sscanf(shading_version_string + shading_version_offset,
-               "%i.%i",
-               &glsl_major,
-               &glsl_minor) != 2) {
-        LogMessage(X_WARNING,
-                   "glamor%d: Failed to parse GLSL version string %s\n",
-                   screen->myNum, shading_version_string);
-        goto fail;
-    }
-    glamor_priv->glsl_version = glsl_major * 100 + glsl_minor;
+    glamor_priv->glsl_version = epoxy_glsl_version();
 
     if (glamor_priv->is_gles) {
         /* Force us back to the base version of our programs on an ES

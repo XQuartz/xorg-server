@@ -293,9 +293,11 @@ xwl_eglstream_destroy_pixmap_stream(struct xwl_pixmap *xwl_pixmap)
 }
 
 static void
-xwl_glamor_eglstream_remove_pending_stream(struct xwl_pixmap *xwl_pixmap)
+xwl_eglstream_destroy_pending_cb(PixmapPtr pixmap)
 {
-    if (xwl_pixmap->pending_cb) {
+    struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
+
+    if (xwl_pixmap && xwl_pixmap->pending_cb) {
         wl_callback_destroy(xwl_pixmap->pending_cb);
         xwl_pixmap->pending_cb = NULL;
     }
@@ -307,7 +309,7 @@ xwl_glamor_eglstream_destroy_pixmap(PixmapPtr pixmap)
     struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
 
     if (xwl_pixmap && pixmap->refcnt == 1) {
-        xwl_glamor_eglstream_remove_pending_stream(xwl_pixmap);
+        xwl_eglstream_destroy_pending_cb(pixmap);
         xwl_eglstream_destroy_pixmap_stream(xwl_pixmap);
         xwl_pixmap_del_buffer_release_cb(pixmap);
     }
@@ -323,16 +325,6 @@ xwl_glamor_eglstream_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
         return NULL;
 
     return xwl_pixmap->buffer;
-}
-
-static void
-xwl_eglstream_cancel_pending_stream(PixmapPtr pixmap)
-{
-    struct xwl_pixmap *xwl_pixmap;
-
-    xwl_pixmap = xwl_pixmap_get(pixmap);
-    if (xwl_pixmap)
-        xwl_glamor_eglstream_remove_pending_stream(xwl_pixmap);
 }
 
 static void
@@ -352,7 +344,7 @@ xwl_eglstream_set_window_pixmap(WindowPtr window, PixmapPtr pixmap)
      */
     old_pixmap = (*screen->GetWindowPixmap) (window);
     if (old_pixmap && old_pixmap != pixmap)
-        xwl_eglstream_cancel_pending_stream(old_pixmap);
+        xwl_eglstream_destroy_pending_cb(old_pixmap);
 
     xwl_screen->screen->SetWindowPixmap = xwl_eglstream->SetWindowPixmap;
     (*xwl_screen->screen->SetWindowPixmap)(window, pixmap);
@@ -449,8 +441,7 @@ xwl_eglstream_consumer_ready_callback(void *data,
     struct xwl_eglstream_private *xwl_eglstream =
         xwl_eglstream_get(xwl_screen);
 
-    wl_callback_destroy(callback);
-    xwl_pixmap->pending_cb = NULL;
+    xwl_eglstream_destroy_pending_cb(pixmap);
 
     xwl_glamor_egl_make_current(xwl_screen);
 

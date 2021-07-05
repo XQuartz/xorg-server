@@ -701,6 +701,8 @@ err:
 void
 xwl_output_destroy(struct xwl_output *xwl_output)
 {
+    if (xwl_output->xdg_output)
+        zxdg_output_v1_destroy(xwl_output->xdg_output);
     wl_output_destroy(xwl_output->output);
     free(xwl_output);
 }

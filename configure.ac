@@ -31,7 +31,7 @@ RELEASE_DATE="2021-04-13"
 RELEASE_NAME="Arroz con Pollo"
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_MACRO_DIR([m4])
-AM_INIT_AUTOMAKE([foreign dist-bzip2])
+AM_INIT_AUTOMAKE([foreign dist-xz])
 AC_USE_SYSTEM_EXTENSIONS
 
 # Require xorg-macros minimum of 1.14 for XORG_COMPILER_BRAND in XORG_DEFAULT_OPTIONS

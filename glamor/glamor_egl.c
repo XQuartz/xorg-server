@@ -1060,9 +1060,14 @@ glamor_egl_init(ScrnInfoPtr scrn, int fd)
         goto error;
     }
     if (strstr((const char *)renderer, "llvmpipe")) {
-        xf86DrvMsg(scrn->scrnIndex, X_INFO,
-                   "Refusing to try glamor on llvmpipe\n");
-        goto error;
+        if (scrn->confScreen->num_gpu_devices)
+            xf86DrvMsg(scrn->scrnIndex, X_INFO,
+                       "Allowing glamor on llvmpipe for PRIME\n");
+        else {
+            xf86DrvMsg(scrn->scrnIndex, X_INFO,
+                       "Refusing to try glamor on llvmpipe\n");
+            goto error;
+        }
     }
 
     /*

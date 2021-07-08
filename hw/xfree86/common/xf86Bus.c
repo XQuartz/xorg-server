@@ -107,9 +107,9 @@ xf86CallDriverProbe(DriverPtr drv, Bool detect_only)
 }
 
 static screenLayoutPtr
-xf86BusConfigMatch(ScrnInfoPtr scrnInfo) {
+xf86BusConfigMatch(ScrnInfoPtr scrnInfo, Bool is_gpu) {
     screenLayoutPtr layout;
-    int i;
+    int i, j;
 
     for (layout = xf86ConfigLayout.screens; layout->screen != NULL;
          layout++) {
@@ -118,9 +118,18 @@ xf86BusConfigMatch(ScrnInfoPtr scrnInfo) {
                 xf86GetDevFromEntity(scrnInfo->entityList[i],
                                      scrnInfo->entityInstanceList[i]);
 
-            if (dev == layout->screen->device) {
-                /* A match has been found */
-                return layout;
+            if (is_gpu) {
+                for (j = 0; j < layout->screen->num_gpu_devices; j++) {
+                    if (dev == layout->screen->gpu_devices[j]) {
+                        /* A match has been found */
+                        return layout;
+                    }
+                }
+            } else {
+                if (dev == layout->screen->device) {
+                    /* A match has been found */
+                    return layout;
+                }
             }
         }
     }
@@ -192,7 +201,7 @@ xf86BusConfig(void)
      *
      */
     for (i = 0; i < xf86NumScreens; i++) {
-        layout = xf86BusConfigMatch(xf86Screens[i]);
+        layout = xf86BusConfigMatch(xf86Screens[i], FALSE);
         if (layout && layout->screen)
             xf86Screens[i]->confScreen = layout->screen;
         else {
@@ -204,9 +213,12 @@ xf86BusConfig(void)
         }
     }
 
-    /* bind GPU conf screen to protocol screen 0 */
-    for (i = 0; i < xf86NumGPUScreens; i++)
-        xf86GPUScreens[i]->confScreen = xf86Screens[0]->confScreen;
+    /* bind GPU conf screen to the configured protocol screen, or 0 if not configured */
+    for (i = 0; i < xf86NumGPUScreens; i++) {
+        layout = xf86BusConfigMatch(xf86GPUScreens[i], TRUE);
+        int scrnum = (layout && layout->screen) ? layout->screen->screennum : 0;
+        xf86GPUScreens[i]->confScreen = xf86Screens[scrnum]->confScreen;
+    }
 
     /* If no screens left, return now.  */
     if (xf86NumScreens == 0) {

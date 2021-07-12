@@ -69,37 +69,6 @@ struct ephyr_glamor {
     GLuint vao, vbo;
 };
 
-static GLint
-ephyr_glamor_compile_glsl_prog(GLenum type, const char *source)
-{
-    GLint ok;
-    GLint prog;
-
-    prog = glCreateShader(type);
-    glShaderSource(prog, 1, (const GLchar **) &source, NULL);
-    glCompileShader(prog);
-    glGetShaderiv(prog, GL_COMPILE_STATUS, &ok);
-    if (!ok) {
-        GLchar *info;
-        GLint size;
-
-        glGetShaderiv(prog, GL_INFO_LOG_LENGTH, &size);
-        info = malloc(size);
-        if (info) {
-            glGetShaderInfoLog(prog, size, NULL, info);
-            ErrorF("Failed to compile %s: %s\n",
-                   type == GL_FRAGMENT_SHADER ? "FS" : "VS", info);
-            ErrorF("Program source:\n%s", source);
-            free(info);
-        }
-        else
-            ErrorF("Failed to get shader compilation info.\n");
-        FatalError("GLSL compile failure\n");
-    }
-
-    return prog;
-}
-
 static GLuint
 ephyr_glamor_build_glsl_prog(GLuint vs, GLuint fs)
 {
@@ -156,8 +125,8 @@ ephyr_glamor_setup_texturing_shader(struct ephyr_glamor *glamor)
 
     GLuint fs, vs, prog;
 
-    vs = ephyr_glamor_compile_glsl_prog(GL_VERTEX_SHADER, vs_source);
-    fs = ephyr_glamor_compile_glsl_prog(GL_FRAGMENT_SHADER, fs_source);
+    vs = glamor_compile_glsl_prog(GL_VERTEX_SHADER, vs_source);
+    fs = glamor_compile_glsl_prog(GL_FRAGMENT_SHADER, fs_source);
     prog = ephyr_glamor_build_glsl_prog(vs, fs);
 
     glamor->texture_shader = prog;

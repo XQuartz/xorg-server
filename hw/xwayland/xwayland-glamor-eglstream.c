@@ -99,37 +99,6 @@ xwl_eglstream_get(struct xwl_screen *xwl_screen)
                             &xwl_eglstream_private_key);
 }
 
-static GLint
-xwl_eglstream_compile_glsl_prog(GLenum type, const char *source)
-{
-    GLint ok;
-    GLint prog;
-
-    prog = glCreateShader(type);
-    glShaderSource(prog, 1, (const GLchar **) &source, NULL);
-    glCompileShader(prog);
-    glGetShaderiv(prog, GL_COMPILE_STATUS, &ok);
-    if (!ok) {
-        GLchar *info;
-        GLint size;
-
-        glGetShaderiv(prog, GL_INFO_LOG_LENGTH, &size);
-        info = malloc(size);
-        if (info) {
-            glGetShaderInfoLog(prog, size, NULL, info);
-            ErrorF("Failed to compile %s: %s\n",
-                   type == GL_FRAGMENT_SHADER ? "FS" : "VS", info);
-            ErrorF("Program source:\n%s", source);
-            free(info);
-        }
-        else
-            ErrorF("Failed to get shader compilation info.\n");
-        FatalError("GLSL compile failure\n");
-    }
-
-    return prog;
-}
-
 static GLuint
 xwl_eglstream_build_glsl_prog(GLuint vs, GLuint fs)
 {
@@ -775,8 +744,8 @@ xwl_eglstream_init_shaders(struct xwl_screen *xwl_screen)
          0,  0,
     };
 
-    vs = xwl_eglstream_compile_glsl_prog(GL_VERTEX_SHADER, blit_vs_src);
-    fs = xwl_eglstream_compile_glsl_prog(GL_FRAGMENT_SHADER, blit_fs_src);
+    vs = glamor_compile_glsl_prog(GL_VERTEX_SHADER, blit_vs_src);
+    fs = glamor_compile_glsl_prog(GL_FRAGMENT_SHADER, blit_fs_src);
 
     xwl_eglstream->blit_prog = xwl_eglstream_build_glsl_prog(vs, fs);
     glDeleteShader(vs);

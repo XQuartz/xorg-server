@@ -52,39 +52,27 @@
 
 #include "launchd_fd.h"
 
-static char x11_path[PATH_MAX + 1];
+static CFURLRef x11appURL;
+static FSRef x11_appRef;
 static pid_t x11app_pid = 0;
 aslclient aslc;
 
 static void
 set_x11_path(void)
 {
-    CFURLRef appURL = NULL;
     OSStatus osstatus =
         LSFindApplicationForInfo(kLSUnknownCreator, CFSTR(
-                                     kX11AppBundleId), nil, nil, &appURL);
+                                     kX11AppBundleId), nil, &x11_appRef, &x11appURL);
 
     switch (osstatus) {
     case noErr:
-        if (appURL == NULL) {
+        if (x11appURL == NULL) {
             asl_log(
                 aslc, NULL, ASL_LEVEL_ERR,
                 "Xquartz: Invalid response from LSFindApplicationForInfo(%s)",
                 kX11AppBundleId);
             exit(1);
         }
-
-        if (!CFURLGetFileSystemRepresentation(appURL, true,
-                                              (unsigned char *)x11_path,
-                                              sizeof(x11_path))) {
-            asl_log(aslc, NULL, ASL_LEVEL_ERR,
-                    "Xquartz: Error resolving URL for %s",
-                    kX11AppBundleId);
-            exit(3);
-        }
-
-        strlcat(x11_path, kX11AppBundlePath, sizeof(x11_path));
-        asl_log(aslc, NULL, ASL_LEVEL_INFO, "Xquartz: X11.app = %s", x11_path);
         break;
 
     case kLSApplicationNotFoundErr:
@@ -253,24 +241,23 @@ main(int argc, char **argv, char **envp)
                 server_bootstrap_name);
         set_x11_path();
 
-        /* This forking is ugly and will be cleaned up later */
-        child = fork();
-        if (child == -1) {
-            asl_log(aslc, NULL, ASL_LEVEL_ERR, "Xquartz: Could not fork: %s",
-                    strerror(
-                        errno));
-            return EXIT_FAILURE;
-        }
+        char *listenOnlyArg = "--listenonly";
+        CFStringRef silentLaunchArg = CFStringCreateWithCString(NULL, listenOnlyArg, kCFStringEncodingUTF8);
+        CFStringRef args[] = { silentLaunchArg };
+        CFArrayRef passArgv = CFArrayCreate(NULL, (const void**) args, 1, NULL);
+        LSApplicationParameters params = { 0, /* CFIndex version == 0 */
+                                           kLSLaunchDefaults, /* LSLaunchFlags flags */
+                                           &x11_appRef, /* FSRef application */
+                                           NULL, /* void* asyncLaunchRefCon*/
+                                           NULL, /* CFDictionaryRef environment */
+                                           passArgv, /* CFArrayRef arguments */
+                                           NULL /* AppleEvent* initialEvent */
+        };
 
-        if (child == 0) {
-            char *_argv[3];
-            _argv[0] = x11_path;
-            _argv[1] = "--listenonly";
-            _argv[2] = NULL;
-            asl_log(aslc, NULL, ASL_LEVEL_NOTICE,
-                    "Xquartz: Starting X server: %s --listenonly",
-                    x11_path);
-            return execvp(x11_path, _argv);
+        OSStatus status = LSOpenApplication(&params, NULL);
+        if (status != noErr) {
+            asl_log(aslc, NULL, ASL_LEVEL_ERR, "Xquartz: Unable to launch: %d", (int)status);
+            return EXIT_FAILURE;
         }
 
         /* Try connecting for 10 seconds */

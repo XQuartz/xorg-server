@@ -216,15 +216,6 @@ main(int argc, char **argv, char **envp)
     free(asl_sender);
     free(asl_facility);
 
-    /* We don't have a mechanism in place to handle this interrupt driven
-     * server-start notification, so just send the signal now, so xinit doesn't
-     * time out waiting for it and will just poll for the server.
-     */
-    handler = signal(SIGUSR1, SIG_IGN);
-    if (handler == SIG_IGN)
-        kill(getppid(), SIGUSR1);
-    signal(SIGUSR1, handler);
-
     /* Pass on SIGs to X11.app */
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
@@ -318,6 +309,16 @@ main(int argc, char **argv, char **envp)
             break;
         }
     }
+
+   /* As we have already handed off the launchd socket and
+	* we don't have a mechanism in place to handle this interrupt driven
+    * server-start notification, so just send the signal now, so xinit doesn't
+    * time out waiting for it and will just poll for the server.
+    */
+    handler = signal(SIGUSR1, SIG_IGN);
+    if (handler == SIG_IGN)
+        kill(getppid(), SIGUSR1);
+    signal(SIGUSR1, handler);
 
     /* Count envp */
     for (envpc = 0; envp[envpc]; envpc++) ;

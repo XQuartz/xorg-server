@@ -257,6 +257,9 @@ ms_present_check_unflip(RRCrtcPtr crtc,
         pixmap->devKind != drmmode_bo_get_pitch(&ms->drmmode.front_bo))
         return FALSE;
 
+    if (!ms->drmmode.glamor)
+        return FALSE;
+
 #ifdef GBM_BO_WITH_MODIFIERS
     /* Check if buffer format/modifier is supported by all active CRTCs */
     gbm = glamor_gbm_bo_from_pixmap(screen, pixmap);

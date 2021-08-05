@@ -230,3 +230,5 @@ install_man(configure_file(
     output: 'gtf.1',
     configuration: manpage_config,
 ))
+
+subdir('doc')

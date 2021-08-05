@@ -27,7 +27,7 @@ srcs = [
 subdir('config')
 subdir('input')
 subdir('examples')
-# XXX: subdir('doc')
+subdir('doc')
 # XXX: subdir('doxygen')
 
 install_man(configure_file(

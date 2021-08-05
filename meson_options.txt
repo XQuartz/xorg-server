@@ -131,3 +131,10 @@ option('libunwind', type: 'boolean', value: false,
         description: 'Use libunwind for backtrace reporting')
 
 option('xwayland-path', type: 'string', description: 'Directory containing Xwayland executable')
+
+option('docs', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
+        description: 'Build documentation')
+option('devel-docs', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
+        description: 'Build development documentation')
+option('docs-pdf', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
+        description: 'Whether to build PDF version of documentation. Setting is ignored if documentation is not built.')

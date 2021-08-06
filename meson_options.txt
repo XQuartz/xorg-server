@@ -113,6 +113,8 @@ option('xf86-input-inputtest', type: 'boolean', value: true,
 option('dri1', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto', description: 'Build DRI1 extension (default: auto)')
 option('dri2', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto', description: 'Build DRI2 extension (default: auto)')
 option('dri3', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto', description: 'Build DRI3 extension (default: auto)')
+option('drm', type: 'boolean', value: 'true',
+        description: 'Build Xorg with libdrm support')
 
 option('apple-applications-dir', type: 'string', value: '/Applications/Utilities',
         description: 'Applications directory')

@@ -482,7 +482,7 @@ else
     endif
 endif
 
-libdrm_required = build_dri1 or build_dri2 or build_dri3
+libdrm_required = (build_dri1 or build_dri2 or build_dri3) and get_option('drm') == true
 if not libdrm_dep.found() and libdrm_required
     error('DRI requested, but LIBDRM not found')
 endif

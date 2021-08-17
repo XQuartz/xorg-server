@@ -989,8 +989,10 @@ xwl_glamor_eglstream_init_egl(struct xwl_screen *xwl_screen)
 #endif
 
     eglBindAPI(EGL_OPENGL_API);
-    xwl_screen->egl_context = eglCreateContext(
-        xwl_screen->egl_display, config, EGL_NO_CONTEXT, attrib_list);
+    xwl_screen->egl_context = eglCreateContext(xwl_screen->egl_display,
+                                               EGL_NO_CONFIG_KHR,
+                                               EGL_NO_CONTEXT,
+                                               attrib_list);
     if (xwl_screen->egl_context == EGL_NO_CONTEXT) {
         ErrorF("Failed to create main EGL context: 0x%x\n", eglGetError());
         goto error;

@@ -325,7 +325,7 @@ ephyr_glamor_screen_init(xcb_window_t win, xcb_visualid_t vid)
     context_attribs[i++] = ephyr_glamor_gles2 ? 0 : 1;
     context_attribs[i++] = EGL_NONE;
 
-    ctx = eglCreateContext(glamor->dpy, config, EGL_NO_CONTEXT,
+    ctx = eglCreateContext(glamor->dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT,
                            context_attribs);
 
     if (ctx == NULL)

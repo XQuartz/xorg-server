@@ -72,7 +72,6 @@ typedef struct DMXConfigCmdStruct {
     DMXConfigList *xinputs;
 } DMXConfigCmd, *DMXConfigCmdPtr;
 
-extern DMXConfigEntryPtr dmxConfigEntry;
 static DMXConfigCmd dmxConfigCmd;
 
 static int dmxDisplaysFromCommandLine;

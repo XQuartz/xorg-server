@@ -65,7 +65,6 @@ extern FILE *yyin;
 #define DMX_CANVAS_WIDTH  400
 #define DMX_CANVAS_HEIGHT 500
 
-extern DMXConfigEntryPtr dmxConfigEntry;
 static DMXConfigVirtualPtr dmxConfigCurrent, dmxConfigNewVirtual;
 static DMXConfigDisplayPtr dmxConfigCurrentDisplay, dmxConfigNewDisplay;
 static int dmxConfigGrabbed, dmxConfigGrabbedFine;

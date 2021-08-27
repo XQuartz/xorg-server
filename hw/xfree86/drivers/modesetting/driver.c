@@ -751,13 +751,14 @@ ms_change_property(ClientPtr client)
 
     client->requestVector[X_ChangeProperty] = saved_change_property;
     ret = saved_change_property(client);
-    if (ret != Success)
-        return ret;
 
     if (restore_property_vector)
         return ret;
 
     client->requestVector[X_ChangeProperty] = ms_change_property;
+
+    if (ret != Success)
+        return ret;
 
     ret = dixLookupWindow(&window, stuff->window, client, DixSetPropAccess);
     if (ret != Success)

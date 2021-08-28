@@ -1220,6 +1220,14 @@ PreInit(ScrnInfoPtr pScrn, int flags)
 #endif
     }
 
+    /*
+     * Use "atomic modesetting disable" request to detect if the kms driver is
+     * atomic capable, regardless if we will actually use atomic modesetting.
+     * This is effectively a no-op, we only care about the return status code.
+     */
+    ret = drmSetClientCap(ms->fd, DRM_CLIENT_CAP_ATOMIC, 0);
+    ms->atomic_modeset_capable = (ret == 0);
+
     if (xf86ReturnOptValBool(ms->drmmode.Options, OPTION_ATOMIC, FALSE)) {
         ret = drmSetClientCap(ms->fd, DRM_CLIENT_CAP_ATOMIC, 1);
         ms->atomic_modeset = (ret == 0);

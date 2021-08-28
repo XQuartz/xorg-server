@@ -252,8 +252,11 @@ ms_present_check_unflip(RRCrtcPtr crtc,
     if (num_crtcs_on == 0)
         return FALSE;
 
-    /* Check stride, can't change that on flip */
-    if (!ms->atomic_modeset &&
+    /*
+     * Check stride, can't change that reliably on flip on some drivers, unless
+     * the kms driver is atomic_modeset_capable.
+     */
+    if (!ms->atomic_modeset_capable &&
         pixmap->devKind != drmmode_bo_get_pitch(&ms->drmmode.front_bo))
         return FALSE;
 

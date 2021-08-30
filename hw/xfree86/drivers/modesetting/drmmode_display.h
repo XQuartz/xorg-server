@@ -131,6 +131,8 @@ typedef struct {
     Bool present_flipping;
     Bool flip_bo_import_failed;
 
+    Bool can_async_flip;
+    Bool async_flip_secondaries;
     Bool dri2_enable;
     Bool present_enable;
 

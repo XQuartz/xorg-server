@@ -60,6 +60,7 @@ typedef enum {
     OPTION_ATOMIC,
     OPTION_VARIABLE_REFRESH,
     OPTION_USE_GAMMA_LUT,
+    OPTION_ASYNC_FLIP_SECONDARIES,
 } modesettingOpts;
 
 typedef struct

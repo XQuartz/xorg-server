@@ -144,6 +144,7 @@ static const OptionInfoRec Options[] = {
     {OPTION_ATOMIC, "Atomic", OPTV_BOOLEAN, {0}, FALSE},
     {OPTION_VARIABLE_REFRESH, "VariableRefresh", OPTV_BOOLEAN, {0}, FALSE},
     {OPTION_USE_GAMMA_LUT, "UseGammaLUT", OPTV_BOOLEAN, {0}, FALSE},
+    {OPTION_ASYNC_FLIP_SECONDARIES, "AsyncFlipSecondaries", OPTV_BOOLEAN, {0}, FALSE},
     {-1, NULL, OPTV_NONE, {0}, FALSE}
 };
 
@@ -1200,6 +1201,12 @@ PreInit(ScrnInfoPtr pScrn, int flags)
                                                  &ms->vrr_support) ? X_CONFIG : X_DEFAULT;
             xf86DrvMsg(pScrn->scrnIndex, from, "VariableRefresh: %sabled\n",
                        ms->vrr_support ? "en" : "dis");
+
+            ms->drmmode.async_flip_secondaries = FALSE;
+            from = xf86GetOptValBool(ms->drmmode.Options, OPTION_ASYNC_FLIP_SECONDARIES,
+                                     &ms->drmmode.async_flip_secondaries) ? X_CONFIG : X_DEFAULT;
+            xf86DrvMsg(pScrn->scrnIndex, from, "AsyncFlipSecondaries: %sabled\n",
+                       ms->drmmode.async_flip_secondaries ? "en" : "dis");
         }
     }
 

@@ -572,7 +572,6 @@ AC_ARG_ENABLE(suid-wrapper, AS_HELP_STRING([--enable-suid-wrapper], [Build suid-
 
 dnl DDXes.
 AC_ARG_ENABLE(xorg,    	      AS_HELP_STRING([--enable-xorg], [Build Xorg server (default: auto)]), [XORG=$enableval], [XORG=auto])
-AC_ARG_ENABLE(dmx,    	      AS_HELP_STRING([--enable-dmx], [Build DMX server (default: no)]), [DMX=$enableval], [DMX=no])
 AC_ARG_ENABLE(xvfb,    	      AS_HELP_STRING([--enable-xvfb], [Build Xvfb server (default: yes)]), [XVFB=$enableval], [XVFB=yes])
 AC_ARG_ENABLE(xnest,   	      AS_HELP_STRING([--enable-xnest], [Build Xnest server (default: auto)]), [XNEST=$enableval], [XNEST=auto])
 AC_ARG_ENABLE(xquartz,        AS_HELP_STRING([--enable-xquartz], [Build Xquartz server for OS-X (default: auto)]), [XQUARTZ=$enableval], [XQUARTZ=auto])
@@ -721,7 +720,6 @@ XINERAMAPROTO="xineramaproto"
 BIGFONTPROTO="xf86bigfontproto >= 1.2.0"
 DGAPROTO="xf86dgaproto >= 2.0.99.1"
 GLPROTO="glproto >= 1.4.17"
-DMXPROTO="dmxproto >= 2.2.99.1"
 VIDMODEPROTO="xf86vidmodeproto >= 2.2.99.1"
 APPLEWMPROTO="applewmproto >= 1.4"
 LIBXSHMFENCE="xshmfence >= 1.1"
@@ -743,7 +741,6 @@ PRESENTPROTO="presentproto >= 1.2"
 
 dnl List of libraries that require a specific version
 LIBAPPLEWM="applewm >= 1.4"
-LIBDMX="dmx >= 1.0.99.1"
 LIBDRI="dri >= 7.8.0"
 LIBDRM="libdrm >= 2.4.89"
 LIBEGL="egl"
@@ -2180,62 +2177,6 @@ AM_CONDITIONAL(XQUARTZ, [test "x$XQUARTZ" = xyes])
 AM_CONDITIONAL(XQUARTZ_SPARKLE, [test "x$XQUARTZ_SPARKLE" != "xno"])
 AM_CONDITIONAL(STANDALONE_XPBPROXY, [test "x$STANDALONE_XPBPROXY" = xyes])
 
-dnl DMX DDX
-PKG_CHECK_MODULES(
-	[DMXMODULES],
-	[xmuu $LIBXEXT x11 >= 1.6 xrender xfixes $LIBXI $DMXPROTO xau $XDMCP_MODULES],
-	[PKG_CHECK_MODULES(
-		[XDMXCONFIG_DEP],
-		[xaw7 xmu xt xpm x11],
-		[have_dmx=yes],
-		[have_dmx=no])],
-	[have_dmx=no])
-AC_MSG_CHECKING([whether to build Xdmx DDX])
-if test "x$DMX" = xauto; then
-	DMX="$have_dmx"
-	case $host_os in
-		cygwin*) DMX="no" ;;
-		mingw*)  DMX="no" ;;
-		darwin*) DMX="no" ;;
-	esac
-fi
-AC_MSG_RESULT([$DMX])
-AM_CONDITIONAL(DMX, [test "x$DMX" = xyes])
-
-if test "x$DMX" = xyes; then
-	if test "x$have_dmx" = xno; then
-		AC_MSG_ERROR([Xdmx build explicitly requested, but required
-		              modules not found.])
-	fi
-	DMX_INCLUDES="$XEXT_INC $RENDER_INC $RECORD_INC"
-	XDMX_CFLAGS="$DMXMODULES_CFLAGS"
-	XDMX_LIBS="$FB_LIB $MI_LIB $XEXT_LIB $RENDER_LIB $RECORD_LIB $XI_LIB $XKB_LIB $XKB_STUB_LIB $DRI3_LIB $PRESENT_LIB $MIEXT_SYNC_LIB $MIEXT_SHADOW_LIB $MIEXT_DAMAGE_LIB $COMPOSITE_LIB $DAMAGE_LIB $MAIN_LIB $DIX_LIB $RANDR_LIB $RENDER_LIB $CONFIG_LIB $OS_LIB $FIXES_LIB"
-	XDMX_SYS_LIBS="$DMXMODULES_LIBS"
-	AC_SUBST([XDMX_CFLAGS])
-	AC_SUBST([XDMX_LIBS])
-	AC_SUBST([XDMX_SYS_LIBS])
-
-dnl USB sources in DMX require <linux/input.h>
-	AC_CHECK_HEADER([linux/input.h], DMX_BUILD_USB="yes",
-			DMX_BUILD_USB="no")
-	AC_SUBST(XDMXCONFIG_DEP_CFLAGS)
-	AC_SUBST(XDMXCONFIG_DEP_LIBS)
-	PKG_CHECK_MODULES([DMXEXAMPLES_DEP], [$LIBDMX $LIBXEXT x11])
-	AC_SUBST(DMXEXAMPLES_DEP_LIBS)
-	PKG_CHECK_MODULES([DMXXMUEXAMPLES_DEP], [$LIBDMX xmu $LIBXEXT x11])
-	AC_SUBST(DMXXMUEXAMPLES_DEP_LIBS)
-	PKG_CHECK_MODULES([DMXXIEXAMPLES_DEP], [$LIBDMX $LIBXI $LIBXEXT x11])
-	AC_SUBST(DMXXIEXAMPLES_DEP_LIBS)
-	PKG_CHECK_MODULES([XTSTEXAMPLES_DEP], [$LIBXTST $LIBXEXT x11])
-	AC_SUBST(XTSTEXAMPLES_DEP_LIBS)
-	PKG_CHECK_MODULES([XRESEXAMPLES_DEP], [xres $LIBXEXT x11])
-	AC_SUBST(XRESEXAMPLES_DEP_LIBS)
-	PKG_CHECK_MODULES([X11EXAMPLES_DEP], [$LIBXEXT x11])
-	AC_SUBST(X11EXAMPLES_DEP_LIBS)
-
-fi
-AM_CONDITIONAL([DMX_BUILD_USB], [test "x$DMX_BUILD_USB" = xyes])
-
 dnl kdrive DDX
 
 XEPHYR_LIBS=
@@ -2489,16 +2430,6 @@ hw/xfree86/xkb/Makefile
 hw/xfree86/utils/Makefile
 hw/xfree86/utils/man/Makefile
 hw/xfree86/utils/gtf/Makefile
-hw/dmx/config/Makefile
-hw/dmx/config/man/Makefile
-hw/dmx/doc/Makefile
-hw/dmx/doxygen/doxygen.conf
-hw/dmx/doxygen/Makefile
-hw/dmx/examples/Makefile
-hw/dmx/input/Makefile
-hw/dmx/glxProxy/Makefile
-hw/dmx/Makefile
-hw/dmx/man/Makefile
 hw/vfb/Makefile
 hw/vfb/man/Makefile
 hw/xnest/Makefile

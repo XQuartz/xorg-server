@@ -608,7 +608,7 @@ Controlling the server once started: \fIxset\fP(1), \fIxsetroot\fP(1),
 \fIxhost\fP(1), \fIxinput\fP(1), \fIxrandr\fP(1)
 .PP
 Server-specific man pages:
-\fIXorg\fP(1), \fIXdmx\fP(1), \fIXephyr\fP(1), \fIXnest\fP(1),
+\fIXorg\fP(1), \fIXephyr\fP(1), \fIXnest\fP(1),
 \fIXvfb\fP(1), \fIXquartz\fP(1), \fIXWin\fP(1).
 .PP
 Server internal documentation:

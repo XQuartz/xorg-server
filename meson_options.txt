@@ -10,8 +10,6 @@ option('xwayland_eglstream', type: 'combo', choices: ['true', 'false', 'auto'],
        value: 'auto', description: 'Enable EGLStream support for glamor on Xwayland')
 option('xnest', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
        description: 'Enable Xnest nested X server')
-option('dmx', type: 'boolean', value: false,
-       description: 'Enable DMX nested X server')
 option('xvfb', type: 'boolean', value: true,
        description: 'Enable Xvfb X server')
 option('xwin', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',

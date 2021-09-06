@@ -216,7 +216,7 @@ glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
              w <= glamor_priv->glyph_max_dim &&
              h <= glamor_priv->glyph_max_dim)
          || (w == 0 && h == 0)
-         || !glamor_priv->formats[depth].format))
+         || !glamor_priv->formats[depth].rendering_supported))
         return fbCreatePixmap(screen, w, h, depth, usage);
     else
         pixmap = fbCreatePixmap(screen, 0, 0, depth, usage);
@@ -461,7 +461,8 @@ glamor_format_for_pixmap(PixmapPtr pixmap)
 
 static void
 glamor_add_format(ScreenPtr screen, int depth, CARD32 render_format,
-                  GLenum internalformat, GLenum format, GLenum type)
+                  GLenum internalformat, GLenum format, GLenum type,
+                  Bool rendering_supported)
 {
     glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
     struct glamor_format *f = &glamor_priv->formats[depth];
@@ -476,7 +477,7 @@ glamor_add_format(ScreenPtr screen, int depth, CARD32 render_format,
      * Note that we can't just create a pixmap because we're in
      * screeninit.
      */
-    if (glamor_priv->is_gles) {
+    if (rendering_supported && glamor_priv->is_gles) {
         unsigned fbo, tex;
         int read_format, read_type;
         GLenum status;
@@ -521,6 +522,7 @@ glamor_add_format(ScreenPtr screen, int depth, CARD32 render_format,
     f->internalformat = internalformat;
     f->format = format;
     f->type = type;
+    f->rendering_supported = rendering_supported;
 }
 
 /* Set up the GL format/types that glamor will use for the various depths
@@ -551,11 +553,15 @@ glamor_setup_formats(ScreenPtr screen)
      * only falling back to a8 if we can't do them.
      */
     if (glamor_priv->is_gles || epoxy_has_gl_extension("GL_ARB_texture_rg")) {
+        glamor_add_format(screen, 1, PICT_a1,
+                          GL_R8, GL_RED, GL_UNSIGNED_BYTE, FALSE);
         glamor_add_format(screen, 8, PICT_a8,
-                          GL_R8, GL_RED, GL_UNSIGNED_BYTE);
+                          GL_R8, GL_RED, GL_UNSIGNED_BYTE, TRUE);
     } else {
+        glamor_add_format(screen, 1, PICT_a1,
+                          GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE, FALSE);
         glamor_add_format(screen, 8, PICT_a8,
-                          GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE);
+                          GL_ALPHA, GL_ALPHA, GL_UNSIGNED_BYTE, TRUE);
     }
 
     if (glamor_priv->is_gles) {
@@ -569,40 +575,41 @@ glamor_setup_formats(ScreenPtr screen)
          * disable render accel for now.
          */
         glamor_add_format(screen, 15, PICT_x1r5g5b5,
-                          GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1);
+                          GL_RGB5_A1, GL_RGBA, GL_UNSIGNED_SHORT_5_5_5_1, TRUE);
     } else {
         glamor_add_format(screen, 15, PICT_x1r5g5b5,
-                          GL_RGBA, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV);
+                          GL_RGBA, GL_BGRA, GL_UNSIGNED_SHORT_1_5_5_5_REV, TRUE);
     }
 
     glamor_add_format(screen, 16, PICT_r5g6b5,
-                      GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5);
+                      GL_RGB, GL_RGB, GL_UNSIGNED_SHORT_5_6_5, TRUE);
 
     if (glamor_priv->is_gles) {
         assert(X_BYTE_ORDER == X_LITTLE_ENDIAN);
         glamor_add_format(screen, 24, PICT_x8b8g8r8,
-                          GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+                          GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, TRUE);
         glamor_add_format(screen, 32, PICT_a8b8g8r8,
-                          GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
+                          GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, TRUE);
     } else {
         glamor_add_format(screen, 24, PICT_x8r8g8b8,
-                          GL_RGBA, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV);
+                          GL_RGBA, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, TRUE);
         glamor_add_format(screen, 32, PICT_a8r8g8b8,
-                          GL_RGBA, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV);
+                          GL_RGBA, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, TRUE);
     }
 
     if (glamor_priv->is_gles) {
         glamor_add_format(screen, 30, PICT_x2b10g10r10,
-                          GL_RGB10_A2, GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV);
+                          GL_RGB10_A2, GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV, TRUE);
     } else {
         glamor_add_format(screen, 30, PICT_x2r10g10b10,
-                          GL_RGB10_A2, GL_BGRA, GL_UNSIGNED_INT_2_10_10_10_REV);
+                          GL_RGB10_A2, GL_BGRA, GL_UNSIGNED_INT_2_10_10_10_REV, TRUE);
     }
 
     glamor_priv->cbcr_format.depth = 16;
     glamor_priv->cbcr_format.internalformat = GL_RG8;
     glamor_priv->cbcr_format.format = GL_RG;
     glamor_priv->cbcr_format.type = GL_UNSIGNED_BYTE;
+    glamor_priv->cbcr_format.rendering_supported = TRUE;
 }
 
 /** Set up glamor for an already-configured GL context. */

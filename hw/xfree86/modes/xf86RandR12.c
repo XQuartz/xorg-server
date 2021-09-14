@@ -1358,6 +1358,7 @@ xf86RandR12CrtcSetGamma(ScreenPtr pScreen, RRCrtcPtr randr_crtc)
 {
     XF86RandRInfoPtr randrp = XF86RANDRINFO(pScreen);
     xf86CrtcPtr crtc = randr_crtc->devPrivate;
+    int max_size = crtc->gamma_size;
 
     if (crtc->funcs->gamma_set == NULL)
         return FALSE;
@@ -1372,12 +1373,15 @@ xf86RandR12CrtcSetGamma(ScreenPtr pScreen, RRCrtcPtr randr_crtc)
                                     randr_crtc->gammaBlue,
                                     randr_crtc->gammaSize);
     } else {
+        if (max_size > randr_crtc->gammaSize)
+            max_size = randr_crtc->gammaSize;
+
         memcpy(crtc->gamma_red, randr_crtc->gammaRed,
-               crtc->gamma_size * sizeof(crtc->gamma_red[0]));
+               max_size * sizeof(crtc->gamma_red[0]));
         memcpy(crtc->gamma_green, randr_crtc->gammaGreen,
-               crtc->gamma_size * sizeof(crtc->gamma_green[0]));
+               max_size * sizeof(crtc->gamma_green[0]));
         memcpy(crtc->gamma_blue, randr_crtc->gammaBlue,
-               crtc->gamma_size * sizeof(crtc->gamma_blue[0]));
+               max_size * sizeof(crtc->gamma_blue[0]));
     }
 
     xf86RandR12CrtcReloadGamma(crtc);

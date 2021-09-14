@@ -1255,8 +1255,8 @@ xf86RandR12CrtcComputeGamma(xf86CrtcPtr crtc, LOCO *palette,
 {
     int gamma_slots;
     unsigned shift;
-    CARD32 value;
     int i, j;
+    CARD32 value = 0;
 
     for (shift = 0; (gamma_size << shift) < (1 << 16); shift++);
 
@@ -1273,6 +1273,10 @@ xf86RandR12CrtcComputeGamma(xf86CrtcPtr crtc, LOCO *palette,
             for (j = 0; j < gamma_slots; j++)
                 crtc->gamma_red[i * gamma_slots + j] = value;
         }
+
+        /* Replicate last value until end of crtc for gamma_size not a power of 2 */
+        for (j = i * gamma_slots; j < crtc->gamma_size; j++)
+                crtc->gamma_red[j] = value;
     } else {
         /* Downsampling of larger palette to smaller hw lut size */
         for (i = 0; i < crtc->gamma_size; i++) {
@@ -1299,6 +1303,10 @@ xf86RandR12CrtcComputeGamma(xf86CrtcPtr crtc, LOCO *palette,
             for (j = 0; j < gamma_slots; j++)
                 crtc->gamma_green[i * gamma_slots + j] = value;
         }
+
+        /* Replicate last value until end of crtc for gamma_size not a power of 2 */
+        for (j = i * gamma_slots; j < crtc->gamma_size; j++)
+            crtc->gamma_green[j] = value;
     } else {
         /* Downsampling of larger palette to smaller hw lut size */
         for (i = 0; i < crtc->gamma_size; i++) {
@@ -1325,6 +1333,10 @@ xf86RandR12CrtcComputeGamma(xf86CrtcPtr crtc, LOCO *palette,
             for (j = 0; j < gamma_slots; j++)
                 crtc->gamma_blue[i * gamma_slots + j] = value;
         }
+
+        /* Replicate last value until end of crtc for gamma_size not a power of 2 */
+        for (j = i * gamma_slots; j < crtc->gamma_size; j++)
+            crtc->gamma_blue[j] = value;
     } else {
         /* Downsampling of larger palette to smaller hw lut size */
         for (i = 0; i < crtc->gamma_size; i++) {

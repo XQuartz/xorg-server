@@ -383,6 +383,8 @@ fail:
         glDeleteProgram(prog->prog);
         prog->prog = 0;
     }
+    free(vs_prog_string);
+    free(fs_prog_string);
     free(version_string);
     free(fs_vars);
     free(vs_vars);

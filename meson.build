@@ -196,39 +196,6 @@ endif
 xorgsdkdir = join_paths(get_option('prefix'), get_option('includedir'), 'xorg')
 libxcvt_dep = dependency('libxcvt', required: build_xorg)
 
-build_xwayland = false
-if (host_machine.system() != 'darwin' and
-    host_machine.system() != 'windows')
-    if get_option('xwayland') != 'false'
-        xwayland_required = get_option('xwayland') == 'true'
-        build_glamor = glamor_option == 'true' or glamor_option == 'auto'
-
-        xwayland_path = get_option('xwayland-path')
-        if (xwayland_path == '')
-            xwayland_path = join_paths(get_option('prefix'), get_option('bindir'))
-        endif
-
-        xwayland_dep = [
-            dependency('wayland-client', version: wayland_req, required: xwayland_required),
-            dependency('wayland-protocols', version: wayland_protocols_req, required: xwayland_required),
-            dependency('libxcvt', required: xwayland_required),
-        ]
-
-        if build_glamor
-            xwayland_dep += dependency('libdrm', version: libdrm_req, required: xwayland_required)
-            xwayland_dep += dependency('epoxy', required: xwayland_required)
-        endif
-
-        build_xwayland = true
-        # check for all the deps being found, to handle 'auto' mode.
-        foreach d: xwayland_dep
-            if not d.found()
-                build_xwayland = false
-            endif
-        endforeach
-    endif
-endif
-
 build_xnest = false
 if (host_machine.system() != 'darwin' and
     host_machine.system() != 'windows')
@@ -326,7 +293,7 @@ endif
 module_dir = join_paths(get_option('libdir'), get_option('module_dir'))
 
 if glamor_option == 'auto'
-    build_glamor = build_xorg or build_xwayland
+    build_glamor = build_xorg
 else
     build_glamor = glamor_option == 'true'
 endif
@@ -336,21 +303,6 @@ epoxy_dep = dependency('', required: false)
 if build_glamor
     gbm_dep = dependency('gbm', version: gbm_req, required: false)
     epoxy_dep = dependency('epoxy', required: false)
-endif
-
-eglstream_option = get_option('xwayland_eglstream')
-if build_xwayland and build_glamor
-    eglstream_dep = dependency('wayland-eglstream-protocols', required:false)
-    if eglstream_option == 'auto'
-        build_eglstream = eglstream_dep.found()
-    else
-        build_eglstream = eglstream_option == 'true'
-        if build_eglstream and not eglstream_dep.found()
-            error('glamor EGLStream support requested, but wayland-eglstream-protocols not found')
-        endif
-    endif
-else
-    build_eglstream = false
 endif
 
 # Lots of sha1 options, because Linux is about choice :)

@@ -412,14 +412,6 @@ configure_file(output : 'xwin-config.h',
                input : 'xwin-config.h.meson.in',
                configuration : xwin_data)
 
-xwayland_data = configuration_data()
-xwayland_data.set('XWL_HAS_GLAMOR', build_glamor and (gbm_dep.found() or build_eglstream) ? '1' : false)
-xwayland_data.set('XWL_HAS_EGLSTREAM', build_eglstream ? '1' : false)
-
-configure_file(output : 'xwayland-config.h',
-               input : 'xwayland-config.h.meson.in',
-               configuration : xwayland_data)
-
 dtrace_hdr = []
 dtrace_tmpl = files('Xserver.d')
 if with_dtrace

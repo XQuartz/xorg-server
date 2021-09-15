@@ -25,14 +25,9 @@ endif
 endif
 endif
 
-if XWAYLAND
-XWAYLAND_TESTS = scripts/xwayland-piglit.sh
-endif
-
 SCRIPT_TESTS = \
 	$(XVFB_TESTS) \
 	$(XEPHYR_GLAMOR_TESTS) \
-	$(XWAYLAND_TESTS) \
 	$(NULL)
 
 TESTS = tests \
@@ -193,7 +188,6 @@ EXTRA_DIST = \
 	scripts/xvfb-piglit.sh \
 	scripts/xephyr-glamor-piglit.sh \
 	scripts/xinit-piglit-session.sh \
-	scripts/xwayland-piglit.sh \
 	scripts/run-piglit.sh \
 	$(NULL)
 

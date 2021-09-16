@@ -223,7 +223,7 @@ glamor_create_pixmap(ScreenPtr screen, int w, int h, int depth,
 
     pixmap_priv = glamor_get_pixmap_private(pixmap);
 
-    pixmap_priv->is_cbcr = (usage == GLAMOR_CREATE_FORMAT_CBCR);
+    pixmap_priv->is_cbcr = (GLAMOR_CREATE_FORMAT_CBCR & usage) == GLAMOR_CREATE_FORMAT_CBCR;
 
     pitch = (((w * pixmap->drawable.bitsPerPixel + 7) / 8) + 3) & ~3;
     screen->ModifyPixmapHeader(pixmap, w, h, 0, 0, pitch, NULL);
@@ -550,9 +550,10 @@ glamor_setup_formats(ScreenPtr screen)
     glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
 
     /* Prefer r8 textures since they're required by GLES3 and core,
-     * only falling back to a8 if we can't do them.
+     * only falling back to a8 if we can't do them. We cannot do them
+     * on GLES2 due to lack of texture swizzle.
      */
-    if (glamor_priv->is_gles || epoxy_has_gl_extension("GL_ARB_texture_rg")) {
+    if (glamor_priv->has_rg && glamor_priv->has_texture_swizzle) {
         glamor_add_format(screen, 1, PICT_a1,
                           GL_R8, GL_RED, GL_UNSIGNED_BYTE, FALSE);
         glamor_add_format(screen, 8, PICT_a8,
@@ -606,8 +607,13 @@ glamor_setup_formats(ScreenPtr screen)
     }
 
     glamor_priv->cbcr_format.depth = 16;
-    glamor_priv->cbcr_format.internalformat = GL_RG8;
+    if (glamor_priv->is_gles && glamor_priv->has_rg) {
+        glamor_priv->cbcr_format.internalformat = GL_RG;
+    } else {
+        glamor_priv->cbcr_format.internalformat = GL_RG8;
+    }
     glamor_priv->cbcr_format.format = GL_RG;
+    glamor_priv->cbcr_format.render_format = PICT_yuv2;
     glamor_priv->cbcr_format.type = GL_UNSIGNED_BYTE;
     glamor_priv->cbcr_format.rendering_supported = TRUE;
 }
@@ -787,6 +793,11 @@ glamor_init(ScreenPtr screen, unsigned int flags)
     glamor_priv->has_clear_texture =
         epoxy_gl_version() >= 44 ||
         epoxy_has_gl_extension("GL_ARB_clear_texture");
+    /* GL_EXT_texture_rg is part of GLES3 core */
+    glamor_priv->has_rg =
+        (glamor_priv->is_gles && epoxy_gl_version() >= 30) ||
+        epoxy_has_gl_extension("GL_EXT_texture_rg") ||
+        epoxy_has_gl_extension("GL_ARB_texture_rg");
 
     glamor_priv->can_copyplane = (gl_version >= 30);
 

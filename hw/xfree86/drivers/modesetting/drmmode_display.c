@@ -2404,10 +2404,23 @@ drmmode_crtc_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, drmModeResPtr mode_res
     xf86DrvMsgVerb(pScrn->scrnIndex, X_INFO, MS_LOGLEVEL_DEBUG,
                    "Allocated crtc nr. %d to this screen.\n", num);
 
-    drmmode_crtc->use_gamma_lut =
-        drmmode_crtc->props[DRMMODE_CRTC_GAMMA_LUT_SIZE].prop_id &&
-        drmmode_crtc->props[DRMMODE_CRTC_GAMMA_LUT_SIZE].value &&
-        xf86ReturnOptValBool(drmmode->Options, OPTION_USE_GAMMA_LUT, TRUE);
+    if (drmmode_crtc->props[DRMMODE_CRTC_GAMMA_LUT_SIZE].prop_id &&
+        drmmode_crtc->props[DRMMODE_CRTC_GAMMA_LUT_SIZE].value) {
+        /*
+         * GAMMA_LUT property supported, and so far tested to be safe to use by
+         * default for lut sizes up to 4096 slots. Intel Tigerlake+ has some
+         * issues, and a large GAMMA_LUT with 262145 slots, so keep GAMMA_LUT
+         * off for large lut sizes by default for now.
+         */
+        drmmode_crtc->use_gamma_lut = drmmode_crtc->props[DRMMODE_CRTC_GAMMA_LUT_SIZE].value <= 4096;
+
+        /* Allow config override. */
+        drmmode_crtc->use_gamma_lut = xf86ReturnOptValBool(drmmode->Options,
+                                                           OPTION_USE_GAMMA_LUT,
+                                                           drmmode_crtc->use_gamma_lut);
+    } else {
+        drmmode_crtc->use_gamma_lut = FALSE;
+    }
 
     if (drmmode_crtc->use_gamma_lut &&
         drmmode_crtc->props[DRMMODE_CRTC_CTM].prop_id) {

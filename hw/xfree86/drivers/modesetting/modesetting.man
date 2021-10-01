@@ -99,8 +99,8 @@ will assign xrandr outputs LVDS and VGA-0 to this instance of the driver.
 .BI "Option \*qUseGammaLUT\*q \*q" boolean \*q
 Enable or disable use of the GAMMA_LUT property, when available.
 When enabled, this option allows the driver to use gamma ramps with more
-entries, if supported by the kernel.
-Default: on.
+entries, if supported by the kernel. By default, GAMMA_LUT will be used for
+kms drivers which are known to be safe for use of GAMMA_LUT.
 .TP
 .SH "SEE ALSO"
 @xservername@(@appmansuffix@), @xconfigfile@(@filemansuffix@), Xserver(@appmansuffix@),

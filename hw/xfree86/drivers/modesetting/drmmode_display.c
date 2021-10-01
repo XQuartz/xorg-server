@@ -3309,7 +3309,7 @@ drmmode_output_init(ScrnInfoPtr pScrn, drmmode_ptr drmmode, drmModeResPtr mode_r
         }
     }
 
-    ms->is_connector_vrr_capable =
+    ms->is_connector_vrr_capable |=
 	         drmmode_connector_check_vrr_capable(drmmode->fd,
                                                   drmmode_output->output_id);
     return 1;

@@ -939,6 +939,7 @@ xwl_glamor_gbm_init_egl(struct xwl_screen *xwl_screen)
     struct xwl_gbm_private *xwl_gbm = xwl_gbm_get(xwl_screen);
     EGLint major, minor;
     const GLubyte *renderer;
+    const char *gbm_backend_name;
 
     if (!xwl_gbm->fd_render_node && !xwl_gbm->drm_authenticated) {
         ErrorF("Failed to get wl_drm, disabling Glamor and DRI3\n");
@@ -989,6 +990,11 @@ xwl_glamor_gbm_init_egl(struct xwl_screen *xwl_screen)
         epoxy_has_egl_extension(xwl_screen->egl_display,
                                 "EXT_image_dma_buf_import_modifiers"))
        xwl_gbm->dmabuf_capable = TRUE;
+
+    gbm_backend_name = gbm_device_get_backend_name(xwl_gbm->gbm);
+    /* Mesa uses "drm" as backend name, in that case, just do nothing */
+    if (gbm_backend_name && strcmp(gbm_backend_name, "drm") != 0)
+        xwl_screen->glvnd_vendor = gbm_backend_name;
 
     return TRUE;
 error:

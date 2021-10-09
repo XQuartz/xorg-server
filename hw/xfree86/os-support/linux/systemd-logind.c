@@ -38,6 +38,7 @@
 #include "xf86.h"
 #include "xf86platformBus.h"
 #include "xf86Xinput.h"
+#include "xf86Priv.h"
 #include "globals.h"
 
 #include "systemd-logind.h"
@@ -583,7 +584,7 @@ static struct dbus_core_hook core_hook = {
 int
 systemd_logind_init(void)
 {
-    if (!ServerIsNotSeat0() && linux_parse_vt_settings(TRUE) && !linux_get_keeptty()) {
+    if (!ServerIsNotSeat0() && xf86HasTTYs() && linux_parse_vt_settings(TRUE) && !linux_get_keeptty()) {
         LogMessage(X_INFO,
             "systemd-logind: logind integration requires -keeptty and "
             "-keeptty was not provided, disabling logind integration\n");

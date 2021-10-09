@@ -85,6 +85,11 @@
 #include <X11/extensions/dpmsconst.h>
 #include "dpmsproc.h"
 #endif
+
+#ifdef __linux__
+#include <linux/major.h>
+#include <sys/sysmacros.h>
+#endif
 #include <hotplug.h>
 
 void (*xf86OSPMClose) (void) = NULL;
@@ -199,6 +204,17 @@ Bool
 xf86PrivsElevated(void)
 {
     return PrivsElevated();
+}
+
+Bool
+xf86HasTTYs(void)
+{
+#ifdef __linux__
+    struct stat tty0devAttributes;
+    return (stat("/dev/tty0", &tty0devAttributes) == 0 && major(tty0devAttributes.st_rdev) == TTY_MAJOR);
+#else
+    return TRUE;
+#endif
 }
 
 static void
@@ -425,7 +441,7 @@ InitOutput(ScreenInfo * pScreenInfo, int argc, char **argv)
                 want_hw_access = TRUE;
 
             /* Non-seat0 X servers should not open console */
-            if (!(flags & HW_SKIP_CONSOLE) && !ServerIsNotSeat0())
+            if (!(flags & HW_SKIP_CONSOLE) && !ServerIsNotSeat0() && xf86HasTTYs())
                 xorgHWOpenConsole = TRUE;
         }
 

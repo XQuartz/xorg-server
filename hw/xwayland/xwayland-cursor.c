@@ -265,7 +265,7 @@ xwl_tablet_tool_set_cursor(struct xwl_tablet_tool *xwl_tablet_tool)
 }
 
 static void
-xwl_seat_update_cursor(struct xwl_seat *xwl_seat)
+xwl_seat_update_all_cursors(struct xwl_seat *xwl_seat)
 {
     struct xwl_tablet_tool *xwl_tablet_tool;
 
@@ -285,7 +285,7 @@ xwl_seat_update_cursor_visibility(struct xwl_seat *xwl_seat)
 {
     xwl_seat->x_cursor = xwl_seat->pending_x_cursor;
     xwl_seat_cursor_visibility_changed(xwl_seat);
-    xwl_seat_update_cursor(xwl_seat);
+    xwl_seat_update_all_cursors(xwl_seat);
 }
 
 static void
@@ -339,7 +339,7 @@ xwl_set_cursor(DeviceIntPtr device,
         /* Cursor remains shown or hidden, apply the change immediately */
         xwl_set_cursor_free_timer(xwl_seat);
         xwl_seat->x_cursor = cursor;
-        xwl_seat_update_cursor(xwl_seat);
+        xwl_seat_update_all_cursors(xwl_seat);
         return;
     }
 

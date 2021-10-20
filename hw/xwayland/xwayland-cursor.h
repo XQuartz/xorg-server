@@ -31,6 +31,7 @@
 #include <xwayland-types.h>
 #include <xwayland-input.h>
 
+Bool xwl_cursor_clear_frame_cb(struct xwl_cursor *xwl_cursor);
 void xwl_cursor_release(struct xwl_cursor *xwl_cursor);
 void xwl_tablet_tool_set_cursor(struct xwl_tablet_tool *tool);
 void xwl_seat_set_cursor(struct xwl_seat *xwl_seat);

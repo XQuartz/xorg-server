@@ -112,22 +112,13 @@ xwl_unrealize_cursor(DeviceIntPtr device, ScreenPtr screen, CursorPtr cursor)
 }
 
 static void
-clear_cursor_frame_callback(struct xwl_cursor *xwl_cursor)
-{
-   if (xwl_cursor->frame_cb) {
-       wl_callback_destroy (xwl_cursor->frame_cb);
-       xwl_cursor->frame_cb = NULL;
-   }
-}
-
-static void
 frame_callback(void *data,
                struct wl_callback *callback,
                uint32_t time)
 {
     struct xwl_cursor *xwl_cursor = data;
 
-    clear_cursor_frame_callback(xwl_cursor);
+    xwl_cursor_clear_frame_cb(xwl_cursor);
     if (xwl_cursor->needs_update) {
         xwl_cursor->needs_update = FALSE;
         xwl_cursor->update_proc(xwl_cursor);
@@ -187,6 +178,18 @@ xwl_cursor_attach_pixmap(struct xwl_seat *xwl_seat,
     wl_surface_commit(xwl_cursor->surface);
 }
 
+Bool
+xwl_cursor_clear_frame_cb(struct xwl_cursor *xwl_cursor)
+{
+    if (xwl_cursor->frame_cb) {
+        wl_callback_destroy(xwl_cursor->frame_cb);
+        xwl_cursor->frame_cb = NULL;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 void
 xwl_seat_set_cursor(struct xwl_seat *xwl_seat)
 {
@@ -200,7 +203,7 @@ xwl_seat_set_cursor(struct xwl_seat *xwl_seat)
     if (!xwl_seat->x_cursor) {
         wl_pointer_set_cursor(xwl_seat->wl_pointer,
                               xwl_seat->pointer_enter_serial, NULL, 0, 0);
-        clear_cursor_frame_callback(xwl_cursor);
+        xwl_cursor_clear_frame_cb(xwl_cursor);
         xwl_cursor->needs_update = FALSE;
         return;
     }
@@ -238,7 +241,7 @@ xwl_tablet_tool_set_cursor(struct xwl_tablet_tool *xwl_tablet_tool)
         zwp_tablet_tool_v2_set_cursor(xwl_tablet_tool->tool,
                                       xwl_tablet_tool->proximity_in_serial,
                                       NULL, 0, 0);
-        clear_cursor_frame_callback(xwl_cursor);
+        xwl_cursor_clear_frame_cb(xwl_cursor);
         xwl_cursor->needs_update = FALSE;
         return;
     }
@@ -268,8 +271,7 @@ void
 xwl_cursor_release(struct xwl_cursor *xwl_cursor)
 {
     wl_surface_destroy(xwl_cursor->surface);
-    if (xwl_cursor->frame_cb)
-        wl_callback_destroy(xwl_cursor->frame_cb);
+    xwl_cursor_clear_frame_cb(xwl_cursor);
 }
 
 static void

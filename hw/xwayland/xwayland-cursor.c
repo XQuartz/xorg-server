@@ -264,6 +264,14 @@ xwl_tablet_tool_set_cursor(struct xwl_tablet_tool *xwl_tablet_tool)
     xwl_cursor_attach_pixmap(xwl_seat, xwl_cursor, pixmap);
 }
 
+void
+xwl_cursor_release(struct xwl_cursor *xwl_cursor)
+{
+    wl_surface_destroy(xwl_cursor->surface);
+    if (xwl_cursor->frame_cb)
+        wl_callback_destroy(xwl_cursor->frame_cb);
+}
+
 static void
 xwl_seat_update_all_cursors(struct xwl_seat *xwl_seat)
 {

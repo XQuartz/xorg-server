@@ -1449,14 +1449,6 @@ xwl_cursor_init(struct xwl_cursor *xwl_cursor, struct xwl_screen *xwl_screen,
 }
 
 static void
-xwl_cursor_release(struct xwl_cursor *xwl_cursor)
-{
-    wl_surface_destroy(xwl_cursor->surface);
-    if (xwl_cursor->frame_cb)
-        wl_callback_destroy(xwl_cursor->frame_cb);
-}
-
-static void
 xwl_seat_update_cursor(struct xwl_cursor *xwl_cursor)
 {
     struct xwl_seat *xwl_seat = wl_container_of(xwl_cursor, xwl_seat, cursor);

@@ -11,10 +11,10 @@ release_date = '2021-07-05'
 add_project_arguments('-DHAVE_DIX_CONFIG_H', language: ['c', 'objc'])
 cc = meson.get_compiler('c')
 
-add_global_arguments('-fno-strict-aliasing', language : 'c')
-add_global_arguments('-fvisibility=hidden', language : 'c')
+add_project_arguments('-fno-strict-aliasing', language : 'c')
+add_project_arguments('-fvisibility=hidden', language : 'c')
 
-add_global_link_arguments('-fvisibility=hidden', language : 'c')
+add_project_link_arguments('-fvisibility=hidden', language : 'c')
 
 if cc.get_id() == 'gcc' or cc.get_id() == 'clang'
     test_wflags = [
@@ -58,7 +58,7 @@ foreach wflag: test_wflags
     endif
 endforeach
 
-add_global_arguments(common_wflags, language : ['c', 'objc'])
+add_project_arguments(common_wflags, language : ['c', 'objc'])
 
 libdrm_req = '>= 2.4.89'
 libselinux_req = '>= 2.0.86'

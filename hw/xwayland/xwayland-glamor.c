@@ -58,10 +58,12 @@ glamor_egl_make_current(struct glamor_context *glamor_ctx)
 void
 xwl_glamor_egl_make_current(struct xwl_screen *xwl_screen)
 {
-    if (lastGLContext == xwl_screen->glamor_ctx)
+    EGLContext ctx = xwl_screen->glamor_ctx->ctx;
+    
+    if (lastGLContext == ctx)
         return;
 
-    lastGLContext = xwl_screen->glamor_ctx;
+    lastGLContext = ctx;
     xwl_screen->glamor_ctx->make_current(xwl_screen->glamor_ctx);
 }
 

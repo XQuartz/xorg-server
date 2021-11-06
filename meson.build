@@ -3,7 +3,7 @@ project('xserver', 'c',
             'buildtype=debugoptimized',
             'c_std=gnu99',
         ],
-        version: '21.0.99.1',
+        version: '21.1.99.1',
         meson_version: '>= 0.47.0',
 )
 release_date = '2021-07-05'

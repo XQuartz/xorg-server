@@ -147,6 +147,8 @@ EXTRA_DIST += \
 	damageext/meson.build \
 	dbe/meson.build \
 	dix/meson.build \
+	doc/dtrace/meson.build \
+	doc/meson.build \
 	dri3/meson.build \
 	exa/meson.build \
 	fb/meson.build \
@@ -160,8 +162,10 @@ EXTRA_DIST += \
 	hw/xfree86/common/meson.build \
 	hw/xfree86/ddc/meson.build \
 	hw/xfree86/dixmods/meson.build \
+	hw/xfree86/doc/meson.build \
 	hw/xfree86/dri2/meson.build \
 	hw/xfree86/dri/meson.build \
+	hw/xfree86/drivers/inputtest/meson.build \
 	hw/xfree86/drivers/modesetting/meson.build \
 	hw/xfree86/exa/meson.build \
 	hw/xfree86/fbdevhw/meson.build \
@@ -179,7 +183,12 @@ EXTRA_DIST += \
 	hw/xfree86/x86emu/meson.build \
 	hw/xfree86/xkb/meson.build \
 	hw/xnest/meson.build \
+	hw/xquartz/bundle/meson.build \
+	hw/xquartz/GL/meson.build \
+	hw/xquartz/mach-startup/meson.build \
 	hw/xquartz/meson.build \
+	hw/xquartz/pbproxy/meson.build \
+	hw/xquartz/xpr/meson.build \
 	hw/xwin/dri/meson.build \
 	hw/xwin/glx/meson.build \
 	hw/xwin/meson.build \
@@ -187,6 +196,7 @@ EXTRA_DIST += \
 	include/meson.build \
 	meson.build \
 	miext/damage/meson.build \
+	miext/rootless/meson.build \
 	miext/shadow/meson.build \
 	miext/sync/meson.build \
 	mi/meson.build \
@@ -198,6 +208,8 @@ EXTRA_DIST += \
 	render/meson.build \
 	test/bigreq/meson.build \
 	test/bigreq/request-length.c \
+	test/damage/meson.build \
+	test/damage/primitives.c \
 	test/meson.build \
 	test/sync/meson.build \
 	test/sync/sync.c \

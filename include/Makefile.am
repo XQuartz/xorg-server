@@ -82,7 +82,8 @@ EXTRA_DIST = 	\
 	xorg-config.h.meson.in \
 	xorg-server.h.meson.in \
 	xwin-config.h.meson.in \
-	xsha1.h
+	xsha1.h \
+	Xserver.d
 
 if XSERVER_DTRACE
 # Generate dtrace header file for C sources to include

@@ -412,6 +412,7 @@ xwl_glamor_select_gbm_backend(struct xwl_screen *xwl_screen)
     if (xwl_screen->gbm_backend.is_available &&
         xwl_glamor_has_wl_interfaces(xwl_screen, &xwl_screen->gbm_backend)) {
         xwl_screen->egl_backend = &xwl_screen->gbm_backend;
+        LogMessageVerb(X_INFO, 3, "glamor: Using GBM backend\n");
         return TRUE;
     }
     else
@@ -429,6 +430,7 @@ xwl_glamor_select_eglstream_backend(struct xwl_screen *xwl_screen)
     if (xwl_screen->eglstream_backend.is_available &&
         xwl_glamor_has_wl_interfaces(xwl_screen, &xwl_screen->eglstream_backend)) {
         xwl_screen->egl_backend = &xwl_screen->eglstream_backend;
+        LogMessageVerb(X_INFO, 3, "glamor: Using EGLStream backend\n");
         return TRUE;
     }
     else

@@ -444,13 +444,9 @@ xwl_glamor_select_eglstream_backend(struct xwl_screen *xwl_screen)
 void
 xwl_glamor_select_backend(struct xwl_screen *xwl_screen, Bool use_eglstream)
 {
-    if (use_eglstream) {
-        if (!xwl_glamor_select_eglstream_backend(xwl_screen))
+    if (!xwl_glamor_select_eglstream_backend(xwl_screen)) {
+        if (!use_eglstream)
             xwl_glamor_select_gbm_backend(xwl_screen);
-    }
-    else {
-        if (!xwl_glamor_select_gbm_backend(xwl_screen))
-            xwl_glamor_select_eglstream_backend(xwl_screen);
     }
 }
 

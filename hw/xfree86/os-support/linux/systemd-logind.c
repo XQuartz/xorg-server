@@ -303,6 +303,20 @@ cleanup:
     dbus_error_free(&error);
 }
 
+/*
+ * Send a message to logind, to pause the drm device
+ * and ensure the drm_drop_master is done before
+ * VT_RELDISP when switching VT
+ */
+void systemd_logind_drop_master(int _major, int _minor)
+{
+    struct systemd_logind_info *info = &logind_info;
+    dbus_int32_t major = _major;
+    dbus_int32_t minor = _minor;
+
+    systemd_logind_ack_pause(info, minor, major);
+}
+
 static DBusHandlerResult
 message_filter(DBusConnection * connection, DBusMessage * message, void *data)
 {

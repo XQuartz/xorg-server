@@ -382,6 +382,17 @@ xf86VTLeave(void)
     for (i = 0; i < xf86NumGPUScreens; i++)
         xf86GPUScreens[i]->LeaveVT(xf86GPUScreens[i]);
 
+    if (systemd_logind_controls_session()) {
+        for (i = 0; i < xf86_num_platform_devices; i++) {
+            if (xf86_platform_devices[i].flags & XF86_PDEV_SERVER_FD) {
+                int major, minor;
+                major = xf86_platform_odev_attributes(i)->major;
+                minor = xf86_platform_odev_attributes(i)->minor;
+                systemd_logind_drop_master(major, minor);
+            }
+        }
+    }
+
     if (!xf86VTSwitchAway())
         goto switch_failed;
 

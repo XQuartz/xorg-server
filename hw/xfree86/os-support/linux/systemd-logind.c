@@ -394,14 +394,16 @@ message_filter(DBusConnection * connection, DBusMessage * message, void *data)
         /* info->vt_active gets set by systemd_logind_vtenter() */
         info->active = TRUE;
 
-        if (pdev)
+        if (pdev) {
             pdev->flags &= ~XF86_PDEV_PAUSED;
-        else
+            systemd_logind_vtenter();
+        } else
             systemd_logind_set_input_fd_for_all_devs(major, minor, fd,
                                                      info->vt_active);
 
-        /* Always call vtenter(), in case there are only legacy video devs */
-        systemd_logind_vtenter();
+        /* Always call vtenter(), only if there are only legacy video devs */
+        if (!xf86_num_platform_devices)
+            systemd_logind_vtenter();
     }
     return DBUS_HANDLER_RESULT_HANDLED;
 }

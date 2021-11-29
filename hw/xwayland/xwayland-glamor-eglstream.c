@@ -691,12 +691,14 @@ xwl_glamor_eglstream_has_wl_interfaces(struct xwl_screen *xwl_screen)
         xwl_eglstream_get(xwl_screen);
 
     if (xwl_eglstream->display == NULL) {
-        ErrorF("glamor: 'wl_eglstream_display' not supported\n");
+        LogMessageVerb(X_INFO, 3,
+                       "glamor: 'wl_eglstream_display' not supported\n");
         return FALSE;
     }
 
     if (xwl_eglstream->controller == NULL) {
-        ErrorF("glamor: 'wl_eglstream_controller' not supported\n");
+        LogMessageVerb(X_INFO, 3,
+                       "glamor: 'wl_eglstream_controller' not supported\n");
         return FALSE;
     }
 

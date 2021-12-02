@@ -175,6 +175,45 @@ xwl_get_formats(struct xwl_format *format_array, int format_array_len,
     return TRUE;
 }
 
+static Bool
+xwl_get_formats_for_device(struct xwl_dmabuf_feedback *xwl_feedback, dev_t device,
+                           uint32_t *num_formats, uint32_t **formats)
+{
+    uint32_t *ret = NULL;
+    uint32_t count = 0;
+
+    /* go through all matching sets of tranches for the window's device */
+    for (int i = 0; i < xwl_feedback->dev_formats_len; i++) {
+        if (xwl_feedback->dev_formats[i].drm_dev == device) {
+            struct xwl_device_formats *dev_formats = &xwl_feedback->dev_formats[i];
+
+            /* Append the formats from this tranche to the list */
+            ret = xnfreallocarray(ret, count + dev_formats->num_formats, sizeof(CARD32));
+
+            for (int j = 0; j < dev_formats->num_formats; j++) {
+                bool found = false;
+
+                /* Check if this format is already present in the list */
+                for (int k = 0; k < count; k++) {
+                    if (ret[k] == dev_formats->formats[j].format) {
+                        found = true;
+                        break;
+                    }
+                }
+
+                /* If this format has not yet been added, do so now */
+                if (!found)
+                    ret[count++] = dev_formats->formats[j].format;
+            }
+        }
+    }
+
+    *num_formats = count;
+    *formats = ret;
+
+    return TRUE;
+}
+
 Bool
 xwl_glamor_get_formats(ScreenPtr screen,
                        CARD32 *num_formats, CARD32 **formats)
@@ -186,6 +225,13 @@ xwl_glamor_get_formats(ScreenPtr screen,
 
     if (!xwl_screen->dmabuf)
         return FALSE;
+
+    if (xwl_screen->dmabuf_protocol_version >= 4) {
+        dev_t main_dev = xwl_screen_get_main_dev(xwl_screen);
+
+        return xwl_get_formats_for_device(&xwl_screen->default_feedback, main_dev,
+                                          num_formats, formats);
+    }
 
     return xwl_get_formats(xwl_screen->formats, xwl_screen->num_formats,
                            num_formats, formats);
@@ -232,19 +278,17 @@ xwl_get_modifiers_for_device(struct xwl_dmabuf_feedback *feedback, dev_t device,
                              uint32_t format, uint32_t *num_modifiers,
                              uint64_t **modifiers)
 {
-    struct xwl_device_formats *dev_formats = NULL;
-
     /* Now try to find a matching set of tranches for the window's device */
     for (int i = 0; i < feedback->dev_formats_len; i++) {
-        if (feedback->dev_formats[i].drm_dev == device)
-            dev_formats = &feedback->dev_formats[i];
+        struct xwl_device_formats *dev_formats = &feedback->dev_formats[i];
+
+        if (dev_formats->drm_dev == device &&
+            xwl_get_modifiers_for_format(dev_formats->formats, dev_formats->num_formats,
+                                         format, num_modifiers, modifiers))
+            return TRUE;
     }
 
-    if (!dev_formats)
-        return FALSE;
-
-    return xwl_get_modifiers_for_format(dev_formats->formats, dev_formats->num_formats,
-                                        format, num_modifiers, modifiers);
+    return FALSE;
 }
 
 Bool
@@ -586,6 +630,18 @@ xwl_screen_set_dmabuf_interface(struct xwl_screen *xwl_screen,
         wl_registry_bind(xwl_screen->registry, id, &zwp_linux_dmabuf_v1_interface, supported_version);
     xwl_screen->dmabuf_protocol_version = supported_version;
     zwp_linux_dmabuf_v1_add_listener(xwl_screen->dmabuf, &xwl_dmabuf_listener, xwl_screen);
+
+    /* If the compositor supports it, request the default feedback hints */
+    if (version >= 4) {
+        xwl_screen->default_feedback.dmabuf_feedback =
+            zwp_linux_dmabuf_v1_get_default_feedback(xwl_screen->dmabuf);
+        if (!xwl_screen->default_feedback.dmabuf_feedback)
+            return FALSE;
+
+        zwp_linux_dmabuf_feedback_v1_add_listener(xwl_screen->default_feedback.dmabuf_feedback,
+                                                  &xwl_dmabuf_feedback_listener,
+                                                  &xwl_screen->default_feedback);
+    }
 
     return TRUE;
 }

@@ -1470,6 +1470,18 @@ release_pointer(struct xwl_seat *xwl_seat)
 static void
 init_relative_pointer(struct xwl_seat *xwl_seat)
 {
+    if (xwl_seat->relative_pointer == NULL) {
+        xwl_seat->relative_pointer =
+            add_device(xwl_seat, "xwayland-relative-pointer",
+                       xwl_pointer_proc_relative);
+        ActivateDevice(xwl_seat->relative_pointer, TRUE);
+    }
+    enable_device(xwl_seat, xwl_seat->relative_pointer);
+}
+
+static void
+init_relative_pointer_listener(struct xwl_seat *xwl_seat)
+{
     struct zwp_relative_pointer_manager_v1 *relative_pointer_manager =
         xwl_seat->xwl_screen->relative_pointer_manager;
 
@@ -1481,14 +1493,6 @@ init_relative_pointer(struct xwl_seat *xwl_seat)
                                              &relative_pointer_listener,
                                              xwl_seat);
     }
-
-    if (xwl_seat->relative_pointer == NULL) {
-        xwl_seat->relative_pointer =
-            add_device(xwl_seat, "xwayland-relative-pointer",
-                       xwl_pointer_proc_relative);
-        ActivateDevice(xwl_seat->relative_pointer, TRUE);
-    }
-    enable_device(xwl_seat, xwl_seat->relative_pointer);
 }
 
 static void
@@ -1506,10 +1510,22 @@ release_relative_pointer(struct xwl_seat *xwl_seat)
 static void
 init_pointer_gestures_device(struct xwl_seat *xwl_seat)
 {
+    if (xwl_seat->pointer_gestures == NULL) {
+        xwl_seat->pointer_gestures =
+            add_device(xwl_seat, "xwayland-pointer-gestures",
+                       xwl_pointer_proc_pointer_gestures);
+        ActivateDevice(xwl_seat->pointer_gestures, TRUE);
+    }
+    enable_device(xwl_seat, xwl_seat->pointer_gestures);
+}
+
+static void
+init_pointer_gestures_listener(struct xwl_seat *xwl_seat)
+{
     struct zwp_pointer_gestures_v1 *pointer_gestures =
             xwl_seat->xwl_screen->pointer_gestures;
 
-    if (pointer_gestures) {
+    if (pointer_gestures && !xwl_seat->wp_pointer_gesture_swipe) {
         xwl_seat->wp_pointer_gesture_swipe =
                 zwp_pointer_gestures_v1_get_swipe_gesture(pointer_gestures,
                                                           xwl_seat->wl_pointer);
@@ -1518,7 +1534,9 @@ init_pointer_gestures_device(struct xwl_seat *xwl_seat)
         zwp_pointer_gesture_swipe_v1_add_listener(xwl_seat->wp_pointer_gesture_swipe,
                                                   &pointer_gesture_swipe_listener,
                                                   xwl_seat);
+    }
 
+    if (pointer_gestures && !xwl_seat->wp_pointer_gesture_pinch) {
         xwl_seat->wp_pointer_gesture_pinch =
                 zwp_pointer_gestures_v1_get_pinch_gesture(pointer_gestures,
                                                           xwl_seat->wl_pointer);
@@ -1528,14 +1546,6 @@ init_pointer_gestures_device(struct xwl_seat *xwl_seat)
                                                   &pointer_gesture_pinch_listener,
                                                   xwl_seat);
     }
-
-    if (xwl_seat->pointer_gestures == NULL) {
-        xwl_seat->pointer_gestures =
-            add_device(xwl_seat, "xwayland-pointer-gestures",
-                       xwl_pointer_proc_pointer_gestures);
-        ActivateDevice(xwl_seat->pointer_gestures, TRUE);
-    }
-    enable_device(xwl_seat, xwl_seat->pointer_gestures);
 }
 
 static void
@@ -1627,7 +1637,9 @@ seat_handle_capabilities(void *data, struct wl_seat *seat,
     if (caps & WL_SEAT_CAPABILITY_POINTER && xwl_seat->wl_pointer == NULL) {
         init_pointer(xwl_seat);
         init_relative_pointer(xwl_seat);
+        init_relative_pointer_listener(xwl_seat);
         init_pointer_gestures_device(xwl_seat);
+        init_pointer_gestures_listener(xwl_seat);
     } else if (!(caps & WL_SEAT_CAPABILITY_POINTER) && xwl_seat->wl_pointer) {
         release_pointer(xwl_seat);
         release_relative_pointer(xwl_seat);
@@ -2812,6 +2824,34 @@ init_keyboard_grab(struct xwl_screen *xwl_screen,
     }
 }
 
+/* The compositor may send us wl_seat and its capabilities before sending e.g.
+   relative_pointer_manager or pointer_gesture interfaces. This would result in
+   devices being created in capabilities handler, but listeners not, because
+   the interfaces weren't available at the time. So we manually attempt to setup
+   listeners again.
+*/
+static void
+maybe_init_relative_pointer_listeners_after_capabilities(struct xwl_screen* xwl_screen)
+{
+    struct xwl_seat *xwl_seat;
+    xorg_list_for_each_entry(xwl_seat, &xwl_screen->seat_list, link) {
+        if (xwl_seat->wl_pointer) {
+            init_relative_pointer_listener(xwl_seat);
+        }
+    }
+}
+
+static void
+maybe_init_pointer_gesture_listeners_after_capabilities(struct xwl_screen* xwl_screen)
+{
+    struct xwl_seat *xwl_seat;
+    xorg_list_for_each_entry(xwl_seat, &xwl_screen->seat_list, link) {
+        if (xwl_seat->wl_pointer) {
+            init_pointer_gestures_listener(xwl_seat);
+        }
+    }
+}
+
 static void
 input_handler(void *data, struct wl_registry *registry, uint32_t id,
               const char *interface, uint32_t version)
@@ -2823,10 +2863,12 @@ input_handler(void *data, struct wl_registry *registry, uint32_t id,
         xwl_screen->expecting_event++;
     } else if (strcmp(interface, "zwp_relative_pointer_manager_v1") == 0) {
         init_relative_pointer_manager(xwl_screen, id, version);
+        maybe_init_relative_pointer_listeners_after_capabilities(xwl_screen);
     } else if (strcmp(interface, "zwp_pointer_constraints_v1") == 0) {
         init_pointer_constraints(xwl_screen, id, version);
     } else if (strcmp(interface, "zwp_pointer_gestures_v1") == 0) {
         init_pointer_gestures(xwl_screen, id, version);
+        maybe_init_pointer_gesture_listeners_after_capabilities(xwl_screen);
     } else if (strcmp(interface, "zwp_tablet_manager_v2") == 0) {
         init_tablet_manager(xwl_screen, id, version);
     } else if (strcmp(interface, "zwp_xwayland_keyboard_grab_manager_v1") == 0) {

@@ -253,8 +253,8 @@ wscons_add_pointers(void)
             break;
         }
     }
-    /* Add a default entry catching all other mux elements as "mouse" */
-    wscons_add_pointer(WSCONS_MOUSE_PREFIX, "mouse", ATTR_POINTER);
+    /* Add a default entry catching all other mux elements as pointers */
+    wscons_add_pointer(WSCONS_MOUSE_PREFIX, "ws", ATTR_POINTER);
 }
 
 int

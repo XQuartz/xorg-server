@@ -110,23 +110,10 @@ static PixmapFormatRec formats[MAXFORMATS] = {
 static int numFormats = 7;
 static Bool formatsDone = FALSE;
 
-#ifndef PRE_RELEASE
-#define PRE_RELEASE XORG_VERSION_SNAP
-#endif
 
 static void
 xf86PrintBanner(void)
 {
-#if PRE_RELEASE
-    xf86ErrorFVerb(0, "\n"
-                   "This is a pre-release version of the X server from "
-                   XVENDORNAME ".\n" "It is not supported in any way.\n"
-                   "Bugs may be filed in the bugzilla at http://bugs.freedesktop.org/.\n"
-                   "Select the \"xorg\" product for bugs you find in this release.\n"
-                   "Before reporting bugs in pre-release versions please check the\n"
-                   "latest version in the X.Org Foundation git repository.\n"
-                   "See http://wiki.x.org/wiki/GitPage for git access instructions.\n");
-#endif
     xf86ErrorFVerb(0, "\nX.Org X Server %d.%d.%d",
                    XORG_VERSION_MAJOR, XORG_VERSION_MINOR, XORG_VERSION_PATCH);
 #if XORG_VERSION_SNAP > 0

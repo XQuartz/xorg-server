@@ -517,13 +517,13 @@ xwl_dispatch_events (struct xwl_screen *xwl_screen)
 pollout:
     ready = xwl_display_pollout(xwl_screen, 5);
     if (ready == -1 && errno != EINTR)
-        xwl_give_up("error polling on XWayland fd: %s\n", strerror(errno));
+        xwl_give_up("error polling on Xwayland fd: %s\n", strerror(errno));
 
     if (ready > 0)
         ret = wl_display_flush(xwl_screen->display);
 
     if (ret == -1 && errno != EAGAIN)
-        xwl_give_up("failed to write to XWayland fd: %s\n", strerror(errno));
+        xwl_give_up("failed to write to Xwayland fd: %s\n", strerror(errno));
 
     xwl_screen->wait_flush = (ready == 0 || ready == -1 || ret == -1);
 }

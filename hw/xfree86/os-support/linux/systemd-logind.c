@@ -308,13 +308,19 @@ cleanup:
  * and ensure the drm_drop_master is done before
  * VT_RELDISP when switching VT
  */
-void systemd_logind_drop_master(int _major, int _minor)
+void systemd_logind_drop_master(void)
 {
-    struct systemd_logind_info *info = &logind_info;
-    dbus_int32_t major = _major;
-    dbus_int32_t minor = _minor;
+    int i;
+    for (i = 0; i < xf86_num_platform_devices; i++) {
+        if (xf86_platform_devices[i].flags & XF86_PDEV_SERVER_FD) {
+            dbus_int32_t major, minor;
+            struct systemd_logind_info *info = &logind_info;
 
-    systemd_logind_ack_pause(info, minor, major);
+            major = xf86_platform_odev_attributes(i)->major;
+            minor = xf86_platform_odev_attributes(i)->minor;
+            systemd_logind_ack_pause(info, minor, major);
+        }
+    }
 }
 
 static DBusHandlerResult

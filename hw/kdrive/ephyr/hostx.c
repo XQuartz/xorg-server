@@ -1100,6 +1100,7 @@ hostx_paint_rect(KdScreenInfo *screen,
                           HostX.gc, scrpriv->ximg,
                           scrpriv->shminfo,
                           sx, sy, dx, dy, width, height, FALSE);
+        xcb_aux_sync(HostX.conn);
     }
     else {
         xcb_image_t *subimg = xcb_image_subimage(scrpriv->ximg, sx, sy,
@@ -1110,8 +1111,6 @@ hostx_paint_rect(KdScreenInfo *screen,
             xcb_image_destroy(img);
         xcb_image_destroy(subimg);
     }
-
-    xcb_aux_sync(HostX.conn);
 }
 
 static void

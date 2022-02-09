@@ -1011,7 +1011,8 @@ static void hostx_paint_debug_rect(KdScreenInfo *screen,
 
 void
 hostx_paint_rect(KdScreenInfo *screen,
-                 int sx, int sy, int dx, int dy, int width, int height)
+                 int sx, int sy, int dx, int dy, int width, int height,
+                 Bool sync)
 {
     EphyrScrPriv *scrpriv = screen->driver;
 
@@ -1100,7 +1101,8 @@ hostx_paint_rect(KdScreenInfo *screen,
                           HostX.gc, scrpriv->ximg,
                           scrpriv->shminfo,
                           sx, sy, dx, dy, width, height, FALSE);
-        xcb_aux_sync(HostX.conn);
+        if (sync)
+            xcb_aux_sync(HostX.conn);
     }
     else {
         xcb_image_t *subimg = xcb_image_subimage(scrpriv->ximg, sx, sy,

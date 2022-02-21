@@ -522,6 +522,7 @@ Bool
 xwl_realize_window(WindowPtr window)
 {
     ScreenPtr screen = window->drawable.pScreen;
+    CompScreenPtr comp_screen = GetCompScreen(screen);
     struct xwl_screen *xwl_screen;
     Bool ret;
 
@@ -535,12 +536,20 @@ xwl_realize_window(WindowPtr window)
     if (!ret)
         return FALSE;
 
-    if (xwl_screen->rootless && !window->parent) {
-        BoxRec box = { 0, 0, xwl_screen->width, xwl_screen->height };
+    if (xwl_screen->rootless) {
+        /* We do not want the COW to be mapped when rootless in Xwayland */
+        if (window == comp_screen->pOverlayWin) {
+            window->mapped = FALSE;
+            return TRUE;
+        }
 
-        RegionReset(&window->winSize, &box);
-        RegionNull(&window->clipList);
-        RegionNull(&window->borderClip);
+        if (!window->parent) {
+            BoxRec box = { 0, 0, xwl_screen->width, xwl_screen->height };
+
+            RegionReset(&window->winSize, &box);
+            RegionNull(&window->clipList);
+            RegionNull(&window->borderClip);
+        }
     }
 
     if (xwl_screen->rootless ?

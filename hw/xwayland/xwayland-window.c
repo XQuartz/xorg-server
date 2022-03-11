@@ -605,16 +605,6 @@ xwl_unrealize_window(WindowPtr window)
     if (xwl_window_has_viewport_enabled(xwl_window))
         xwl_window_disable_viewport(xwl_window);
 
-    wl_surface_destroy(xwl_window->surface);
-    xorg_list_del(&xwl_window->link_damage);
-    xorg_list_del(&xwl_window->link_window);
-    unregister_damage(window);
-
-    xwl_window_buffers_dispose(xwl_window);
-
-    if (xwl_window->frame_callback)
-        wl_callback_destroy(xwl_window->frame_callback);
-
 #ifdef GLAMOR_HAS_GBM
     if (xwl_screen->present) {
         struct xwl_present_window *xwl_present_window, *tmp;
@@ -626,6 +616,16 @@ xwl_unrealize_window(WindowPtr window)
         }
     }
 #endif
+
+    wl_surface_destroy(xwl_window->surface);
+    xorg_list_del(&xwl_window->link_damage);
+    xorg_list_del(&xwl_window->link_window);
+    unregister_damage(window);
+
+    xwl_window_buffers_dispose(xwl_window);
+
+    if (xwl_window->frame_callback)
+        wl_callback_destroy(xwl_window->frame_callback);
 
     free(xwl_window);
     dixSetPrivate(&window->devPrivates, &xwl_window_private_key, NULL);

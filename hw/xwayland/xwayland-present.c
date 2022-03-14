@@ -942,6 +942,9 @@ xwl_present_unrealize_window(struct xwl_present_window *xwl_present_window)
      * the frame timer interval.
      */
     xorg_list_del(&xwl_present_window->frame_callback_list);
+
+    /* Make sure the timer callback doesn't get called */
+    xwl_present_window->timer_armed = 0;
     xwl_present_reset_timer(xwl_present_window);
 }
 

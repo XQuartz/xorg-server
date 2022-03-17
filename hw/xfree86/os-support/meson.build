@@ -36,10 +36,10 @@ if host_machine.system() == 'linux'
         'linux/lnx_bell.c',
         'linux/lnx_init.c',
         'linux/lnx_kmod.c',
-        'linux/lnx_platform.c',
         'linux/lnx_video.c',
         'misc/SlowBcopy.c',
         'shared/VTsw_usl.c',
+        'shared/drm_platform.c',
     ]
     if build_agp
         srcs_xorg_os_support += 'linux/lnx_agp.c'
@@ -96,6 +96,7 @@ elif host_machine.system().endswith('bsd')
         'bsd/bsd_VTsw.c',
         'bsd/bsd_bell.c',
         'bsd/bsd_init.c',
+        'shared/drm_platform.c',
 	'shared/pm_noop.c'
     ]
 

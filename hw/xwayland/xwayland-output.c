@@ -720,6 +720,27 @@ static const struct zxdg_output_v1_listener xdg_output_listener = {
     xdg_output_handle_description,
 };
 
+#define XRANDR_EMULATION_PROP "RANDR Emulation"
+static Atom
+get_rand_emulation_property(void)
+{
+    const char *emulStr = XRANDR_EMULATION_PROP;
+
+    return MakeAtom(emulStr, strlen(emulStr), TRUE);
+}
+
+static void
+xwl_output_set_emulated(struct xwl_output *xwl_output)
+{
+    int32_t val = TRUE;
+
+    RRChangeOutputProperty(xwl_output->randr_output,
+                           get_rand_emulation_property(),
+                           XA_INTEGER,
+                           32, PropModeReplace, 1,
+                           &val, FALSE, FALSE);
+}
+
 struct xwl_output *
 xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id)
 {
@@ -758,6 +779,7 @@ xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id)
         ErrorF("Failed creating RandR Output\n");
         goto err;
     }
+    xwl_output_set_emulated(xwl_output);
 
     RRCrtcGammaSetSize(xwl_output->randr_crtc, 256);
     RROutputSetCrtcs(xwl_output->randr_output, &xwl_output->randr_crtc, 1);
@@ -896,6 +918,10 @@ xwl_randr_output_set_property(ScreenPtr pScreen,
                               Atom property,
                               RRPropertyValuePtr value)
 {
+    /* RANDR Emulation property is read-only. */
+    if (get_rand_emulation_property() == property)
+        return FALSE;
+
     return TRUE;
 }
 

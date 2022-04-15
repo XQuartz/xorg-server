@@ -461,15 +461,7 @@ rrGetPixmapSharingSyncProp(int numOutputs, RROutputPtr * outputs)
     for (o = 0; o < numOutputs; o++) {
         RRPropertyValuePtr val;
 
-        /* Try pending value first, then current value */
         if ((val = RRGetOutputProperty(outputs[o], syncProp, TRUE)) &&
-            val->data) {
-            if (!(*(char *) val->data))
-                return FALSE;
-            continue;
-        }
-
-        if ((val = RRGetOutputProperty(outputs[o], syncProp, FALSE)) &&
             val->data) {
             if (!(*(char *) val->data))
                 return FALSE;

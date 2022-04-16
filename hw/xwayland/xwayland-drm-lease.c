@@ -386,7 +386,8 @@ static void
 drm_lease_device_handle_released(void *data,
                                  struct wp_drm_lease_device_v1 *wp_drm_lease_device_v1)
 {
-    xwl_screen_destroy_drm_lease_device(data, wp_drm_lease_device_v1);
+    struct xwl_drm_lease_device *lease_device = data;
+    xwl_screen_destroy_drm_lease_device(lease_device->xwl_screen, wp_drm_lease_device_v1);
 }
 
 static void

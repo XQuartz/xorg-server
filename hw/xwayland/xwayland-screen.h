@@ -93,6 +93,7 @@ struct xwl_screen {
     struct xorg_list drm_lease_devices;
     struct xorg_list queued_drm_lease_devices;
     struct xorg_list drm_leases;
+    struct xwl_output *fixed_output;
     uint32_t serial;
 
 #define XWL_FORMAT_ARGB8888 (1 << 0)
@@ -134,6 +135,7 @@ Bool xwl_screen_has_viewport_support(struct xwl_screen *xwl_screen);
 Bool xwl_screen_has_resolution_change_emulation(struct xwl_screen *xwl_screen);
 void xwl_screen_check_resolution_change_emulation(struct xwl_screen *xwl_screen);
 struct xwl_output *xwl_screen_get_first_output(struct xwl_screen *xwl_screen);
+struct xwl_output *xwl_screen_get_fixed_or_first_output(struct xwl_screen *xwl_screen);
 Bool xwl_close_screen(ScreenPtr screen);
 Bool xwl_screen_init(ScreenPtr pScreen, int argc, char **argv);
 void xwl_sync_events (struct xwl_screen *xwl_screen);

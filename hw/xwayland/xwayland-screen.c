@@ -127,6 +127,15 @@ xwl_screen_get_first_output(struct xwl_screen *xwl_screen)
     return xorg_list_first_entry(&xwl_screen->output_list, struct xwl_output, link);
 }
 
+struct xwl_output *
+xwl_screen_get_fixed_or_first_output(struct xwl_screen *xwl_screen)
+{
+    if (xwl_screen->fixed_output)
+        return xwl_screen->fixed_output;
+
+    return xwl_screen_get_first_output(xwl_screen);
+}
+
 static void
 xwl_property_callback(CallbackListPtr *pcbl, void *closure,
                       void *calldata)
@@ -179,6 +188,9 @@ xwl_close_screen(ScreenPtr screen)
     xorg_list_for_each_entry_safe(xwl_output, next_xwl_output,
                                   &xwl_screen->output_list, link)
         xwl_output_destroy(xwl_output);
+
+    if (xwl_screen->fixed_output)
+        xwl_output_destroy(xwl_screen->fixed_output);
 
     xorg_list_for_each_entry_safe(xwl_seat, next_xwl_seat,
                                   &xwl_screen->seat_list, link)
@@ -406,7 +418,7 @@ registry_global(void *data, struct wl_registry *registry, uint32_t id,
                                  NULL);
     }
     else if (strcmp(interface, "wl_output") == 0 && version >= 2) {
-        if (xwl_output_create(xwl_screen, id))
+        if (xwl_output_create(xwl_screen, id, (xwl_screen->fixed_output == NULL)))
             xwl_screen->expecting_event++;
     }
     else if (strcmp(interface, "zxdg_output_manager_v1") == 0) {
@@ -594,9 +606,12 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     struct xwl_screen *xwl_screen;
     Pixel red_mask, blue_mask, green_mask;
     int ret, bpc, green_bpc, i;
+    unsigned int xwl_width = 0;
+    unsigned int xwl_height = 0;
 #ifdef XWL_HAS_GLAMOR
     Bool use_eglstreams = FALSE;
 #endif
+    Bool use_fixed_size = FALSE;
 
     if (!dixRegisterPrivateKey(&xwl_screen_private_key, PRIVATE_SCREEN, 0))
         return FALSE;
@@ -653,6 +668,24 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
         else if (strcmp(argv[i], "-force-xrandr-emulation") == 0) {
             xwl_screen->force_xrandr_emulation = 1;
         }
+        else if (strcmp(argv[i], "-geometry") == 0) {
+            sscanf(argv[i + 1], "%ix%i", &xwl_width, &xwl_height);
+            if (xwl_width == 0 || xwl_height == 0) {
+                ErrorF("invalid argument for -geometry %s\n", argv[i + 1]);
+                return FALSE;
+            }
+            use_fixed_size = 1;
+        }
+    }
+
+    if (use_fixed_size) {
+        if (xwl_screen->rootless) {
+            ErrorF("error, cannot set a geometry when running rootless\n");
+            return FALSE;
+        } else {
+            xwl_screen->width = xwl_width;
+            xwl_screen->height = xwl_height;
+        }
     }
 
 #ifdef XWL_HAS_GLAMOR
@@ -685,8 +718,13 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
         return FALSE;
     }
 
-    if (!xwl_screen_init_output(xwl_screen))
-        return FALSE;
+    if (use_fixed_size) {
+        if (!xwl_screen_init_randr_fixed(xwl_screen))
+            return FALSE;
+    } else {
+        if (!xwl_screen_init_output(xwl_screen))
+            return FALSE;
+    }
 
     xwl_screen->expecting_event = 0;
     xwl_screen->registry = wl_display_get_registry(xwl_screen->display);

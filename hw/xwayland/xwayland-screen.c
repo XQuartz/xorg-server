@@ -777,10 +777,8 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     xwl_screen->MoveWindow = pScreen->MoveWindow;
     pScreen->MoveWindow = xwl_move_window;
 
-    if (xwl_screen->rootless) {
-        xwl_screen->SetWindowPixmap = pScreen->SetWindowPixmap;
-        pScreen->SetWindowPixmap = xwl_window_set_window_pixmap;
-    }
+    xwl_screen->SetWindowPixmap = pScreen->SetWindowPixmap;
+    pScreen->SetWindowPixmap = xwl_window_set_window_pixmap;
 
     pScreen->CursorWarpedTo = xwl_cursor_warped_to;
     pScreen->CursorConfinedTo = xwl_cursor_confined_to;

@@ -180,10 +180,8 @@ update_backing_pixmaps(struct xwl_screen *xwl_screen, int width, int height)
 }
 
 static void
-update_screen_size(struct xwl_output *xwl_output, int width, int height)
+update_screen_size(struct xwl_screen *xwl_screen, int width, int height)
 {
-    struct xwl_screen *xwl_screen = xwl_output->xwl_screen;
-
     if (xwl_screen->root_clip_mode == ROOT_CLIP_FULL)
         SetRootClip(xwl_screen->screen, ROOT_CLIP_NONE);
 
@@ -645,7 +643,7 @@ apply_output_change(struct xwl_output *xwl_output)
 	--xwl_screen->expecting_event;
     }
 
-    update_screen_size(xwl_output, width, height);
+    update_screen_size(xwl_screen, width, height);
 }
 
 static void
@@ -837,7 +835,7 @@ xwl_output_remove(struct xwl_output *xwl_output)
 
     xorg_list_for_each_entry(it, &xwl_screen->output_list, link)
         output_get_new_size(it, &width, &height);
-    update_screen_size(xwl_output, width, height);
+    update_screen_size(xwl_screen, width, height);
 
     RRCrtcDestroy(xwl_output->randr_crtc);
     RROutputDestroy(xwl_output->randr_output);

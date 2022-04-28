@@ -93,6 +93,7 @@ ddxUseMsg(void)
     ErrorF("-rootless              run rootless, requires wm support\n");
     ErrorF("-fullscreen            run fullscreen when rootful\n");
     ErrorF("-geometry WxH          set Xwayland window size when rootful\n");
+    ErrorF("-host-grab             disable host keyboard shortcuts when rootful\n");
     ErrorF("-wm fd                 create X client for wm on given fd\n");
     ErrorF("-initfd fd             add given fd as a listen socket for initialization clients\n");
     ErrorF("-listenfd fd           add given fd as a listen socket\n");
@@ -231,6 +232,9 @@ ddxProcessArgument(int argc, char *argv[], int i)
         return 2;
     }
     else if (strcmp(argv[i], "-fullscreen") == 0) {
+        return 1;
+    }
+    else if (strcmp(argv[i], "-host-grab") == 0) {
         return 1;
     }
 

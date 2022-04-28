@@ -15,3 +15,4 @@ have_no_touch_pointer_emulation=true
 have_force_xrandr_emulation=true
 have_geometry=true
 have_fullscreen=true
+have_host_grab=true

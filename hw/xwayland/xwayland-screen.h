@@ -59,6 +59,8 @@ struct xwl_screen {
     int present;
     int force_xrandr_emulation;
     int fullscreen;
+    int host_grab;
+    int has_grab;
 
     CreateScreenResourcesProcPtr CreateScreenResources;
     CloseScreenProcPtr CloseScreen;
@@ -88,6 +90,8 @@ struct xwl_screen {
     struct zwp_pointer_constraints_v1 *pointer_constraints;
     struct zwp_pointer_gestures_v1 *pointer_gestures;
     struct zwp_xwayland_keyboard_grab_manager_v1 *wp_grab;
+    struct zwp_keyboard_shortcuts_inhibit_manager_v1 *shortcuts_inhibit_manager;
+    struct zwp_keyboard_shortcuts_inhibitor_v1 *shortcuts_inhibit;
     struct zwp_linux_dmabuf_v1 *dmabuf;
     struct zxdg_output_manager_v1 *xdg_output_manager;
     struct wp_viewporter *viewporter;

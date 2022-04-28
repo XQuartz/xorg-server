@@ -306,6 +306,12 @@ xwl_cursor_confined_to(DeviceIntPtr device,
     struct xwl_seat *xwl_seat = device->public.devicePrivate;
     struct xwl_window *xwl_window;
 
+    /* If running rootful with host grab requested, do not tamper with
+     * pointer confinement.
+     */
+    if (!xwl_screen->rootless && xwl_screen->host_grab && xwl_screen->has_grab)
+        return;
+
     if (!xwl_seat)
         xwl_seat = xwl_screen_get_default_seat(xwl_screen);
 
@@ -679,6 +685,10 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
         else if (strcmp(argv[i], "-fullscreen") == 0) {
             xwl_screen->fullscreen = 1;
         }
+        else if (strcmp(argv[i], "-host-grab") == 0) {
+            xwl_screen->host_grab = 1;
+            xwl_screen->has_grab = 1;
+        }
     }
 
     if (use_fixed_size) {
@@ -743,6 +753,11 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     if (xwl_screen->fullscreen && !xwl_screen_has_viewport_support(xwl_screen)) {
         ErrorF("missing viewport support in the compositor, ignoring fullscreen\n");
         xwl_screen->fullscreen = FALSE;
+    }
+
+    if (xwl_screen->host_grab && xwl_screen->rootless) {
+        ErrorF("error, cannot use host grab when running rootless\n");
+        return FALSE;
     }
 
     if (!xwl_screen->rootless && !xwl_screen->xdg_wm_base) {

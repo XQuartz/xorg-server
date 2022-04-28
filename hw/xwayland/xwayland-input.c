@@ -49,6 +49,7 @@
 #include "tablet-unstable-v2-client-protocol.h"
 #include "pointer-gestures-unstable-v1-client-protocol.h"
 #include "xwayland-keyboard-grab-unstable-v1-client-protocol.h"
+#include "keyboard-shortcuts-inhibit-unstable-v1-client-protocol.h"
 
 struct axis_discrete_pending {
     struct xorg_list l;
@@ -126,6 +127,57 @@ init_pointer_buttons(DeviceIntPtr device)
         return FALSE;
 
     return TRUE;
+}
+
+static void
+maybe_fake_grab_devices(struct xwl_seat *xwl_seat)
+{
+    struct xwl_screen *xwl_screen = xwl_seat->xwl_screen;
+    struct xwl_window *xwl_window;
+
+    if (xwl_screen->rootless)
+        return;
+
+    if (!xwl_screen->host_grab)
+        return;
+
+    if (!xwl_screen->has_grab)
+        return;
+
+    if (!xwl_screen->screen->root)
+        return;
+
+    xwl_window = xwl_window_get(xwl_screen->screen->root);
+    if (!xwl_window)
+        return;
+
+    xwl_seat_confine_pointer(xwl_seat, xwl_window);
+
+    if (!xwl_screen->shortcuts_inhibit_manager)
+        return;
+
+    if (xwl_screen->shortcuts_inhibit)
+        return;
+
+    xwl_screen->shortcuts_inhibit =
+        zwp_keyboard_shortcuts_inhibit_manager_v1_inhibit_shortcuts (
+            xwl_screen->shortcuts_inhibit_manager,
+            xwl_window->surface,
+            xwl_seat->seat);
+}
+
+static void
+maybe_fake_ungrab_devices(struct xwl_seat *xwl_seat)
+{
+    struct xwl_screen *xwl_screen = xwl_seat->xwl_screen;
+
+    xwl_seat_unconfine_pointer(xwl_seat);
+
+    if (!xwl_screen->shortcuts_inhibit)
+        return;
+
+    zwp_keyboard_shortcuts_inhibitor_v1_destroy (xwl_screen->shortcuts_inhibit);
+    xwl_screen->shortcuts_inhibit = NULL;
 }
 
 static int
@@ -520,6 +572,8 @@ pointer_handle_enter(void *data, struct wl_pointer *pointer,
     else {
         xwl_seat_maybe_lock_on_hidden_cursor(xwl_seat);
     }
+
+    maybe_fake_grab_devices(xwl_seat);
 }
 
 static void
@@ -539,6 +593,8 @@ pointer_handle_leave(void *data, struct wl_pointer *pointer,
         xwl_seat->focus_window = NULL;
         CheckMotion(NULL, GetMaster(dev, POINTER_OR_FLOAT));
     }
+
+    maybe_fake_ungrab_devices(xwl_seat);
 }
 
 static void
@@ -928,6 +984,34 @@ static const struct zwp_pointer_gesture_pinch_v1_listener pointer_gesture_pinch_
 };
 
 static void
+maybe_toggle_fake_grab(struct xwl_seat *xwl_seat, uint32_t key)
+{
+    struct xwl_screen *xwl_screen = xwl_seat->xwl_screen;
+    XkbStateRec state_rec;
+    uint32_t xkb_state;
+
+    if (xwl_screen->rootless)
+        return;
+
+    if (!xwl_screen->host_grab)
+        return;
+
+    state_rec = xwl_seat->keyboard->key->xkbInfo->state;
+    xkb_state = (XkbStateFieldFromRec(&state_rec) & 0xff);
+
+    if (((key == KEY_LEFTSHIFT || key == KEY_RIGHTSHIFT) && (xkb_state & ControlMask)) ||
+        ((key == KEY_LEFTCTRL || key == KEY_RIGHTCTRL) && (xkb_state & ShiftMask))) {
+
+        xwl_screen->has_grab = !xwl_screen->has_grab;
+
+        if (xwl_screen->has_grab)
+            maybe_fake_grab_devices(xwl_seat);
+        else
+            maybe_fake_ungrab_devices(xwl_seat);
+    }
+}
+
+static void
 keyboard_handle_key(void *data, struct wl_keyboard *keyboard, uint32_t serial,
                     uint32_t time, uint32_t key, uint32_t state)
 {
@@ -949,6 +1033,9 @@ keyboard_handle_key(void *data, struct wl_keyboard *keyboard, uint32_t serial,
 
     QueueKeyboardEvents(xwl_seat->keyboard,
                         state ? KeyPress : KeyRelease, key + 8);
+
+    if (!state)
+        maybe_toggle_fake_grab(xwl_seat, key);
 }
 
 static void
@@ -1009,6 +1096,8 @@ keyboard_handle_enter(void *data, struct wl_keyboard *keyboard,
     wl_array_copy(&xwl_seat->keys, keys);
     wl_array_for_each(k, &xwl_seat->keys)
         QueueKeyboardEvents(xwl_seat->keyboard, EnterNotify, *k + 8);
+
+    maybe_fake_grab_devices(xwl_seat);
 }
 
 static void
@@ -1024,6 +1113,8 @@ keyboard_handle_leave(void *data, struct wl_keyboard *keyboard,
         QueueKeyboardEvents(xwl_seat->keyboard, LeaveNotify, *k + 8);
 
     xwl_seat->keyboard_focus = NULL;
+
+    maybe_fake_ungrab_devices(xwl_seat);
 }
 
 static void
@@ -2824,6 +2915,16 @@ init_keyboard_grab(struct xwl_screen *xwl_screen,
     }
 }
 
+static void
+init_keyboard_shortcuts_inhibit(struct xwl_screen *xwl_screen,
+                                uint32_t id, uint32_t version)
+{
+    xwl_screen->shortcuts_inhibit_manager =
+         wl_registry_bind(xwl_screen->registry, id,
+                          &zwp_keyboard_shortcuts_inhibit_manager_v1_interface,
+                          1);
+}
+
 /* The compositor may send us wl_seat and its capabilities before sending e.g.
    relative_pointer_manager or pointer_gesture interfaces. This would result in
    devices being created in capabilities handler, but listeners not, because
@@ -2873,6 +2974,8 @@ input_handler(void *data, struct wl_registry *registry, uint32_t id,
         init_tablet_manager(xwl_screen, id, version);
     } else if (strcmp(interface, "zwp_xwayland_keyboard_grab_manager_v1") == 0) {
         init_keyboard_grab(xwl_screen, id, version);
+    } else if (strcmp(interface, "zwp_keyboard_shortcuts_inhibit_manager_v1") == 0) {
+        init_keyboard_shortcuts_inhibit(xwl_screen, id, version);
     }
 }
 

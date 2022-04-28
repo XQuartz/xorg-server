@@ -521,12 +521,63 @@ static const struct wl_surface_listener surface_listener = {
 };
 
 static Bool
+xwl_create_root_surface(struct xwl_window *xwl_window)
+{
+    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
+    WindowPtr window = xwl_window->window;
+    struct wl_region *region;
+
+    xwl_window->xdg_surface =
+        xdg_wm_base_get_xdg_surface(xwl_screen->xdg_wm_base, xwl_window->surface);
+    if (xwl_window->xdg_surface == NULL) {
+        ErrorF("Failed creating xdg_wm_base xdg_surface\n");
+        goto err_surf;
+    }
+
+    xwl_window->xdg_toplevel =
+        xdg_surface_get_toplevel(xwl_window->xdg_surface);
+    if (xwl_window->xdg_surface == NULL) {
+        ErrorF("Failed creating xdg_toplevel\n");
+        goto err_surf;
+    }
+
+    wl_surface_add_listener(xwl_window->surface,
+                            &surface_listener, xwl_window);
+
+    xdg_surface_add_listener(xwl_window->xdg_surface,
+                             &xdg_surface_listener, xwl_window);
+
+    wl_surface_commit(xwl_window->surface);
+
+    region = wl_compositor_create_region(xwl_screen->compositor);
+    if (region == NULL) {
+        ErrorF("Failed creating region\n");
+        goto err_surf;
+    }
+
+    wl_region_add(region, 0, 0,
+                  window->drawable.width, window->drawable.height);
+    wl_surface_set_opaque_region(xwl_window->surface, region);
+    wl_region_destroy(region);
+
+    return TRUE;
+
+err_surf:
+    if (xwl_window->xdg_toplevel)
+        xdg_toplevel_destroy(xwl_window->xdg_toplevel);
+    if (xwl_window->xdg_surface)
+        xdg_surface_destroy(xwl_window->xdg_surface);
+    wl_surface_destroy(xwl_window->surface);
+
+    return FALSE;
+}
+
+static Bool
 ensure_surface_for_window(WindowPtr window)
 {
     ScreenPtr screen = window->drawable.pScreen;
     struct xwl_screen *xwl_screen;
     struct xwl_window *xwl_window;
-    struct wl_region *region;
     WindowPtr toplevel;
 
     if (xwl_window_from_window(window))
@@ -555,40 +606,8 @@ ensure_surface_for_window(WindowPtr window)
         goto err;
     }
 
-    if (!xwl_screen->rootless) {
-        xwl_window->xdg_surface =
-            xdg_wm_base_get_xdg_surface(xwl_screen->xdg_wm_base, xwl_window->surface);
-        if (xwl_window->xdg_surface == NULL) {
-            ErrorF("Failed creating xdg_wm_base xdg_surface\n");
-            goto err_surf;
-        }
-
-        xwl_window->xdg_toplevel =
-            xdg_surface_get_toplevel(xwl_window->xdg_surface);
-        if (xwl_window->xdg_surface == NULL) {
-            ErrorF("Failed creating xdg_toplevel\n");
-            goto err_surf;
-        }
-
-        wl_surface_add_listener(xwl_window->surface,
-                                &surface_listener, xwl_window);
-
-        xdg_surface_add_listener(xwl_window->xdg_surface,
-                                 &xdg_surface_listener, xwl_window);
-
-        wl_surface_commit(xwl_window->surface);
-
-        region = wl_compositor_create_region(xwl_screen->compositor);
-        if (region == NULL) {
-            ErrorF("Failed creating region\n");
-            goto err_surf;
-        }
-
-        wl_region_add(region, 0, 0,
-                      window->drawable.width, window->drawable.height);
-        wl_surface_set_opaque_region(xwl_window->surface, region);
-        wl_region_destroy(region);
-    }
+    if (!xwl_screen->rootless && !xwl_create_root_surface(xwl_window))
+        goto err;
 
     wl_display_flush(xwl_screen->display);
 
@@ -624,12 +643,6 @@ ensure_surface_for_window(WindowPtr window)
 
     return TRUE;
 
-err_surf:
-    if (xwl_window->xdg_toplevel)
-        xdg_toplevel_destroy(xwl_window->xdg_toplevel);
-    if (xwl_window->xdg_surface)
-        xdg_surface_destroy(xwl_window->xdg_surface);
-    wl_surface_destroy(xwl_window->surface);
 err:
     free(xwl_window);
     return FALSE;

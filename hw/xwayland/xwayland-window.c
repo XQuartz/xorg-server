@@ -469,6 +469,26 @@ xwl_window_set_fullscreen(struct xwl_window *xwl_window)
     return TRUE;
 }
 
+void
+xwl_window_rootful_update_title(struct xwl_window *xwl_window)
+{
+    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
+    char title[128];
+    const char *grab_message = "";
+
+    if (xwl_screen->host_grab) {
+        if (xwl_screen->has_grab)
+            grab_message = " - ([ctrl]+[shift] releases mouse and keyboard)";
+        else
+            grab_message = " - ([ctrl]+[shift] grabs mouse and keyboard)";
+    }
+
+    snprintf(title, sizeof(title), "Xwayland on :%s%s", display, grab_message);
+
+    if (xwl_window->xdg_toplevel)
+        xdg_toplevel_set_title(xwl_window->xdg_toplevel, title);
+}
+
 static void
 xdg_surface_handle_configure(void *data,
                              struct xdg_surface *xdg_surface,
@@ -546,6 +566,8 @@ xwl_create_root_surface(struct xwl_window *xwl_window)
 
     xdg_surface_add_listener(xwl_window->xdg_surface,
                              &xdg_surface_listener, xwl_window);
+
+    xwl_window_rootful_update_title(xwl_window);
 
     wl_surface_commit(xwl_window->surface);
 

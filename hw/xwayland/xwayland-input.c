@@ -987,6 +987,7 @@ static void
 maybe_toggle_fake_grab(struct xwl_seat *xwl_seat, uint32_t key)
 {
     struct xwl_screen *xwl_screen = xwl_seat->xwl_screen;
+    struct xwl_window *xwl_window;
     XkbStateRec state_rec;
     uint32_t xkb_state;
 
@@ -1008,6 +1009,10 @@ maybe_toggle_fake_grab(struct xwl_seat *xwl_seat, uint32_t key)
             maybe_fake_grab_devices(xwl_seat);
         else
             maybe_fake_ungrab_devices(xwl_seat);
+
+        xwl_window = xwl_window_get(xwl_screen->screen->root);
+        if (xwl_window)
+            xwl_window_rootful_update_title(xwl_window);
     }
 }
 

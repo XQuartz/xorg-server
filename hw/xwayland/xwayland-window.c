@@ -540,6 +540,28 @@ static const struct wl_surface_listener surface_listener = {
     xwl_window_surface_leave
 };
 
+static void
+xdg_toplevel_handle_configure(void *data,
+                              struct xdg_toplevel *xdg_toplevel,
+                              int32_t width,
+                              int32_t height,
+                              struct wl_array *states)
+{
+}
+
+static void
+xdg_toplevel_handle_close(void *data,
+                          struct xdg_toplevel *xdg_toplevel)
+{
+    DebugF("Terminating on compositor request");
+    GiveUp(0);
+}
+
+static const struct xdg_toplevel_listener xdg_toplevel_listener = {
+    xdg_toplevel_handle_configure,
+    xdg_toplevel_handle_close,
+};
+
 static Bool
 xwl_create_root_surface(struct xwl_window *xwl_window)
 {
@@ -566,6 +588,10 @@ xwl_create_root_surface(struct xwl_window *xwl_window)
 
     xdg_surface_add_listener(xwl_window->xdg_surface,
                              &xdg_surface_listener, xwl_window);
+
+    xdg_toplevel_add_listener(xwl_window->xdg_toplevel,
+                              &xdg_toplevel_listener,
+                              NULL);
 
     xwl_window_rootful_update_title(xwl_window);
 

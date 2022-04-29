@@ -173,3 +173,7 @@ xwayland_manpage = configure_file(
     configuration: manpage_config,
 )
 install_man(xwayland_manpage)
+
+datadir = join_paths(get_option('prefix'), get_option('datadir'))
+desktopdir = join_paths(datadir, 'applications')
+install_data('desktop/org.freedesktop.Xwayland.desktop', install_dir : desktopdir)

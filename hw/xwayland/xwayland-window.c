@@ -490,6 +490,15 @@ xwl_window_rootful_update_title(struct xwl_window *xwl_window)
 }
 
 static void
+xwl_window_rootful_set_app_id(struct xwl_window *xwl_window)
+{
+    const char *app_id = "org.freedesktop.Xwayland";
+
+    if (xwl_window->xdg_toplevel)
+        xdg_toplevel_set_app_id(xwl_window->xdg_toplevel, app_id);
+}
+
+static void
 xdg_surface_handle_configure(void *data,
                              struct xdg_surface *xdg_surface,
                              uint32_t serial)
@@ -594,6 +603,7 @@ xwl_create_root_surface(struct xwl_window *xwl_window)
                               NULL);
 
     xwl_window_rootful_update_title(xwl_window);
+    xwl_window_rootful_set_app_id(xwl_window);
 
     wl_surface_commit(xwl_window->surface);
 

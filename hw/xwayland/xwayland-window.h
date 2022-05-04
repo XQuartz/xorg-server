@@ -58,6 +58,9 @@ struct xwl_window {
     struct xorg_list frame_callback_list;
     Bool present_flipped;
 #endif
+#ifdef XWL_HAS_LIBDECOR
+    struct libdecor_frame *libdecor_frame;
+#endif
 };
 
 struct xwl_window *xwl_window_get(WindowPtr window);

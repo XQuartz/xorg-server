@@ -336,6 +336,21 @@ if build_glamor
     epoxy_dep = dependency('epoxy', required: false)
 endif
 
+if build_xwayland
+    libdecor_dep = dependency('libdecor-0', required: false)
+    libdecor_option = get_option('libdecor')
+    if libdecor_option == 'auto'
+        have_libdecor = libdecor_dep.found()
+    else
+        have_libdecor = libdecor_option == 'true'
+        if have_libdecor and not libdecor_dep.found()
+            error('libdecor support requested but not found')
+        endif
+    endif
+else
+    have_libdecor = false
+endif
+
 eglstream_option = get_option('xwayland_eglstream')
 if build_xwayland and build_glamor
     eglstream_dep = dependency('wayland-eglstream-protocols', required:false)

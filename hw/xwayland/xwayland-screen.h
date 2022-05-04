@@ -38,6 +38,10 @@
 #include "xwayland-glamor.h"
 #include "xwayland-drm-lease.h"
 
+#ifdef XWL_HAS_LIBDECOR
+#include <libdecor.h>
+#endif
+
 struct xwl_format {
     uint32_t format;
     int num_modifiers;
@@ -61,6 +65,7 @@ struct xwl_screen {
     int fullscreen;
     int host_grab;
     int has_grab;
+    int decorate;
 
     CreateScreenResourcesProcPtr CreateScreenResources;
     CloseScreenProcPtr CloseScreen;
@@ -123,6 +128,10 @@ struct xwl_screen {
 
     /* The preferred GLVND vendor. If NULL, "mesa" is assumed. */
     const char *glvnd_vendor;
+#ifdef XWL_HAS_LIBDECOR
+    int libdecor_fd;
+    struct libdecor *libdecor_context;
+#endif
 };
 
 /* Apps which use randr/vidmode to change the mode when going fullscreen,

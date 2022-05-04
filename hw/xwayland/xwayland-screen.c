@@ -513,6 +513,33 @@ xwl_display_pollout (struct xwl_screen *xwl_screen, int timeout)
     return xserver_poll(&poll_fd, 1, timeout);
 }
 
+#ifdef XWL_HAS_LIBDECOR
+static void
+xwl_dispatch_events_with_libdecor(struct xwl_screen *xwl_screen)
+{
+    int ret = 0;
+
+    assert(!xwl_screen->rootless);
+
+    ret = libdecor_dispatch(xwl_screen->libdecor_context, 0);
+    if (ret == -1)
+        xwl_give_up("failed to dispatch Wayland events with libdecor: %s\n",
+                    strerror(errno));
+}
+
+static void
+handle_libdecor_error(struct libdecor *context,
+                      enum libdecor_error error,
+                      const char *message)
+{
+    xwl_give_up("libdecor error (%d): %s\n", error, message);
+}
+
+static struct libdecor_interface libdecor_iface = {
+    .error = handle_libdecor_error,
+};
+#endif
+
 static void
 xwl_dispatch_events (struct xwl_screen *xwl_screen)
 {
@@ -551,6 +578,12 @@ socket_handler(int fd, int ready, void *data)
 {
     struct xwl_screen *xwl_screen = data;
 
+#ifdef XWL_HAS_LIBDECOR
+    if (xwl_screen->libdecor_context) {
+        xwl_dispatch_events_with_libdecor(xwl_screen);
+        return;
+    }
+#endif
     xwl_read_events (xwl_screen);
 }
 
@@ -565,12 +598,24 @@ block_handler(void *data, void *timeout)
     struct xwl_screen *xwl_screen = data;
 
     xwl_screen_post_damage(xwl_screen);
+#ifdef XWL_HAS_LIBDECOR
+    if (xwl_screen->libdecor_context) {
+        xwl_dispatch_events_with_libdecor(xwl_screen);
+        return;
+    }
+#endif
     xwl_dispatch_events (xwl_screen);
 }
 
 void
 xwl_sync_events (struct xwl_screen *xwl_screen)
 {
+#ifdef XWL_HAS_LIBDECOR
+    if (xwl_screen->libdecor_context) {
+        xwl_dispatch_events_with_libdecor(xwl_screen);
+        return;
+    }
+#endif
     xwl_dispatch_events (xwl_screen);
     xwl_read_events (xwl_screen);
 }
@@ -689,6 +734,13 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
             xwl_screen->host_grab = 1;
             xwl_screen->has_grab = 1;
         }
+        else if (strcmp(argv[i], "-decorate") == 0) {
+#ifdef XWL_HAS_LIBDECOR
+            xwl_screen->decorate = 1;
+#else
+            ErrorF("This build does not have libdecor support\n");
+#endif
+        }
     }
 
     if (use_fixed_size) {
@@ -745,8 +797,14 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
                              &registry_listener, xwl_screen);
     xwl_screen_roundtrip(xwl_screen);
 
+
     if (xwl_screen->fullscreen && xwl_screen->rootless) {
         ErrorF("error, cannot set fullscreen when running rootless\n");
+        return FALSE;
+    }
+
+    if (xwl_screen->fullscreen && xwl_screen->decorate) {
+        ErrorF("error, cannot use the decorate option when running fullscreen\n");
         return FALSE;
     }
 
@@ -796,7 +854,16 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
         return FALSE;
 #endif
 
-    xwl_screen->wayland_fd = wl_display_get_fd(xwl_screen->display);
+#ifdef XWL_HAS_LIBDECOR
+    if (xwl_screen->decorate && !xwl_screen->rootless) {
+        xwl_screen->libdecor_context = libdecor_new(xwl_screen->display, &libdecor_iface);
+        xwl_screen->wayland_fd = libdecor_get_fd(xwl_screen->libdecor_context);
+    }
+    else
+#endif
+    {
+        xwl_screen->wayland_fd = wl_display_get_fd(xwl_screen->display);
+    }
     SetNotifyFd(xwl_screen->wayland_fd, socket_handler, X_NOTIFY_READ, xwl_screen);
     RegisterBlockAndWakeupHandlers(block_handler, wakeup_handler, xwl_screen);
 

@@ -106,6 +106,9 @@ ddxUseMsg(void)
     ErrorF("-version               show the server version and exit\n");
     ErrorF("-noTouchPointerEmulation  disable touch pointer emulation\n");
     ErrorF("-force-xrandr-emulation   force non-native modes to be exposed when viewporter is not exposed by the compositor\n");
+#ifdef XWL_HAS_LIBDECOR
+    ErrorF("-decorate              add decorations to Xwayland when rootful (experimental)\n");
+#endif
 }
 
 static int init_fd = -1;
@@ -235,6 +238,9 @@ ddxProcessArgument(int argc, char *argv[], int i)
         return 1;
     }
     else if (strcmp(argv[i], "-host-grab") == 0) {
+        return 1;
+    }
+    else if (strcmp(argv[i], "-decorate") == 0) {
         return 1;
     }
 

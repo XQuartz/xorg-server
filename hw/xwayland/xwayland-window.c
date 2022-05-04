@@ -498,6 +498,11 @@ xwl_window_rootful_update_title(struct xwl_window *xwl_window)
 
     snprintf(title, sizeof(title), "Xwayland on :%s%s", display, grab_message);
 
+#ifdef XWL_HAS_LIBDECOR
+    if (xwl_window->libdecor_frame)
+        libdecor_frame_set_title(xwl_window->libdecor_frame, title);
+    else
+#endif
     if (xwl_window->xdg_toplevel)
         xdg_toplevel_set_title(xwl_window->xdg_toplevel, title);
 }
@@ -507,9 +512,77 @@ xwl_window_rootful_set_app_id(struct xwl_window *xwl_window)
 {
     const char *app_id = "org.freedesktop.Xwayland";
 
+#ifdef XWL_HAS_LIBDECOR
+    if (xwl_window->libdecor_frame)
+        libdecor_frame_set_app_id(xwl_window->libdecor_frame, app_id);
+    else
+#endif
     if (xwl_window->xdg_toplevel)
         xdg_toplevel_set_app_id(xwl_window->xdg_toplevel, app_id);
 }
+
+#ifdef XWL_HAS_LIBDECOR
+static void
+xwl_window_update_libdecor_size(struct xwl_window *xwl_window, int width, int height)
+{
+    struct libdecor_state *state;
+
+    if (xwl_window->libdecor_frame) {
+	state = libdecor_state_new(width, height);
+	libdecor_frame_commit(xwl_window->libdecor_frame, state, NULL);
+	libdecor_state_free(state);
+    }
+}
+
+static void
+handle_libdecor_configure(struct libdecor_frame *frame,
+                          struct libdecor_configuration *configuration,
+                          void *data)
+{
+    struct xwl_window *xwl_window = data;
+    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
+    struct libdecor_state *state;
+
+    state = libdecor_state_new(xwl_screen->width, xwl_screen->height);
+    libdecor_frame_commit(frame, state, configuration);
+    libdecor_state_free(state);
+
+    if (libdecor_frame_has_capability(frame, LIBDECOR_ACTION_RESIZE))
+        libdecor_frame_unset_capabilities(frame, LIBDECOR_ACTION_RESIZE);
+    if (libdecor_frame_has_capability(frame, LIBDECOR_ACTION_FULLSCREEN))
+        libdecor_frame_unset_capabilities(frame, LIBDECOR_ACTION_FULLSCREEN);
+}
+
+static void
+handle_libdecor_close(struct libdecor_frame *frame,
+                      void *data)
+{
+    DebugF("Terminating on compositor request");
+    GiveUp(0);
+}
+
+static void
+handle_libdecor_commit(struct libdecor_frame *frame,
+                       void *data)
+{
+    struct xwl_window *xwl_window = data;
+    wl_surface_commit(xwl_window->surface);
+}
+
+static void
+handle_libdecor_dismiss_popup(struct libdecor_frame *frame,
+                              const char *seat_name,
+                              void *data)
+{
+}
+
+static struct libdecor_frame_interface libdecor_frame_iface = {
+    handle_libdecor_configure,
+    handle_libdecor_close,
+    handle_libdecor_commit,
+    handle_libdecor_dismiss_popup,
+};
+#endif
 
 static void
 xdg_surface_handle_configure(void *data,
@@ -591,29 +664,43 @@ xwl_create_root_surface(struct xwl_window *xwl_window)
     WindowPtr window = xwl_window->window;
     struct wl_region *region;
 
-    xwl_window->xdg_surface =
-        xdg_wm_base_get_xdg_surface(xwl_screen->xdg_wm_base, xwl_window->surface);
-    if (xwl_window->xdg_surface == NULL) {
-        ErrorF("Failed creating xdg_wm_base xdg_surface\n");
-        goto err_surf;
+
+#ifdef XWL_HAS_LIBDECOR
+    if (xwl_screen->decorate) {
+        xwl_window->libdecor_frame =
+            libdecor_decorate(xwl_screen->libdecor_context,
+                              xwl_window->surface,
+                              &libdecor_frame_iface,
+                              xwl_window);
+        libdecor_frame_map(xwl_window->libdecor_frame);
     }
+    else
+#endif
+    {
+        xwl_window->xdg_surface =
+            xdg_wm_base_get_xdg_surface(xwl_screen->xdg_wm_base, xwl_window->surface);
+        if (xwl_window->xdg_surface == NULL) {
+            ErrorF("Failed creating xdg_wm_base xdg_surface\n");
+            goto err_surf;
+        }
 
-    xwl_window->xdg_toplevel =
-        xdg_surface_get_toplevel(xwl_window->xdg_surface);
-    if (xwl_window->xdg_surface == NULL) {
-        ErrorF("Failed creating xdg_toplevel\n");
-        goto err_surf;
+        xwl_window->xdg_toplevel =
+            xdg_surface_get_toplevel(xwl_window->xdg_surface);
+        if (xwl_window->xdg_surface == NULL) {
+            ErrorF("Failed creating xdg_toplevel\n");
+            goto err_surf;
+        }
+
+        wl_surface_add_listener(xwl_window->surface,
+                                &surface_listener, xwl_window);
+
+        xdg_surface_add_listener(xwl_window->xdg_surface,
+                                 &xdg_surface_listener, xwl_window);
+
+        xdg_toplevel_add_listener(xwl_window->xdg_toplevel,
+                                  &xdg_toplevel_listener,
+                                  NULL);
     }
-
-    wl_surface_add_listener(xwl_window->surface,
-                            &surface_listener, xwl_window);
-
-    xdg_surface_add_listener(xwl_window->xdg_surface,
-                             &xdg_surface_listener, xwl_window);
-
-    xdg_toplevel_add_listener(xwl_window->xdg_toplevel,
-                              &xdg_toplevel_listener,
-                              NULL);
 
     xwl_window_rootful_update_title(xwl_window);
     xwl_window_rootful_set_app_id(xwl_window);
@@ -908,8 +995,14 @@ xwl_resize_window(WindowPtr window,
     xwl_screen->ResizeWindow = screen->ResizeWindow;
     screen->ResizeWindow = xwl_resize_window;
 
-    if (xwl_window && (xwl_window_get(window) || xwl_window_is_toplevel(window)))
-        xwl_window_check_resolution_change_emulation(xwl_window);
+    if (xwl_window) {
+        if (xwl_window_get(window) || xwl_window_is_toplevel(window))
+            xwl_window_check_resolution_change_emulation(xwl_window);
+#ifdef XWL_HAS_LIBDECOR
+        if (window == screen->root)
+            xwl_window_update_libdecor_size(xwl_window, width, height);
+#endif
+    }
 }
 
 void

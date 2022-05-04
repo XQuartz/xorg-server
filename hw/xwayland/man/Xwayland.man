@@ -46,6 +46,14 @@ Like all of the X servers, \fIXwayland\fP accepts the command line options
 described in the \fIXserver\fP(@miscmansuffix@) manual page.
 The following additional arguments are supported as well.
 .TP 8
+.B \-decorate
+Add decorations to the Xwayland root window when running rootful.
+
+This option has no effect when \fIXwayland\fP is built without libdecor
+support (optional).
+
+This option is not compatible with rootless mode (\fI-rootless\fP).
+.TP 8
 .B \-eglstream
 Use EGLStream backend for NVidia GPUs. If \fIXwayland\fP was compiled with
 EGLStream support, this option will instruct \fIXwayland\fP to try that

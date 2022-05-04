@@ -135,6 +135,8 @@ option('libunwind', type: 'boolean', value: false,
         description: 'Use libunwind for backtrace reporting')
 
 option('xwayland-path', type: 'string', description: 'Directory containing Xwayland executable')
+option('libdecor', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
+        description: 'Whether Xwayland should use libdecor when running rootful.')
 
 option('docs', type: 'combo', choices: ['true', 'false', 'auto'], value: 'auto',
         description: 'Build documentation')

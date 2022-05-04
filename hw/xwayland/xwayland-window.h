@@ -63,6 +63,8 @@ struct xwl_window {
 struct xwl_window *xwl_window_get(WindowPtr window);
 struct xwl_window *xwl_window_from_window(WindowPtr window);
 
+Bool is_surface_from_xwl_window(struct wl_surface *surface);
+
 void xwl_window_update_property(struct xwl_window *xwl_window,
                                 PropertyStateRec *propstate);
 Bool xwl_window_has_viewport_enabled(struct xwl_window *xwl_window);

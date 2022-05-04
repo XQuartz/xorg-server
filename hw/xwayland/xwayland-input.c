@@ -525,6 +525,9 @@ pointer_handle_enter(void *data, struct wl_pointer *pointer,
     if (surface == NULL)
         return;
 
+    if (!is_surface_from_xwl_window(surface))
+        return;
+
     xwl_seat->xwl_screen->serial = serial;
     xwl_seat->pointer_enter_serial = serial;
 
@@ -867,6 +870,9 @@ pointer_gesture_swipe_handle_begin(void *data,
 {
     struct xwl_seat *xwl_seat = data;
 
+    if (surface != NULL && !is_surface_from_xwl_window(surface))
+        return;
+
     xwl_seat->pointer_gesture_swipe_fingers = fingers;
     QueueGestureSwipeEvents(xwl_seat->pointer_gestures,
                             XI_GestureSwipeBegin, fingers, 0, 0.0, 0.0, 0.0, 0.0);
@@ -925,6 +931,9 @@ pointer_gesture_pinch_handle_begin(void *data,
                                    uint32_t fingers)
 {
     struct xwl_seat *xwl_seat = data;
+
+    if (surface != NULL && !is_surface_from_xwl_window(surface))
+        return;
 
     xwl_seat->pointer_gesture_pinch_fingers = fingers;
     xwl_seat->pointer_gesture_pinch_last_scale = 1.0;
@@ -1095,6 +1104,9 @@ keyboard_handle_enter(void *data, struct wl_keyboard *keyboard,
     struct xwl_seat *xwl_seat = data;
     uint32_t *k;
 
+    if (surface != NULL && !is_surface_from_xwl_window(surface))
+        return;
+
     xwl_seat->xwl_screen->serial = serial;
     xwl_seat->keyboard_focus = surface;
 
@@ -1111,6 +1123,9 @@ keyboard_handle_leave(void *data, struct wl_keyboard *keyboard,
 {
     struct xwl_seat *xwl_seat = data;
     uint32_t *k;
+
+    if (surface != NULL && !is_surface_from_xwl_window(surface))
+        return;
 
     xwl_seat->xwl_screen->serial = serial;
 
@@ -1312,6 +1327,9 @@ touch_handle_down(void *data, struct wl_touch *wl_touch,
     struct xwl_touch *xwl_touch;
 
     if (surface == NULL)
+        return;
+
+    if (!is_surface_from_xwl_window(surface))
         return;
 
     xwl_touch = calloc(1, sizeof *xwl_touch);
@@ -1995,6 +2013,9 @@ tablet_tool_proximity_in(void *data, struct zwp_tablet_tool_v2 *tool,
      * see pointer_handle_enter()
      */
     if (wl_surface == NULL)
+        return;
+
+    if (!is_surface_from_xwl_window(wl_surface))
         return;
 
     xwl_tablet_tool->proximity_in_serial = serial;

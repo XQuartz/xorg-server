@@ -3202,6 +3202,8 @@ xwl_seat_emulate_pointer_warp(struct xwl_seat *xwl_seat,
 static Bool
 xwl_seat_maybe_lock_on_hidden_cursor(struct xwl_seat *xwl_seat)
 {
+    struct xwl_screen *xwl_screen = xwl_seat->xwl_screen;
+
     /* Some clients use hidden cursor+confineTo+relative motion
      * to implement infinite panning (eg. 3D views), lock the
      * pointer for so the relative pointer is used.
@@ -3210,6 +3212,9 @@ xwl_seat_maybe_lock_on_hidden_cursor(struct xwl_seat *xwl_seat)
         return FALSE;
 
     if (!xwl_seat->focus_window)
+        return FALSE;
+
+    if (!xwl_screen->rootless)
         return FALSE;
 
     if (xwl_seat->cursor_confinement_window != xwl_seat->focus_window)

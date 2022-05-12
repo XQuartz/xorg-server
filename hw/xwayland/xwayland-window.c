@@ -483,13 +483,18 @@ ensure_surface_for_window(WindowPtr window)
             goto err_surf;
         }
 
+        xwl_window->xdg_toplevel =
+            xdg_surface_get_toplevel(xwl_window->xdg_surface);
+        if (xwl_window->xdg_surface == NULL) {
+            ErrorF("Failed creating xdg_toplevel\n");
+            goto err_surf;
+        }
+
         wl_surface_add_listener(xwl_window->surface,
                                 &surface_listener, xwl_window);
 
         xdg_surface_add_listener(xwl_window->xdg_surface,
                                  &xdg_surface_listener, xwl_window);
-
-        xdg_surface_get_toplevel(xwl_window->xdg_surface);
 
         wl_surface_commit(xwl_window->surface);
 
@@ -540,6 +545,8 @@ ensure_surface_for_window(WindowPtr window)
     return TRUE;
 
 err_surf:
+    if (xwl_window->xdg_toplevel)
+        xdg_toplevel_destroy(xwl_window->xdg_toplevel);
     if (xwl_window->xdg_surface)
         xdg_surface_destroy(xwl_window->xdg_surface);
     wl_surface_destroy(xwl_window->surface);

@@ -270,7 +270,7 @@ window_get_client_toplevel(WindowPtr window)
 static Bool
 xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
                                   struct xwl_output **xwl_output_ret,
-                                  struct xwl_emulated_mode **emulated_mode_ret)
+                                  struct xwl_emulated_mode *emulated_mode_ret)
 {
     struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
     struct xwl_emulated_mode *emulated_mode;
@@ -302,7 +302,7 @@ xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
             drawable->width  == emulated_mode->width &&
             drawable->height == emulated_mode->height) {
 
-            *emulated_mode_ret = emulated_mode;
+            memcpy(emulated_mode_ret, emulated_mode, sizeof(struct xwl_emulated_mode));
             *xwl_output_ret = xwl_output;
             return TRUE;
         }
@@ -320,7 +320,7 @@ xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
         drawable->width  == xwl_screen->width &&
         drawable->height == xwl_screen->height) {
 
-        *emulated_mode_ret = emulated_mode;
+        memcpy(emulated_mode_ret, emulated_mode, sizeof(struct xwl_emulated_mode));
         *xwl_output_ret = xwl_output;
         return TRUE;
     }
@@ -331,11 +331,11 @@ xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
 void
 xwl_window_check_resolution_change_emulation(struct xwl_window *xwl_window)
 {
-    struct xwl_emulated_mode *emulated_mode;
+    struct xwl_emulated_mode emulated_mode;
     struct xwl_output *xwl_output;
 
     if (xwl_window_should_enable_viewport(xwl_window, &xwl_output, &emulated_mode))
-        xwl_window_enable_viewport(xwl_window, xwl_output, emulated_mode);
+        xwl_window_enable_viewport(xwl_window, xwl_output, &emulated_mode);
     else if (xwl_window_has_viewport_enabled(xwl_window))
         xwl_window_disable_viewport(xwl_window);
 }

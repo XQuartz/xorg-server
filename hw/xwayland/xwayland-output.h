@@ -79,6 +79,9 @@ Bool xwl_screen_init_randr_fixed(struct xwl_screen *xwl_screen);
 void xwl_output_set_mode_fixed(struct xwl_output *xwl_output,
                                RRModePtr mode);
 
+struct xwl_output *xwl_output_from_wl_output(struct xwl_screen *xwl_screen,
+                                             struct wl_output* wl_output);
+
 struct xwl_output *xwl_output_create(struct xwl_screen *xwl_screen,
                                      uint32_t id, Bool with_xrandr);
 

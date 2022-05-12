@@ -752,6 +752,20 @@ xwl_output_set_emulated(struct xwl_output *xwl_output)
                            &val, FALSE, FALSE);
 }
 
+struct xwl_output*
+xwl_output_from_wl_output(struct xwl_screen *xwl_screen,
+                          struct wl_output* wl_output)
+{
+    struct xwl_output *xwl_output;
+
+    xorg_list_for_each_entry(xwl_output, &xwl_screen->output_list, link) {
+        if (xwl_output->output == wl_output)
+            return xwl_output;
+    }
+
+    return NULL;
+}
+
 struct xwl_output *
 xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id, Bool with_xrandr)
 {

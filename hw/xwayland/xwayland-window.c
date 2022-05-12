@@ -413,6 +413,33 @@ static const struct xdg_surface_listener xdg_surface_listener = {
     xdg_surface_handle_configure,
 };
 
+static void
+xwl_window_surface_enter(void *data,
+                         struct wl_surface *wl_surface,
+                         struct wl_output *wl_output)
+{
+    struct xwl_window *xwl_window = data;
+
+    if (xwl_window->wl_output != wl_output)
+        xwl_window->wl_output = wl_output;
+}
+
+static void
+xwl_window_surface_leave(void *data,
+                         struct wl_surface *wl_surface,
+                         struct wl_output *wl_output)
+{
+    struct xwl_window *xwl_window = data;
+
+    if (xwl_window->wl_output == wl_output)
+        xwl_window->wl_output = NULL;
+}
+
+static const struct wl_surface_listener surface_listener = {
+    xwl_window_surface_enter,
+    xwl_window_surface_leave
+};
+
 static Bool
 ensure_surface_for_window(WindowPtr window)
 {
@@ -455,6 +482,9 @@ ensure_surface_for_window(WindowPtr window)
             ErrorF("Failed creating xdg_wm_base xdg_surface\n");
             goto err_surf;
         }
+
+        wl_surface_add_listener(xwl_window->surface,
+                                &surface_listener, xwl_window);
 
         xdg_surface_add_listener(xwl_window->xdg_surface,
                                  &xdg_surface_listener, xwl_window);

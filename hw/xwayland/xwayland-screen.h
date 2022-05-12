@@ -58,6 +58,7 @@ struct xwl_screen {
     int glamor;
     int present;
     int force_xrandr_emulation;
+    int fullscreen;
 
     CreateScreenResourcesProcPtr CreateScreenResources;
     CloseScreenProcPtr CloseScreen;

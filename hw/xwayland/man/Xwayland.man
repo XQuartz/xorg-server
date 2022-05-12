@@ -53,6 +53,11 @@ backend first, then fallback to the GBM backend if EGLStream is not supported
 by the Wayland server. Without this option, \fIXwayland\fP tries the GBM
 backend first, and fallback to EGLStream if GBM is not usable.
 .TP 8
+.B \-fullscreen
+Set the Xwayland window fullscreen when running rootful.
+
+This option is not compatible with rootless mode (\fI-rootless\fP).
+.TP 8
 .B \-geometry \fIWxH\fP
 Sets the geometry of the \fIXwayland\fP window to \fIWxH\fP when running rootful.
 

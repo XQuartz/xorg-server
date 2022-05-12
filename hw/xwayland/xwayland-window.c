@@ -267,6 +267,41 @@ window_get_client_toplevel(WindowPtr window)
     return window;
 }
 
+static struct xwl_output *
+xwl_window_get_output(struct xwl_window *xwl_window)
+{
+    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
+    struct xwl_output *xwl_output;
+
+    xwl_output = xwl_output_from_wl_output(xwl_screen, xwl_window->wl_output);
+
+    if (xwl_output)
+        return xwl_output;
+
+    return xwl_screen_get_first_output(xwl_screen);
+}
+
+static Bool
+xwl_window_should_enable_viewport_fullscreen(struct xwl_window *xwl_window,
+                                             struct xwl_output **xwl_output_ret,
+                                             struct xwl_emulated_mode *emulated_mode_ret)
+{
+    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
+    struct xwl_output *xwl_output;
+
+    xwl_output = xwl_window_get_output(xwl_window);
+    if (!xwl_output)
+        return FALSE;
+
+    *xwl_output_ret = xwl_output;
+    emulated_mode_ret->server_output_id = 0;
+    emulated_mode_ret->width = xwl_screen->width;
+    emulated_mode_ret->height = xwl_screen->height;
+    emulated_mode_ret->from_vidmode = FALSE;
+
+    return TRUE;
+}
+
 static Bool
 xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
                                   struct xwl_output **xwl_output_ret,
@@ -279,7 +314,15 @@ xwl_window_should_enable_viewport(struct xwl_window *xwl_window,
     WindowPtr window;
     DrawablePtr drawable;
 
-    if (!xwl_screen_has_resolution_change_emulation(xwl_screen))
+    if (!xwl_screen_has_viewport_support(xwl_screen))
+        return FALSE;
+
+    if (xwl_screen->fullscreen)
+        return xwl_window_should_enable_viewport_fullscreen(xwl_window,
+                                                            xwl_output_ret,
+                                                            emulated_mode_ret);
+
+    if (!xwl_screen->rootless)
         return FALSE;
 
     window = window_get_client_toplevel(xwl_window->window);
@@ -401,12 +444,44 @@ send_surface_id_event(struct xwl_window *xwl_window)
                           &e, 1, SubstructureRedirectMask, NullGrab);
 }
 
+static Bool
+xwl_window_set_fullscreen(struct xwl_window *xwl_window)
+{
+    struct xwl_output *xwl_output;
+    struct wl_output *wl_output = NULL;
+
+    if (!xwl_window->xdg_toplevel)
+        return FALSE;
+
+    xwl_output = xwl_window_get_output(xwl_window);
+    if (xwl_output)
+        wl_output = xwl_output->output;
+
+    if (wl_output && xwl_window->wl_output_fullscreen == wl_output)
+        return FALSE;
+
+    xdg_toplevel_set_fullscreen(xwl_window->xdg_toplevel, wl_output);
+    xwl_window_check_resolution_change_emulation(xwl_window);
+    wl_surface_commit(xwl_window->surface);
+
+    xwl_window->wl_output_fullscreen = wl_output;
+
+    return TRUE;
+}
+
 static void
 xdg_surface_handle_configure(void *data,
                              struct xdg_surface *xdg_surface,
                              uint32_t serial)
 {
+    struct xwl_window *xwl_window = data;
+    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
+
+    if (xwl_screen->fullscreen)
+        xwl_window_set_fullscreen(xwl_window);
+
     xdg_surface_ack_configure(xdg_surface, serial);
+    wl_surface_commit(xwl_window->surface);
 }
 
 static const struct xdg_surface_listener xdg_surface_listener = {
@@ -419,9 +494,14 @@ xwl_window_surface_enter(void *data,
                          struct wl_output *wl_output)
 {
     struct xwl_window *xwl_window = data;
+    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
 
-    if (xwl_window->wl_output != wl_output)
+    if (xwl_window->wl_output != wl_output) {
         xwl_window->wl_output = wl_output;
+
+        if (xwl_screen->fullscreen)
+            xwl_window_set_fullscreen(xwl_window);
+    }
 }
 
 static void
@@ -533,7 +613,7 @@ ensure_surface_for_window(WindowPtr window)
     /* When a new window-manager window is realized, then the randr emulation
      * props may have not been set on the managed client window yet.
      */
-    if (window_is_wm_window(window)) {
+    if (!xwl_screen->fullscreen && window_is_wm_window(window)) {
         toplevel = window_get_client_toplevel(window);
         if (toplevel)
             xwl_output_set_window_randr_emu_props(xwl_screen, toplevel);

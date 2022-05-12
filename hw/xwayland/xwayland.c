@@ -91,6 +91,7 @@ void
 ddxUseMsg(void)
 {
     ErrorF("-rootless              run rootless, requires wm support\n");
+    ErrorF("-fullscreen            run fullscreen when rootful\n");
     ErrorF("-geometry WxH          set Xwayland window size when rootful\n");
     ErrorF("-wm fd                 create X client for wm on given fd\n");
     ErrorF("-initfd fd             add given fd as a listen socket for initialization clients\n");
@@ -228,6 +229,9 @@ ddxProcessArgument(int argc, char *argv[], int i)
     else if (strcmp(argv[i], "-geometry") == 0) {
         CHECK_FOR_REQUIRED_ARGUMENTS(1);
         return 2;
+    }
+    else if (strcmp(argv[i], "-fullscreen") == 0) {
+        return 1;
     }
 
     return 0;

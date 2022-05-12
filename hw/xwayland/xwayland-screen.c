@@ -676,6 +676,9 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
             }
             use_fixed_size = 1;
         }
+        else if (strcmp(argv[i], "-fullscreen") == 0) {
+            xwl_screen->fullscreen = 1;
+        }
     }
 
     if (use_fixed_size) {
@@ -731,6 +734,16 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     wl_registry_add_listener(xwl_screen->registry,
                              &registry_listener, xwl_screen);
     xwl_screen_roundtrip(xwl_screen);
+
+    if (xwl_screen->fullscreen && xwl_screen->rootless) {
+        ErrorF("error, cannot set fullscreen when running rootless\n");
+        return FALSE;
+    }
+
+    if (xwl_screen->fullscreen && !xwl_screen_has_viewport_support(xwl_screen)) {
+        ErrorF("missing viewport support in the compositor, ignoring fullscreen\n");
+        xwl_screen->fullscreen = FALSE;
+    }
 
     if (!xwl_screen->rootless && !xwl_screen->xdg_wm_base) {
         ErrorF("missing XDG-WM-Base protocol\n");

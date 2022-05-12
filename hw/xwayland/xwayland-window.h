@@ -53,6 +53,7 @@ struct xwl_window {
     struct xorg_list window_buffers_unavailable;
     OsTimerPtr window_buffers_timer;
     struct wl_output *wl_output;
+    struct wl_output *wl_output_fullscreen;
 #ifdef GLAMOR_HAS_GBM
     struct xorg_list frame_callback_list;
     Bool present_flipped;

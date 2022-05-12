@@ -12,3 +12,4 @@ have_listenfd=true
 have_verbose=true
 have_terminate_delay=true
 have_no_touch_pointer_emulation=true
+have_force_xrandr_emulation=true

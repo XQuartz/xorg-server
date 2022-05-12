@@ -643,6 +643,9 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
             ErrorF("xwayland glamor: this build does not have EGLStream support\n");
 #endif
         }
+        else if (strcmp(argv[i], "-force-xrandr-emulation") == 0) {
+            xwl_screen->force_xrandr_emulation = 1;
+        }
     }
 
 #ifdef XWL_HAS_GLAMOR

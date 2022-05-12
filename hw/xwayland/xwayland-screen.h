@@ -56,6 +56,7 @@ struct xwl_screen {
     int rootless;
     int glamor;
     int present;
+    int force_xrandr_emulation;
 
     CreateScreenResourcesProcPtr CreateScreenResources;
     CloseScreenProcPtr CloseScreen;

@@ -102,6 +102,7 @@ ddxUseMsg(void)
     ErrorF("-verbose [n]           verbose startup messages\n");
     ErrorF("-version               show the server version and exit\n");
     ErrorF("-noTouchPointerEmulation  disable touch pointer emulation\n");
+    ErrorF("-force-xrandr-emulation   force non-native modes to be exposed when viewporter is not exposed by the compositor\n");
 }
 
 static int init_fd = -1;

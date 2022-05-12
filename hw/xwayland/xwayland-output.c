@@ -355,7 +355,7 @@ output_get_rr_modes(struct xwl_output *xwl_output,
 
     *count = 1;
 
-    if (!xwl_screen_has_resolution_change_emulation(xwl_screen))
+    if (!xwl_screen_has_resolution_change_emulation(xwl_screen) && !xwl_screen->force_xrandr_emulation)
         return rr_modes;
 
     /* Add fake modes */

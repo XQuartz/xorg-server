@@ -32,6 +32,7 @@ apt-get install -y \
 	libaudit-dev \
 	libbsd-dev \
 	libcairo2 \
+	libcairo2-dev \
 	libdbus-1-dev \
 	libdmx-dev \
 	libdrm-dev \
@@ -47,6 +48,8 @@ apt-get install -y \
 	libglx-mesa0 \
 	libinput10 \
 	libnvidia-egl-wayland-dev \
+	libpango1.0-0 \
+	libpango1.0-dev \
 	libpciaccess-dev \
 	libpixman-1-dev \
 	libselinux1-dev \
@@ -150,6 +153,14 @@ meson _build -Dbackend-{drm,drm-screencast-vaapi,fbdev,rdp,wayland,x11}=false \
 ninja -C _build -j${FDO_CI_CONCURRENT:-4} install
 cd ..
 rm -rf weston
+
+# Install libdecor for Xwayland
+git clone https://gitlab.gnome.org/jadahl/libdecor.git --depth 1 --branch=0.1.0
+cd libdecor
+meson _build -D{demo,install_demo}=false
+ninja -C _build -j${FDO_CI_CONCURRENT:-4} install
+cd ..
+rm -rf libdecor
 
 git clone https://gitlab.freedesktop.org/mesa/piglit.git --depth 1
 

@@ -48,6 +48,7 @@ struct xwl_screen {
     int width;
     int height;
     int depth;
+    int output_name_serial;
     ScreenPtr screen;
     int wm_client_id;
     int expecting_event;
@@ -140,5 +141,6 @@ void xwl_screen_roundtrip (struct xwl_screen *xwl_screen);
 void xwl_surface_damage(struct xwl_screen *xwl_screen,
                         struct wl_surface *surface,
                         int32_t x, int32_t y, int32_t width, int32_t height);
+int xwl_screen_get_next_output_serial(struct xwl_screen * xwl_screen);
 
 #endif /* XWAYLAND_SCREEN_H */

@@ -768,7 +768,8 @@ xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id)
     xwl_output->server_output_id = id;
     wl_output_add_listener(xwl_output->output, &output_listener, xwl_output);
 
-    snprintf(name, sizeof name, "XWAYLAND%d", xwl_get_next_output_serial());
+    snprintf(name, sizeof name, "XWAYLAND%d",
+             xwl_screen_get_next_output_serial(xwl_screen));
 
     xwl_output->xwl_screen = xwl_screen;
     xwl_output->randr_crtc = RRCrtcCreate(xwl_screen->screen, xwl_output);
@@ -1010,11 +1011,4 @@ xwl_screen_init_xdg_output(struct xwl_screen *xwl_screen)
 
     xorg_list_for_each_entry(it, &xwl_screen->output_list, link)
         xwl_output_get_xdg_output(it);
-}
-
-int
-xwl_get_next_output_serial(void)
-{
-    static int output_name_serial = 0;
-    return output_name_serial++;
 }

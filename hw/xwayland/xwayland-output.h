@@ -94,6 +94,4 @@ void xwl_output_set_window_randr_emu_props(struct xwl_screen *xwl_screen,
 
 void xwl_screen_init_xdg_output(struct xwl_screen *xwl_screen);
 
-int xwl_get_next_output_serial(void);
-
 #endif /* XWAYLAND_OUTPUT_H */

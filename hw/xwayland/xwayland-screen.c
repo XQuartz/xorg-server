@@ -580,6 +580,13 @@ xwl_screen_roundtrip(struct xwl_screen *xwl_screen)
         xwl_give_up("could not connect to wayland server\n");
 }
 
+
+int
+xwl_screen_get_next_output_serial(struct xwl_screen *xwl_screen)
+{
+    return xwl_screen->output_name_serial++;
+}
+
 Bool
 xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
 {

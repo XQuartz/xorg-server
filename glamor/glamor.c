@@ -788,8 +788,10 @@ glamor_init(ScreenPtr screen, unsigned int flags)
         epoxy_gl_version() >= 30 ||
         epoxy_has_gl_extension("GL_NV_pack_subimage");
     glamor_priv->has_dual_blend =
-        glamor_glsl_has_ints(glamor_priv) &&
-        epoxy_has_gl_extension("GL_ARB_blend_func_extended");
+        (epoxy_has_gl_extension("GL_ARB_blend_func_extended") &&
+        (glamor_glsl_has_ints(glamor_priv) ||
+        epoxy_has_gl_extension("GL_ARB_ES2_compatibility"))) ||
+        epoxy_has_gl_extension("GL_EXT_blend_func_extended");
     glamor_priv->has_clear_texture =
         epoxy_gl_version() >= 44 ||
         epoxy_has_gl_extension("GL_ARB_clear_texture");

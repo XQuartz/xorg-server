@@ -44,6 +44,7 @@ typedef enum {
     glamor_program_alpha_ca_first,
     glamor_program_alpha_ca_second,
     glamor_program_alpha_dual_blend,
+    glamor_program_alpha_dual_blend_gles2,
     glamor_program_alpha_count
 } glamor_program_alpha;
 
@@ -56,8 +57,8 @@ typedef Bool (*glamor_use_render) (CARD8 op, PicturePtr src, PicturePtr dst, gla
 typedef struct {
     const char                          *name;
     const int                           version;
-    char                                *vs_defines;
-    char                                *fs_defines;
+    char                                *vs_extensions;
+    const char                          *fs_extensions;
     const char                          *vs_vars;
     const char                          *vs_exec;
     const char                          *fs_vars;

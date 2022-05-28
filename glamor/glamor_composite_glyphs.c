@@ -208,6 +208,22 @@ static const glamor_facet glamor_facet_composite_glyphs_120 = {
     .locations = glamor_program_location_atlas,
 };
 
+static const glamor_facet glamor_facet_composite_glyphs_gles2 = {
+    .name = "composite_glyphs",
+    .version = 100,
+    .fs_extensions = ("#extension GL_EXT_blend_func_extended : enable\n"),
+    .vs_vars = ("attribute vec2 primitive;\n"
+                "attribute vec2 source;\n"
+                "varying vec2 glyph_pos;\n"),
+    .vs_exec = ("       vec2 pos = vec2(0,0);\n"
+                GLAMOR_POS(gl_Position, primitive.xy)
+                "       glyph_pos = source.xy * ATLAS_DIM_INV;\n"),
+    .fs_vars = ("varying vec2 glyph_pos;\n"),
+    .fs_exec = ("       vec4 mask = texture2D(atlas, glyph_pos);\n"),
+    .source_name = "source",
+    .locations = glamor_program_location_atlas,
+};
+
 static Bool
 glamor_glyphs_init_facet(ScreenPtr screen)
 {
@@ -442,7 +458,9 @@ glamor_composite_glyphs(CARD8 op,
                         else
                             prog = glamor_setup_program_render(op, src, glyph_pict, dst,
                                                                glyphs_program,
-                                                               &glamor_facet_composite_glyphs_120,
+                                                               glamor_priv->has_dual_blend ?
+                                                                   &glamor_facet_composite_glyphs_gles2 :
+                                                                   &glamor_facet_composite_glyphs_120,
                                                                glamor_priv->glyph_defines);
                         if (!prog)
                             goto bail_one;

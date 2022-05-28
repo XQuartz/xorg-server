@@ -201,6 +201,8 @@ static const char vs_template[] =
 static const char fs_template[] =
     "%s"                                /* version */
     "%s"                                /* exts */
+    "%s"                                /* prim fs_extensions */
+    "%s"                                /* fill fs_extensions */
     GLAMOR_DEFAULT_PRECISION
     "%s"                                /* defines */
     "%s"                                /* prim fs_vars */
@@ -312,6 +314,8 @@ glamor_build_program(ScreenPtr          screen,
     if (asprintf(&fs_prog_string,
                  fs_template,
                  str(version_string),
+                 str(prim->fs_extensions),
+                 str(fill->fs_extensions),
                  gpu_shader4 ? "#extension GL_EXT_gpu_shader4 : require\n#define texelFetch texelFetch2D\n#define uint unsigned int\n" : "",
                  str(defines),
                  str(prim->fs_vars),
@@ -494,7 +498,8 @@ glamor_set_blend(CARD8 op, glamor_program_alpha alpha, PicturePtr dst)
     }
 
     /* Set up the source alpha value for blending in component alpha mode. */
-    if (alpha == glamor_program_alpha_dual_blend) {
+    if (alpha == glamor_program_alpha_dual_blend ||
+        alpha == glamor_program_alpha_dual_blend_gles2) {
         switch (dst_blend) {
         case GL_SRC_ALPHA:
             dst_blend = GL_SRC1_COLOR;
@@ -581,11 +586,13 @@ static const glamor_facet *glamor_facet_source[glamor_program_source_count] = {
 };
 
 static const char *glamor_combine[] = {
-    [glamor_program_alpha_normal]    = "       gl_FragColor = source * mask.a;\n",
-    [glamor_program_alpha_ca_first]  = "       gl_FragColor = source.a * mask;\n",
-    [glamor_program_alpha_ca_second] = "       gl_FragColor = source * mask;\n",
-    [glamor_program_alpha_dual_blend] = "      color0 = source * mask;\n"
-                                        "      color1 = source.a * mask;\n"
+    [glamor_program_alpha_normal]    = "        gl_FragColor = source * mask.a;\n",
+    [glamor_program_alpha_ca_first]  = "        gl_FragColor = source.a * mask;\n",
+    [glamor_program_alpha_ca_second] = "        gl_FragColor = source * mask;\n",
+    [glamor_program_alpha_dual_blend] = "       color0 = source * mask;\n"
+                                        "       color1 = source.a * mask;\n",
+    [glamor_program_alpha_dual_blend_gles2] = " gl_FragColor = source * mask;\n"
+                                              " gl_SecondaryFragColorEXT = source.a * mask;\n"
 };
 
 static Bool
@@ -633,7 +640,9 @@ glamor_setup_program_render(CARD8                 op,
 
     if (glamor_is_component_alpha(mask)) {
         if (glamor_priv->has_dual_blend) {
-            alpha = glamor_program_alpha_dual_blend;
+            alpha = glamor_glsl_has_ints(glamor_priv) ?
+                    glamor_program_alpha_dual_blend :
+                    glamor_program_alpha_dual_blend_gles2;
         } else {
             /* This only works for PictOpOver */
             if (op != PictOpOver)

@@ -184,14 +184,15 @@ update_backing_pixmaps(struct xwl_screen *xwl_screen, int width, int height)
 static void
 update_screen_size(struct xwl_screen *xwl_screen, int width, int height)
 {
+    xwl_screen->width = width;
+    xwl_screen->height = height;
+
     if (xwl_screen->root_clip_mode == ROOT_CLIP_FULL)
         SetRootClip(xwl_screen->screen, ROOT_CLIP_NONE);
 
     if (!xwl_screen->rootless && xwl_screen->screen->root)
         update_backing_pixmaps (xwl_screen, width, height);
 
-    xwl_screen->width = width;
-    xwl_screen->height = height;
     xwl_screen->screen->width = width;
     xwl_screen->screen->height = height;
     xwl_screen->screen->mmWidth = (width * 25.4) / monitorResolution;

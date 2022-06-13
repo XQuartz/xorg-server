@@ -1701,8 +1701,17 @@ handle_mouse:
     }
 
         if (darwinSyncKeymap) {
-            TISInputSourceRef key_layout = 
-                TISCopyCurrentKeyboardLayoutInputSource();
+            __block TISInputSourceRef key_layout;
+            dispatch_block_t copyCurrentKeyboardLayoutInputSource = ^{
+                key_layout = TISCopyCurrentKeyboardLayoutInputSource();
+            };
+            /* This is an ugly ant-pattern, but it is more expedient to address the problem right now. */
+            if (pthread_main_np()) {
+                copyCurrentKeyboardLayoutInputSource();
+            } else {
+                dispatch_sync(dispatch_get_main_queue(), copyCurrentKeyboardLayoutInputSource);
+            }
+
             TISInputSourceRef clear;
             if (CFEqual(key_layout, last_key_layout)) {
                 CFRelease(key_layout);

@@ -192,11 +192,12 @@ WaitForSomething(Bool are_ready)
         /* deal with any blocked jobs */
         ProcessWorkQueue();
 
-        timeout = check_timers();
         are_ready = clients_are_ready();
 
         if (are_ready)
             timeout = 0;
+        else
+            timeout = check_timers();
 
         BlockHandler(&timeout);
         if (NewOutputPending)

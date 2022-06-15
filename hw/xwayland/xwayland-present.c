@@ -276,7 +276,15 @@ xwl_present_flips_stop(WindowPtr window)
         xwl_present_free_idle_vblank(vblank);
 
     if (xwl_present_window->flip_active) {
-        xwl_present_free_idle_vblank(xwl_present_window->flip_active);
+        struct xwl_present_event *event;
+
+        vblank = xwl_present_window->flip_active;
+        event = xwl_present_event_from_id((uintptr_t)vblank);
+        if (event->pixmap)
+            xwl_present_free_idle_vblank(vblank);
+        else
+            xwl_present_free_event(event);
+
         xwl_present_window->flip_active = NULL;
     }
 

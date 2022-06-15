@@ -387,6 +387,9 @@ RRExtensionInit(void)
 {
     ExtensionEntry *extEntry;
 
+    if (RRNScreens == 0)
+        return;
+
     if (!dixRegisterPrivateKey(&RRClientPrivateKeyRec, PRIVATE_CLIENT,
                                sizeof(RRClientRec) +
                                screenInfo.numScreens * sizeof(RRTimesRec)))

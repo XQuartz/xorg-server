@@ -267,6 +267,8 @@ QuartzModeBundleInit(void);
     case NSLeftMouseUp:
     case NSRightMouseUp:
     case NSOtherMouseUp:
+    case NSScrollWheel:
+
         if ([e window] != nil) {
             /* Pointer event has an (AppKit) window. Probably something for the kit. */
             for_x = NO;
@@ -466,12 +468,14 @@ QuartzModeBundleInit(void);
         break;          /* for gcc */
     }
 
-    if (for_appkit) [super sendEvent:e];
+    if (for_appkit) {
+        [super sendEvent:e];
+    }
 
     if (for_x) {
         dispatch_async(eventTranslationQueue, ^{
-                           [self sendX11NSEvent:e];
-                       });
+            [self sendX11NSEvent:e];
+        });
     }
 }
 

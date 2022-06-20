@@ -6,8 +6,19 @@ bundle_id_prefix = get_option('bundle-id-prefix')
 xquartz_sparkle_feed_url = get_option('sparkle-feed-url')
 xquartz_sparkle_public_edkey = get_option('sparkle-public-edkey')
 
-bundle_version_string = meson.project_version() # CFBundleShortVersionString
-bundle_version = release                        # CFBundleVersion
+bundle_version_string = get_option('bundle-version-string') # CFBundleShortVersionString
+if bundle_version_string == 'auto'
+    bundle_version_string = meson.project_version()
+endif
+
+bundle_version = get_option('bundle-version') # CFBundleVersion
+if bundle_version == 'auto'
+    version_arr = bundle_version_string.split('.')
+    version_major = version_arr[0].to_int()
+    version_minor = version_arr[1].to_int()
+    version_tiny = version_arr[2].to_int()
+    bundle_version = '@0@.@1@.@2@'.format(version_major, version_minor, version_tiny)
+endif
 
 bundle_id_def = '-DBUNDLE_ID_PREFIX="@0@"'.format(bundle_id_prefix)
 

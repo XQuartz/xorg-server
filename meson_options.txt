@@ -122,6 +122,8 @@ option('bundle-id-prefix', type: 'string', value: 'org.x',
         description: 'RDNS prefix for bundle identifier')
 option('sparkle-feed-url', type: 'string',
         description: 'Feed URL for autoupdating with the Sparkle Framework (default: disabled)')
+option('sparkle-public-edkey', type: 'string',
+        description: 'Public EdDSA key for verifying updates from the Sparkle feed (default: disabled)')
 option('xpbproxy', type: 'boolean', value: false,
         description: 'Build a standalone X pasteboard proxy')
 

@@ -4,6 +4,7 @@ apple_applications_dir = get_option('apple-applications-dir')
 apple_application_name = get_option('apple-application-name')
 bundle_id_prefix = get_option('bundle-id-prefix')
 xquartz_sparkle_feed_url = get_option('sparkle-feed-url')
+xquartz_sparkle_public_edkey = get_option('sparkle-public-edkey')
 
 bundle_version_string = meson.project_version() # CFBundleShortVersionString
 bundle_version = release                        # CFBundleVersion
@@ -13,7 +14,7 @@ bundle_id_def = '-DBUNDLE_ID_PREFIX="@0@"'.format(bundle_id_prefix)
 bundle_root = join_paths(apple_applications_dir, apple_application_name + '.app')
 
 # using sparkle update framework?
-build_sparkle = xquartz_sparkle_feed_url != ''
+build_sparkle = xquartz_sparkle_feed_url != '' and xquartz_sparkle_public_edkey != ''
 if build_sparkle
     sparkle = dependency('Sparkle', method: 'extraframework')
 endif

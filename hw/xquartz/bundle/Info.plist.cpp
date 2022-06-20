@@ -31,8 +31,8 @@
 #ifdef XQUARTZ_SPARKLE
 	<key>SUEnableAutomaticChecks</key>
 		<true/>
-	<key>SUPublicDSAKeyFile</key>
-		<string>sparkle.pem</string>
+	<key>SUPublicEDKey</key>
+		<string>XQUARTZ_SPARKLE_PUBLIC_EDKEY</string>
         <key>SUFeedURL</key>
                 <string>XQUARTZ_SPARKLE_FEED_URL</string>
 #endif

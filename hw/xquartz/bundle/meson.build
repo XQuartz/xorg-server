@@ -13,6 +13,7 @@ if build_sparkle
 cpp_defs += [
     '-DXQUARTZ_SPARKLE',
     '-DXQUARTZ_SPARKLE_FEED_URL=@0@'.format(xquartz_sparkle_feed_url),
+    '-DXQUARTZ_SPARKLE_PUBLIC_EDKEY=@0@'.format(xquartz_sparkle_public_edkey),
 ]
 endif
 

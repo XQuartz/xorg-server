@@ -4,7 +4,7 @@ project('xserver', 'c',
             'c_std=gnu99',
         ],
         version: '21.1.3',
-        meson_version: '>= 0.47.0',
+        meson_version: '>= 0.50.0',
 )
 release_date = '2022-01-02'
 

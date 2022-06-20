@@ -116,6 +116,10 @@ option('apple-application-name', type: 'string', value: 'X11',
         description: 'Application name')
 option('bundle-id-prefix', type: 'string', value: 'org.x',
         description: 'RDNS prefix for bundle identifier')
+option('bundle-version', type: 'string', value: 'auto',
+        description: 'The CFBundleVersion for the application bundle')
+option('bundle-version-string', type: 'string', value: 'auto',
+        description: 'The CFBundleShortVersionString for the application bundle')
 option('sparkle-feed-url', type: 'string',
         description: 'Feed URL for autoupdating with the Sparkle Framework (default: disabled)')
 option('sparkle-public-edkey', type: 'string',

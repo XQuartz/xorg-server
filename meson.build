@@ -184,8 +184,7 @@ if with_dtrace
 endif
 
 build_xorg = false
-if (host_machine.system() != 'darwin' and
-    host_machine.system() != 'windows')
+if (host_machine.system() != 'windows')
     if get_option('xorg') == 'auto'
         build_xorg = (host_machine.system() != 'darwin' and
                       host_machine.system() != 'windows')
@@ -230,8 +229,7 @@ if (host_machine.system() != 'darwin' and
 endif
 
 build_xnest = false
-if (host_machine.system() != 'darwin' and
-    host_machine.system() != 'windows')
+if (host_machine.system() != 'windows')
     if get_option('xnest') != 'false'
         xnest_required = get_option('xnest') == 'true'
 

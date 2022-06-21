@@ -57,6 +57,7 @@ apt-get install -y \
 	libtool \
 	libudev-dev \
 	libunwind-dev \
+	libwayland-dev \
 	libx11-dev \
 	libx11-xcb-dev \
 	libxau-dev \
@@ -101,6 +102,7 @@ apt-get install -y \
 	python3-mako \
 	python3-numpy \
 	python3-six \
+	x11-xkb-utils \
 	xfonts-utils \
 	xkb-data \
 	xtrans-dev \
@@ -126,33 +128,13 @@ make -j${FDO_CI_CONCURRENT:-4} install
 popd
 rm -rf xorgproto
 
-# weston 9.0 requires libwayland >= 1.18
-git clone https://gitlab.freedesktop.org/wayland/wayland.git --depth 1 --branch=1.18.0
-cd wayland
-meson _build -D{documentation,dtd_validation}=false
-ninja -C _build -j${FDO_CI_CONCURRENT:-4} install
-cd ..
-rm -rf wayland
-
-# Xwayland requires wayland-protocols >= 1.22, but Debian buster has 1.17 only
+# Xwayland requires wayland-protocols >= 1.22, but Debian bullseye has 1.20 only
 git clone https://gitlab.freedesktop.org/wayland/wayland-protocols.git --depth 1 --branch=1.22
 cd wayland-protocols
 ./autogen.sh
 make -j${FDO_CI_CONCURRENT:-4} install
 cd ..
 rm -rf wayland-protocols
-
-# Xwayland requires weston > 5.0, but Debian buster has 5.0 only
-git clone https://gitlab.freedesktop.org/wayland/weston.git --depth 1 --branch=9.0
-cd weston
-meson _build -Dbackend-{drm,drm-screencast-vaapi,fbdev,rdp,wayland,x11}=false \
-      -Dbackend-default=headless -Dcolor-management-{colord,lcms}=false \
-      -Ddemo-clients=false -Dimage-{jpeg,webp}=false \
-      -D{pipewire,remoting,screenshare,test-junit-xml,wcap-decode,weston-launch,xwayland}=false \
-      -Dshell-{fullscreen,ivi,kiosk}=false -Dsimple-clients=
-ninja -C _build -j${FDO_CI_CONCURRENT:-4} install
-cd ..
-rm -rf weston
 
 # Install libdecor for Xwayland
 git clone https://gitlab.gnome.org/jadahl/libdecor.git --depth 1 --branch=0.1.0
@@ -185,14 +167,6 @@ echo 'path=/root/xts' >> piglit/piglit.conf
 
 find -name \*.a -o -name \*.o -o -name \*.c -o -name \*.h -o -name \*.la\* | xargs rm
 strip xts/xts5/*/.libs/*
-
-# Running meson dist requires xkbcomp 1.4.1 or newer, but Debian buster has 1.4.0 only
-git clone https://gitlab.freedesktop.org/xorg/app/xkbcomp.git --depth 1 --branch=xkbcomp-1.4.1
-cd xkbcomp
-./autogen.sh --datarootdir=/usr/share
-make -j${FDO_CI_CONCURRENT:-4} install
-cd ..
-rm -rf xkbcomp
 
 apt-get purge -y \
 	$EPHEMERAL

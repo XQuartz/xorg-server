@@ -166,7 +166,9 @@ git clone https://gitlab.freedesktop.org/mesa/piglit.git --depth 1
 
 git clone https://gitlab.freedesktop.org/xorg/test/xts --depth 1
 cd xts
-./autogen.sh
+# Using -fcommon until we get a proper fix into xtst.
+# See discussion at https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/913
+CFLAGS=-fcommon ./autogen.sh
 xvfb-run make -j${FDO_CI_CONCURRENT:-4}
 cd ..
 

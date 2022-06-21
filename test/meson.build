@@ -110,6 +110,8 @@ if build_xorg
     unit_sources = [
      '../mi/miinitext.c',
      '../mi/miinitext.h',
+     '../mi/micmap.c',
+     '../mi/micmap.h',
      'fixes.c',
      'input.c',
      'list.c',

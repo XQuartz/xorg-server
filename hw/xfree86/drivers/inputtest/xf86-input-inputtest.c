@@ -1014,7 +1014,19 @@ pre_init(InputDriverPtr drv, InputInfoPtr pInfo, int flags)
 
     unlink(driver_data->socket_path);
 
+#ifdef SOCK_NONBLOCK
     driver_data->socket_fd = socket(PF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0);
+#else
+    int fd = socket(PF_UNIX, SOCK_STREAM, 0);
+    if (fd >= 0) {
+        flags = fcntl(fd, F_GETFL, 0);
+        if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) < 0) {
+            fd = -1;
+        }
+    }
+    driver_data->socket_fd = fd;
+#endif
+
     if (driver_data->socket_fd < 0) {
         xf86IDrvMsg(pInfo, X_ERROR, "Failed to create a socket for communication: %s\n",
                     strerror(errno));

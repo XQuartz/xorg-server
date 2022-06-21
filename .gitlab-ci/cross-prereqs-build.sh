@@ -51,7 +51,7 @@ build 'https://gitlab.freedesktop.org/xorg/lib/pthread-stubs.git' '0.4'
 # these would add -I/usr/include to CFLAGS, which breaks cross-compilation
 build 'https://gitlab.freedesktop.org/xorg/proto/xorgproto.git' 'xorgproto-2021.4.99.2' '--datadir=/lib'
 build 'https://gitlab.freedesktop.org/xorg/lib/libXau.git' 'libXau-1.0.9'
-build 'https://gitlab.freedesktop.org/xorg/proto/xcbproto.git' 'xcb-proto-1.14'
+build 'https://gitlab.freedesktop.org/xorg/proto/xcbproto.git' 'xcb-proto-1.14.1'
 build 'https://gitlab.freedesktop.org/xorg/lib/libxcb.git' 'libxcb-1.14'
 build 'https://gitlab.freedesktop.org/xorg/lib/libxtrans.git' 'xtrans-1.4.0'
 # the default value of keysymdefdir is taken from the includedir variable for

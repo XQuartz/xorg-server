@@ -2935,7 +2935,7 @@ sprite_check_lost_focus(SpritePtr sprite, WindowPtr window)
 
     if (xwl_seat->focus_window == NULL &&
         xwl_seat->last_xwindow != NullWindow &&
-        IsParent(xwl_seat->last_xwindow, window))
+        (IsParent(xwl_seat->last_xwindow, window) || xwl_seat->last_xwindow == window))
         return TRUE;
 
     return FALSE;

@@ -586,10 +586,10 @@ glamor_setup_formats(ScreenPtr screen)
 
     if (glamor_priv->is_gles) {
         assert(X_BYTE_ORDER == X_LITTLE_ENDIAN);
-        glamor_add_format(screen, 24, PICT_x8b8g8r8,
-                          GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, TRUE);
-        glamor_add_format(screen, 32, PICT_a8b8g8r8,
-                          GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE, TRUE);
+        glamor_add_format(screen, 24, PICT_x8r8g8b8,
+                          GL_BGRA, GL_BGRA, GL_UNSIGNED_BYTE, TRUE);
+        glamor_add_format(screen, 32, PICT_a8r8g8b8,
+                          GL_BGRA, GL_BGRA, GL_UNSIGNED_BYTE, TRUE);
     } else {
         glamor_add_format(screen, 24, PICT_x8r8g8b8,
                           GL_RGBA, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, TRUE);

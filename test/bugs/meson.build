@@ -45,7 +45,6 @@ if get_option('xvfb')
                     ],
                 suite: 'xephyr-glamor-gles2',
                 timeout: 300,
-                should_fail: true,
             )
     endif
 endif

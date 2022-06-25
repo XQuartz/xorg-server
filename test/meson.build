@@ -9,13 +9,24 @@ piglit_env.set('XSERVER_DIR', meson.source_root())
 piglit_env.set('XSERVER_BUILDDIR', meson.build_root())
 
 some_ops = ' -o clear,src,dst,over,xor,disjointover'
-rendercheck_tests = [
+gles2_working_formats = ' -f '+ ','.join(['a8',
+                                          'a8r8g8b8',
+                                          'x8r8g8b8',
+                                          'b8g8r8a8',
+                                          'b8g8r8x8',
+                                          'r8g8b8',
+                                          'r5g5b5',
+                                          'b5g5r5',
+                                          'r5g6b5',
+                                          'b5g6r5',
+                                          'b8g8r8',
+                                          'x8b8g8r8',
+                                          'x2r10g10b10',
+                                          'x2b10g10r10'])
+rendercheck_tests_noblend = [
     ['blend/All/a8r8g8b8', '-t blend -f a8r8g8b8'],
     ['blend/All/x8r8g8b8', '-t blend -f a8r8g8b8,x8r8g8b8'],
     ['blend/All/a2r10g10b10', '-t blend -f a8r8g8b8,a2r10g10b10'],
-    ['blend/Clear', '-t blend -o clear'],
-    ['blend/Src', '-t blend -o src'],
-    ['blend/Over', '-t blend -o over'],
     ['composite/Some/a8r8g8b8', '-t composite -f a8r8g8b8' + some_ops],
     ['composite/Some/x8r8g8b8', '-t composite -f a8r8g8b8,x8r8g8b8' + some_ops],
     ['composite/Some/a2r10g10b10', '-t composite -f a8r8g8b8,a2r10g10b10' + some_ops],
@@ -34,7 +45,19 @@ rendercheck_tests = [
     ['LibreOffice xRGB', '-t libreoffice_xrgb'],
     ['GTK ARGB vs xBGR', '-t gtk_argb_xbgr'],
 ]
-
+rendercheck_blend = [
+    ['blend/Clear', '-t blend -o clear'],
+    ['blend/Src', '-t blend -o src'],
+    ['blend/Over', '-t blend -o over'],
+]
+#Exclude 15bpp for now due to GLES limitation (see glamor.c:470)
+rendercheck_blend_gles2 = [
+    ['blend/Clear', '-t blend -o clear' + gles2_working_formats],
+    ['blend/Src', '-t blend -o src' + gles2_working_formats],
+    ['blend/Over', '-t blend -o over' + gles2_working_formats],
+]
+rendercheck_tests = rendercheck_blend + rendercheck_tests_noblend
+rendercheck_tests_gles2 = rendercheck_blend_gles2 + rendercheck_tests_noblend
 rendercheck = find_program('rendercheck', required:false)
 
 if get_option('xvfb')
@@ -76,6 +99,12 @@ if get_option('xvfb')
             timeout: 1200,
             suite: 'xephyr-glamor',
         )
+        test('XTS',
+            find_program('scripts/xephyr-glamor-gles2-piglit.sh'),
+            env: piglit_env,
+            timeout: 1200,
+            suite: 'xephyr-glamor-gles2',
+        )
 
         if rendercheck.found()
             foreach rctest: rendercheck_tests
@@ -93,6 +122,24 @@ if get_option('xvfb')
                             xvfb_args,
                            ],
                      suite: 'xephyr-glamor',
+                     timeout: 300,
+                    )
+            endforeach
+            foreach rctest: rendercheck_tests_gles2
+                test(rctest[0],
+                     simple_xinit,
+                     args: [simple_xinit.full_path(),
+                            rendercheck.path(),
+                            rctest[1].split(' '),
+                            '----',
+                            xephyr_server.full_path(),
+                            '-glamor_gles2',
+                            '-glamor-skip-present',
+                            '-schedMax', '2000',
+                            '--',
+                            xvfb_args,
+                           ],
+                     suite: 'xephyr-glamor-gles2',
                      timeout: 300,
                     )
             endforeach
@@ -116,6 +163,7 @@ endif
 subdir('bigreq')
 subdir('damage')
 subdir('sync')
+subdir('bugs')
 
 if build_xorg
 # Tests that require at least some DDX functions in order to fully link

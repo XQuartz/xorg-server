@@ -57,7 +57,6 @@ install_data('PkgInfo',
     install_mode: 'rw-r--r--')
 
 install_data('X11.sh',
-    rename: 'X11',
     install_dir: join_paths(bundle_root, 'Contents/MacOS'),
     install_mode: 'rwxr-xr-x')
 

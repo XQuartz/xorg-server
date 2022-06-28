@@ -283,6 +283,11 @@ glamor_build_program(ScreenPtr          screen,
             gpu_shader4 = TRUE;
         }
     }
+    /* For now, fix shader version to GLES as 100. We will fall with 130 shaders
+     * in previous check due to forcibly set 120 glsl for GLES. But this patch
+     * makes xv shaders to work */
+    if(version && glamor_priv->is_gles)
+        version = 100;
 
     vs_vars = vs_location_vars(locations);
     fs_vars = fs_location_vars(locations);

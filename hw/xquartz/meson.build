@@ -28,6 +28,14 @@ bundle_root = join_paths(apple_applications_dir, apple_application_name + '.app'
 build_sparkle = xquartz_sparkle_feed_url != '' and xquartz_sparkle_public_edkey != ''
 if build_sparkle
     sparkle = dependency('Sparkle', method: 'extraframework')
+
+    sparkle_defs = [
+        '-DXQUARTZ_SPARKLE',
+        '-DXQUARTZ_SPARKLE_FEED_URL=@0@'.format(xquartz_sparkle_feed_url),
+        '-DXQUARTZ_SPARKLE_PUBLIC_EDKEY=@0@'.format(xquartz_sparkle_public_edkey),
+    ]
+else
+    sparkle_defs = []
 endif
 
 # libxquartz
@@ -56,6 +64,7 @@ libxquartz_defs = [
     '-DXQUARTZ',
     '-DXSERVER_VERSION="@0@"'.format(meson.project_version()),
     bundle_id_def,
+    sparkle_defs,
 ]
 
 if cc.has_function('dispatch_async')

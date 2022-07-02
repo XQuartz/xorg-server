@@ -62,8 +62,8 @@ extern char *bundle_id_prefix;
 @property (nonatomic, readwrite, strong) NSMenuItem *check_for_updates_item; // Programatically enabled
 #endif
 
-@property (nonatomic, readwrite, strong) NSArray *apps;
-@property (nonatomic, readwrite, strong) NSMutableArray *table_apps;
+@property (nonatomic, readwrite, strong) NSArray <NSArray <NSString *> *> *apps;
+@property (nonatomic, readwrite, strong) NSMutableArray <NSMutableArray <NSString *> *> *table_apps;
 @property (nonatomic, readwrite, assign) NSInteger windows_menu_nitems;
 @property (nonatomic, readwrite, assign) int checked_window_item;
 @property (nonatomic, readwrite, assign) x_list *pending_apps;
@@ -155,10 +155,10 @@ extern char *bundle_id_prefix;
     self.apps = nil;
 }
 
-- (void) prepend_apps_item:(NSArray *)list index:(int)i menu:(NSMenu *)menu
+- (void) prepend_apps_item:(NSArray <NSArray <NSString *> *> *)list index:(int)i menu:(NSMenu *)menu
 {
     NSString *title, *shortcut = @"";
-    NSArray *group;
+    NSArray <NSString *> *group;
     NSMenuItem *item;
 
     group = [list objectAtIndex:i];
@@ -182,7 +182,7 @@ extern char *bundle_id_prefix;
     [item setTag:i + 1];                  /* can't be zero, so add one */
 }
 
-- (void) install_apps_menu:(NSArray *)list
+- (void) install_apps_menu:(NSArray <NSArray <NSString *> *> *)list
 {
     NSMenu *menu;
     int i, count;
@@ -206,7 +206,7 @@ extern char *bundle_id_prefix;
     self.apps = list;
 }
 
-- (void) set_window_menu:(NSArray *)list
+- (void) set_window_menu:(NSArray <NSArray <NSString *> *> *)list
 {
     NSMenu * const menu = X11App.windowsMenu;
     NSMenu * const dock_menu = self.dock_menu;
@@ -302,7 +302,7 @@ extern char *bundle_id_prefix;
     self.checked_window_item = n;
 }
 
-- (void) set_apps_menu:(NSArray *)list
+- (void) set_apps_menu:(NSArray <NSArray <NSString *> *> *)list
 {
     [self remove_apps_menu];
     [self install_apps_menu:list];
@@ -448,7 +448,7 @@ extern char *bundle_id_prefix;
 {
     int tag;
     NSString *item;
-    NSArray * const apps = self.apps;
+    NSArray <NSArray <NSString *> *> * const apps = self.apps;
 
     tag = [sender tag] - 1;
     if (apps == nil || tag < 0 || tag >= [apps count])
@@ -462,13 +462,13 @@ extern char *bundle_id_prefix;
 - (IBAction) apps_table_show:sender
 {
     NSArray *columns;
-    NSMutableArray *oldapps = self.table_apps;
+    NSMutableArray <NSMutableArray <NSString *> *> * const oldapps = self.table_apps;
     NSTableView * const apps_table = self.apps_table;
 
-    NSMutableArray * const table_apps = [[NSMutableArray alloc] initWithCapacity:1];
+    NSMutableArray <NSMutableArray <NSString *> *> * const table_apps = [[NSMutableArray alloc] initWithCapacity:1];
     self.table_apps = table_apps;
 
-    NSArray * const apps = self.apps;
+    NSArray <NSArray <NSString *> *> * const apps = self.apps;
     if (apps != nil) {
         for (NSArray <NSString *> * row in apps) {
             [table_apps addObject:row.mutableCopy];
@@ -492,7 +492,7 @@ extern char *bundle_id_prefix;
 
 - (IBAction) apps_table_done:sender
 {
-    NSMutableArray * const table_apps = self.table_apps;
+    NSMutableArray <NSMutableArray <NSString *> *> * const table_apps = self.table_apps;
     NSTableView * const apps_table = self.apps_table;
     [apps_table deselectAll:sender];    /* flush edits? */
 
@@ -510,7 +510,7 @@ extern char *bundle_id_prefix;
 - (IBAction) apps_table_new:sender
 {
     NSMutableArray *item;
-    NSMutableArray * const table_apps = self.table_apps;
+    NSMutableArray <NSMutableArray <NSString *> *> * const table_apps = self.table_apps;
     NSTableView * const apps_table = self.apps_table;
 
     int row = [apps_table selectedRow], i;
@@ -539,10 +539,10 @@ extern char *bundle_id_prefix;
 
 - (IBAction) apps_table_duplicate:sender
 {
-    NSMutableArray * const table_apps = self.table_apps;
+    NSMutableArray <NSMutableArray <NSString *> *> * const table_apps = self.table_apps;
     NSTableView * const apps_table = self.apps_table;
     int row = [apps_table selectedRow], i;
-    NSObject *item;
+    NSMutableArray <NSString *> *item;
 
     if (row < 0) {
         [self apps_table_new:sender];
@@ -565,7 +565,7 @@ extern char *bundle_id_prefix;
 
 - (IBAction) apps_table_delete:sender
 {
-    NSMutableArray * const table_apps = self.table_apps;
+    NSMutableArray <NSMutableArray <NSString *> *> * const table_apps = self.table_apps;
     NSTableView * const apps_table = self.apps_table;
     int row = [apps_table selectedRow];
 
@@ -589,7 +589,7 @@ extern char *bundle_id_prefix;
 
 - (NSInteger) numberOfRowsInTableView:(NSTableView *)tableView
 {
-    NSMutableArray * const table_apps = self.table_apps;
+    NSMutableArray <NSMutableArray <NSString *> *> * const table_apps = self.table_apps;
     if (table_apps == nil) return 0;
 
     return [table_apps count];
@@ -598,7 +598,7 @@ extern char *bundle_id_prefix;
 - (id)             tableView:(NSTableView *)tableView
    objectValueForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row
 {
-    NSMutableArray * const table_apps = self.table_apps;
+    NSMutableArray <NSMutableArray <NSString *> *> * const table_apps = self.table_apps;
     NSArray *item;
     int col;
 
@@ -616,8 +616,8 @@ extern char *bundle_id_prefix;
 - (void) tableView:(NSTableView *)tableView setObjectValue:(id)object
     forTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row
 {
-    NSMutableArray * const table_apps = self.table_apps;
-    NSMutableArray *item;
+    NSMutableArray <NSMutableArray <NSString *> *> * const table_apps = self.table_apps;
+    NSMutableArray <NSString *> *item;
     int col;
 
     if (table_apps == nil) return;

@@ -469,8 +469,11 @@ extern char *bundle_id_prefix;
     self.table_apps = table_apps;
 
     NSArray * const apps = self.apps;
-    if (apps != nil)
-        [table_apps addObjectsFromArray:apps];
+    if (apps != nil) {
+        for (NSArray <NSString *> * row in apps) {
+            [table_apps addObject:row.mutableCopy];
+        }
+    }
 
     columns = [apps_table tableColumns];
     [[columns objectAtIndex:0] setIdentifier:@"0"];

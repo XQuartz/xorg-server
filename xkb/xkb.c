@@ -38,7 +38,7 @@ THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "extnsionst.h"
 #include "extinit.h"
 #include "xace.h"
-#include "xkb.h"
+#include "xkb-procs.h"
 #include "protocol-versions.h"
 
 #include <X11/extensions/XI.h>

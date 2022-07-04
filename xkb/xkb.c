@@ -2433,7 +2433,7 @@ _XkbSetMapCheckLength(xkbSetMapReq *req)
     }
     /* actions */
     if (req->present & XkbKeyActionsMask) {
-        _add_check_len(req->totalActs * sz_xkbActionWireDesc 
+        _add_check_len(req->totalActs * sz_xkbActionWireDesc
                        + XkbPaddedSize(req->nKeyActs));
     }
     /* behaviours */
@@ -6774,7 +6774,7 @@ _XkbSetDeviceInfoCheck(ClientPtr client, DeviceIntPtr dev,
     ed.deviceID = dev->id;
     wire = (char *) &stuff[1];
     if (stuff->change & XkbXI_ButtonActionsMask) {
-	int nBtns, sz, i;
+        int nBtns, sz, i;
         XkbAction *acts;
         DeviceIntPtr kbd;
 

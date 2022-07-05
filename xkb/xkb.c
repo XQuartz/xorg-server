@@ -5137,6 +5137,11 @@ _GetCountedString(char **wire_inout, ClientPtr client, char **str)
     CARD16 len;
 
     wire = *wire_inout;
+
+    if (client->req_len <
+        bytes_to_int32(wire + 2 - (char *) client->requestBuffer))
+        return BadValue;
+
     len = *(CARD16 *) wire;
     if (client->swapped) {
         swaps(&len);

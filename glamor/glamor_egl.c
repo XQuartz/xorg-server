@@ -403,6 +403,9 @@ glamor_egl_fds_from_pixmap(ScreenPtr screen, PixmapPtr pixmap, int *fds,
     struct gbm_bo *bo;
     int num_fds;
 #ifdef GBM_BO_WITH_MODIFIERS
+#ifndef GBM_BO_FD_FOR_PLANE
+    int32_t first_handle;
+#endif
     int i;
 #endif
 
@@ -416,7 +419,24 @@ glamor_egl_fds_from_pixmap(ScreenPtr screen, PixmapPtr pixmap, int *fds,
 #ifdef GBM_BO_WITH_MODIFIERS
     num_fds = gbm_bo_get_plane_count(bo);
     for (i = 0; i < num_fds; i++) {
-        fds[i] = gbm_bo_get_fd(bo);
+#ifdef GBM_BO_FD_FOR_PLANE
+        fds[i] = gbm_bo_get_fd_for_plane(bo, i);
+#else
+        union gbm_bo_handle plane_handle = gbm_bo_get_handle_for_plane(bo, i);
+
+        if (i == 0)
+            first_handle = plane_handle.s32;
+
+        /* If all planes point to the same object as the first plane, i.e. they
+         * all have the same handle, we can fall back to the non-planar
+         * gbm_bo_get_fd without losing information. If they point to different
+         * objects we are out of luck and need to give up.
+         */
+	if (first_handle == plane_handle.s32)
+            fds[i] = gbm_bo_get_fd(bo);
+        else
+            fds[i] = -1;
+#endif
         if (fds[i] == -1) {
             while (--i >= 0)
                 close(fds[i]);

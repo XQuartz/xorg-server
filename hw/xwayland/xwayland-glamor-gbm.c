@@ -354,12 +354,15 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
     unsigned short width = pixmap->drawable.width;
     unsigned short height = pixmap->drawable.height;
     uint32_t format;
-    int prime_fd;
     int num_planes;
+    int prime_fds[4];
     uint32_t strides[4];
     uint32_t offsets[4];
     uint64_t modifier;
     int i;
+#ifndef GBM_BO_FD_FOR_PLANE
+    int32_t first_handle;
+#endif
 
     if (xwl_pixmap == NULL)
        return NULL;
@@ -374,20 +377,43 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
 
     format = wl_drm_format_for_depth(pixmap->drawable.depth);
 
-    prime_fd = gbm_bo_get_fd(xwl_pixmap->bo);
-    if (prime_fd == -1)
-        return NULL;
-
 #ifdef GBM_BO_WITH_MODIFIERS
     num_planes = gbm_bo_get_plane_count(xwl_pixmap->bo);
     modifier = gbm_bo_get_modifier(xwl_pixmap->bo);
     for (i = 0; i < num_planes; i++) {
+#ifdef GBM_BO_FD_FOR_PLANE
+        prime_fds[i] = gbm_bo_get_fd_for_plane(xwl_pixmap->bo, i);
+#else
+        union gbm_bo_handle plane_handle;
+
+        plane_handle = gbm_bo_get_handle_for_plane(xwl_pixmap->bo, i);
+        if (i == 0)
+            first_handle = plane_handle.s32;
+
+        /* If all planes point to the same object as the first plane, i.e. they
+         * all have the same handle, we can fall back to the non-planar
+         * gbm_bo_get_fd without losing information. If they point to different
+         * objects we are out of luck and need to give up.
+         */
+        if (first_handle == plane_handle.s32)
+            prime_fds[i] = gbm_bo_get_fd(xwl_pixmap->bo);
+        else
+            prime_fds[i] = -1;
+#endif
+        if (prime_fds[i] == -1) {
+            while (--i >= 0)
+                close(prime_fds[i]);
+            return NULL;
+        }
         strides[i] = gbm_bo_get_stride_for_plane(xwl_pixmap->bo, i);
         offsets[i] = gbm_bo_get_offset(xwl_pixmap->bo, i);
     }
 #else
     num_planes = 1;
     modifier = DRM_FORMAT_MOD_INVALID;
+    prime_fds[0] = gbm_bo_get_fd(xwl_pixmap->bo);
+    if (prime_fds[0] == -1)
+        return NULL;
     strides[0] = gbm_bo_get_stride(xwl_pixmap->bo);
     offsets[0] = 0;
 #endif
@@ -398,7 +424,7 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
 
         params = zwp_linux_dmabuf_v1_create_params(xwl_screen->dmabuf);
         for (i = 0; i < num_planes; i++) {
-            zwp_linux_buffer_params_v1_add(params, prime_fd, i,
+            zwp_linux_buffer_params_v1_add(params, prime_fds[i], i,
                                            offsets[i], strides[i],
                                            modifier >> 32, modifier & 0xffffffff);
         }
@@ -409,14 +435,15 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
         zwp_linux_buffer_params_v1_destroy(params);
     } else if (num_planes == 1) {
         xwl_pixmap->buffer =
-            wl_drm_create_prime_buffer(xwl_gbm->drm, prime_fd, width, height,
+            wl_drm_create_prime_buffer(xwl_gbm->drm, prime_fds[0], width, height,
                                        format,
                                        0, gbm_bo_get_stride(xwl_pixmap->bo),
                                        0, 0,
                                        0, 0);
     }
 
-    close(prime_fd);
+    for (i = 0; i < num_planes; i++)
+        close(prime_fds[i]);
 
     /* Add our listener now */
     wl_buffer_add_listener(xwl_pixmap->buffer,
@@ -610,6 +637,9 @@ glamor_egl_fds_from_pixmap(ScreenPtr screen, PixmapPtr pixmap, int *fds,
 {
     struct xwl_pixmap *xwl_pixmap;
 #ifdef GBM_BO_WITH_MODIFIERS
+#ifndef GBM_BO_FD_FOR_PLANE
+    int32_t first_handle;
+#endif
     uint32_t num_fds;
     int i;
 #endif
@@ -627,7 +657,25 @@ glamor_egl_fds_from_pixmap(ScreenPtr screen, PixmapPtr pixmap, int *fds,
     *modifier = gbm_bo_get_modifier(xwl_pixmap->bo);
 
     for (i = 0; i < num_fds; i++) {
-        fds[i] = gbm_bo_get_fd(xwl_pixmap->bo);
+#ifdef GBM_BO_FD_FOR_PLANE
+        fds[i] = gbm_bo_get_fd_for_plane(xwl_pixmap->bo, i);
+#else
+        union gbm_bo_handle plane_handle;
+
+        plane_handle = gbm_bo_get_handle_for_plane(xwl_pixmap->bo, i);
+        if (i == 0)
+            first_handle = plane_handle.s32;
+
+        /* If all planes point to the same object as the first plane, i.e. they
+         * all have the same handle, we can fall back to the non-planar
+         * gbm_bo_get_fd without losing information. If they point to different
+         * objects we are out of luck and need to give up.
+         */
+        if (first_handle == plane_handle.s32)
+            fds[i] = gbm_bo_get_fd(xwl_pixmap->bo);
+        else
+            fds[i] = -1;
+#endif
         if (fds[i] == -1) {
             while (--i >= 0)
                 close(fds[i]);

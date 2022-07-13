@@ -5870,6 +5870,8 @@ ProcXkbListComponents(ClientPtr client)
      * length wrong. */
     str = (unsigned char *) &stuff[1];
     for (i = 0; i < 6; i++) {
+        if (!_XkbCheckRequestBounds(client, stuff, str, str + 1))
+            return BadLength;
         size = *((uint8_t *)str);
         len = (str + size + 1) - ((unsigned char *) stuff);
         if ((XkbPaddedSize(len) / 4) > stuff->length)

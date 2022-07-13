@@ -5935,18 +5935,32 @@ ProcXkbGetKbdByName(ClientPtr client)
     xkb = dev->key->xkbInfo->desc;
     status = Success;
     str = (unsigned char *) &stuff[1];
-    if (GetComponentSpec(&str, TRUE, &status))  /* keymap, unsupported */
-        return BadMatch;
+    {
+        char *keymap = GetComponentSpec(&str, TRUE, &status);  /* keymap, unsupported */
+        if (keymap) {
+            free(keymap);
+            return BadMatch;
+        }
+    }
     names.keycodes = GetComponentSpec(&str, TRUE, &status);
     names.types = GetComponentSpec(&str, TRUE, &status);
     names.compat = GetComponentSpec(&str, TRUE, &status);
     names.symbols = GetComponentSpec(&str, TRUE, &status);
     names.geometry = GetComponentSpec(&str, TRUE, &status);
-    if (status != Success)
+    if (status == Success) {
+        len = str - ((unsigned char *) stuff);
+        if ((XkbPaddedSize(len) / 4) != stuff->length)
+            status = BadLength;
+    }
+
+    if (status != Success) {
+        free(names.keycodes);
+        free(names.types);
+        free(names.compat);
+        free(names.symbols);
+        free(names.geometry);
         return status;
-    len = str - ((unsigned char *) stuff);
-    if ((XkbPaddedSize(len) / 4) != stuff->length)
-        return BadLength;
+    }
 
     CHK_MASK_LEGAL(0x01, stuff->want, XkbGBN_AllComponentsMask);
     CHK_MASK_LEGAL(0x02, stuff->need, XkbGBN_AllComponentsMask);

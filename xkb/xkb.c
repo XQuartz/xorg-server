@@ -5794,7 +5794,8 @@ static unsigned char componentExprLegal[] = {
 };
 
 static char *
-GetComponentSpec(unsigned char **pWire, Bool allowExpr, int *errRtrn)
+GetComponentSpec(ClientPtr client, xkbGetKbdByNameReq *stuff,
+                 unsigned char **pWire, Bool allowExpr, int *errRtrn)
 {
     int len;
     register int i;
@@ -5806,7 +5807,15 @@ GetComponentSpec(unsigned char **pWire, Bool allowExpr, int *errRtrn)
         legal = &componentSpecLegal[0];
 
     wire = *pWire;
+    if (!_XkbCheckRequestBounds(client, stuff, wire, wire + 1)) {
+        *errRtrn = BadLength;
+        return NULL;
+    }
     len = (*(unsigned char *) wire++);
+    if (!_XkbCheckRequestBounds(client, stuff, wire, wire + len)) {
+        *errRtrn = BadLength;
+        return NULL;
+    }
     if (len > 0) {
         str = calloc(1, len + 1);
         if (str) {
@@ -5936,17 +5945,17 @@ ProcXkbGetKbdByName(ClientPtr client)
     status = Success;
     str = (unsigned char *) &stuff[1];
     {
-        char *keymap = GetComponentSpec(&str, TRUE, &status);  /* keymap, unsupported */
+        char *keymap = GetComponentSpec(client, stuff, &str, TRUE, &status);  /* keymap, unsupported */
         if (keymap) {
             free(keymap);
             return BadMatch;
         }
     }
-    names.keycodes = GetComponentSpec(&str, TRUE, &status);
-    names.types = GetComponentSpec(&str, TRUE, &status);
-    names.compat = GetComponentSpec(&str, TRUE, &status);
-    names.symbols = GetComponentSpec(&str, TRUE, &status);
-    names.geometry = GetComponentSpec(&str, TRUE, &status);
+    names.keycodes = GetComponentSpec(client, stuff, &str, TRUE, &status);
+    names.types = GetComponentSpec(client, stuff, &str, TRUE, &status);
+    names.compat = GetComponentSpec(client, stuff, &str, TRUE, &status);
+    names.symbols = GetComponentSpec(client, stuff, &str, TRUE, &status);
+    names.geometry = GetComponentSpec(client, stuff, &str, TRUE, &status);
     if (status == Success) {
         len = str - ((unsigned char *) stuff);
         if ((XkbPaddedSize(len) / 4) != stuff->length)

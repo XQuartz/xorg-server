@@ -1,3 +1,11 @@
+# vim: set expandtab shiftwidth=2 tabstop=8 textwidth=0 filetype=yaml:
+#
+# This CI uses the freedesktop.org ci-templates.
+# Please see the ci-templates documentation for details:
+# https://freedesktop.pages.freedesktop.org/ci-templates/
+
+.templates_sha: &template_sha c5626190ec14b475271288dda7a7dae8dbe0cd76 # see https://docs.gitlab.com/ee/ci/yaml/#includefile
+
 # FDO_DISTRIBUTION_TAG is the tag of the docker image used for the build jobs.
 # If the image doesn't exist yet, the docker-image stage generates it.
 #
@@ -15,8 +23,11 @@ variables:
 
 include:
   - project: 'freedesktop/ci-templates'
-    ref: 4f06663cd1507136a0f8440925a2521098adb298
+    ref: *template_sha
     file: '/templates/debian.yml'
+  - project: 'freedesktop/ci-templates'
+    ref: *template_sha
+    file: '/templates/ci-fairy.yml'
   - template: Security/SAST.gitlab-ci.yml
 
 stages:
@@ -86,3 +97,36 @@ mingw-cross-build:
     script:
         - meson --cross-file=.gitlab-ci/cross-i686-w64-mingw32.txt -Dglx=false -Dsecure-rpc=false -Dlisten_tcp=true build/
         - ninja -j${FDO_CI_CONCURRENT:-4} -C build/ install
+
+#
+# Verify that commit messages are as expected
+#
+check-commits:
+  extends:
+    - .fdo.ci-fairy
+  stage: test
+  script:
+    - ci-fairy check-commits --junit-xml=results.xml
+  except:
+    - master@xorg/xserver
+  variables:
+    GIT_DEPTH: 100
+  artifacts:
+    reports:
+      junit: results.xml
+  allow_failure: true
+
+#
+# Verify that the merge request has the allow-collaboration checkbox ticked
+#
+check-merge-request:
+  extends:
+    - .fdo.ci-fairy
+  stage: test
+  script:
+    - ci-fairy check-merge-request --require-allow-collaboration --junit-xml=results.xml
+  artifacts:
+    when: on_failure
+    reports:
+      junit: results.xml
+  allow_failure: true

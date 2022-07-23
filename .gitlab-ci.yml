@@ -17,10 +17,12 @@ include:
   - project: 'freedesktop/ci-templates'
     ref: 4f06663cd1507136a0f8440925a2521098adb298
     file: '/templates/debian.yml'
+  - template: Security/SAST.gitlab-ci.yml
 
 stages:
     - docker-image
     - build-and-test
+    - test
 
 .ci-run-policy:
   # Retry jobs after runner system failures

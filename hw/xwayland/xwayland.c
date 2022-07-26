@@ -230,6 +230,9 @@ ddxProcessArgument(int argc, char *argv[], int i)
         touchEmulatePointer = FALSE;
         return 1;
     }
+    else if (strcmp(argv[i], "-force-xrandr-emulation") == 0) {
+        return 1;
+    }
     else if (strcmp(argv[i], "-geometry") == 0) {
         CHECK_FOR_REQUIRED_ARGUMENTS(1);
         return 2;

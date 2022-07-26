@@ -670,8 +670,8 @@ dispatch_scroll_motion(struct xwl_seat *xwl_seat)
     const int divisor = 10;
     wl_fixed_t dy = xwl_seat->pending_pointer_event.scroll_dy;
     wl_fixed_t dx = xwl_seat->pending_pointer_event.scroll_dx;
-    wl_fixed_t discrete_dy = xwl_seat->pending_pointer_event.scroll_discrete_dy;
-    wl_fixed_t discrete_dx = xwl_seat->pending_pointer_event.scroll_discrete_dx;
+    int32_t discrete_dy = xwl_seat->pending_pointer_event.scroll_discrete_dy;
+    int32_t discrete_dx = xwl_seat->pending_pointer_event.scroll_discrete_dx;
 
     valuator_mask_zero(&mask);
     if (xwl_seat->pending_pointer_event.has_vertical_scroll)

@@ -51,6 +51,9 @@
 #include "xwayland-keyboard-grab-unstable-v1-client-protocol.h"
 #include "keyboard-shortcuts-inhibit-unstable-v1-client-protocol.h"
 
+#define SCROLL_AXIS_HORIZ 2
+#define SCROLL_AXIS_VERT 3
+
 struct sync_pending {
     struct xorg_list l;
     DeviceIntPtr pending_dev;
@@ -189,8 +192,8 @@ xwl_pointer_proc(DeviceIntPtr device, int what)
 
         axes_labels[0] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_X);
         axes_labels[1] = XIGetKnownProperty(AXIS_LABEL_PROP_ABS_Y);
-        axes_labels[2] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_HWHEEL);
-        axes_labels[3] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_WHEEL);
+        axes_labels[SCROLL_AXIS_HORIZ] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_HWHEEL);
+        axes_labels[SCROLL_AXIS_VERT] = XIGetKnownProperty(AXIS_LABEL_PROP_REL_WHEEL);
 
         if (!InitValuatorClassDeviceStruct(device, NAXES, axes_labels,
                                            GetMotionHistorySize(), Absolute))
@@ -201,13 +204,13 @@ xwl_pointer_proc(DeviceIntPtr device, int what)
                                0, 0xFFFF, 10000, 0, 10000, Absolute);
         InitValuatorAxisStruct(device, 1, axes_labels[1],
                                0, 0xFFFF, 10000, 0, 10000, Absolute);
-        InitValuatorAxisStruct(device, 2, axes_labels[2],
+        InitValuatorAxisStruct(device, SCROLL_AXIS_HORIZ, axes_labels[2],
                                NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Relative);
-        InitValuatorAxisStruct(device, 3, axes_labels[3],
+        InitValuatorAxisStruct(device, SCROLL_AXIS_VERT, axes_labels[3],
                                NO_AXIS_LIMITS, NO_AXIS_LIMITS, 0, 0, 0, Relative);
 
-        SetScrollValuator(device, 2, SCROLL_TYPE_HORIZONTAL, 1.0, SCROLL_FLAG_NONE);
-        SetScrollValuator(device, 3, SCROLL_TYPE_VERTICAL, 1.0, SCROLL_FLAG_PREFERRED);
+        SetScrollValuator(device, SCROLL_AXIS_HORIZ, SCROLL_TYPE_HORIZONTAL, 1.0, SCROLL_FLAG_NONE);
+        SetScrollValuator(device, SCROLL_AXIS_VERT, SCROLL_TYPE_VERTICAL, 1.0, SCROLL_FLAG_PREFERRED);
 
         if (!InitPtrFeedbackClassDeviceStruct(device, xwl_pointer_control))
             return BadValue;
@@ -676,17 +679,17 @@ dispatch_scroll_motion(struct xwl_seat *xwl_seat)
     valuator_mask_zero(&mask);
     if (xwl_seat->pending_pointer_event.has_vertical_scroll)
         valuator_mask_set_double(&mask,
-                                 3,
+                                 SCROLL_AXIS_VERT,
                                  wl_fixed_to_double(dy) / divisor);
     else if (xwl_seat->pending_pointer_event.has_vertical_scroll_discrete)
-        valuator_mask_set(&mask, 3, discrete_dy);
+        valuator_mask_set(&mask, SCROLL_AXIS_VERT, discrete_dy);
 
     if (xwl_seat->pending_pointer_event.has_horizontal_scroll)
         valuator_mask_set_double(&mask,
-                                 2,
+                                 SCROLL_AXIS_HORIZ,
                                  wl_fixed_to_double(dx) / divisor);
     else if (xwl_seat->pending_pointer_event.has_horizontal_scroll_discrete)
-        valuator_mask_set(&mask, 2, discrete_dx);
+        valuator_mask_set(&mask, SCROLL_AXIS_HORIZ, discrete_dx);
 
     QueuePointerEvents(get_pointer_device(xwl_seat),
                        MotionNotify, 0, POINTER_RELATIVE, &mask);

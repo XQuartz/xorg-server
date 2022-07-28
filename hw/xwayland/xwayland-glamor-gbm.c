@@ -628,6 +628,11 @@ glamor_egl_fds_from_pixmap(ScreenPtr screen, PixmapPtr pixmap, int *fds,
 
     for (i = 0; i < num_fds; i++) {
         fds[i] = gbm_bo_get_fd(xwl_pixmap->bo);
+        if (fds[i] == -1) {
+            while (--i >= 0)
+                close(fds[i]);
+            return 0;
+        }
         strides[i] = gbm_bo_get_stride_for_plane(xwl_pixmap->bo, i);
         offsets[i] = gbm_bo_get_offset(xwl_pixmap->bo, i);
     }
@@ -636,6 +641,8 @@ glamor_egl_fds_from_pixmap(ScreenPtr screen, PixmapPtr pixmap, int *fds,
 #else
     *modifier = DRM_FORMAT_MOD_INVALID;
     fds[0] = gbm_bo_get_fd(xwl_pixmap->bo);
+    if (fds[0] == -1)
+        return 0;
     strides[0] = gbm_bo_get_stride(xwl_pixmap->bo);
     offsets[0] = 0;
     return 1;

@@ -299,9 +299,103 @@ xwl_log_handler(const char *format, va_list args)
     FatalError("%s", msg);
 }
 
+#ifdef XWL_HAS_XWAYLAND_EXTENSION
+#include <X11/extensions/xwaylandproto.h>
+
+Bool noXWaylandExtension = FALSE;
+
+static int
+ProcXwlQueryVersion(ClientPtr client)
+{
+    xXwlQueryVersionReply reply;
+    int major, minor;
+
+    REQUEST(xXwlQueryVersionReq);
+    REQUEST_SIZE_MATCH(xXwlQueryVersionReq);
+
+    if (version_compare(stuff->majorVersion, stuff->minorVersion,
+                        XWAYLAND_EXTENSION_MAJOR,
+                        XWAYLAND_EXTENSION_MINOR) < 0) {
+        major = stuff->majorVersion;
+        minor = stuff->minorVersion;
+    } else {
+        major = XWAYLAND_EXTENSION_MAJOR;
+        minor = XWAYLAND_EXTENSION_MINOR;
+    }
+
+    reply = (xXwlQueryVersionReply) {
+        .type = X_Reply,
+        .sequenceNumber = client->sequence,
+        .length = 0,
+        .majorVersion = major,
+        .minorVersion = minor,
+    };
+
+    if (client->swapped) {
+        swaps(&reply.sequenceNumber);
+        swapl(&reply.length);
+        swaps(&reply.majorVersion);
+        swaps(&reply.minorVersion);
+    }
+
+    WriteReplyToClient(client, sizeof(reply), &reply);
+    return Success;
+}
+
+static int _X_COLD
+SProcXwlQueryVersion(ClientPtr client)
+{
+    REQUEST(xXwlQueryVersionReq);
+
+    swaps(&stuff->length);
+    REQUEST_AT_LEAST_SIZE(xXwlQueryVersionReq);
+    swaps(&stuff->majorVersion);
+    swaps(&stuff->minorVersion);
+
+    return ProcXwlQueryVersion(client);
+}
+
+static int
+ProcXWaylandDispatch(ClientPtr client)
+{
+    REQUEST(xReq);
+
+    switch (stuff->data) {
+    case X_XwlQueryVersion:
+        return ProcXwlQueryVersion(client);
+    }
+    return BadRequest;
+}
+
+static int
+SProcXWaylandDispatch(ClientPtr client)
+{
+    REQUEST(xReq);
+
+    switch (stuff->data) {
+    case X_XwlQueryVersion:
+        return SProcXwlQueryVersion(client);
+    }
+    return BadRequest;
+}
+
+static void
+xwlExtensionInit(void)
+{
+    AddExtension(XWAYLAND_EXTENSION_NAME,
+                 XwlNumberEvents, XwlNumberErrors,
+                 ProcXWaylandDispatch, SProcXWaylandDispatch,
+                 NULL, StandardMinorOpcode);
+}
+
+#endif
+
 static const ExtensionModule xwayland_extensions[] = {
 #ifdef XF86VIDMODE
     { xwlVidModeExtensionInit, XF86VIDMODENAME, &noXFree86VidModeExtension },
+#endif
+#ifdef XWL_HAS_XWAYLAND_EXTENSION
+    { xwlExtensionInit, XWAYLAND_EXTENSION_NAME, &noXWaylandExtension },
 #endif
 };
 

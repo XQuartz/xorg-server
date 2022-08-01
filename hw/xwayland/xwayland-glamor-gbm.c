@@ -1030,7 +1030,7 @@ xwl_glamor_gbm_init_egl(struct xwl_screen *xwl_screen)
         ErrorF("glGetString() returned NULL, your GL is broken\n");
         goto error;
     }
-    if (strstr((const char *)renderer, "llvmpipe")) {
+    if (!strncmp("llvmpipe", (const char *)renderer, strlen("llvmpipe"))) {
         ErrorF("Refusing to try glamor on llvmpipe\n");
         goto error;
     }

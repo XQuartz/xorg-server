@@ -1080,7 +1080,7 @@ glamor_egl_init(ScrnInfoPtr scrn, int fd)
                    "glGetString() returned NULL, your GL is broken\n");
         goto error;
     }
-    if (strstr((const char *)renderer, "llvmpipe")) {
+    if (!strncmp("llvmpipe", (const char *)renderer, strlen("llvmpipe"))) {
         if (scrn->confScreen->num_gpu_devices)
             xf86DrvMsg(scrn->scrnIndex, X_INFO,
                        "Allowing glamor on llvmpipe for PRIME\n");

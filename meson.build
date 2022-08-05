@@ -283,7 +283,7 @@ endif
 int10 = get_option('int10')
 if int10 == 'auto'
     int10 = 'x86emu'
-    if host_machine.cpu() == 'powerpc' and host_machine.system() == 'freebsd'
+    if host_machine.cpu() == 'ppc' and host_machine.system() == 'freebsd'
         int10 = 'stub'
     endif
     if host_machine.cpu() == 'arm'

@@ -113,7 +113,7 @@ elif host_machine.system().endswith('bsd')
         endif
     elif host_machine.cpu_family() == 'arm'
         srcs_xorg_os_support += 'bsd/arm_video.c'
-    elif host_machine.cpu_family() == 'powerpc'
+    elif host_machine.cpu_family() == 'ppc' or host_machine.cpu_family() == 'ppc64'
         srcs_xorg_os_support += 'bsd/ppc_video.c'
     elif host_machine.cpu_family() == 'sparc64'
         srcs_xorg_os_support += 'bsd/sparc64_video.c'

@@ -139,6 +139,7 @@ xwayland_server = executable(
     dependencies: [
         common_dep,
         xwayland_dep,
+        xwaylandproto_dep,
     ],
     link_with: [
         libxserver_main,

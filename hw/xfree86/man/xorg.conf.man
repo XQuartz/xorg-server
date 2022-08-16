@@ -1296,7 +1296,20 @@ This option specifies that the matched device should be treated as the
 primary GPU, replacing the selection of the GPU used as output by the
 firmware. If multiple output devices match an OutputClass section with
 the PrimaryGPU option set, the first one enumerated becomes the primary GPU.
-.PP
+.TP 7
+.BI "Option \*qHotplugDriver\*q \*q" driver \*q
+This option specifies that the matched driver should be used to handle a
+hot-plugged GPU device.
+The module specified by
+.I driver
+will be loaded during setup of the GPU device.
+If loading of this module fails or there is no driver by that name, the
+modesetting driver will be used, which is the default behavior.
+If multiple output devices match an
+.B OutputClass
+section with the
+.B HotplugDriver
+option, the first one enumerated becomes the hotplug driver.
 A
 .B OutputClass
 Section may contain

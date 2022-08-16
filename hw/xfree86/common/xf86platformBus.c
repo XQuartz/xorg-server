@@ -272,6 +272,22 @@ xf86PlatformMatchDriver(XF86MatchedDrivers *md)
     }
 }
 
+void xf86PlatformScanPciDev(void)
+{
+    int i;
+
+    if (!xf86scanpci())
+        return;
+
+    xf86Msg(X_CONFIG, "Scanning the platform PCI devices\n");
+    for (i = 0; i < xf86_num_platform_devices; i++) {
+        char *busid = xf86_platform_odev_attributes(i)->busid;
+
+        if (strncmp(busid, "pci:", 4) == 0)
+            platform_find_pci_info(&xf86_platform_devices[i], busid);
+    }
+}
+
 int
 xf86platformProbe(void)
 {
@@ -613,31 +629,58 @@ xf86platformAddGPUDevices(DriverPtr drvp)
     return foundScreen;
 }
 
+const char *
+xf86PlatformFindHotplugDriver(int dev_index)
+{
+    XF86ConfOutputClassPtr cl;
+    const char *hp_driver = NULL;
+    struct xf86_platform_device *dev = &xf86_platform_devices[dev_index];
+
+    for (cl = xf86configptr->conf_outputclass_lst; cl; cl = cl->list.next) {
+        if (!OutputClassMatches(cl, dev) || !cl->option_lst)
+	    continue;
+
+        hp_driver = xf86FindOptionValue(cl->option_lst, "HotplugDriver");
+        if (hp_driver)
+            xf86MarkOptionUsed(cl->option_lst);
+    }
+
+    /* Return the first driver from the match list */
+    xf86Msg(X_INFO, "matching hotplug-driver is %s\n",
+            hp_driver ? hp_driver : "none");
+    return hp_driver;
+}
+
 int
-xf86platformAddDevice(int index)
+xf86platformAddDevice(const char *driver_name, int index)
 {
     int i, old_screens, scr_index, scrnum;
     DriverPtr drvp = NULL;
     screenLayoutPtr layout;
-    static const char *hotplug_driver_name = "modesetting";
 
     if (!xf86Info.autoAddGPU)
         return -1;
 
-    /* force load the driver for now */
-    xf86LoadOneModule(hotplug_driver_name, NULL);
+    /* Load modesetting driver if no driver given, or driver open failed */
+    if (!driver_name || !xf86LoadOneModule(driver_name, NULL)) {
+        driver_name = "modesetting";
+        xf86LoadOneModule(driver_name, NULL);
+    }
 
     for (i = 0; i < xf86NumDrivers; i++) {
         if (!xf86DriverList[i])
             continue;
 
-        if (!strcmp(xf86DriverList[i]->driverName, hotplug_driver_name)) {
+        if (!strcmp(xf86DriverList[i]->driverName, driver_name)) {
             drvp = xf86DriverList[i];
             break;
         }
     }
-    if (i == xf86NumDrivers)
+
+    if (i == xf86NumDrivers) {
+        ErrorF("can't find driver %s for hotplugged device\n", driver_name);
         return -1;
+    }
 
     old_screens = xf86NumGPUScreens;
     doPlatformProbe(&xf86_platform_devices[index], drvp, NULL,

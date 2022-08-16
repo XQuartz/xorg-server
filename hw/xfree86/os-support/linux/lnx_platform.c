@@ -125,7 +125,7 @@ xf86PlatformReprobeDevice(int index, struct OdevAttributes *attribs)
         xf86_remove_platform_device(index);
         return;
     }
-    ret = xf86platformAddDevice(index);
+    ret = xf86platformAddDevice(xf86PlatformFindHotplugDriver(index), index);
     if (ret == -1)
         xf86_remove_platform_device(index);
 }
@@ -173,6 +173,8 @@ void NewGPUDeviceRequest(struct OdevAttributes *attribs)
 {
     int old_num = xf86_num_platform_devices;
     int ret;
+    const char *driver_name;
+
     xf86PlatformDeviceProbe(attribs);
 
     if (old_num == xf86_num_platform_devices)
@@ -181,7 +183,11 @@ void NewGPUDeviceRequest(struct OdevAttributes *attribs)
     if (xf86_get_platform_device_unowned(xf86_num_platform_devices - 1) == TRUE)
         return;
 
-    ret = xf86platformAddDevice(xf86_num_platform_devices-1);
+    /* Scan and update PCI devices before adding new platform device */
+    xf86PlatformScanPciDev();
+    driver_name = xf86PlatformFindHotplugDriver(xf86_num_platform_devices - 1);
+
+    ret = xf86platformAddDevice(driver_name, xf86_num_platform_devices-1);
     if (ret == -1)
         xf86_remove_platform_device(xf86_num_platform_devices-1);
 

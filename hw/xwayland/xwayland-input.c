@@ -782,9 +782,11 @@ pointer_handle_axis(void *data, struct wl_pointer *pointer,
     case WL_POINTER_AXIS_VERTICAL_SCROLL:
         xwl_seat->pending_pointer_event.has_vertical_scroll = TRUE;
         xwl_seat->pending_pointer_event.scroll_dy = value;
+        break;
     case WL_POINTER_AXIS_HORIZONTAL_SCROLL:
         xwl_seat->pending_pointer_event.has_horizontal_scroll = TRUE;
         xwl_seat->pending_pointer_event.scroll_dx = value;
+        break;
     }
 }
 

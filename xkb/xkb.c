@@ -5817,11 +5817,11 @@ GetComponentSpec(ClientPtr client, xkbGetKbdByNameReq *stuff,
         return NULL;
     }
     len = (*(unsigned char *) wire++);
-    if (!_XkbCheckRequestBounds(client, stuff, wire, wire + len)) {
-        *errRtrn = BadLength;
-        return NULL;
-    }
     if (len > 0) {
+        if (!_XkbCheckRequestBounds(client, stuff, wire, wire + len)) {
+            *errRtrn = BadLength;
+            return NULL;
+        }
         str = calloc(1, len + 1);
         if (str) {
             tmp = str;

@@ -114,7 +114,7 @@ apt-get install -y \
 cd /root
 
 # xserver requires libxcvt
-git clone https://gitlab.freedesktop.org/xorg/lib//libxcvt.git --depth 1 --branch=libxcvt-0.1.0
+git clone https://gitlab.freedesktop.org/xorg/lib/libxcvt.git --depth 1 --branch=libxcvt-0.1.0
 cd libxcvt
 meson _build
 ninja -C _build -j${FDO_CI_CONCURRENT:-4} install

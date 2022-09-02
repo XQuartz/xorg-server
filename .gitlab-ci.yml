@@ -58,7 +58,7 @@ debian-bullseye:
         - .ci-run-policy
     stage: build-and-test
     artifacts:
-        when: on_failure
+        when: always
         paths:
             - build/meson-logs/
             - build/test/piglit-results/

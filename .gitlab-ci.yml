@@ -76,9 +76,7 @@ debian-bullseye:
 meson:
     extends: .common-build-and-test
     script:
-        - meson -Dc_args="-fno-common" -Dprefix=/usr -Dxephyr=true -Dwerror=true $MESON_EXTRA_OPTIONS build/
-        - ninja -j${FDO_CI_CONCURRENT:-4} -C build/ dist
-        - PIGLIT_DIR=/root/piglit XTEST_DIR=/root/xts ninja -j${FDO_CI_CONCURRENT:-4} -C build/ test
+        - .gitlab-ci/build-and-test.sh
         - .gitlab-ci/manpages-check
 
 meson-noglamor:

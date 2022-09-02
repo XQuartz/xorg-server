@@ -60,7 +60,7 @@ endforeach
 
 add_project_arguments(common_wflags, language : ['c', 'objc'])
 
-libdrm_req = '>= 2.4.89'
+libdrm_req = '>= 2.4.109'
 libselinux_req = '>= 2.0.86'
 xext_req = '>= 1.0.99.4'
 wayland_req = '>= 1.21.0'

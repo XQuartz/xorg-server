@@ -113,6 +113,14 @@ apt-get install -y \
 
 cd /root
 
+# Xwayland requires drm 2.4.109 for drmGetDeviceFromDevId
+git clone https://gitlab.freedesktop.org/mesa/drm --depth 1 --branch=libdrm-2.4.109
+cd drm
+meson _build
+ninja -C _build -j${FDO_CI_CONCURRENT:-4} install
+cd ..
+rm -rf drm
+
 # xserver requires libxcvt
 git clone https://gitlab.freedesktop.org/xorg/lib/libxcvt.git --depth 1 --branch=libxcvt-0.1.0
 cd libxcvt

@@ -74,7 +74,7 @@ if get_option('xvfb')
             find_program('scripts/xephyr-glamor-piglit.sh'),
             env: piglit_env,
             timeout: 1200,
-            suite: 'xephr-glamor',
+            suite: 'xephyr-glamor',
         )
 
         if rendercheck.found()
@@ -92,7 +92,7 @@ if get_option('xvfb')
                             '--',
                             xvfb_args,
                            ],
-                     suite: 'xephr-glamor',
+                     suite: 'xephyr-glamor',
                      timeout: 300,
                     )
             endforeach

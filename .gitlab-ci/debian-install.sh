@@ -145,18 +145,23 @@ ninja -C _build -j${FDO_CI_CONCURRENT:-4} install
 cd ..
 rm -rf libdecor
 
-git clone https://gitlab.freedesktop.org/mesa/piglit.git --depth 1
+git clone https://gitlab.freedesktop.org/mesa/piglit.git
+cd piglit
+git checkout 265896c86f90cb72e8f218ba6a3617fca8b9a1e3
+cd ..
 
-git clone https://gitlab.freedesktop.org/xorg/test/xts --depth 1
+git clone https://gitlab.freedesktop.org/xorg/test/xts
 cd xts
+git checkout dbbfa96c036e596346147081cbceda136e7c86c1
 # Using -fcommon until we get a proper fix into xtst.
 # See discussion at https://gitlab.freedesktop.org/xorg/xserver/-/merge_requests/913
 CFLAGS=-fcommon ./autogen.sh
 xvfb-run make -j${FDO_CI_CONCURRENT:-4}
 cd ..
 
-git clone https://gitlab.freedesktop.org/xorg/test/rendercheck --depth 1
+git clone https://gitlab.freedesktop.org/xorg/test/rendercheck
 cd rendercheck
+git checkout 67a820621b1475ebfcf3d4f9d7f03a5fc3b9769a
 meson build
 ninja -j${FDO_CI_CONCURRENT:-4} -C build install
 cd ..

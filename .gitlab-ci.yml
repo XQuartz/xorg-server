@@ -60,6 +60,7 @@ debian-bullseye:
     artifacts:
         when: on_failure
         paths:
+            - build/meson-logs/
             - build/test/piglit-results/
     variables:
         CCACHE_COMPILERCHECK: content

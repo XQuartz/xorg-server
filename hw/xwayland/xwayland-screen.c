@@ -643,6 +643,52 @@ xwl_screen_roundtrip(struct xwl_screen *xwl_screen)
         xwl_give_up("could not connect to wayland server\n");
 }
 
+static int
+xwl_server_grab(ClientPtr client)
+{
+    struct xwl_screen *xwl_screen;
+
+    /* Allow GrabServer for the X11 window manager.
+     * Xwayland only has 1 screen (no Zaphod for Xwayland) so we check
+     * for the first and only screen here.
+     */
+    xwl_screen = xwl_screen_get(screenInfo.screens[0]);
+    if (xwl_screen->wm_client_id == client->index)
+        return xwl_screen->GrabServer(client);
+
+    /* For all other clients, just pretend it works for compatibility,
+       but do nothing */
+    return Success;
+}
+
+static int
+xwl_server_ungrab(ClientPtr client)
+{
+    struct xwl_screen *xwl_screen;
+
+    /* Same as above, allow UngrabServer for the X11 window manager only */
+    xwl_screen = xwl_screen_get(screenInfo.screens[0]);
+    if (xwl_screen->wm_client_id == client->index)
+        return xwl_screen->UngrabServer(client);
+
+    /* For all other clients, just pretend it works for compatibility,
+       but do nothing */
+    return Success;
+}
+
+static void
+xwl_screen_setup_custom_vector(struct xwl_screen *xwl_screen)
+{
+    /* Rootfull Xwayland does not need a custom ProcVector (yet?) */
+    if (xwl_screen->rootless)
+        return;
+
+    xwl_screen->GrabServer = ProcVector[X_GrabServer];
+    xwl_screen->UngrabServer = ProcVector[X_UngrabServer];
+
+    ProcVector[X_GrabServer] = xwl_server_grab;
+    ProcVector[X_UngrabServer] = xwl_server_ungrab;
+}
 
 int
 xwl_screen_get_next_output_serial(struct xwl_screen *xwl_screen)
@@ -931,6 +977,8 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
 
     AddCallback(&PropertyStateCallback, xwl_property_callback, pScreen);
     AddCallback(&RootWindowFinalizeCallback, xwl_root_window_finalized_callback, pScreen);
+
+    xwl_screen_setup_custom_vector(xwl_screen);
 
     xwl_screen_roundtrip(xwl_screen);
 

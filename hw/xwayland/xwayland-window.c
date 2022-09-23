@@ -46,6 +46,8 @@
 #include "viewporter-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
 
+#define DELAYED_WL_SURFACE_DESTROY 1000 /* ms */
+
 static DevPrivateKeyRec xwl_window_private_key;
 static DevPrivateKeyRec xwl_damage_private_key;
 static const char *xwl_surface_tag = "xwl-surface";
@@ -852,6 +854,58 @@ xwl_realize_window(WindowPtr window)
     return ensure_surface_for_window(window);
 }
 
+static void
+xwl_surface_destroy_free_timer(struct xwl_wl_surface *xwl_wl_surface)
+{
+    if (xwl_wl_surface->wl_surface_destroy_timer) {
+        TimerFree(xwl_wl_surface->wl_surface_destroy_timer);
+        xwl_wl_surface->wl_surface_destroy_timer = NULL;
+    }
+}
+
+void
+xwl_window_surface_do_destroy(struct xwl_wl_surface *xwl_wl_surface)
+{
+    wl_surface_destroy(xwl_wl_surface->wl_surface);
+    xorg_list_del(&xwl_wl_surface->link);
+    xwl_surface_destroy_free_timer(xwl_wl_surface);
+    free(xwl_wl_surface);
+}
+
+static CARD32
+xwl_surface_destroy_callback(OsTimerPtr timer, CARD32 now, void *arg)
+{
+    struct xwl_wl_surface *xwl_wl_surface = arg;
+
+    xwl_window_surface_do_destroy(xwl_wl_surface);
+
+    return 0;
+}
+
+static void
+release_wl_surface_for_window(struct xwl_window *xwl_window)
+{
+    struct xwl_wl_surface *xwl_wl_surface;
+
+    /* If the Xserver is terminating, destroy the surface immediately */
+    if ((dispatchException & DE_TERMINATE) == DE_TERMINATE) {
+        wl_surface_destroy(xwl_window->surface);
+        return;
+    }
+
+    /* Otherwise, schedule the destruction later, to mitigate the race
+     * between X11 and Wayland processing so that the compositor has the
+     * time to establish the association before the wl_surface is destroyed.
+     */
+    xwl_wl_surface = xnfcalloc(1, sizeof *xwl_wl_surface);
+    xwl_wl_surface->wl_surface = xwl_window->surface;
+    xorg_list_add(&xwl_wl_surface->link,
+                  &xwl_window->xwl_screen->pending_wl_surface_destroy);
+    xwl_wl_surface->wl_surface_destroy_timer =
+        TimerSet(NULL, 0, DELAYED_WL_SURFACE_DESTROY,
+                 xwl_surface_destroy_callback, xwl_wl_surface);
+}
+
 Bool
 xwl_unrealize_window(WindowPtr window)
 {
@@ -906,7 +960,7 @@ xwl_unrealize_window(WindowPtr window)
     }
 #endif
 
-    wl_surface_destroy(xwl_window->surface);
+    release_wl_surface_for_window(xwl_window);
     xorg_list_del(&xwl_window->link_damage);
     xorg_list_del(&xwl_window->link_window);
     unregister_damage(window);

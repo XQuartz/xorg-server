@@ -182,6 +182,7 @@ xwl_close_screen(ScreenPtr screen)
     struct xwl_screen *xwl_screen = xwl_screen_get(screen);
     struct xwl_output *xwl_output, *next_xwl_output;
     struct xwl_seat *xwl_seat, *next_xwl_seat;
+    struct xwl_wl_surface *xwl_wl_surface, *xwl_wl_surface_next;
 
     DeleteCallback(&PropertyStateCallback, xwl_property_callback, screen);
 
@@ -203,6 +204,10 @@ xwl_close_screen(ScreenPtr screen)
                                   &xwl_screen->drm_lease_devices, link)
         xwl_screen_destroy_drm_lease_device(xwl_screen,
                                             device_data->drm_lease_device);
+
+    xorg_list_for_each_entry_safe(xwl_wl_surface, xwl_wl_surface_next,
+                                  &xwl_screen->pending_wl_surface_destroy, link)
+        xwl_window_surface_do_destroy(xwl_wl_surface);
 
     RemoveNotifyFd(xwl_screen->wayland_fd);
 
@@ -818,6 +823,7 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
     xorg_list_init(&xwl_screen->drm_lease_devices);
     xorg_list_init(&xwl_screen->queued_drm_lease_devices);
     xorg_list_init(&xwl_screen->drm_leases);
+    xorg_list_init(&xwl_screen->pending_wl_surface_destroy);
     xwl_screen->depth = 24;
 
     if (!monitorResolution)

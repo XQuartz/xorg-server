@@ -37,6 +37,12 @@
 
 #include "xwayland-types.h"
 
+struct xwl_wl_surface {
+    OsTimerPtr wl_surface_destroy_timer;
+    struct wl_surface *wl_surface;
+    struct xorg_list link;
+};
+
 struct xwl_window {
     struct xwl_screen *xwl_screen;
     struct wl_surface *surface;
@@ -91,6 +97,8 @@ void xwl_move_window(WindowPtr window,
 Bool xwl_destroy_window(WindowPtr window);
 void xwl_window_post_damage(struct xwl_window *xwl_window);
 void xwl_window_create_frame_callback(struct xwl_window *xwl_window);
+void xwl_window_surface_do_destroy(struct xwl_wl_surface *xwl_wl_surface);
+
 Bool xwl_window_init(void);
 
 #endif /* XWAYLAND_WINDOW_H */

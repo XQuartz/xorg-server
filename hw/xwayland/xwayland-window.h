@@ -67,6 +67,7 @@ struct xwl_window {
 #ifdef XWL_HAS_LIBDECOR
     struct libdecor_frame *libdecor_frame;
 #endif
+    struct xwayland_surface_v1 *xwayland_surface;
 };
 
 struct xwl_window *xwl_window_get(WindowPtr window);

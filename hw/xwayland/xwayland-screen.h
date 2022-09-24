@@ -103,11 +103,13 @@ struct xwl_screen {
     struct zwp_linux_dmabuf_v1 *dmabuf;
     struct zxdg_output_manager_v1 *xdg_output_manager;
     struct wp_viewporter *viewporter;
+    struct xwayland_shell_v1 *xwayland_shell;
     struct xorg_list drm_lease_devices;
     struct xorg_list queued_drm_lease_devices;
     struct xorg_list drm_leases;
     struct xwl_output *fixed_output;
     struct xorg_list pending_wl_surface_destroy;
+    uint64_t surface_association_serial;
     uint32_t serial;
 
 #define XWL_FORMAT_ARGB8888 (1 << 0)

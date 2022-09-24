@@ -45,6 +45,7 @@
 
 #include "viewporter-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
+#include "xwayland-shell-v1-client-protocol.h"
 
 #define DELAYED_WL_SURFACE_DESTROY 1000 /* ms */
 
@@ -438,24 +439,30 @@ xwl_window_init_allow_commits(struct xwl_window *xwl_window)
         xwl_window_set_allow_commits(xwl_window, TRUE, "no property");
 }
 
-static void
-send_surface_id_event(struct xwl_window *xwl_window)
+static uint32_t
+serial_lo(uint64_t value)
 {
-    static const char atom_name[] = "WL_SURFACE_ID";
-    static Atom type_atom;
+    return value & 0xFFFFFFFFu;
+}
+
+static uint32_t
+serial_hi(uint64_t value)
+{
+    return value >> 32u;
+}
+
+static void
+send_window_client_message(struct xwl_window *xwl_window, Atom type_atom, uint64_t value)
+{
     DeviceIntPtr dev;
     xEvent e;
-
-    if (type_atom == None)
-        type_atom = MakeAtom(atom_name, strlen(atom_name), TRUE);
 
     e.u.u.type = ClientMessage;
     e.u.u.detail = 32;
     e.u.clientMessage.window = xwl_window->window->drawable.id;
     e.u.clientMessage.u.l.type = type_atom;
-    e.u.clientMessage.u.l.longs0 =
-        wl_proxy_get_id((struct wl_proxy *) xwl_window->surface);
-    e.u.clientMessage.u.l.longs1 = 0;
+    e.u.clientMessage.u.l.longs0 = serial_lo(value);
+    e.u.clientMessage.u.l.longs1 = serial_hi(value);
     e.u.clientMessage.u.l.longs2 = 0;
     e.u.clientMessage.u.l.longs3 = 0;
     e.u.clientMessage.u.l.longs4 = 0;
@@ -463,6 +470,54 @@ send_surface_id_event(struct xwl_window *xwl_window)
     dev = PickPointer(serverClient);
     DeliverEventsToWindow(dev, xwl_window->xwl_screen->screen->root,
                           &e, 1, SubstructureRedirectMask, NullGrab);
+}
+
+static void
+send_surface_id_event_serial(struct xwl_window *xwl_window)
+{
+    static const char atom_name[] = "WL_SURFACE_SERIAL";
+    static Atom type_atom;
+    uint64_t serial;
+
+    if (type_atom == None)
+        type_atom = MakeAtom(atom_name, strlen(atom_name), TRUE);
+
+    serial = ++xwl_window->xwl_screen->surface_association_serial;
+
+    send_window_client_message(xwl_window, type_atom, serial);
+    xwayland_surface_v1_set_serial(xwl_window->xwayland_surface,
+        serial_lo(serial), serial_hi(serial));
+    wl_surface_commit(xwl_window->surface);
+
+    /* Flush wayland display *after* commit in the new path. */
+    wl_display_flush(xwl_window->xwl_screen->display);
+}
+
+static void
+send_surface_id_event_legacy(struct xwl_window *xwl_window)
+{
+    static const char atom_name[] = "WL_SURFACE_ID";
+    static Atom type_atom;
+    uint32_t surface_id;
+
+    if (type_atom == None)
+        type_atom = MakeAtom(atom_name, strlen(atom_name), TRUE);
+
+    surface_id = wl_proxy_get_id((struct wl_proxy *) xwl_window->surface);
+
+    /* Flush wayland display *before* setting the atom in the legacy path */
+    wl_display_flush(xwl_window->xwl_screen->display);
+
+    send_window_client_message(xwl_window, type_atom, (uint64_t)surface_id);
+}
+
+static void
+send_surface_id_event(struct xwl_window *xwl_window)
+{
+    return xwl_window->xwayland_surface
+        ? send_surface_id_event_serial(xwl_window)
+        : send_surface_id_event_legacy(xwl_window);
+
 }
 
 static Bool
@@ -772,10 +827,13 @@ ensure_surface_for_window(WindowPtr window)
         goto err;
     }
 
+    if (xwl_screen->xwayland_shell) {
+        xwl_window->xwayland_surface = xwayland_shell_v1_get_xwayland_surface(
+            xwl_screen->xwayland_shell, xwl_window->surface);
+    }
+
     if (!xwl_screen->rootless && !xwl_create_root_surface(xwl_window))
         goto err;
-
-    wl_display_flush(xwl_screen->display);
 
     send_surface_id_event(xwl_window);
 
@@ -889,7 +947,7 @@ xwl_surface_destroy_callback(OsTimerPtr timer, CARD32 now, void *arg)
 }
 
 static void
-release_wl_surface_for_window(struct xwl_window *xwl_window)
+release_wl_surface_for_window_legacy_delay(struct xwl_window *xwl_window)
 {
     struct xwl_wl_surface *xwl_wl_surface;
 
@@ -914,6 +972,22 @@ release_wl_surface_for_window(struct xwl_window *xwl_window)
     xwl_wl_surface->wl_surface_destroy_timer =
         TimerSet(NULL, 0, DELAYED_WL_SURFACE_DESTROY,
                  xwl_surface_destroy_callback, xwl_wl_surface);
+}
+
+static void
+release_wl_surface_for_window_shell(struct xwl_window *xwl_window)
+{
+    xwayland_surface_v1_destroy(xwl_window->xwayland_surface);
+    wl_surface_destroy(xwl_window->surface);
+}
+
+static void
+release_wl_surface_for_window(struct xwl_window *xwl_window)
+{
+    if (xwl_window->xwayland_surface)
+        release_wl_surface_for_window_shell(xwl_window);
+    else
+        release_wl_surface_for_window_legacy_delay(xwl_window);
 }
 
 Bool

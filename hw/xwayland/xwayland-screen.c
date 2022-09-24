@@ -59,6 +59,7 @@
 #include "xdg-output-unstable-v1-client-protocol.h"
 #include "viewporter-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
+#include "xwayland-shell-v1-client-protocol.h"
 
 static DevPrivateKeyRec xwl_screen_private_key;
 static DevPrivateKeyRec xwl_client_private_key;
@@ -450,6 +451,10 @@ registry_global(void *data, struct wl_registry *registry, uint32_t id,
     }
     else if (strcmp(interface, "wp_viewporter") == 0) {
         xwl_screen->viewporter = wl_registry_bind(registry, id, &wp_viewporter_interface, 1);
+    }
+    else if (strcmp(interface, "xwayland_shell_v1") == 0 && xwl_screen->rootless) {
+        xwl_screen->xwayland_shell =
+            wl_registry_bind(registry, id, &xwayland_shell_v1_interface, 1);
     }
 #ifdef XWL_HAS_GLAMOR
     else if (xwl_screen->glamor) {

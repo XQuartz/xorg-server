@@ -685,7 +685,7 @@ static void
 xwl_screen_setup_custom_vector(struct xwl_screen *xwl_screen)
 {
     /* Rootfull Xwayland does not need a custom ProcVector (yet?) */
-    if (xwl_screen->rootless)
+    if (!xwl_screen->rootless)
         return;
 
     xwl_screen->GrabServer = ProcVector[X_GrabServer];

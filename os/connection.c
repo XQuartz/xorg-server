@@ -1018,7 +1018,7 @@ ListenOnOpenFD(int fd, int noxauth)
         }
     }
 
-    if (!display_env) {
+    if (!display_env || display_env[0] != '/') {
         /* Just some default so things don't break and die. */
         snprintf(port, sizeof(port), ":%d", atoi(display));
     }

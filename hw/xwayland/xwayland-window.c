@@ -121,6 +121,12 @@ xwl_window_set_xwayland_tag(struct xwl_window *xwl_window)
     wl_proxy_set_tag((struct wl_proxy *)xwl_window->surface, &xwl_surface_tag);
 }
 
+static void
+xwl_window_clear_xwayland_tag(struct xwl_window *xwl_window)
+{
+    wl_proxy_set_tag((struct wl_proxy *)xwl_window->surface, NULL);
+}
+
 Bool
 is_surface_from_xwl_window(struct wl_surface *surface)
 {
@@ -893,9 +899,13 @@ release_wl_surface_for_window(struct xwl_window *xwl_window)
         return;
     }
 
-    /* Otherwise, schedule the destruction later, to mitigate the race
-     * between X11 and Wayland processing so that the compositor has the
-     * time to establish the association before the wl_surface is destroyed.
+    /* Break the wl_surface / xwl_window relationship */
+    wl_surface_set_user_data(xwl_window->surface, NULL);
+    xwl_window_clear_xwayland_tag(xwl_window);
+
+    /* Schedule the destruction later, to mitigate the race between X11
+     * and Wayland processing so that the compositor has the time to
+     * establish the association before the wl_surface is destroyed.
      */
     xwl_wl_surface = xnfcalloc(1, sizeof *xwl_wl_surface);
     xwl_wl_surface->wl_surface = xwl_window->surface;

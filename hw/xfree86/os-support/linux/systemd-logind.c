@@ -310,15 +310,19 @@ cleanup:
  */
 void systemd_logind_drop_master(void)
 {
+    struct systemd_logind_info *info = &logind_info;
     int i;
+    /* Our VT_PROCESS usage guarantees we've already given up the vt */
+    info->active = info->vt_active = FALSE;
     for (i = 0; i < xf86_num_platform_devices; i++) {
         if (xf86_platform_devices[i].flags & XF86_PDEV_SERVER_FD) {
             dbus_int32_t major, minor;
-            struct systemd_logind_info *info = &logind_info;
 
             xf86_platform_devices[i].flags |= XF86_PDEV_PAUSED;
             major = xf86_platform_odev_attributes(i)->major;
             minor = xf86_platform_odev_attributes(i)->minor;
+            LogMessage(X_INFO, "systemd-logind: drop master for %u:%u\n",
+               major, minor);
             systemd_logind_ack_pause(info, minor, major);
         }
     }

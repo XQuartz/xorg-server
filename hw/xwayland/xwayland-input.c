@@ -1147,9 +1147,6 @@ keyboard_handle_leave(void *data, struct wl_keyboard *keyboard,
     struct xwl_seat *xwl_seat = data;
     uint32_t *k;
 
-    if (surface != NULL && !is_surface_from_xwl_window(surface))
-        return;
-
     xwl_seat->xwl_screen->serial = serial;
 
     wl_array_for_each(k, &xwl_seat->keys)

@@ -339,7 +339,7 @@ egl_mirror_configs(ScreenPtr pScreen, struct egl_screen *screen)
     /* We walk the EGL configs backwards to make building the
      * ->next chain easier.
      */
-    for (i = nconfigs - 1; i > 0; i--)
+    for (i = nconfigs - 1; i >= 0; i--)
         for (j = 0; j < 3; j++) /* direct_color */
             for (k = 0; k < 2; k++) /* double_buffer */ {
                 if (can_srgb)

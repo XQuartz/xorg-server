@@ -141,8 +141,15 @@ endif
 
 dfp = get_option('default_font_path')
 if dfp == ''
-    fontutil_dep = dependency('fontutil')
-    fontrootdir = fontutil_dep.get_pkgconfig_variable('fontrootdir')
+    fontrootdir = get_option('fontrootdir')
+    if fontrootdir == ''
+        fontutil_dep = dependency('fontutil', required: false)
+        if fontutil_dep.found()
+            fontrootdir = fontutil_dep.get_pkgconfig_variable('fontrootdir')
+        else
+            fontrootdir = join_paths(get_option('prefix'), get_option('datadir'), 'fonts', 'X11')
+        endif
+    endif
     dfp_elements = [
         join_paths(fontrootdir, 'misc'),
         join_paths(fontrootdir, 'TTF'),

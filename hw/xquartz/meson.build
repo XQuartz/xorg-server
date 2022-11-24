@@ -58,8 +58,6 @@ srcs_libxquartz = [
 
 libxquartz_defs = [
     '-DUSE_NEW_CLUT',
-    '-DX11LIBDIR="@0@"'.format(join_paths(get_option('prefix'),
-                               get_option('libdir'))),
     '-DXFree86Server',
     '-DXQUARTZ',
     '-DXSERVER_VERSION="@0@"'.format(meson.project_version()),

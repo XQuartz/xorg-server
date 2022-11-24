@@ -23,6 +23,7 @@ endif
 bundle_id_def = '-DBUNDLE_ID_PREFIX="@0@"'.format(bundle_id_prefix)
 
 bundle_root = join_paths(apple_applications_dir, apple_application_name + '.app')
+xquartz_data_dir = join_paths(get_option('prefix'), get_option('datadir'),'X11', 'XQuartz')
 
 # using sparkle update framework?
 build_sparkle = xquartz_sparkle_feed_url != '' and xquartz_sparkle_public_edkey != ''
@@ -60,6 +61,7 @@ libxquartz_defs = [
     '-DUSE_NEW_CLUT',
     '-DXFree86Server',
     '-DXQUARTZ',
+    '-DXQUARTZ_DATA_DIR="@0@"'.format(xquartz_data_dir),
     '-DXSERVER_VERSION="@0@"'.format(meson.project_version()),
     bundle_id_def,
     sparkle_defs,
@@ -93,3 +95,7 @@ xquartz_man = configure_file(
     configuration: manpage_config,
 )
 install_man(xquartz_man)
+
+install_data('defaults.plist',
+    install_dir: xquartz_data_dir,
+    install_mode: 'rw-r--r--')

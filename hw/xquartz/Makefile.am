@@ -2,6 +2,7 @@ noinst_LTLIBRARIES = libXquartz.la
 AM_CFLAGS = $(DIX_CFLAGS)
 AM_OBJCFLAGS = $(DIX_CFLAGS)
 AM_CPPFLAGS = \
+	-DXQUARTZ_DATA_DIR=\"$(datadir)/X11/XQuartz\" \
 	-DXSERVER_VERSION=\"$(VERSION)\" \
 	-DBUNDLE_ID_PREFIX=\"$(BUNDLE_ID_PREFIX)\" \
 	-DUSE_NEW_CLUT \
@@ -44,6 +45,7 @@ EXTRA_DIST = \
 	darwin.h \
 	darwinfb.h \
 	darwinEvents.h \
+	defaults.plist \
 	keysym2ucs.h \
 	quartz.h \
 	quartzKeyboard.h \

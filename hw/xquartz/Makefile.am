@@ -8,8 +8,7 @@ AM_CPPFLAGS = \
 	-DXFree86Server \
 	-I$(top_srcdir)/miext/rootless \
 	-I$(top_builddir)/pseudoramiX \
-	-I$(top_builddir) \
-	-DX11LIBDIR=\"$(libdir)\"
+	-I$(top_builddir)"
 
 if GLX
 GL_DIR = GL

@@ -269,8 +269,10 @@ else
     build_xquartz = get_option('xquartz') == 'true'
 endif
 
+build_composite = true
 build_rootless = false
 if build_xquartz
+    build_composite = false
     build_rootless = true
 endif
 
@@ -761,7 +763,9 @@ subdir('fb')
 subdir('mi')
 subdir('os')
 # X extensions
-subdir('composite')
+if build_composite
+    subdir('composite')
+endif
 subdir('damageext')
 subdir('dbe')
 subdir('miext/damage')
@@ -795,7 +799,6 @@ libxserver = [
     libxserver_mi,
     libxserver_dix,
 
-    libxserver_composite,
     libxserver_damageext,
     libxserver_dbe,
     libxserver_randr,
@@ -811,6 +814,10 @@ libxserver = [
 
     libxserver_os,
 ]
+
+if build_composite
+    libxserver += libxserver_composite
+endif
 
 libxserver += libxserver_dri3
 

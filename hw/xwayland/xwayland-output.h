@@ -69,6 +69,7 @@ struct xwl_emulated_mode {
     uint32_t server_output_id;
     int32_t width;
     int32_t height;
+    RRMode id;
     Bool from_vidmode;
 };
 

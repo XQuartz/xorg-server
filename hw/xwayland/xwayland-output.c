@@ -271,6 +271,7 @@ xwl_output_add_emulated_mode_for_client(struct xwl_output *xwl_output,
     emulated_mode->server_output_id = xwl_output->server_output_id;
     emulated_mode->width  = mode->mode.width;
     emulated_mode->height = mode->mode.height;
+    emulated_mode->id = mode->mode.id;
     emulated_mode->from_vidmode = from_vidmode;
 }
 
@@ -936,6 +937,20 @@ xwl_randr_crtc_set(ScreenPtr pScreen,
     return TRUE;
 }
 
+static void
+xwl_randr_crtc_get(ScreenPtr pScreen,
+                   RRCrtcPtr crtc,
+                   xRRGetCrtcInfoReply *rep)
+{
+    struct xwl_output *xwl_output = crtc->devPrivate;
+
+    struct xwl_emulated_mode *mode = xwl_output_get_emulated_mode_for_client(
+        xwl_output, GetCurrentClient());
+
+    if (mode)
+        rep->mode = mode->id;
+}
+
 static Bool
 xwl_randr_crtc_set_gamma(ScreenPtr pScreen, RRCrtcPtr crtc)
 {
@@ -996,6 +1011,7 @@ xwl_screen_init_output(struct xwl_screen *xwl_screen)
 #if RANDR_12_INTERFACE
     rp->rrScreenSetSize = xwl_randr_screen_set_size;
     rp->rrCrtcSet = xwl_randr_crtc_set;
+    rp->rrCrtcGet = xwl_randr_crtc_get;
     rp->rrCrtcSetGamma = xwl_randr_crtc_set_gamma;
     rp->rrCrtcGetGamma = xwl_randr_crtc_get_gamma;
     rp->rrOutputSetProperty = xwl_randr_output_set_property;

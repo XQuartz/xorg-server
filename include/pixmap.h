@@ -134,4 +134,9 @@ PixmapStopDirtyTracking(DrawablePtr src, PixmapPtr slave_dst);
 extern _X_EXPORT Bool
 PixmapSyncDirtyHelper(PixmapDirtyUpdatePtr dirty);
 
+extern _X_EXPORT void
+PixmapDirtyCopyArea(PixmapPtr dst, DrawablePtr src,
+                    int x, int y, int dst_x, int dst_y,
+                    RegionPtr dirty_region);
+
 #endif                          /* PIXMAP_H */

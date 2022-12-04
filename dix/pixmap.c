@@ -262,12 +262,11 @@ PixmapStopDirtyTracking(DrawablePtr src, PixmapPtr secondary_dst)
     return TRUE;
 }
 
-static void
-PixmapDirtyCopyArea(PixmapPtr dst,
-                    PixmapDirtyUpdatePtr dirty,
+void
+PixmapDirtyCopyArea(PixmapPtr dst, DrawablePtr src,
+                    int x, int y, int dst_x, int dst_y,
                     RegionPtr dirty_region)
 {
-    DrawablePtr src = dirty->src;
     ScreenPtr pScreen = src->pScreen;
     int n;
     BoxPtr b;
@@ -294,9 +293,8 @@ PixmapDirtyCopyArea(PixmapPtr dst,
         h = dst_box.y2 - dst_box.y1;
 
         pGC->ops->CopyArea(src, &dst->drawable, pGC,
-                           dirty->x + dst_box.x1, dirty->y + dst_box.y1, w, h,
-                           dirty->dst_x + dst_box.x1,
-                           dirty->dst_y + dst_box.y1);
+                           x + dst_box.x1, y + dst_box.y1, w, h,
+                           dst_x + dst_box.x1, dst_y + dst_box.y1);
         b++;
     }
     FreeScratchGC(pGC);
@@ -408,7 +406,8 @@ Bool PixmapSyncDirtyHelper(PixmapDirtyUpdatePtr dirty)
     RegionTranslate(&pixregion, -dirty->x, -dirty->y);
 
     if (!pScreen->root || dirty->rotation == RR_Rotate_0)
-        PixmapDirtyCopyArea(dst, dirty, &pixregion);
+        PixmapDirtyCopyArea(dst, dirty->src, dirty->x, dirty->y,
+                            dirty->dst_x, dirty->dst_y, &pixregion);
     else
         PixmapDirtyCompositeRotate(dst, dirty, &pixregion);
     pScreen->SourceValidate = SourceValidate;

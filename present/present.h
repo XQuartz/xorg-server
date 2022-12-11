@@ -29,7 +29,9 @@
 
 typedef enum {
     PRESENT_FLIP_REASON_UNKNOWN,
-    PRESENT_FLIP_REASON_BUFFER_FORMAT
+    PRESENT_FLIP_REASON_BUFFER_FORMAT,
+    PRESENT_FLIP_REASON_DRIVER_TEARFREE,
+    PRESENT_FLIP_REASON_DRIVER_TEARFREE_FLIPPING
 } PresentFlipReason;
 
 typedef struct present_vblank present_vblank_rec, *present_vblank_ptr;

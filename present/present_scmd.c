@@ -71,6 +71,7 @@ present_check_flip(RRCrtcPtr            crtc,
     PixmapPtr                   window_pixmap;
     WindowPtr                   root = screen->root;
     present_screen_priv_ptr     screen_priv = present_screen_priv(screen);
+    PresentFlipReason           tmp_reason = PRESENT_FLIP_REASON_UNKNOWN;
 
     if (crtc) {
        screen_priv = present_screen_priv(crtc->pScreen);
@@ -90,6 +91,27 @@ present_check_flip(RRCrtcPtr            crtc,
     /* Check to see if the driver supports flips at all */
     if (!screen_priv->info->flip)
         return FALSE;
+
+    /* Ask the driver for permission. Do this now to see if there's TearFree. */
+    if (screen_priv->info->version >= 1 && screen_priv->info->check_flip2) {
+        if (!(*screen_priv->info->check_flip2) (crtc, window, pixmap, sync_flip, &tmp_reason)) {
+            DebugPresent(("\td %08" PRIx32 " -> %08" PRIx32 "\n", window->drawable.id, pixmap ? pixmap->drawable.id : 0));
+            /* It's fine to return now unless the page flip failure reason is
+             * PRESENT_FLIP_REASON_BUFFER_FORMAT; we must only output that
+             * reason if all the other checks pass.
+             */
+            if (!reason || tmp_reason != PRESENT_FLIP_REASON_BUFFER_FORMAT) {
+                if (reason)
+                    *reason = tmp_reason;
+                return FALSE;
+            }
+        }
+    } else if (screen_priv->info->check_flip) {
+        if (!(*screen_priv->info->check_flip) (crtc, window, pixmap, sync_flip)) {
+            DebugPresent(("\td %08" PRIx32 " -> %08" PRIx32 "\n", window->drawable.id, pixmap ? pixmap->drawable.id : 0));
+            return FALSE;
+        }
+    }
 
     /* Make sure the window hasn't been redirected with Composite */
     window_pixmap = screen->GetWindowPixmap(window);
@@ -123,17 +145,10 @@ present_check_flip(RRCrtcPtr            crtc,
         return FALSE;
     }
 
-    /* Ask the driver for permission */
-    if (screen_priv->info->version >= 1 && screen_priv->info->check_flip2) {
-        if (!(*screen_priv->info->check_flip2) (crtc, window, pixmap, sync_flip, reason)) {
-            DebugPresent(("\td %08" PRIx32 " -> %08" PRIx32 "\n", window->drawable.id, pixmap ? pixmap->drawable.id : 0));
-            return FALSE;
-        }
-    } else if (screen_priv->info->check_flip) {
-        if (!(*screen_priv->info->check_flip) (crtc, window, pixmap, sync_flip)) {
-            DebugPresent(("\td %08" PRIx32 " -> %08" PRIx32 "\n", window->drawable.id, pixmap ? pixmap->drawable.id : 0));
-            return FALSE;
-        }
+    if (tmp_reason == PRESENT_FLIP_REASON_BUFFER_FORMAT) {
+        if (reason)
+            *reason = tmp_reason;
+        return FALSE;
     }
 
     return TRUE;
@@ -456,7 +471,9 @@ present_check_flip_window (WindowPtr window)
     xorg_list_for_each_entry(vblank, &window_priv->vblank, window_list) {
         if (vblank->queued && vblank->flip && !present_check_flip(vblank->crtc, window, vblank->pixmap, vblank->sync_flip, NULL, 0, 0, &reason)) {
             vblank->flip = FALSE;
-            vblank->reason = reason;
+            /* Don't spuriously flag this as a TearFree presentation */
+            if (reason < PRESENT_FLIP_REASON_DRIVER_TEARFREE)
+                vblank->reason = reason;
             if (vblank->sync_flip)
                 vblank->exec_msc = vblank->target_msc;
         }
@@ -537,6 +554,7 @@ present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
     WindowPtr                   window = vblank->window;
     ScreenPtr                   screen = window->drawable.pScreen;
     present_screen_priv_ptr     screen_priv = present_screen_priv(screen);
+    uint64_t                    completion_msc;
     if (vblank && vblank->crtc) {
         screen_priv=present_screen_priv(vblank->crtc->pScreen);
     }
@@ -560,7 +578,9 @@ present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
     xorg_list_del(&vblank->window_list);
     vblank->queued = FALSE;
 
-    if (vblank->pixmap && vblank->window) {
+    if (vblank->pixmap && vblank->window &&
+        (vblank->reason < PRESENT_FLIP_REASON_DRIVER_TEARFREE ||
+         vblank->exec_msc != vblank->target_msc)) {
 
         if (vblank->flip) {
 
@@ -626,6 +646,30 @@ present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
         }
 
         present_execute_copy(vblank, crtc_msc);
+
+        /* The presentation will be visible at the next vblank with TearFree, so
+         * the PresentComplete notification needs to be sent at the next vblank.
+         * If TearFree is already flipping then the presentation will be visible
+         * at the *next* next vblank.
+         */
+        completion_msc = crtc_msc + 1;
+        switch (vblank->reason) {
+        case PRESENT_FLIP_REASON_DRIVER_TEARFREE_FLIPPING:
+            if (vblank->exec_msc < crtc_msc)
+                completion_msc++;
+        case PRESENT_FLIP_REASON_DRIVER_TEARFREE:
+            if (Success == screen_priv->queue_vblank(screen,
+                                                     window,
+                                                     vblank->crtc,
+                                                     vblank->event_id,
+                                                     completion_msc)) {
+                /* Ensure present_execute_post() runs at the next MSC */
+                vblank->exec_msc = vblank->target_msc;
+                vblank->queued = TRUE;
+            }
+        default:
+            break;
+        }
 
         if (vblank->queued) {
             xorg_list_add(&vblank->event_queue, &present_exec_queue);
@@ -739,6 +783,11 @@ present_scmd_pixmap(WindowPtr window,
             if (vblank->crtc != target_crtc || vblank->target_msc != target_msc)
                 continue;
 
+            /* Too late to abort now if TearFree execution already happened */
+            if (vblank->reason >= PRESENT_FLIP_REASON_DRIVER_TEARFREE &&
+                vblank->exec_msc == vblank->target_msc)
+                continue;
+
             present_vblank_scrap(vblank);
             if (vblank->flip_ready)
                 present_re_execute(vblank);
@@ -767,7 +816,12 @@ present_scmd_pixmap(WindowPtr window,
 
     vblank->event_id = ++present_scmd_event_id;
 
-    if (vblank->flip && vblank->sync_flip)
+    /* The soonest presentation is crtc_msc+2 if TearFree is already flipping */
+    if (vblank->reason == PRESENT_FLIP_REASON_DRIVER_TEARFREE_FLIPPING &&
+        !msc_is_after(vblank->exec_msc, crtc_msc + 1))
+        vblank->exec_msc -= 2;
+    else if (vblank->reason >= PRESENT_FLIP_REASON_DRIVER_TEARFREE ||
+             (vblank->flip && vblank->sync_flip))
         vblank->exec_msc--;
 
     xorg_list_append(&vblank->event_queue, &present_exec_queue);

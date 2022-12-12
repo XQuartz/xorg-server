@@ -160,11 +160,24 @@ ms_pageflip_abort(void *data)
 }
 
 static Bool
-do_queue_flip_on_crtc(modesettingPtr ms, xf86CrtcPtr crtc,
-                      uint32_t flags, uint32_t seq)
+do_queue_flip_on_crtc(ScreenPtr screen, xf86CrtcPtr crtc, uint32_t flags,
+                      uint32_t seq, uint32_t fb_id, int x, int y)
 {
-    return drmmode_crtc_flip(crtc, ms->drmmode.fb_id, flags,
-                             (void *) (uintptr_t) seq);
+    while (drmmode_crtc_flip(crtc, fb_id, x, y, flags, (void *)(long)seq)) {
+        /* We may have failed because the event queue was full.  Flush it
+         * and retry.  If there was nothing to flush, then we failed for
+         * some other reason and should just return an error.
+         */
+        if (ms_flush_drm_events(screen) <= 0) {
+            ms_drm_abort_seq(crtc->scrn, seq);
+            return TRUE;
+        }
+
+        /* We flushed some events, so try again. */
+        xf86DrvMsg(crtc->scrn->scrnIndex, X_WARNING, "flip queue retry\n");
+    }
+
+    return FALSE;
 }
 
 enum queue_flip_status {
@@ -205,20 +218,9 @@ queue_flip_on_crtc(ScreenPtr screen, xf86CrtcPtr crtc,
     /* take a reference on flipdata for use in flip */
     flipdata->flip_count++;
 
-    while (do_queue_flip_on_crtc(ms, crtc, flags, seq)) {
-        /* We may have failed because the event queue was full.  Flush it
-         * and retry.  If there was nothing to flush, then we failed for
-         * some other reason and should just return an error.
-         */
-        if (ms_flush_drm_events(screen) <= 0) {
-            /* Aborting will also decrement flip_count and free(flip). */
-            ms_drm_abort_seq(scrn, seq);
-            return QUEUE_FLIP_DRM_FLUSH_FAILED;
-        }
-
-        /* We flushed some events, so try again. */
-        xf86DrvMsg(scrn->scrnIndex, X_WARNING, "flip queue retry\n");
-    }
+    if (do_queue_flip_on_crtc(screen, crtc, flags, seq, ms->drmmode.fb_id,
+                              crtc->x, crtc->y))
+        return QUEUE_FLIP_DRM_FLUSH_FAILED;
 
     /* The page flip succeeded. */
     return QUEUE_FLIP_SUCCESS;

@@ -200,6 +200,8 @@ typedef struct {
     uint64_t msc_high;
     /** @} */
 
+    uint64_t next_msc;
+
     Bool need_modeset;
     struct xorg_list mode_list;
 

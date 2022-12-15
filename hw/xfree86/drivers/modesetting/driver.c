@@ -1370,9 +1370,13 @@ PreInit(ScrnInfoPtr pScrn, int flags)
     if (xf86ReturnOptValBool(ms->drmmode.Options, OPTION_ATOMIC, FALSE)) {
         ret = drmSetClientCap(ms->fd, DRM_CLIENT_CAP_ATOMIC, 1);
         ms->atomic_modeset = (ret == 0);
+        if (!ms->atomic_modeset)
+            xf86DrvMsg(pScrn->scrnIndex, X_WARNING, "Atomic modesetting not supported\n");
     } else {
         ms->atomic_modeset = FALSE;
     }
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO,
+               "Atomic modesetting %sabled\n", ms->atomic_modeset ? "en" : "dis");
 
     /* TearFree requires glamor and, if PageFlip is enabled, universal planes */
     if (xf86ReturnOptValBool(ms->drmmode.Options, OPTION_TEARFREE, FALSE)) {

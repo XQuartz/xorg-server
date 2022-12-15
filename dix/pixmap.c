@@ -44,8 +44,13 @@ from The Open Group.
 #include "picturestr.h"
 #include "randrstr.h"
 /*
- *  Scratch pixmap management and device independent pixmap allocation
- *  function.
+ * Scratch pixmap APIs are provided for source and binary compatability.  In
+ * older versions, DIX would store a freed scratch pixmap for future use.  This
+ * optimization is not really that impactful on modern systems with decent
+ * system heap management and modern CPUs, and it interferes with memory
+ * analysis tools such as ASan, malloc history, etc.
+ *
+ * Now, these entry points just allocte/free pixmaps.
  */
 
 /* callable by ddx */
@@ -53,14 +58,7 @@ PixmapPtr
 GetScratchPixmapHeader(ScreenPtr pScreen, int width, int height, int depth,
                        int bitsPerPixel, int devKind, void *pPixData)
 {
-    PixmapPtr pPixmap = pScreen->pScratchPixmap;
-
-    if (pPixmap)
-        pScreen->pScratchPixmap = NULL;
-    else
-        /* width and height of 0 means don't allocate any pixmap data */
-        pPixmap = (*pScreen->CreatePixmap) (pScreen, 0, 0, depth, 0);
-
+    PixmapPtr pPixmap = (*pScreen->CreatePixmap) (pScreen, 0, 0, depth, 0);
     if (pPixmap) {
         if ((*pScreen->ModifyPixmapHeader) (pPixmap, width, height, depth,
                                             bitsPerPixel, devKind, pPixData))
@@ -76,12 +74,8 @@ FreeScratchPixmapHeader(PixmapPtr pPixmap)
 {
     if (pPixmap) {
         ScreenPtr pScreen = pPixmap->drawable.pScreen;
-
-        pPixmap->devPrivate.ptr = NULL; /* lest ddx chases bad ptr */
-        if (pScreen->pScratchPixmap)
-            (*pScreen->DestroyPixmap) (pPixmap);
-        else
-            pScreen->pScratchPixmap = pPixmap;
+        pPixmap->devPrivate.ptr = NULL; /* help catch/avoid heap-use-after-free */
+        (*pScreen->DestroyPixmap)(pPixmap);
     }
 }
 
@@ -94,7 +88,7 @@ CreateScratchPixmapsForScreen(ScreenPtr pScreen)
     pScreen->totalPixmapSize =
         BitmapBytePad(pixmap_size * 8);
 
-    /* let it be created on first use */
+    /* NULL this out as it is no longer used */
     pScreen->pScratchPixmap = NULL;
     return TRUE;
 }
@@ -102,7 +96,6 @@ CreateScratchPixmapsForScreen(ScreenPtr pScreen)
 void
 FreeScratchPixmapsForScreen(ScreenPtr pScreen)
 {
-    FreeScratchPixmapHeader(pScreen->pScratchPixmap);
 }
 
 /* callable by ddx */

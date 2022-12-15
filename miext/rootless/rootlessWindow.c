@@ -803,9 +803,8 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
     rect.x2 = min(oldX2, newX2);
     rect.y2 = min(oldY2, newY2);
 
-    RL_DEBUG_MSG("RESIZE TOPLEVEL WINDOW with gravity %i ", gravity);
-    RL_DEBUG_MSG("%d %d %d %d %d   %d %d %d %d %d\n",
-                 oldX, oldY, oldW, oldH, oldBW, newX, newY, newW, newH, newBW);
+    RL_DEBUG_MSG("RESIZE TOPLEVEL WINDOW with gravity %i %d,%d %dx%d bw:%d -> %d,%d %dx%d bw:%d\n",
+                 gravity, oldX, oldY, oldW, oldH, oldBW, newX, newY, newW, newH, newBW);
 
     RootlessRedisplay(pWin);
 

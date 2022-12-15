@@ -26,6 +26,8 @@
 
 #include "fb.h"
 
+extern unsigned long RootlessWID(WindowPtr pWindow);
+
 Bool
 fbCloseScreen(ScreenPtr pScreen)
 {
@@ -87,6 +89,12 @@ _fbGetWindowPixmap(WindowPtr pWindow)
 void
 _fbSetWindowPixmap(WindowPtr pWindow, PixmapPtr pPixmap)
 {
+    ErrorF("_fbSetWindowPixmap: window=%p (%lu) pixmap=%p bits=%p (%d,%d %dx%d %d)\n",
+           pWindow, RootlessWID(pWindow), pPixmap, pPixmap->devPrivate.ptr,
+           pPixmap->drawable.x, pPixmap->drawable.y, pPixmap->drawable.width,
+           pPixmap->drawable.height, pPixmap->drawable.bitsPerPixel);
+
+    xorg_backtrace();
     dixSetPrivate(&pWindow->devPrivates, fbGetWinPrivateKey(pWindow), pPixmap);
 }
 

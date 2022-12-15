@@ -188,22 +188,33 @@ RootlessStartDrawing(WindowPtr pWindow)
                                    top->drawable.bitsPerPixel,
                                    winRec->bytesPerRow, winRec->pixelData);
 
-        RL_DEBUG_MSG("GetScratchPixmapHeader gave us %p %p (%d,%d %dx%d %d) for wid=%lu\n",
-                     winRec->pixmap, winRec->pixmap->devPrivate.ptr, winRec->pixmap->drawable.x,
-                     winRec->pixmap->drawable.y, winRec->pixmap->drawable.width, winRec->pixmap->drawable.height,
-                     winRec->pixmap->drawable.bitsPerPixel, RootlessWID(pWindow));
+//        RL_DEBUG_MSG("GetScratchPixmapHeader gave us pixmap=%p bits=%p (drawable: %d,%d @ %d,%d %dx%d %d bpp) for window=%p (%d,%d %dx%d) wid=%lu (winrec: %dx%d))\n",
+//                     winRec->pixmap, winRec->pixmap->devPrivate.ptr, winRec->pixmap->drawable.x,
+//                     winRec->pixmap->drawable.y, winRec->pixmap->drawable.screen_x, winRec->pixmap->drawable.screen_y,
+//                     winRec->pixmap->drawable.width, winRec->pixmap->drawable.height, winRec->pixmap->drawable.bitsPerPixel,
+//                     pWindow->drawable.x, pWindow->drawable.y, pWindow->drawable.width, pWindow->drawable.height,
+//                     RootlessWID(pWindow), winRec->width, winRec->height);
 
         SetPixmapBaseToScreen(winRec->pixmap,
                               top->drawable.x - bw, top->drawable.y - bw);
 
-        RL_DEBUG_MSG("After SetPixmapBaseToScreen(%d %d %d): %p (%d,%d %dx%d %d) for wid=%lu\n",
-                     top->drawable.x, top->drawable.y, bw, winRec->pixmap->devPrivate.ptr, winRec->pixmap->drawable.x,
-                     winRec->pixmap->drawable.y, winRec->pixmap->drawable.width, winRec->pixmap->drawable.height,
-                     winRec->pixmap->drawable.bitsPerPixel, RootlessWID(pWindow));
+        RL_DEBUG_MSG("After GetScratchPixmapHeader + SetPixmapBaseToScreen(x:%d y:%d bw: %d): pixmap=%p (@ %d,%d) bits=%p (drawable: %d,%d %dx%d %d bpp) for window=%p (drawable: %d,%d %dx%d) wid=%lu (winrec: %dx%d))\n",
+                     top->drawable.x, top->drawable.y, bw,
+                     winRec->pixmap, winRec->pixmap->screen_x, winRec->pixmap->screen_y,
+                     winRec->pixmap->devPrivate.ptr, winRec->pixmap->drawable.x, winRec->pixmap->drawable.y,
+                     winRec->pixmap->drawable.width, winRec->pixmap->drawable.height, winRec->pixmap->drawable.bitsPerPixel,
+                     pWindow, pWindow->drawable.x, pWindow->drawable.y, pWindow->drawable.width, pWindow->drawable.height,
+                     RootlessWID(pWindow), winRec->width, winRec->height);
 
         winRec->is_drawing = TRUE;
     } else {
-        RL_DEBUG_MSG("Skipped call to xprStartDrawing (wid: %lu) because winRec->is_drawing says we already did.\n", RootlessWID(pWindow));
+        RL_DEBUG_MSG("Skipped call to xprStartDrawing (wid: %lu) because winRec->is_drawing says we already did. pixmap=%p (@ %d,%d) bits=%p (drawable: %d,%d %dx%d %d bpp) for window=%p (%d,%d %dx%d) wid=%lu (winrec: %dx%d))\n",
+                     RootlessWID(pWindow),
+                     winRec->pixmap, winRec->pixmap->screen_x, winRec->pixmap->screen_y,
+                     winRec->pixmap->devPrivate.ptr, winRec->pixmap->drawable.x, winRec->pixmap->drawable.y,
+                     winRec->pixmap->drawable.width, winRec->pixmap->drawable.height, winRec->pixmap->drawable.bitsPerPixel,
+                     pWindow, pWindow->drawable.x, pWindow->drawable.y, pWindow->drawable.width, pWindow->drawable.height,
+                     RootlessWID(pWindow), winRec->width, winRec->height);
     }
 
     curPixmap = pScreen->GetWindowPixmap(pWindow);

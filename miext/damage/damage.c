@@ -41,6 +41,8 @@
 #include    "damage.h"
 #include    "damagestr.h"
 
+extern unsigned long RootlessWID(WindowPtr pWindow);
+
 #define wrap(priv, real, mem, func) {\
     priv->mem = real->mem; \
     real->mem = func; \
@@ -1550,10 +1552,20 @@ damageSetWindowPixmap(WindowPtr pWindow, PixmapPtr pPixmap)
     DamagePtr pDamage;
     ScreenPtr pScreen = pWindow->drawable.pScreen;
 
+    ErrorF("damageSetWindowPixmap(%p %lu, %p %p) (%d,%d %dx%d %d)\n",
+           pWindow, RootlessWID(pWindow), pPixmap, pPixmap->devPrivate.ptr,
+           pPixmap->drawable.x, pPixmap->drawable.y, pPixmap->drawable.width,
+           pPixmap->drawable.height, pPixmap->drawable.bitsPerPixel);
+
     damageScrPriv(pScreen);
 
     if ((pDamage = damageGetWinPriv(pWindow))) {
         PixmapPtr pOldPixmap = (*pScreen->GetWindowPixmap) (pWindow);
+
+        ErrorF("pOldPixmap: %p %p (%d,%d %dx%d %d)\n", pOldPixmap, pOldPixmap->devPrivate.ptr,
+               pOldPixmap->drawable.x, pOldPixmap->drawable.y, pOldPixmap->drawable.width,
+               pOldPixmap->drawable.height, pOldPixmap->drawable.bitsPerPixel);
+
         DamagePtr *pPrev = getPixmapDamageRef(pOldPixmap);
 
         while (pDamage) {

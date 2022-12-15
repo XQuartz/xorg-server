@@ -290,6 +290,13 @@ create_bits_picture(PicturePtr pict, Bool has_clip, int *xoff, int *yoff)
     fbGetDrawablePixmap(pict->pDrawable, pixmap, *xoff, *yoff);
     fbGetPixmapBitsData(pixmap, bits, stride, bpp);
 
+    ErrorF("=== create_bits_picture ===\n");
+    xorg_backtrace();
+
+    ErrorF("    fbGetDrawable: pDrawable %p (%d,%d %dx%d): bits base: %p stride: %u bpp: %d xoff: %d yoff: %d\n",
+           pict->pDrawable, pict->pDrawable->x, pict->pDrawable->y, pict->pDrawable->width, pict->pDrawable->height,
+           bits, stride, bpp, *xoff, *yoff);
+
     image = pixman_image_create_bits((pixman_format_code_t) pict->format,
                                      pixmap->drawable.width,
                                      pixmap->drawable.height, (uint32_t *) bits,

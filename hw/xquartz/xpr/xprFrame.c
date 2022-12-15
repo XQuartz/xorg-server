@@ -45,6 +45,8 @@
 
 #include <dispatch/dispatch.h>
 
+#define DEBUG_XP_LOCK_WINDOW 1
+
 #define DEFINE_ATOM_HELPER(func, atom_name)                      \
     static Atom func(void) {                                       \
         static int generation;                                      \
@@ -353,15 +355,20 @@ xprStartDrawing(RootlessFrameID wid, char **pixelData, int *bytesPerRow)
     xorg_backtrace();
 #endif
 
-    err = xp_lock_window(x_cvt_vptr_to_uint(
-                             wid), NULL, NULL, data, rowbytes, NULL);
+    xp_box out_box;
+    err = xp_lock_window(x_cvt_vptr_to_uint(wid), NULL, NULL, data, rowbytes, &out_box);
     if (err != Success)
         FatalError("Could not lock window %d for drawing (%d).",
-                   (int)x_cvt_vptr_to_uint(
-                       wid), (int)err);
+                   (int)x_cvt_vptr_to_uint(wid), (int)err);
 
 #ifdef DEBUG_XP_LOCK_WINDOW
-    ErrorF("  bits: %p\n", *data);
+    ErrorF("  bits: %p box: (%d,%d %d,%d) rowbytes: %u\n", *data, (int)out_box.x1, (int)out_box.y1, (int)out_box.x2, (int)out_box.y2, *rowbytes);
+    char *bytes = *data;
+    ErrorF("  bytes[0] = %d\n", bytes[0]);
+
+    int size = (out_box.y2 - out_box.y1) * (*rowbytes);
+    ErrorF("  size = %d\n", size);
+    ErrorF("  bytes[%d] = %d\n", size-1, bytes[size-1]);
 #endif
 
     *pixelData = data[0];

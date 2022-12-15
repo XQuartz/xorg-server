@@ -53,6 +53,7 @@ PixmapPtr
 GetScratchPixmapHeader(ScreenPtr pScreen, int width, int height, int depth,
                        int bitsPerPixel, int devKind, void *pPixData)
 {
+#if 0
     PixmapPtr pPixmap = pScreen->pScratchPixmap;
 
     if (pPixmap)
@@ -68,6 +69,16 @@ GetScratchPixmapHeader(ScreenPtr pScreen, int width, int height, int depth,
         (*pScreen->DestroyPixmap) (pPixmap);
     }
     return NullPixmap;
+#else
+    PixmapPtr pPixmap = (*pScreen->CreatePixmap) (pScreen, 0, 0, depth, 0);
+    if (pPixmap) {
+        if ((*pScreen->ModifyPixmapHeader) (pPixmap, width, height, depth,
+                                            bitsPerPixel, devKind, pPixData))
+            return pPixmap;
+        (*pScreen->DestroyPixmap) (pPixmap);
+    }
+    return NullPixmap;
+#endif
 }
 
 /* callable by ddx */
@@ -78,10 +89,14 @@ FreeScratchPixmapHeader(PixmapPtr pPixmap)
         ScreenPtr pScreen = pPixmap->drawable.pScreen;
 
         pPixmap->devPrivate.ptr = NULL; /* lest ddx chases bad ptr */
+#if 0
         if (pScreen->pScratchPixmap)
             (*pScreen->DestroyPixmap) (pPixmap);
         else
             pScreen->pScratchPixmap = pPixmap;
+#else
+        (*pScreen->DestroyPixmap)(pPixmap);
+#endif
     }
 }
 

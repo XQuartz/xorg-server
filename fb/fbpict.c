@@ -137,9 +137,24 @@ create_bits_picture(PicturePtr pict, Bool has_clip)
 
     fbGetDrawable (pict->pDrawable, bits, stride, bpp, xoff, yoff);
 
+    ErrorF("=== create_bits_picture ===\n");
+    xorg_backtrace();
+
+    ErrorF("    fbGetDrawable: pDrawable %p (%d,%d %dx%d): bits base: %p stride: %u bpp: %d xoff: %d yoff: %d\n",
+           pict->pDrawable, pict->pDrawable->x, pict->pDrawable->y, pict->pDrawable->width, pict->pDrawable->height,
+           bits, stride, bpp, xoff, yoff);
+
     bits = (FbBits*)((CARD8*)bits +
                      (pict->pDrawable->y + yoff) * stride * sizeof(FbBits) +
                      (pict->pDrawable->x + xoff) * (bpp / 8));
+
+    FbBits *end = (FbBits*)((CARD8*)bits +
+                            (pict->pDrawable->height - 1) * stride * sizeof(FbBits) +
+                            (pict->pDrawable->width - 1) * (bpp / 8));
+
+    ErrorF("                   adjusted bits: %p\n", bits);
+    ErrorF("                   value: %u\n", (unsigned)*bits);
+    ErrorF("                   end value: %u\n", (unsigned)*end);
 
     image = pixman_image_create_bits((pixman_format_code_t) pict->format,
                                      pict->pDrawable->width,

@@ -196,10 +196,11 @@ RootlessStartDrawing(WindowPtr pWindow)
         SetPixmapBaseToScreen(winRec->pixmap,
                               top->drawable.x - bw, top->drawable.y - bw);
 
-        RL_DEBUG_MSG("After SetPixmapBaseToScreen(%d %d %d): %p (%d,%d %dx%d %d) for wid=%lu\n",
+        RL_DEBUG_MSG("After SetPixmapBaseToScreen(%d %d %d): %p (%d,%d %dx%d %d) for wid=%lu (which is %d,%d %dx%d=%dx%d)\n",
                      top->drawable.x, top->drawable.y, bw, winRec->pixmap->devPrivate.ptr, winRec->pixmap->drawable.x,
                      winRec->pixmap->drawable.y, winRec->pixmap->drawable.width, winRec->pixmap->drawable.height,
-                     winRec->pixmap->drawable.bitsPerPixel, RootlessWID(pWindow));
+                     winRec->pixmap->drawable.bitsPerPixel, RootlessWID(pWindow),
+                     pWindow->drawable.x, pWindow->drawable.y, pWindow->drawable.width, pWindow->drawable.height, winRec->width, winRec->height);
 
         winRec->is_drawing = TRUE;
     } else {

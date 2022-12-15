@@ -626,6 +626,9 @@ main(int argc, char **argv, char **envp)
     mach_port_t mp;
     kern_return_t kr;
 
+    /* Ignore SIGPIPE */
+    signal(SIGPIPE, SIG_IGN);
+
     /* Setup our environment for our children */
     setup_env();
 

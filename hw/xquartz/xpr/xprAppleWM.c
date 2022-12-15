@@ -129,6 +129,9 @@ xprFrameDraw(WindowPtr pWin,
     if (wid == 0)
         return BadWindow;
 
+     ErrorF("=== xp_frame_draw %d ===\n", (int)x_cvt_vptr_to_uint(wid));
+     xorg_backtrace();
+
     if (xp_frame_draw(wid, class, attr, outer, inner,
                       title_len, title_bytes) != Success) {
         return BadValue;

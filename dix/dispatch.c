@@ -492,10 +492,10 @@ Dispatch(void)
         if (!WaitForSomething(clients_are_ready()))
             continue;
 
-       /*****************
-	*  Handle events in round robin fashion, doing input between
-	*  each round
-	*****************/
+        /*****************
+         *  Handle events in round robin fashion, doing input between
+         *  each round
+         *****************/
 
         if (!dispatchException && clients_are_ready()) {
             client = SmartScheduleClient();
@@ -3657,11 +3657,11 @@ ProcInitialConnection(ClientPtr client)
     prefix = (xConnClientPrefix *) ((char *)stuff + sz_xReq);
     order = prefix->byteOrder;
     if (order != 'l' && order != 'B' && order != 'r' && order != 'R')
-	return client->noClientException = -1;
+        return client->noClientException = -1;
     if (((*(char *) &whichbyte) && (order == 'B' || order == 'R')) ||
-	(!(*(char *) &whichbyte) && (order == 'l' || order == 'r'))) {
-	client->swapped = TRUE;
-	SwapConnClientPrefix(prefix);
+        (!(*(char *) &whichbyte) && (order == 'l' || order == 'r'))) {
+        client->swapped = TRUE;
+        SwapConnClientPrefix(prefix);
     }
     stuff->reqType = 2;
     stuff->length += bytes_to_int32(prefix->nbytesAuthProto) +
@@ -3670,7 +3670,7 @@ ProcInitialConnection(ClientPtr client)
         swaps(&stuff->length);
     }
     if (order == 'r' || order == 'R') {
-	client->local = FALSE;
+        client->local = FALSE;
     }
     ResetCurrentRequest(client);
     return Success;
@@ -3781,8 +3781,8 @@ ProcEstablishConnection(ClientPtr client)
     auth_string = auth_proto + pad_to_int32(prefix->nbytesAuthProto);
 
     if ((client->req_len << 2) != sz_xReq + sz_xConnClientPrefix +
-	pad_to_int32(prefix->nbytesAuthProto) +
-	pad_to_int32(prefix->nbytesAuthString))
+            pad_to_int32(prefix->nbytesAuthProto) +
+            pad_to_int32(prefix->nbytesAuthString))
         reason = "Bad length";
     else if ((prefix->majorVersion != X_PROTOCOL) ||
         (prefix->minorVersion != X_PROTOCOL_REVISION))

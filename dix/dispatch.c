@@ -101,11 +101,6 @@ Equipment Corporation.
 #include <version-config.h>
 #endif
 
-#ifdef PANORAMIX_DEBUG
-#include <stdio.h>
-int ProcInitialConnection();
-#endif
-
 #include "windowstr.h"
 #include <X11/fonts/fontstruct.h>
 #include <X11/fonts/libxfont2.h>

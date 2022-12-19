@@ -502,7 +502,7 @@ XTestSwapFakeInput(ClientPtr client, xReq * req)
 
     nev = ((req->length << 2) - sizeof(xReq)) / sizeof(xEvent);
     for (ev = (xEvent *) &req[1]; --nev >= 0; ev++) {
-        int evtype = ev->u.u.type & 0x177;
+        int evtype = ev->u.u.type & 0177;
         /* Swap event */
         proc = EventSwapVector[evtype];
         /* no swapping proc; invalid event type? */

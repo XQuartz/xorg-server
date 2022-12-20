@@ -97,16 +97,16 @@ xwl_glamor_check_flip(PixmapPtr pixmap)
     return TRUE;
 }
 
-Bool
-xwl_glamor_is_modifier_supported(struct xwl_screen *xwl_screen,
-                                 uint32_t format, uint64_t modifier)
+static Bool
+xwl_glamor_is_modifier_supported_in_formats(struct xwl_format *formats, int num_formats,
+                                            uint32_t format, uint64_t modifier)
 {
     struct xwl_format *xwl_format = NULL;
     int i;
 
-    for (i = 0; i < xwl_screen->num_formats; i++) {
-        if (xwl_screen->formats[i].format == format) {
-            xwl_format = &xwl_screen->formats[i];
+    for (i = 0; i < num_formats; i++) {
+        if (formats[i].format == format) {
+            xwl_format = &formats[i];
             break;
         }
     }
@@ -117,6 +117,52 @@ xwl_glamor_is_modifier_supported(struct xwl_screen *xwl_screen,
                 return TRUE;
             }
         }
+    }
+
+    return FALSE;
+}
+
+static Bool
+xwl_feedback_is_modifier_supported(struct xwl_dmabuf_feedback *xwl_feedback,
+                                   uint32_t format, uint64_t modifier)
+{
+    for (int i = 0; i < xwl_feedback->dev_formats_len; i++) {
+        struct xwl_device_formats *dev_formats = &xwl_feedback->dev_formats[i];
+
+        if (xwl_glamor_is_modifier_supported_in_formats(dev_formats->formats,
+                                                        dev_formats->num_formats,
+                                                        format, modifier))
+            return TRUE;
+    }
+
+    return FALSE;
+}
+
+
+Bool
+xwl_glamor_is_modifier_supported(struct xwl_screen *xwl_screen,
+                                 uint32_t format, uint64_t modifier)
+{
+    struct xwl_window *xwl_window;
+
+    /*
+     * If we are using dmabuf v4, then we need to check in the main
+     * device and per-window format lists. For older protocol
+     * versions we can just check the list returned by the dmabuf.modifier
+     * events in xwl_screen
+     */
+    if (xwl_screen->dmabuf_protocol_version < 4) {
+        return xwl_glamor_is_modifier_supported_in_formats(xwl_screen->formats,
+                                                           xwl_screen->num_formats,
+                                                           format, modifier);
+    }
+
+    if (xwl_feedback_is_modifier_supported(&xwl_screen->default_feedback, format, modifier))
+        return TRUE;
+
+    xorg_list_for_each_entry(xwl_window, &xwl_screen->window_list, link_window) {
+        if (xwl_feedback_is_modifier_supported(&xwl_window->feedback, format, modifier))
+            return TRUE;
     }
 
     return FALSE;

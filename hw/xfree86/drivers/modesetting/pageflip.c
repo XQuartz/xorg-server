@@ -35,8 +35,8 @@
  * Returns a negative value on error, 0 if there was nothing to process,
  * or 1 if we handled any events.
  */
-int
-ms_flush_drm_events(ScreenPtr screen)
+static int
+ms_flush_drm_events_timeout(ScreenPtr screen, int timeout)
 {
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     modesettingPtr ms = modesettingPTR(scrn);
@@ -45,7 +45,7 @@ ms_flush_drm_events(ScreenPtr screen)
     int r;
 
     do {
-            r = xserver_poll(&p, 1, 0);
+            r = xserver_poll(&p, 1, timeout);
     } while (r == -1 && (errno == EINTR || errno == EAGAIN));
 
     /* If there was an error, r will be < 0.  Return that.  If there was
@@ -61,6 +61,12 @@ ms_flush_drm_events(ScreenPtr screen)
 
     /* Otherwise return 1 to indicate that we handled an event. */
     return 1;
+}
+
+int
+ms_flush_drm_events(ScreenPtr screen)
+{
+    return ms_flush_drm_events_timeout(screen, 0);
 }
 
 #ifdef GLAMOR_HAS_GBM
@@ -163,14 +169,22 @@ static Bool
 do_queue_flip_on_crtc(ScreenPtr screen, xf86CrtcPtr crtc, uint32_t flags,
                       uint32_t seq, uint32_t fb_id, int x, int y)
 {
+    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
+
     while (drmmode_crtc_flip(crtc, fb_id, x, y, flags, (void *)(long)seq)) {
         /* We may have failed because the event queue was full.  Flush it
          * and retry.  If there was nothing to flush, then we failed for
          * some other reason and should just return an error.
          */
         if (ms_flush_drm_events(screen) <= 0) {
-            ms_drm_abort_seq(crtc->scrn, seq);
-            return TRUE;
+            /* The failure could be caused by a pending TearFree flip, in which
+             * case we should wait until there's a new event and try again.
+             */
+            if (!trf->flip_seq || ms_flush_drm_events_timeout(screen, -1) < 0) {
+                ms_drm_abort_seq(crtc->scrn, seq);
+                return TRUE;
+            }
         }
 
         /* We flushed some events, so try again. */
@@ -467,4 +481,50 @@ error_out:
 #endif /* GLAMOR_HAS_GBM */
 }
 
+static void
+ms_tearfree_flip_abort(void *data)
+{
+    drmmode_tearfree_ptr trf = data;
+
+    trf->flip_seq = 0;
+}
+
+static void
+ms_tearfree_flip_handler(uint64_t msc, uint64_t usec, void *data)
+{
+    drmmode_tearfree_ptr trf = data;
+
+    /* Swap the buffers and complete the flip */
+    trf->back_idx ^= 1;
+    trf->flip_seq = 0;
+}
+
+Bool
+ms_do_tearfree_flip(ScreenPtr screen, xf86CrtcPtr crtc)
+{
+    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
+    uint32_t idx = trf->back_idx, seq;
+
+    seq = ms_drm_queue_alloc(crtc, trf, ms_tearfree_flip_handler,
+                             ms_tearfree_flip_abort);
+    if (!seq)
+        goto no_flip;
+
+    /* Copy the damage to the back buffer and then flip it at the vblank */
+    drmmode_copy_damage(crtc, trf->buf[idx].px, &trf->buf[idx].dmg, TRUE);
+    if (do_queue_flip_on_crtc(screen, crtc, DRM_MODE_PAGE_FLIP_EVENT,
+                              seq, trf->buf[idx].fb_id, 0, 0))
+        goto no_flip;
+
+    trf->flip_seq = seq;
+    return FALSE;
+
+no_flip:
+    xf86DrvMsg(crtc->scrn->scrnIndex, X_WARNING,
+               "TearFree flip failed, rendering frame without TearFree\n");
+    drmmode_copy_damage(crtc, trf->buf[idx ^ 1].px,
+                        &trf->buf[idx ^ 1].dmg, FALSE);
+    return TRUE;
+}
 #endif

@@ -632,6 +632,7 @@ drmmode_crtc_get_fb_id(xf86CrtcPtr crtc, uint32_t *fb_id, int *x, int *y)
 {
     drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
     drmmode_ptr drmmode = drmmode_crtc->drmmode;
+    drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
     int ret;
 
     *fb_id = 0;
@@ -645,6 +646,10 @@ drmmode_crtc_get_fb_id(xf86CrtcPtr crtc, uint32_t *fb_id, int *x, int *y)
         } else
             *x = drmmode_crtc->prime_pixmap_x;
         *y = 0;
+    }
+    else if (trf->buf[trf->back_idx ^ 1].px) {
+        *fb_id = trf->buf[trf->back_idx ^ 1].fb_id;
+        *x = *y = 0;
     }
     else if (drmmode_crtc->rotate_fb_id) {
         *fb_id = drmmode_crtc->rotate_fb_id;
@@ -922,6 +927,10 @@ drmmode_crtc_set_mode(xf86CrtcPtr crtc, Bool test_only)
     drmmode_ConvertToKMode(crtc->scrn, &kmode, &crtc->mode);
     ret = drmModeSetCrtc(drmmode->fd, drmmode_crtc->mode_crtc->crtc_id,
                          fb_id, x, y, output_ids, output_count, &kmode);
+    if (!ret && !ms->atomic_modeset) {
+        drmmode_crtc->src_x = x;
+        drmmode_crtc->src_y = y;
+    }
 
     drmmode_set_ctm(crtc, ctm);
 
@@ -949,6 +958,26 @@ drmmode_crtc_flip(xf86CrtcPtr crtc, uint32_t fb_id, int x, int y,
             ret = drmModeAtomicCommit(ms->fd, req, flags, data);
         drmModeAtomicFree(req);
         return ret;
+    }
+
+    /* The frame buffer source coordinates may change when switching between the
+     * primary frame buffer and a per-CRTC frame buffer. Set the correct source
+     * coordinates if they differ for this flip.
+     */
+    if (drmmode_crtc->src_x != x || drmmode_crtc->src_y != y) {
+        ret = drmModeSetPlane(ms->fd, drmmode_crtc->plane_id,
+                              drmmode_crtc->mode_crtc->crtc_id, fb_id, 0,
+                              0, 0, crtc->mode.HDisplay, crtc->mode.VDisplay,
+                              x << 16, y << 16, crtc->mode.HDisplay << 16,
+                              crtc->mode.VDisplay << 16);
+        if (ret) {
+            xf86DrvMsg(crtc->scrn->scrnIndex, X_WARNING,
+                       "error changing fb src coordinates for flip: %d\n", ret);
+            return ret;
+        }
+
+        drmmode_crtc->src_x = x;
+        drmmode_crtc->src_y = y;
     }
 
     return drmModePageFlip(ms->fd, drmmode_crtc->mode_crtc->crtc_id,
@@ -1549,6 +1578,90 @@ drmmode_copy_fb(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
 #endif
 }
 
+void
+drmmode_copy_damage(xf86CrtcPtr crtc, PixmapPtr dst, RegionPtr dmg, Bool empty)
+{
+#ifdef GLAMOR_HAS_GBM
+    ScreenPtr pScreen = xf86ScrnToScreen(crtc->scrn);
+    DrawableRec *src;
+
+    /* Copy the screen's pixmap into the destination pixmap */
+    if (crtc->rotatedPixmap) {
+        src = &crtc->rotatedPixmap->drawable;
+        xf86RotateCrtcRedisplay(crtc, dst, src, dmg, FALSE);
+    } else {
+        src = &pScreen->GetScreenPixmap(pScreen)->drawable;
+        PixmapDirtyCopyArea(dst, src, 0, 0, -crtc->x, -crtc->y, dmg);
+    }
+
+    /* Reset the damages if requested */
+    if (empty)
+        RegionEmpty(dmg);
+
+    /* Wait until the GC operations finish */
+    modesettingPTR(crtc->scrn)->glamor.finish(pScreen);
+#endif
+}
+
+static void
+drmmode_shadow_fb_destroy(xf86CrtcPtr crtc, PixmapPtr pixmap,
+                          void *data, drmmode_bo *bo, uint32_t *fb_id);
+static void
+drmmode_destroy_tearfree_shadow(xf86CrtcPtr crtc)
+{
+    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
+    int i;
+
+    if (trf->flip_seq)
+        ms_drm_abort_seq(crtc->scrn, trf->flip_seq);
+
+    for (i = 0; i < ARRAY_SIZE(trf->buf); i++) {
+        if (trf->buf[i].px) {
+            drmmode_shadow_fb_destroy(crtc, trf->buf[i].px, (void *)(long)1,
+                                      &trf->buf[i].bo, &trf->buf[i].fb_id);
+            trf->buf[i].px = NULL;
+            RegionUninit(&trf->buf[i].dmg);
+        }
+    }
+}
+
+static PixmapPtr
+drmmode_shadow_fb_create(xf86CrtcPtr crtc, void *data, int width, int height,
+                         drmmode_bo *bo, uint32_t *fb_id);
+static Bool
+drmmode_create_tearfree_shadow(xf86CrtcPtr crtc)
+{
+    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    drmmode_ptr drmmode = drmmode_crtc->drmmode;
+    drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
+    uint32_t w = crtc->mode.HDisplay, h = crtc->mode.VDisplay;
+    int i;
+
+    if (!drmmode->tearfree_enable)
+        return TRUE;
+
+    /* Destroy the old mode's buffers and make new ones */
+    drmmode_destroy_tearfree_shadow(crtc);
+    for (i = 0; i < ARRAY_SIZE(trf->buf); i++) {
+        trf->buf[i].px = drmmode_shadow_fb_create(crtc, NULL, w, h,
+                                                  &trf->buf[i].bo,
+                                                  &trf->buf[i].fb_id);
+        if (!trf->buf[i].px) {
+            drmmode_destroy_tearfree_shadow(crtc);
+            xf86DrvMsg(crtc->scrn->scrnIndex, X_ERROR,
+                       "shadow creation failed for TearFree buf%d\n", i);
+            return FALSE;
+        }
+        RegionInit(&trf->buf[i].dmg, &crtc->bounds, 0);
+    }
+
+    /* Initialize the front buffer with the current scanout */
+    drmmode_copy_damage(crtc, trf->buf[trf->back_idx ^ 1].px,
+                        &trf->buf[trf->back_idx ^ 1].dmg, TRUE);
+    return TRUE;
+}
+
 static Bool
 drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
                        Rotation rotation, int x, int y)
@@ -1581,6 +1694,10 @@ drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
 
         crtc->funcs->gamma_set(crtc, crtc->gamma_red, crtc->gamma_green,
                                crtc->gamma_blue, crtc->gamma_size);
+
+        ret = drmmode_create_tearfree_shadow(crtc);
+        if (!ret)
+            goto done;
 
         can_test = drmmode_crtc_can_test_mode(crtc);
         if (drmmode_crtc_set_mode(crtc, can_test)) {
@@ -1627,6 +1744,7 @@ drmmode_set_mode_major(xf86CrtcPtr crtc, DisplayModePtr mode,
         crtc->y = saved_y;
         crtc->rotation = saved_rotation;
         crtc->mode = saved_mode;
+        drmmode_create_tearfree_shadow(crtc);
     } else
         crtc->active = TRUE;
 
@@ -4274,6 +4392,7 @@ drmmode_free_bos(ScrnInfoPtr pScrn, drmmode_ptr drmmode)
         drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 
         dumb_bo_destroy(drmmode->fd, drmmode_crtc->cursor_bo);
+        drmmode_destroy_tearfree_shadow(crtc);
     }
 }
 

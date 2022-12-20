@@ -61,6 +61,7 @@ typedef enum {
     OPTION_VARIABLE_REFRESH,
     OPTION_USE_GAMMA_LUT,
     OPTION_ASYNC_FLIP_SECONDARIES,
+    OPTION_TEARFREE,
 } modesettingOpts;
 
 typedef struct
@@ -240,6 +241,8 @@ Bool ms_do_pageflip(ScreenPtr screen,
                     ms_pageflip_handler_proc pageflip_handler,
                     ms_pageflip_abort_proc pageflip_abort,
                     const char *log_prefix);
+
+Bool ms_do_tearfree_flip(ScreenPtr screen, xf86CrtcPtr crtc);
 
 #endif
 

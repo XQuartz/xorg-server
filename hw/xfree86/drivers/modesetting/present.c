@@ -318,14 +318,32 @@ ms_present_check_flip(RRCrtcPtr crtc,
     modesettingPtr ms = modesettingPTR(scrn);
 
     if (ms->drmmode.sprites_visible > 0)
-        return FALSE;
+        goto no_flip;
 
     if(!ms_present_check_unflip(crtc, window, pixmap, sync_flip, reason))
-        return FALSE;
+        goto no_flip;
 
     ms->flip_window = window;
 
     return TRUE;
+
+no_flip:
+    /* Export some info about TearFree if Present can't flip anyway */
+    if (reason && ms->drmmode.tearfree_enable) {
+        xf86CrtcPtr xf86_crtc = crtc->devPrivate;
+        drmmode_crtc_private_ptr drmmode_crtc = xf86_crtc->driver_private;
+        drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
+
+        if (trf->buf[0].px) {
+            if (trf->flip_seq)
+                /* The driver has a TearFree flip pending */
+                *reason = PRESENT_FLIP_REASON_DRIVER_TEARFREE_FLIPPING;
+            else
+                /* The driver uses TearFree flips and there's no flip pending */
+                *reason = PRESENT_FLIP_REASON_DRIVER_TEARFREE;
+        }
+    }
+    return FALSE;
 }
 
 /*

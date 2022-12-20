@@ -34,6 +34,7 @@
 #include <dix.h>
 
 #include "xwayland-types.h"
+#include "xwayland-window.h"
 #include "xwayland-output.h"
 #include "xwayland-glamor.h"
 #include "xwayland-drm-lease.h"
@@ -101,6 +102,8 @@ struct xwl_screen {
     struct zwp_keyboard_shortcuts_inhibit_manager_v1 *shortcuts_inhibit_manager;
     struct zwp_keyboard_shortcuts_inhibitor_v1 *shortcuts_inhibit;
     struct zwp_linux_dmabuf_v1 *dmabuf;
+    int dmabuf_protocol_version;
+    struct xwl_dmabuf_feedback default_feedback;
     struct zxdg_output_manager_v1 *xdg_output_manager;
     struct wp_viewporter *viewporter;
     struct xwayland_shell_v1 *xwayland_shell;

@@ -185,6 +185,8 @@ xwl_close_screen(ScreenPtr screen)
     struct xwl_seat *xwl_seat, *next_xwl_seat;
     struct xwl_wl_surface *xwl_wl_surface, *xwl_wl_surface_next;
 
+    xwl_dmabuf_feedback_destroy(&xwl_screen->default_feedback);
+
     DeleteCallback(&PropertyStateCallback, xwl_property_callback, screen);
 
     xorg_list_for_each_entry_safe(xwl_output, next_xwl_output,

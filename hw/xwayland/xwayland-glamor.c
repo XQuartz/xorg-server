@@ -44,6 +44,8 @@
 #include "xwayland-screen.h"
 #include "xwayland-window.h"
 
+#include <sys/mman.h>
+
 static void
 glamor_egl_make_current(struct glamor_context *glamor_ctx)
 {
@@ -266,15 +268,228 @@ static const struct zwp_linux_dmabuf_v1_listener xwl_dmabuf_listener = {
     .modifier = xwl_dmabuf_handle_modifier
 };
 
+/*
+ * We need to check if the compositor is resending all of the tranche
+ * information. Each tranche event will call this method to see
+ * if the existing format info should be cleared before refilling.
+ */
+static void
+xwl_check_reset_tranche_info(struct xwl_dmabuf_feedback *xwl_feedback)
+{
+    if (!xwl_feedback->feedback_done)
+        return;
+
+    xwl_feedback->feedback_done = false;
+
+    xwl_dmabuf_feedback_clear_dev_formats(xwl_feedback);
+}
+
+static void
+xwl_dmabuf_feedback_main_device(void *data,
+                                struct zwp_linux_dmabuf_feedback_v1 *dmabuf_feedback,
+                                struct wl_array *dev)
+{
+    struct xwl_dmabuf_feedback *xwl_feedback = data;
+
+    xwl_check_reset_tranche_info(xwl_feedback);
+
+    assert(dev->size == sizeof(dev_t));
+    memcpy(&xwl_feedback->main_dev, dev->data, sizeof(dev_t));
+}
+
+static void
+xwl_dmabuf_feedback_tranche_target_device(void *data,
+                                          struct zwp_linux_dmabuf_feedback_v1 *dmabuf_feedback,
+                                          struct wl_array *dev)
+{
+    struct xwl_dmabuf_feedback *xwl_feedback = data;
+
+    xwl_check_reset_tranche_info(xwl_feedback);
+
+    assert(dev->size == sizeof(dev_t));
+    memcpy(&xwl_feedback->tmp_tranche.drm_dev, dev->data, sizeof(dev_t));
+}
+
+static void
+xwl_dmabuf_feedback_tranche_flags(void *data,
+                                  struct zwp_linux_dmabuf_feedback_v1 *dmabuf_feedback,
+                                  uint32_t flags)
+{
+    struct xwl_dmabuf_feedback *xwl_feedback = data;
+
+    xwl_check_reset_tranche_info(xwl_feedback);
+
+    if (flags & ZWP_LINUX_DMABUF_FEEDBACK_V1_TRANCHE_FLAGS_SCANOUT)
+        xwl_feedback->tmp_tranche.supports_scanout = true;
+}
+
+static void
+xwl_dmabuf_feedback_tranche_formats(void *data,
+                                    struct zwp_linux_dmabuf_feedback_v1 *dmabuf_feedback,
+                                    struct wl_array *indices)
+{
+    struct xwl_dmabuf_feedback *xwl_feedback = data;
+    struct xwl_device_formats *tranche = &xwl_feedback->tmp_tranche;
+    uint16_t *index;
+
+    xwl_check_reset_tranche_info(xwl_feedback);
+
+    wl_array_for_each(index, indices) {
+        if (*index >= xwl_feedback->format_table.len) {
+            ErrorF("linux_dmabuf_feedback.tranche_formats: Index given to us by the compositor"
+                   " is too large to fit in the format table\n");
+            continue;
+        }
+
+        /* Look up this format/mod in the format table */
+        struct xwl_format_table_entry *entry = &xwl_feedback->format_table.entry[*index];
+
+        /* Add it to the in-progress tranche */
+        xwl_add_format_and_mod_to_list(&tranche->formats, &tranche->num_formats,
+                                       entry->format,
+                                       entry->modifier);
+    }
+}
+
+static void
+xwl_append_to_tranche(struct xwl_device_formats *dst, struct xwl_device_formats *src)
+{
+    struct xwl_format *format;
+
+    for (int i = 0; i < src->num_formats; i++) {
+        format = &src->formats[i];
+
+        for (int j = 0; j < format->num_modifiers; j++)
+            xwl_add_format_and_mod_to_list(&dst->formats, &dst->num_formats,
+                                           format->format,
+                                           format->modifiers[j]);
+    }
+}
+
+static void
+xwl_dmabuf_feedback_tranche_done(void *data,
+                                 struct zwp_linux_dmabuf_feedback_v1 *dmabuf_feedback)
+{
+    struct xwl_dmabuf_feedback *xwl_feedback = data;
+    struct xwl_device_formats *tranche;
+    int appended = false;
+
+    /*
+     * No need to call xwl_check_reset_tranche_info, the other events should have been
+     * triggered first
+     */
+
+    /*
+     * First check if there is an existing tranche for this device+flags combo. We
+     * will combine it with this tranche, since we can only send one modifier list
+     * in DRI3 but the compositor may report multiple tranches per device (KDE
+     * does this)
+     */
+    for (int i = 0; i < xwl_feedback->dev_formats_len; i++) {
+        tranche = &xwl_feedback->dev_formats[i];
+        if (tranche->drm_dev == xwl_feedback->tmp_tranche.drm_dev &&
+            tranche->supports_scanout == xwl_feedback->tmp_tranche.supports_scanout) {
+            appended = true;
+
+            /* Add all format/mods to this tranche */
+            xwl_append_to_tranche(tranche, &xwl_feedback->tmp_tranche);
+
+            /* Now free our temp tranche's allocations */
+            xwl_device_formats_destroy(&xwl_feedback->tmp_tranche);
+
+            break;
+        }
+    }
+
+    if (!appended) {
+        xwl_feedback->dev_formats_len++;
+        xwl_feedback->dev_formats = xnfrealloc(xwl_feedback->dev_formats,
+                                               sizeof(struct xwl_device_formats) *
+                                               xwl_feedback->dev_formats_len);
+
+        /* copy the temporary tranche into the official array */
+        memcpy(&xwl_feedback->dev_formats[xwl_feedback->dev_formats_len - 1],
+               &xwl_feedback->tmp_tranche,
+               sizeof(struct xwl_device_formats));
+    }
+
+    /* reset the tranche */
+    memset(&xwl_feedback->tmp_tranche, 0, sizeof(struct xwl_device_formats));
+}
+
+static void
+xwl_dmabuf_feedback_done(void *data, struct zwp_linux_dmabuf_feedback_v1 *dmabuf_feedback)
+{
+    struct xwl_dmabuf_feedback *xwl_feedback = data;
+
+    xwl_feedback->feedback_done = true;
+}
+
+static void
+xwl_dmabuf_feedback_format_table(void *data,
+                                 struct zwp_linux_dmabuf_feedback_v1 *zwp_linux_dmabuf_feedback_v1,
+                                 int32_t fd, uint32_t size)
+{
+    struct xwl_dmabuf_feedback *xwl_feedback = data;
+    /* Unmap the old table */
+    if (xwl_feedback->format_table.entry) {
+        munmap(xwl_feedback->format_table.entry,
+               xwl_feedback->format_table.len * sizeof(struct xwl_format_table_entry));
+    }
+
+    assert(size % sizeof(struct xwl_format_table_entry) == 0);
+    xwl_feedback->format_table.len = size / sizeof(struct xwl_format_table_entry);
+    xwl_feedback->format_table.entry = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    close(fd);
+
+    if (xwl_feedback->format_table.entry == MAP_FAILED) {
+        ErrorF("linux_dmabuf_feedback.format_table: Could not map the format"
+               " table: Compositor bug or out of resources\n");
+        xwl_feedback->format_table.len = 0;
+    }
+}
+
+static const struct zwp_linux_dmabuf_feedback_v1_listener xwl_dmabuf_feedback_listener = {
+    .done = xwl_dmabuf_feedback_done,
+    .format_table = xwl_dmabuf_feedback_format_table,
+    .main_device = xwl_dmabuf_feedback_main_device,
+    .tranche_done = xwl_dmabuf_feedback_tranche_done,
+    .tranche_target_device = xwl_dmabuf_feedback_tranche_target_device,
+    .tranche_formats = xwl_dmabuf_feedback_tranche_formats,
+    .tranche_flags = xwl_dmabuf_feedback_tranche_flags,
+};
+
+Bool
+xwl_dmabuf_setup_feedback_for_window(struct xwl_window *xwl_window)
+{
+    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
+
+    xwl_window->feedback.dmabuf_feedback =
+        zwp_linux_dmabuf_v1_get_surface_feedback(xwl_screen->dmabuf, xwl_window->surface);
+
+    if (!xwl_window->feedback.dmabuf_feedback)
+        return FALSE;
+
+    zwp_linux_dmabuf_feedback_v1_add_listener(xwl_window->feedback.dmabuf_feedback,
+                                              &xwl_dmabuf_feedback_listener,
+                                              &xwl_window->feedback);
+
+    return TRUE;
+}
+
 Bool
 xwl_screen_set_dmabuf_interface(struct xwl_screen *xwl_screen,
                                 uint32_t id, uint32_t version)
 {
+    /* We either support versions 3 or 4. 4 is needed for dmabuf feedback */
+    int supported_version = version >= 4 ? 4 : 3;
+
     if (version < 3)
         return FALSE;
 
     xwl_screen->dmabuf =
-        wl_registry_bind(xwl_screen->registry, id, &zwp_linux_dmabuf_v1_interface, 3);
+        wl_registry_bind(xwl_screen->registry, id, &zwp_linux_dmabuf_v1_interface, supported_version);
+    xwl_screen->dmabuf_protocol_version = supported_version;
     zwp_linux_dmabuf_v1_add_listener(xwl_screen->dmabuf, &xwl_dmabuf_listener, xwl_screen);
 
     return TRUE;

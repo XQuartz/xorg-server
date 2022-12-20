@@ -27,6 +27,8 @@
 #include <dix-config.h>
 #endif
 
+#include <sys/mman.h>
+
 #include <X11/X.h>
 #include <X11/Xatom.h>
 
@@ -43,6 +45,7 @@
 #include "xwayland-window-buffers.h"
 #include "xwayland-shm.h"
 
+#include "linux-dmabuf-unstable-v1-client-protocol.h"
 #include "viewporter-client-protocol.h"
 #include "xdg-shell-client-protocol.h"
 #include "xwayland-shell-v1-client-protocol.h"
@@ -835,6 +838,13 @@ ensure_surface_for_window(WindowPtr window)
     if (!xwl_screen->rootless && !xwl_create_root_surface(xwl_window))
         goto err;
 
+#ifdef XWL_HAS_GLAMOR
+    if (xwl_screen->dmabuf_protocol_version >= 4)
+        xwl_dmabuf_setup_feedback_for_window(xwl_window);
+#endif
+
+    wl_display_flush(xwl_screen->display);
+
     send_surface_id_event(xwl_window);
 
     wl_surface_set_user_data(xwl_window->surface, xwl_window);
@@ -990,6 +1000,42 @@ release_wl_surface_for_window(struct xwl_window *xwl_window)
         release_wl_surface_for_window_legacy_delay(xwl_window);
 }
 
+void
+xwl_device_formats_destroy(struct xwl_device_formats *dev_formats)
+{
+    for (int j = 0; j < dev_formats->num_formats; j++)
+        free(dev_formats->formats[j].modifiers);
+    free(dev_formats->formats);
+}
+
+void
+xwl_dmabuf_feedback_clear_dev_formats(struct xwl_dmabuf_feedback *xwl_feedback)
+{
+    if (xwl_feedback->dev_formats_len == 0)
+        return;
+
+    for (int i = 0; i < xwl_feedback->dev_formats_len; i++) {
+        struct xwl_device_formats *dev_format = &xwl_feedback->dev_formats[i];
+        xwl_device_formats_destroy(dev_format);
+    }
+    free(xwl_feedback->dev_formats);
+    xwl_feedback->dev_formats = NULL;
+    xwl_feedback->dev_formats_len = 0;
+}
+
+void
+xwl_dmabuf_feedback_destroy(struct xwl_dmabuf_feedback *xwl_feedback)
+{
+    munmap(xwl_feedback->format_table.entry,
+           xwl_feedback->format_table.len * sizeof(struct xwl_format_table_entry));
+    xwl_dmabuf_feedback_clear_dev_formats(xwl_feedback);
+
+    if (xwl_feedback->dmabuf_feedback)
+        zwp_linux_dmabuf_feedback_v1_destroy(xwl_feedback->dmabuf_feedback);
+
+    xwl_feedback->dmabuf_feedback = NULL;
+}
+
 Bool
 xwl_unrealize_window(WindowPtr window)
 {
@@ -1031,6 +1077,8 @@ xwl_unrealize_window(WindowPtr window)
 
     if (xwl_window_has_viewport_enabled(xwl_window))
         xwl_window_disable_viewport(xwl_window);
+
+    xwl_dmabuf_feedback_destroy(&xwl_window->feedback);
 
 #ifdef GLAMOR_HAS_GBM
     if (xwl_screen->present) {

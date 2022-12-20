@@ -154,12 +154,32 @@ xwl_screen_get_main_dev(struct xwl_screen *xwl_screen)
         return xwl_screen->default_feedback.main_dev;
 }
 
+static Bool
+xwl_get_formats(struct xwl_format *format_array, int format_array_len,
+               uint32_t *num_formats, uint32_t **formats)
+{
+    *num_formats = 0;
+    *formats = NULL;
+
+    if (format_array_len == 0)
+       return TRUE;
+
+    *formats = calloc(format_array_len, sizeof(CARD32));
+    if (*formats == NULL)
+        return FALSE;
+
+    for (int i = 0; i < format_array_len; i++)
+       (*formats)[i] = format_array[i].format;
+    *num_formats = format_array_len;
+
+    return TRUE;
+}
+
 Bool
 xwl_glamor_get_formats(ScreenPtr screen,
                        CARD32 *num_formats, CARD32 **formats)
 {
     struct xwl_screen *xwl_screen = xwl_screen_get(screen);
-    int i;
 
     /* Explicitly zero the count as the caller may ignore the return value */
     *num_formats = 0;
@@ -167,18 +187,8 @@ xwl_glamor_get_formats(ScreenPtr screen,
     if (!xwl_screen->dmabuf)
         return FALSE;
 
-    if (xwl_screen->num_formats == 0)
-       return TRUE;
-
-    *formats = calloc(xwl_screen->num_formats, sizeof(CARD32));
-    if (*formats == NULL)
-        return FALSE;
-
-    for (i = 0; i < xwl_screen->num_formats; i++)
-       (*formats)[i] = xwl_screen->formats[i].format;
-    *num_formats = xwl_screen->num_formats;
-
-    return TRUE;
+    return xwl_get_formats(xwl_screen->formats, xwl_screen->num_formats,
+                           num_formats, formats);
 }
 
 static Bool

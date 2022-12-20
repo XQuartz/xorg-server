@@ -213,40 +213,52 @@ xwl_dmabuf_handle_format(void *data, struct zwp_linux_dmabuf_v1 *dmabuf,
 }
 
 static void
-xwl_dmabuf_handle_modifier(void *data, struct zwp_linux_dmabuf_v1 *dmabuf,
-                           uint32_t format, uint32_t modifier_hi,
-                           uint32_t modifier_lo)
+xwl_add_format_and_mod_to_list(struct xwl_format **formats,
+                               uint32_t *num_formats,
+                               uint32_t format,
+                               uint64_t modifier)
 {
-    struct xwl_screen *xwl_screen = data;
     struct xwl_format *xwl_format = NULL;
     int i;
 
-    for (i = 0; i < xwl_screen->num_formats; i++) {
-        if (xwl_screen->formats[i].format == format) {
-            xwl_format = &xwl_screen->formats[i];
+    for (i = 0; i < *num_formats; i++) {
+        if ((*formats)[i].format == format) {
+            xwl_format = &(*formats)[i];
             break;
         }
     }
 
     if (xwl_format == NULL) {
-        xwl_screen->num_formats++;
-        xwl_screen->formats = realloc(xwl_screen->formats,
-                                      xwl_screen->num_formats * sizeof(*xwl_format));
-        if (!xwl_screen->formats)
-            return;
-        xwl_format = &xwl_screen->formats[xwl_screen->num_formats - 1];
+        (*num_formats)++;
+        *formats = xnfrealloc(*formats, *num_formats * sizeof(*xwl_format));
+        xwl_format = &(*formats)[*num_formats - 1];
         xwl_format->format = format;
         xwl_format->num_modifiers = 0;
         xwl_format->modifiers = NULL;
     }
 
+    for (i = 0; i < xwl_format->num_modifiers; i++) {
+        /* don't add it if the modifier already exists */
+        if (xwl_format->modifiers[i] == modifier)
+            return;
+    }
+
     xwl_format->num_modifiers++;
-    xwl_format->modifiers = realloc(xwl_format->modifiers,
-                                    xwl_format->num_modifiers * sizeof(uint64_t));
-    if (!xwl_format->modifiers)
-        return;
-    xwl_format->modifiers[xwl_format->num_modifiers - 1]  = (uint64_t) modifier_lo;
-    xwl_format->modifiers[xwl_format->num_modifiers - 1] |= (uint64_t) modifier_hi << 32;
+    xwl_format->modifiers = xnfrealloc(xwl_format->modifiers,
+                                       xwl_format->num_modifiers * sizeof(uint64_t));
+    xwl_format->modifiers[xwl_format->num_modifiers - 1]  = modifier;
+}
+
+static void
+xwl_dmabuf_handle_modifier(void *data, struct zwp_linux_dmabuf_v1 *dmabuf,
+                           uint32_t format, uint32_t modifier_hi,
+                           uint32_t modifier_lo)
+{
+    struct xwl_screen *xwl_screen = data;
+
+    xwl_add_format_and_mod_to_list(&xwl_screen->formats, &xwl_screen->num_formats,
+                                   format,
+                                   ((uint64_t)modifier_hi << 32 | (uint64_t)modifier_lo));
 }
 
 static const struct zwp_linux_dmabuf_v1_listener xwl_dmabuf_listener = {

@@ -141,6 +141,19 @@ wl_drm_format_for_depth(int depth)
     }
 }
 
+static dev_t
+xwl_screen_get_main_dev(struct xwl_screen *xwl_screen)
+{
+    /*
+     * If we have gbm then get our main device from it. Otherwise use what
+     * the compositor told us.
+     */
+    if (xwl_screen->gbm_backend.is_available)
+        return xwl_screen->gbm_backend.get_main_device(xwl_screen);
+    else
+        return xwl_screen->default_feedback.main_dev;
+}
+
 Bool
 xwl_glamor_get_formats(ScreenPtr screen,
                        CARD32 *num_formats, CARD32 **formats)
@@ -168,26 +181,22 @@ xwl_glamor_get_formats(ScreenPtr screen,
     return TRUE;
 }
 
-Bool
-xwl_glamor_get_modifiers(ScreenPtr screen, uint32_t format,
-                         uint32_t *num_modifiers, uint64_t **modifiers)
+static Bool
+xwl_get_modifiers_for_format(struct xwl_format *format_array, int num_formats,
+                             uint32_t format, uint32_t *num_modifiers, uint64_t **modifiers)
 {
-    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
     struct xwl_format *xwl_format = NULL;
     int i;
 
-    /* Explicitly zero the count as the caller may ignore the return value */
     *num_modifiers = 0;
+    *modifiers = NULL;
 
-    if (!xwl_screen->dmabuf)
-        return FALSE;
-
-    if (xwl_screen->num_formats == 0)
+    if (num_formats == 0)
        return TRUE;
 
-    for (i = 0; i < xwl_screen->num_formats; i++) {
-       if (xwl_screen->formats[i].format == format) {
-          xwl_format = &xwl_screen->formats[i];
+    for (i = 0; i < num_formats; i++) {
+       if (format_array[i].format == format) {
+          xwl_format = &format_array[i];
           break;
        }
     }
@@ -206,6 +215,82 @@ xwl_glamor_get_modifiers(ScreenPtr screen, uint32_t format,
     *num_modifiers = xwl_format->num_modifiers;
 
     return TRUE;
+}
+
+static Bool
+xwl_get_modifiers_for_device(struct xwl_dmabuf_feedback *feedback, dev_t device,
+                             uint32_t format, uint32_t *num_modifiers,
+                             uint64_t **modifiers)
+{
+    struct xwl_device_formats *dev_formats = NULL;
+
+    /* Now try to find a matching set of tranches for the window's device */
+    for (int i = 0; i < feedback->dev_formats_len; i++) {
+        if (feedback->dev_formats[i].drm_dev == device)
+            dev_formats = &feedback->dev_formats[i];
+    }
+
+    if (!dev_formats)
+        return FALSE;
+
+    return xwl_get_modifiers_for_format(dev_formats->formats, dev_formats->num_formats,
+                                        format, num_modifiers, modifiers);
+}
+
+Bool
+xwl_glamor_get_modifiers(ScreenPtr screen, uint32_t format,
+                         uint32_t *num_modifiers, uint64_t **modifiers)
+{
+    struct xwl_screen *xwl_screen = xwl_screen_get(screen);
+    dev_t main_dev;
+
+    /* Explicitly zero the count as the caller may ignore the return value */
+    *num_modifiers = 0;
+    *modifiers = NULL;
+
+    if (!xwl_screen->dmabuf)
+        return FALSE;
+
+    if (xwl_screen->dmabuf_protocol_version >= 4) {
+        main_dev = xwl_screen_get_main_dev(xwl_screen);
+
+        return xwl_get_modifiers_for_device(&xwl_screen->default_feedback, main_dev,
+                                            format, num_modifiers, modifiers);
+    } else {
+        return xwl_get_modifiers_for_format(xwl_screen->formats, xwl_screen->num_formats,
+                                            format, num_modifiers, modifiers);
+    }
+}
+
+Bool
+xwl_glamor_get_drawable_modifiers(DrawablePtr drawable, uint32_t format,
+                                  uint32_t *num_modifiers, uint64_t **modifiers)
+{
+    struct xwl_screen *xwl_screen = xwl_screen_get(drawable->pScreen);
+    struct xwl_window *xwl_window;
+    dev_t main_dev;
+
+    *num_modifiers = 0;
+    *modifiers = NULL;
+
+    /* We can only return per-drawable modifiers if the compositor supports feedback */
+    if (xwl_screen->dmabuf_protocol_version < 4)
+        return TRUE;
+
+    if (drawable->type != DRAWABLE_WINDOW || !xwl_screen->dmabuf)
+        return FALSE;
+
+    xwl_window = xwl_window_from_window((WindowPtr)drawable);
+
+    /* couldn't find drawable for window */
+    if (!xwl_window)
+        return FALSE;
+
+    main_dev = xwl_screen_get_main_dev(xwl_screen);
+
+    return xwl_get_modifiers_for_device(&xwl_window->feedback, main_dev,
+                                        format, num_modifiers, modifiers);
+
 }
 
 static void

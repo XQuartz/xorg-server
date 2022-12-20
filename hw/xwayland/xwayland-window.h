@@ -34,6 +34,7 @@
 #include <dix.h>
 #include <propertyst.h>
 #include <validate.h>
+#include <wayland-util.h>
 
 #include "xwayland-types.h"
 

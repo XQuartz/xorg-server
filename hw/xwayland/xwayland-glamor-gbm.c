@@ -716,7 +716,7 @@ static const dri3_screen_info_rec xwl_dri3_info = {
     .open_client = xwl_dri3_open_client,
     .get_formats = xwl_glamor_get_formats,
     .get_modifiers = xwl_glamor_get_modifiers,
-    .get_drawable_modifiers = glamor_get_drawable_modifiers,
+    .get_drawable_modifiers = xwl_glamor_get_drawable_modifiers,
 };
 
 static const char *

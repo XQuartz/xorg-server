@@ -80,6 +80,13 @@ struct xwl_dmabuf_feedback {
     int feedback_done;
     int dev_formats_len;
     struct xwl_device_formats *dev_formats;
+    /*
+     * This flag is used to identify if the feedback
+     * has been resent. If this is true, then the xwayland
+     * clients need to be sent PresentCompleteModeSuboptimalCopy
+     * to tell them to re-request modifiers.
+     */
+    int unprocessed_feedback_pending;
 };
 
 struct xwl_window {

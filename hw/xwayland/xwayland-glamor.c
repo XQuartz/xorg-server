@@ -608,6 +608,7 @@ xwl_dmabuf_feedback_done(void *data, struct zwp_linux_dmabuf_feedback_v1 *dmabuf
     struct xwl_dmabuf_feedback *xwl_feedback = data;
 
     xwl_feedback->feedback_done = true;
+    xwl_feedback->unprocessed_feedback_pending = true;
 }
 
 static void

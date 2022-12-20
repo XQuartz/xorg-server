@@ -296,6 +296,7 @@ xwl_present_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_t
 {
     WindowPtr                   window = vblank->window;
     struct xwl_present_window *xwl_present_window = xwl_present_window_priv(window);
+    uint8_t mode = PresentCompleteModeFlip;
 
     DebugPresent(("\tn %" PRIu64 " %p %" PRIu64 " %" PRIu64 ": %08" PRIx32 " -> %08" PRIx32 "\n",
                   vblank->event_id, vblank, vblank->exec_msc, vblank->target_msc,
@@ -321,7 +322,10 @@ xwl_present_flip_notify_vblank(present_vblank_ptr vblank, uint64_t ust, uint64_t
 
     xwl_present_window->flip_active = vblank;
 
-    present_vblank_notify(vblank, PresentCompleteKindPixmap, PresentCompleteModeFlip, ust, crtc_msc);
+    if (vblank->reason == PRESENT_FLIP_REASON_BUFFER_FORMAT)
+        mode = PresentCompleteModeSuboptimalCopy;
+
+    present_vblank_notify(vblank, PresentCompleteKindPixmap, mode, ust, crtc_msc);
 
     if (vblank->abort_flip)
         xwl_present_flips_stop(window);
@@ -559,6 +563,27 @@ xwl_present_flush(WindowPtr window)
     glamor_block_handler(window->drawable.pScreen);
 }
 
+static void
+xwl_present_maybe_set_reason(struct xwl_window *xwl_window, PresentFlipReason *reason)
+{
+    struct xwl_screen *xwl_screen = xwl_window->xwl_screen;
+
+    if (!reason || xwl_screen->dmabuf_protocol_version < 4)
+        return;
+
+    if (xwl_window->feedback.unprocessed_feedback_pending) {
+        xwl_window->feedback.unprocessed_feedback_pending = 0;
+
+        *reason = PRESENT_FLIP_REASON_BUFFER_FORMAT;
+    }
+
+    if (xwl_screen->default_feedback.unprocessed_feedback_pending) {
+        xwl_screen->default_feedback.unprocessed_feedback_pending = 0;
+
+        *reason = PRESENT_FLIP_REASON_BUFFER_FORMAT;
+    }
+}
+
 static Bool
 xwl_present_check_flip(RRCrtcPtr crtc,
                        WindowPtr present_window,
@@ -578,6 +603,8 @@ xwl_present_check_flip(RRCrtcPtr crtc,
 
     if (!xwl_window)
         return FALSE;
+
+    xwl_present_maybe_set_reason(xwl_window, reason);
 
     if (!crtc)
         return FALSE;

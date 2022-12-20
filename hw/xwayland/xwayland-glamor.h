@@ -96,6 +96,11 @@ struct xwl_egl_backend {
      * presented by xwl_present_flip. If not implemented, assumed TRUE.
      */
     Bool (*check_flip)(PixmapPtr pixmap);
+
+    /* Called to get the dev_t of the primary GPU that this backend
+     * is set up on.
+     */
+    dev_t (*get_main_device)(struct xwl_screen *xwl_screen);
 };
 
 #ifdef XWL_HAS_GLAMOR

@@ -53,6 +53,7 @@
 #include "linux-dmabuf-unstable-v1-client-protocol.h"
 
 struct xwl_gbm_private {
+    dev_t device;
     char *device_name;
     struct gbm_device *gbm;
     struct wl_drm *drm;
@@ -783,6 +784,7 @@ xwl_drm_handle_device(void *data, struct wl_drm *drm, const char *device)
    struct xwl_gbm_private *xwl_gbm = xwl_gbm_get(xwl_screen);
    drm_magic_t magic;
    char *render_node_path = NULL;
+   struct stat stat;
 
    if (!is_device_path_render_node(device))
        render_node_path = get_render_node_path(device);
@@ -804,6 +806,13 @@ xwl_drm_handle_device(void *data, struct wl_drm *drm, const char *device)
        xwl_glamor_gbm_cleanup(xwl_screen);
        return;
    }
+
+   if (fstat(xwl_gbm->drm_fd, &stat)) {
+       ErrorF("wayland-egl: Could not stat file %s (%s)\n",
+              xwl_gbm->device_name, strerror(errno));
+       return;
+   }
+   xwl_gbm->device = stat.st_rdev;
 
    if (drmGetNodeTypeFromFd(xwl_gbm->drm_fd) == DRM_NODE_RENDER) {
        xwl_gbm->fd_render_node = 1;
@@ -1102,6 +1111,13 @@ error:
     return FALSE;
 }
 
+static dev_t xwl_gbm_get_main_device(struct xwl_screen *xwl_screen)
+{
+    struct xwl_gbm_private *xwl_gbm = xwl_gbm_get(xwl_screen);
+
+    return xwl_gbm->device;
+}
+
 void
 xwl_glamor_init_gbm(struct xwl_screen *xwl_screen)
 {
@@ -1130,6 +1146,7 @@ xwl_glamor_init_gbm(struct xwl_screen *xwl_screen)
     xwl_screen->gbm_backend.init_screen = xwl_glamor_gbm_init_screen;
     xwl_screen->gbm_backend.get_wl_buffer_for_pixmap = xwl_glamor_gbm_get_wl_buffer_for_pixmap;
     xwl_screen->gbm_backend.check_flip = NULL;
+    xwl_screen->gbm_backend.get_main_device = xwl_gbm_get_main_device;
     xwl_screen->gbm_backend.is_available = TRUE;
     xwl_screen->gbm_backend.backend_flags = XWL_EGL_BACKEND_NEEDS_BUFFER_FLUSH |
                                             XWL_EGL_BACKEND_NEEDS_N_BUFFERING;

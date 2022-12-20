@@ -677,6 +677,8 @@ Possible values are
 or
 .BR sync .
 Unset by default.
+.BI "Option \*qAllowByteSwappedClients\*q  \*q" boolean \*q
+Allow clients with a different byte-order than the server. Disabled by default.
 .SH "MODULE SECTION"
 The
 .B Module

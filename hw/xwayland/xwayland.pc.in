@@ -17,3 +17,4 @@ have_geometry=true
 have_fullscreen=true
 have_host_grab=true
 have_decorate=@have_libdecor@
+have_byteswappedclients=true

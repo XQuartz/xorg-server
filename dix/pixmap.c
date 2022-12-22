@@ -80,7 +80,7 @@ FreeScratchPixmapHeader(PixmapPtr pPixmap)
 }
 
 Bool
-CreateScratchPixmapsForScreen(ScreenPtr pScreen)
+PixmapScreenInit(ScreenPtr pScreen)
 {
     unsigned int pixmap_size;
 
@@ -88,14 +88,7 @@ CreateScratchPixmapsForScreen(ScreenPtr pScreen)
     pScreen->totalPixmapSize =
         BitmapBytePad(pixmap_size * 8);
 
-    /* NULL this out as it is no longer used */
-    pScreen->pScratchPixmap = NULL;
     return TRUE;
-}
-
-void
-FreeScratchPixmapsForScreen(ScreenPtr pScreen)
-{
 }
 
 /* callable by ddx */

@@ -715,7 +715,7 @@ xf86platformAddDevice(const char *driver_name, int index)
    dixSetPrivate(&xf86GPUScreens[i]->pScreen->devPrivates,
                  xf86ScreenKey, xf86GPUScreens[i]);
 
-   CreateScratchPixmapsForScreen(xf86GPUScreens[i]->pScreen);
+   PixmapScreenInit(xf86GPUScreens[i]->pScreen);
 
    if (xf86GPUScreens[i]->pScreen->CreateScreenResources &&
        !(*xf86GPUScreens[i]->pScreen->CreateScreenResources) (xf86GPUScreens[i]->pScreen)) {

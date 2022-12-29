@@ -224,8 +224,8 @@ xwl_output_get_emulated_mode_for_client(struct xwl_output *xwl_output,
     if (!xwl_output)
         return NULL;
 
-    /* We don't do XRandr emulation when rootful */
-    if (!xwl_output->xwl_screen->rootless)
+    /* We don't do XRandr emulation when rootful or a fake lease display */
+    if (!xwl_output->xwl_screen->rootless || !xwl_output->output)
         return NULL;
 
     for (i = 0; i < XWL_CLIENT_MAX_EMULATED_MODES; i++) {

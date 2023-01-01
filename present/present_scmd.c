@@ -115,7 +115,7 @@ present_check_flip(RRCrtcPtr            crtc,
 
     /* Does the window match the pixmap exactly? */
     if (window->drawable.x != 0 || window->drawable.y != 0 ||
-#ifdef COMPOSITE
+#if defined(COMPOSITE) || defined(ROOTLESS)
         window->drawable.x != pixmap->screen_x || window->drawable.y != pixmap->screen_y ||
 #endif
         window->drawable.width != pixmap->drawable.width ||

@@ -461,7 +461,7 @@ miPaintWindow(WindowPtr pWin, RegionPtr prgn, int what)
         tile_x_off = pWin->drawable.x;
         tile_y_off = pWin->drawable.y;
 
-#ifdef COMPOSITE
+#if defined(COMPOSITE) || defined(ROOTLESS)
         draw_x_off = pixmap->screen_x;
         draw_y_off = pixmap->screen_y;
         tile_x_off -= draw_x_off;

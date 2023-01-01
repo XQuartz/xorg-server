@@ -282,4 +282,5 @@ void RootlessDisableRoot(ScreenPtr pScreen);
 
 void RootlessSetPixmapOfAncestors(WindowPtr pWin);
 
+unsigned long RootlessWID(WindowPtr pWindow);
 #endif                          /* _ROOTLESSCOMMON_H */

@@ -797,7 +797,7 @@ xwl_present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
                 PixmapPtr old_pixmap = screen->GetWindowPixmap(window);
 
                 /* Replace window pixmap with flip pixmap */
-#ifdef COMPOSITE
+#if defined(COMPOSITE) || defined(ROOTLESS)
                 vblank->pixmap->screen_x = old_pixmap->screen_x;
                 vblank->pixmap->screen_y = old_pixmap->screen_y;
 #endif

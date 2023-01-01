@@ -1071,7 +1071,7 @@ winCreatePixmapMultiwindow(ScreenPtr pScreen, int width, int height, int depth,
     pPixmap->refcnt = 1;
     pPixmap->devPrivate.ptr = NULL; // later set to pbBits
     pPixmap->primary_pixmap = NULL;
-#ifdef COMPOSITE
+#if defined(COMPOSITE) || defined(ROOTLESS)
     pPixmap->screen_x = 0;
     pPixmap->screen_y = 0;
 #endif

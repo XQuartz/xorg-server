@@ -872,7 +872,7 @@ DrawablePtr DRI2UpdatePrime(DrawablePtr pDraw, DRI2BufferPtr pDest)
         return NULL;
 
     pPriv->prime_secondary_pixmap = spix;
-#ifdef COMPOSITE
+#if defined(COMPOSITE) || defined(ROOTLESS)
     spix->screen_x = mpix->screen_x;
     spix->screen_y = mpix->screen_y;
 #endif
@@ -963,7 +963,7 @@ DRI2CanFlip(DrawablePtr pDraw)
 
     /* Does the window match the pixmap exactly? */
     if (pDraw->x != 0 || pDraw->y != 0 ||
-#ifdef COMPOSITE
+#if defined(COMPOSITE) || defined(ROOTLESS)
         pDraw->x != pWinPixmap->screen_x || pDraw->y != pWinPixmap->screen_y ||
 #endif
         pDraw->width != pWinPixmap->drawable.width ||

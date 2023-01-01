@@ -705,11 +705,17 @@ RootlessCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
     else {
         RootlessStartDrawing(pWin);
 
-        miCopyRegion((DrawablePtr) pWin, (DrawablePtr) pWin,
+        PixmapPtr pPixmap = pScreen->GetWindowPixmap(pWin);
+        DrawablePtr pDrawable = &pPixmap->drawable;
+
+        if (pPixmap->screen_x || pPixmap->screen_y) {
+            RegionTranslate(&rgnDst, -pPixmap->screen_x, -pPixmap->screen_y);
+        }
+
+        miCopyRegion(pDrawable, pDrawable,
                      0, &rgnDst, dx, dy, fbCopyWindowProc, 0, 0);
 
-        /* prgnSrc has been translated to dst position */
-        RootlessDamageRegion(pWin, prgnSrc);
+        RootlessDamageRegion(pWin, &rgnDst);
     }
 
  out:

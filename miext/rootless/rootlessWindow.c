@@ -325,7 +325,7 @@ RootlessPositionWindow(WindowPtr pWin, int x, int y)
     RootlessWindowRec *winRec = WINREC(pWin);
     Bool result;
 
-    RL_DEBUG_MSG("positionwindow start (win 0x%x @ %i, %i)\n", pWin, x, y);
+    RL_DEBUG_MSG("positionwindow start (win %p (%lu) @ %i, %i)\n", pWin, RootlessWID(pWin), x, y);
 
     if (winRec) {
         if (winRec->is_drawing) {
@@ -441,7 +441,7 @@ RootlessRealizeWindow(WindowPtr pWin)
     RegionRec saveRoot;
     ScreenPtr pScreen = pWin->drawable.pScreen;
 
-    RL_DEBUG_MSG("realizewindow start (win 0x%x) ", pWin);
+    RL_DEBUG_MSG("realizewindow start (win %p (%lu)) ", pWin, RootlessWID(pWin));
 
     if ((IsTopLevel(pWin) && pWin->drawable.class == InputOutput)) {
         RootlessWindowRec *winRec;
@@ -664,7 +664,7 @@ RootlessResizeCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg,
     RegionRec rgnDst;
     int dx, dy;
 
-    RL_DEBUG_MSG("resizecopywindowFB start (win 0x%x) ", pWin);
+    RL_DEBUG_MSG("resizecopywindowFB start (win %p (%lu)) ", pWin, RootlessWID(pWin));
 
     /* Don't unwrap pScreen->CopyWindow.
        The bogus rewrap with RootlessCopyWindow causes a crash if
@@ -733,7 +733,7 @@ RootlessCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
     BoxPtr extents;
     int area;
 
-    RL_DEBUG_MSG("copywindowFB start (win 0x%x) ", pWin);
+    RL_DEBUG_MSG("copywindowFB start (win %p (%lu)) ", pWin, RootlessWID(pWin));
 
     SCREEN_UNWRAP(pScreen, CopyWindow);
 
@@ -1264,7 +1264,7 @@ RootlessResizeWindow(WindowPtr pWin, int x, int y,
     Bool resize_after = FALSE;
     RegionRec saveRoot;
 
-    RL_DEBUG_MSG("resizewindow start (win 0x%x) ", pWin);
+    RL_DEBUG_MSG("resizewindow start (win %p (%lu)) ", pWin, RootlessWID(pWin));
 
     if (pWin->parent) {
         if (winRec) {
@@ -1645,7 +1645,7 @@ RootlessSetPixmapOfAncestors(WindowPtr pWin)
             XID pixel = 0;
 
             ChangeWindowAttributes(pWin, CWBackPixel, &pixel, serverClient);
-            RL_DEBUG_MSG("Cleared ParentRelative on 0x%x.\n", pWin);
+            RL_DEBUG_MSG("Cleared ParentRelative on %p (%lu).\n", pWin, RootlessWID(pWin));
             break;
         }
 

@@ -1012,7 +1012,12 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
     }
     else if (gravity) {
         /* The general case. Just copy everything. */
+        need_window_source = TRUE;
+    }
 
+    /* If necessary, create a source pixmap pointing at the current
+       window bits. */
+    if (need_window_source) {
         RootlessStartDrawing(pWin);
 
         gResizeDeathBits = xallocarray(winRec->bytesPerRow, winRec->height);
@@ -1053,21 +1058,6 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
     }
 
     RootlessStartDrawing(pWin);
-
-    /* If necessary, create a source pixmap pointing at the current
-       window bits. */
-
-    if (need_window_source) {
-        gResizeDeathBounds[0] = (BoxRec) {
-        oldX, oldY, oldX2, oldY2};
-        gResizeDeathPix[0]
-            = GetScratchPixmapHeader(pScreen, oldW, oldH,
-                                     winRec->win->drawable.depth,
-                                     winRec->win->drawable.bitsPerPixel,
-                                     winRec->bytesPerRow, winRec->pixelData);
-
-        SetPixmapBaseToScreen(gResizeDeathPix[0], oldX, oldY);
-    }
 
     /* Use custom CopyWindow when moving gravity bits around
        ResizeWindow assumes the old window contents are in the same

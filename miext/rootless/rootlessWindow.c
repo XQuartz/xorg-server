@@ -854,14 +854,13 @@ ResizeWeighting(int oldX1, int oldY1, int oldX2, int oldY2, int oldBW,
  *  saved and the implementation is told to change the window size.
  *  (x,y,w,h) is outer frame of window (outside border)
  */
-static Bool
+static void
 StartFrameResize(WindowPtr pWin, Bool gravity,
                  int oldX, int oldY, int oldW, int oldH, int oldBW,
                  int newX, int newY, int newW, int newH, int newBW)
 {
     ScreenPtr pScreen = pWin->drawable.pScreen;
     RootlessWindowRec *winRec = WINREC(pWin);
-    Bool resize_after = FALSE;
 
     BoxRec rect;
     int oldX2, newX2;
@@ -935,15 +934,10 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
     winRec->height = newH;
     winRec->borderWidth = newBW;
 
-    /* Unless both dimensions are getting smaller, Resize the frame
-       before doing gravity repair */
-
-    if (!resize_after) {
-        SCREENREC(pScreen)->imp->ResizeFrame(winRec->wid, pScreen,
-                                             newX + SCREEN_TO_GLOBAL_X,
-                                             newY + SCREEN_TO_GLOBAL_Y,
-                                             newW, newH, weight);
-    }
+    SCREENREC(pScreen)->imp->ResizeFrame(winRec->wid, pScreen,
+                                         newX + SCREEN_TO_GLOBAL_X,
+                                         newY + SCREEN_TO_GLOBAL_Y,
+                                         newW, newH, weight);
 
     RootlessStartDrawing(pWin);
 
@@ -992,36 +986,17 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
             SetPixmapBaseToScreen(dst, oldX, oldY);
         }
     }
-
-    return resize_after;
 }
 
 static void
 FinishFrameResize(WindowPtr pWin, Bool gravity, int oldX, int oldY,
                   unsigned int oldW, unsigned int oldH, unsigned int oldBW,
                   int newX, int newY, unsigned int newW, unsigned int newH,
-                  unsigned int newBW, Bool resize_now)
+                  unsigned int newBW)
 {
     ScreenPtr pScreen = pWin->drawable.pScreen;
     RootlessWindowRec *winRec = WINREC(pWin);
     int i;
-
-    RootlessStopDrawing(pWin, FALSE);
-
-    if (resize_now) {
-        unsigned int weight;
-
-        /* We didn't resize anything earlier, so do it now, now that
-           we've finished gravitating the bits. */
-
-        weight = ResizeWeighting(oldX, oldY, oldW, oldH, oldBW,
-                                 newX, newY, newW, newH, newBW);
-
-        SCREENREC(pScreen)->imp->ResizeFrame(winRec->wid, pScreen,
-                                             newX + SCREEN_TO_GLOBAL_X,
-                                             newY + SCREEN_TO_GLOBAL_Y,
-                                             newW, newH, weight);
-    }
 
     /* Redraw everything. FIXME: there must be times when we don't need
        to do this. Perhaps when top-left weighting and no gravity? */
@@ -1057,7 +1032,6 @@ RootlessMoveWindow(WindowPtr pWin, int x, int y, WindowPtr pSib, VTKind kind)
     int oldX = 0, oldY = 0, newX = 0, newY = 0;
     unsigned int oldW = 0, oldH = 0, oldBW = 0;
     unsigned int newW = 0, newH = 0, newBW = 0;
-    Bool resize_after = FALSE;
     RegionRec saveRoot;
 
     RL_DEBUG_MSG("movewindow start \n");
@@ -1084,9 +1058,9 @@ RootlessMoveWindow(WindowPtr pWin, int x, int y, WindowPtr pSib, VTKind kind)
             newW = pWin->drawable.width + 2 * newBW;
             newH = pWin->drawable.height + 2 * newBW;
 
-            resize_after = StartFrameResize(pWin, FALSE,
-                                            oldX, oldY, oldW, oldH, oldBW,
-                                            newX, newY, newW, newH, newBW);
+            StartFrameResize(pWin, FALSE,
+                             oldX, oldY, oldW, oldH, oldBW,
+                             newX, newY, newW, newH, newBW);
         }
     }
 
@@ -1115,8 +1089,9 @@ RootlessMoveWindow(WindowPtr pWin, int x, int y, WindowPtr pSib, VTKind kind)
                                                y + SCREEN_TO_GLOBAL_Y);
         }
         else {
-            FinishFrameResize(pWin, FALSE, oldX, oldY, oldW, oldH, oldBW,
-                              newX, newY, newW, newH, newBW, resize_after);
+            FinishFrameResize(pWin, FALSE,
+                              oldX, oldY, oldW, oldH, oldBW,
+                              newX, newY, newW, newH, newBW);
         }
     }
 
@@ -1139,7 +1114,6 @@ RootlessResizeWindow(WindowPtr pWin, int x, int y,
     ScreenPtr pScreen = pWin->drawable.pScreen;
     int oldX = 0, oldY = 0, newX = 0, newY = 0;
     unsigned int oldW = 0, oldH = 0, oldBW = 0, newW = 0, newH = 0, newBW = 0;
-    Bool resize_after = FALSE;
     RegionRec saveRoot;
 
     RL_DEBUG_MSG("resizewindow start (win %p (%lu)) ", pWin, RootlessWID(pWin));
@@ -1158,9 +1132,9 @@ RootlessResizeWindow(WindowPtr pWin, int x, int y,
             newW = w + 2 * newBW;
             newH = h + 2 * newBW;
 
-            resize_after = StartFrameResize(pWin, TRUE,
-                                            oldX, oldY, oldW, oldH, oldBW,
-                                            newX, newY, newW, newH, newBW);
+            StartFrameResize(pWin, TRUE,
+                             oldX, oldY, oldW, oldH, oldBW,
+                             newX, newY, newW, newH, newBW);
         }
 
         HUGE_ROOT(pWin);
@@ -1170,8 +1144,9 @@ RootlessResizeWindow(WindowPtr pWin, int x, int y,
         NORMAL_ROOT(pWin);
 
         if (winRec) {
-            FinishFrameResize(pWin, TRUE, oldX, oldY, oldW, oldH, oldBW,
-                              newX, newY, newW, newH, newBW, resize_after);
+            FinishFrameResize(pWin, TRUE,
+                              oldX, oldY, oldW, oldH, oldBW,
+                              newX, newY, newW, newH, newBW);
         }
     }
     else {
@@ -1328,7 +1303,6 @@ void
 RootlessChangeBorderWidth(WindowPtr pWin, unsigned int width)
 {
     RegionRec saveRoot;
-    Bool resize_after = FALSE;
 
     RL_DEBUG_MSG("change border width ");
 
@@ -1351,9 +1325,9 @@ RootlessChangeBorderWidth(WindowPtr pWin, unsigned int width)
             newW = pWin->drawable.width + 2 * newBW;
             newH = pWin->drawable.height + 2 * newBW;
 
-            resize_after = StartFrameResize(pWin, FALSE,
-                                            oldX, oldY, oldW, oldH, oldBW,
-                                            newX, newY, newW, newH, newBW);
+            StartFrameResize(pWin, FALSE,
+                             oldX, oldY, oldW, oldH, oldBW,
+                             newX, newY, newW, newH, newBW);
         }
 
         HUGE_ROOT(pWin);
@@ -1363,8 +1337,9 @@ RootlessChangeBorderWidth(WindowPtr pWin, unsigned int width)
         NORMAL_ROOT(pWin);
 
         if (winRec) {
-            FinishFrameResize(pWin, FALSE, oldX, oldY, oldW, oldH, oldBW,
-                              newX, newY, newW, newH, newBW, resize_after);
+            FinishFrameResize(pWin, FALSE,
+                              oldX, oldY, oldW, oldH, oldBW,
+                              newX, newY, newW, newH, newBW);
         }
     }
 

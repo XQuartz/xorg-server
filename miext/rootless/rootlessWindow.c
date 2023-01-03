@@ -861,7 +861,7 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
 {
     ScreenPtr pScreen = pWin->drawable.pScreen;
     RootlessWindowRec *winRec = WINREC(pWin);
-    Bool need_window_source = FALSE, resize_after = FALSE;
+    Bool resize_after = FALSE;
 
     BoxRec rect;
     int oldX2, newX2;
@@ -905,119 +905,7 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
 
     gResizeDeathCount = 0;
 
-    if (gravity && weight == RL_GRAVITY_NORTH_WEST) {
-        unsigned int code = 0;
-
-        /* Top left corner is anchored. We never need to copy the
-           entire window. */
-
-        need_window_source = TRUE;
-
-        /* These comparisons were chosen to avoid setting bits when the sizes
-           are the same. (So the fastest case automatically gets taken when
-           dimensions are unchanging.) */
-
-        if (newW < oldW)
-            code |= WIDTH_SMALLER;
-        if (newH < oldH)
-            code |= HEIGHT_SMALLER;
-
-        if (((code ^ (code >> 1)) & 1) == 0) {
-            /* Both dimensions are either getting larger, or both
-               are getting smaller. No need to copy anything. */
-
-            if (code == (WIDTH_SMALLER | HEIGHT_SMALLER)) {
-                /* Since the window is getting smaller, we can do gravity
-                   repair on it with its current size, then resize it
-                   afterwards. */
-
-                resize_after = TRUE;
-            }
-
-            gResizeDeathCount = 1;
-        }
-        else {
-            unsigned int copy_rowbytes, Bpp;
-            unsigned int copy_rect_width, copy_rect_height;
-            BoxRec copy_rect;
-
-            /* We can get away with a partial copy. 'rect' is the
-               intersection between old and new bounds, so copy
-               everything to the right of or below the intersection. */
-
-            RootlessStartDrawing(pWin);
-
-            if (code == WIDTH_SMALLER) {
-                copy_rect.x1 = rect.x2;
-                copy_rect.y1 = rect.y1;
-                copy_rect.x2 = oldX2;
-                copy_rect.y2 = oldY2;
-            }
-            else if (code == HEIGHT_SMALLER) {
-                copy_rect.x1 = rect.x1;
-                copy_rect.y1 = rect.y2;
-                copy_rect.x2 = oldX2;
-                copy_rect.y2 = oldY2;
-            }
-            else
-                OsAbort();
-
-            Bpp = winRec->win->drawable.bitsPerPixel / 8;
-            copy_rect_width = copy_rect.x2 - copy_rect.x1;
-            copy_rect_height = copy_rect.y2 - copy_rect.y1;
-            copy_rowbytes = ((copy_rect_width * Bpp) + 31) & ~31;
-            gResizeDeathBits = xallocarray(copy_rowbytes, copy_rect_height);
-
-            if (copy_rect_width * copy_rect_height >
-                rootless_CopyBytes_threshold &&
-                SCREENREC(pScreen)->imp->CopyBytes) {
-                SCREENREC(pScreen)->imp->CopyBytes(copy_rect_width * Bpp,
-                                                   copy_rect_height,
-                                                   ((char *) winRec->pixelData)
-                                                   +
-                                                   ((copy_rect.y1 -
-                                                     oldY) *
-                                                    winRec->bytesPerRow)
-                                                   + (copy_rect.x1 -
-                                                      oldX) * Bpp,
-                                                   winRec->bytesPerRow,
-                                                   gResizeDeathBits,
-                                                   copy_rowbytes);
-            }
-            else {
-                fbBlt((FbBits *) (winRec->pixelData
-                                  +
-                                  ((copy_rect.y1 - oldY) * winRec->bytesPerRow)
-                                  + (copy_rect.x1 - oldX) * Bpp),
-                      winRec->bytesPerRow / sizeof(FbBits), 0,
-                      (FbBits *) gResizeDeathBits,
-                      copy_rowbytes / sizeof(FbBits), 0, copy_rect_width * Bpp,
-                      copy_rect_height, GXcopy, FB_ALLONES, Bpp, 0, 0);
-            }
-
-            gResizeDeathBounds[1] = copy_rect;
-            gResizeDeathPix[1]
-                = GetScratchPixmapHeader(pScreen, copy_rect_width,
-                                         copy_rect_height,
-                                         winRec->win->drawable.depth,
-                                         winRec->win->drawable.bitsPerPixel,
-                                         winRec->bytesPerRow,
-                                         (void *) gResizeDeathBits);
-
-            SetPixmapBaseToScreen(gResizeDeathPix[1],
-                                  copy_rect.x1, copy_rect.y1);
-
-            gResizeDeathCount = 2;
-        }
-    }
-    else if (gravity) {
-        /* The general case. Just copy everything. */
-        need_window_source = TRUE;
-    }
-
-    /* If necessary, create a source pixmap pointing at the current
-       window bits. */
-    if (need_window_source) {
+    if (gravity) {
         RootlessStartDrawing(pWin);
 
         gResizeDeathBits = xallocarray(winRec->bytesPerRow, winRec->height);

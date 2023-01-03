@@ -833,7 +833,6 @@ static inline unsigned int
 ResizeWeighting(int oldX1, int oldY1, int oldX2, int oldY2, int oldBW,
                 int newX1, int newY1, int newX2, int newY2, int newBW)
 {
-#ifdef ROOTLESS_RESIZE_GRAVITY
     if (newBW != oldBW)
         return RL_GRAVITY_NONE;
 
@@ -847,9 +846,6 @@ ResizeWeighting(int oldX1, int oldY1, int oldX2, int oldY2, int oldBW,
         return RL_GRAVITY_NORTH_EAST;
     else
         return RL_GRAVITY_NONE;
-#else
-    return RL_GRAVITY_NONE;
-#endif
 }
 
 /*

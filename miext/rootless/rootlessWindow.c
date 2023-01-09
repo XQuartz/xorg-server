@@ -949,43 +949,6 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
         gResizeOldCopyWindowProc = pScreen->CopyWindow;
         pScreen->CopyWindow = RootlessResizeCopyWindow;
     }
-
-    /* If we can't rely on the window server preserving the bits we
-       need in the position we need, copy the pixels in the
-       intersection from src to dst. ResizeWindow assumes these pixels
-       are already present when making gravity adjustments. pWin
-       currently has new-sized pixmap but is in old position.
-
-       FIXME: border width change! (?) */
-
-    if (gravity && weight == RL_GRAVITY_NONE) {
-        PixmapPtr src, dst;
-
-        assert(gResizeDeathCount == 1);
-
-        src = gResizeDeathPix[0];
-        dst = pScreen->GetWindowPixmap(pWin);
-
-        RL_DEBUG_MSG("Resize copy rect %d %d %d %d\n",
-                     rect.x1, rect.y1, rect.x2, rect.y2);
-
-        /* rect is the intersection of the old location and new location */
-        if (BOX_NOT_EMPTY(rect) && src != NULL && dst != NULL) {
-            /* The window drawable still has the old frame position, which
-               means that DST doesn't actually point at the origin of our
-               physical backing store when adjusted by the drawable.x,y
-               position. So sneakily adjust it temporarily while copying.. */
-
-            ((PixmapPtr) dst)->devPrivate.ptr = winRec->pixelData;
-            SetPixmapBaseToScreen(dst, newX, newY);
-
-            fbCopyWindowProc(&src->drawable, &dst->drawable, NULL,
-                             &rect, 1, 0, 0, FALSE, FALSE, 0, 0);
-
-            ((PixmapPtr) dst)->devPrivate.ptr = winRec->pixelData;
-            SetPixmapBaseToScreen(dst, oldX, oldY);
-        }
-    }
 }
 
 static void

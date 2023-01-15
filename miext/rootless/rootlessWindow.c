@@ -625,11 +625,6 @@ RootlessRestackWindow(WindowPtr pWin, WindowPtr pOldNextSib)
  */
 
 // Globals needed during window resize and move.
-static void *gResizeDeathBits = NULL;
-static int gResizeDeathCount = 0;
-static PixmapPtr gResizeDeathPix[2] = { NULL, NULL };
-
-static BoxRec gResizeDeathBounds[2];
 static CopyWindowProcPtr gResizeOldCopyWindowProc = NULL;
 
 /*
@@ -647,74 +642,6 @@ RootlessNoCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
     RL_DEBUG_MSG("ROOTLESSNOCOPYWINDOW ");
 
     RegionTranslate(prgnSrc, -dx, -dy);
-}
-
-/*
- * RootlessResizeCopyWindow
- *  CopyWindow used during ResizeWindow for gravity moves. Based on
- *  fbCopyWindow. The original always draws on the root pixmap, which
- *  we don't have. Instead, draw on the parent window's pixmap.
- *  Resize version: the old location's pixels are in gResizeCopyWindowSource.
- */
-static void
-RootlessResizeCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg,
-                         RegionPtr prgnSrc)
-{
-    ScreenPtr pScreen = pWin->drawable.pScreen;
-    RegionRec rgnDst;
-    int dx, dy;
-
-    RL_DEBUG_MSG("resizecopywindowFB start (win %p (%lu)) ", pWin, RootlessWID(pWin));
-
-    /* Don't unwrap pScreen->CopyWindow.
-       The bogus rewrap with RootlessCopyWindow causes a crash if
-       CopyWindow is called again during the same resize. */
-
-    if (gResizeDeathCount == 0)
-        return;
-
-    RootlessStartDrawing(pWin);
-
-    dx = ptOldOrg.x - pWin->drawable.x;
-    dy = ptOldOrg.y - pWin->drawable.y;
-    RegionTranslate(prgnSrc, -dx, -dy);
-    RegionNull(&rgnDst);
-    RegionIntersect(&rgnDst, &pWin->borderClip, prgnSrc);
-
-    if (gResizeDeathCount == 1) {
-        /* Simple case, we only have a single source pixmap. */
-
-        miCopyRegion(&gResizeDeathPix[0]->drawable,
-                     &pScreen->GetWindowPixmap(pWin)->drawable, 0,
-                     &rgnDst, dx, dy, fbCopyWindowProc, 0, 0);
-    }
-    else {
-        int i;
-        RegionRec clip, clipped;
-
-        /* More complex case, N source pixmaps (usually two). So we
-           intersect the destination with each source and copy those bits. */
-
-        for (i = 0; i < gResizeDeathCount; i++) {
-            RegionInit(&clip, gResizeDeathBounds + 0, 1);
-            RegionNull(&clipped);
-            RegionIntersect(&rgnDst, &clip, &clipped);
-
-            miCopyRegion(&gResizeDeathPix[i]->drawable,
-                         &pScreen->GetWindowPixmap(pWin)->drawable, 0,
-                         &clipped, dx, dy, fbCopyWindowProc, 0, 0);
-
-            RegionUninit(&clipped);
-            RegionUninit(&clip);
-        }
-    }
-
-    /* Don't update - resize will update everything */
-    RegionUninit(&rgnDst);
-
-    fbValidateDrawable(&pWin->drawable);
-
-    RL_DEBUG_MSG("resizecopywindowFB end\n");
 }
 
 /*
@@ -886,48 +813,6 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
 
     RootlessRedisplay(pWin);
 
-    /* If gravity is true, then we need to have a way of recovering all
-       the original bits in the window for when X rearranges the contents
-       based on the various gravity settings. The obvious way is to just
-       snapshot the entire backing store before resizing it, but that
-       it slow on large windows.
-
-       So the optimization here is to use the implementation's resize
-       weighting options (if available) to allow us to reason about what
-       is left in the backing store after the resize. We can then only
-       copy what won't be there after the resize, and do a two-stage copy
-       operation.
-
-       Most of these optimizations are only applied when the top-left
-       corner of the window is fixed, since that's the common case. They
-       could probably be extended with some thought. */
-
-    gResizeDeathCount = 0;
-
-    if (gravity) {
-        RootlessStartDrawing(pWin);
-
-        gResizeDeathBits = xallocarray(winRec->bytesPerRow, winRec->height);
-
-        memcpy(gResizeDeathBits, winRec->pixelData,
-               winRec->bytesPerRow * winRec->height);
-
-        gResizeDeathBounds[0] = (BoxRec) {
-        oldX, oldY, oldX2, oldY2};
-        gResizeDeathPix[0]
-            = GetScratchPixmapHeader(pScreen, winRec->width,
-                                     winRec->height,
-                                     winRec->win->drawable.depth,
-                                     winRec->win->drawable.bitsPerPixel,
-                                     winRec->bytesPerRow,
-                                     (void *) gResizeDeathBits);
-
-        SetPixmapBaseToScreen(gResizeDeathPix[0], oldX, oldY);
-        gResizeDeathCount = 1;
-    }
-
-    RootlessStopDrawing(pWin, FALSE);
-
     winRec->x = newX;
     winRec->y = newY;
     winRec->width = newW;
@@ -947,7 +832,7 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
 
     if (gravity) {
         gResizeOldCopyWindowProc = pScreen->CopyWindow;
-        pScreen->CopyWindow = RootlessResizeCopyWindow;
+        pScreen->CopyWindow = RootlessNoCopyWindow;
     }
 }
 
@@ -965,16 +850,6 @@ FinishFrameResize(WindowPtr pWin, Bool gravity, int oldX, int oldY,
        to do this. Perhaps when top-left weighting and no gravity? */
 
     RootlessDamageRect(pWin, -newBW, -newBW, newW, newH);
-
-    for (i = 0; i < 2; i++) {
-        if (gResizeDeathPix[i] != NULL) {
-            FreeScratchPixmapHeader(gResizeDeathPix[i]);
-            gResizeDeathPix[i] = NULL;
-        }
-    }
-
-    free(gResizeDeathBits);
-    gResizeDeathBits = NULL;
 
     if (gravity) {
         pScreen->CopyWindow = gResizeOldCopyWindowProc;

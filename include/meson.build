@@ -186,10 +186,6 @@ conf_data.set('LISTEN_TCP', get_option('listen_tcp'))
 conf_data.set('LISTEN_UNIX', get_option('listen_unix'))
 conf_data.set('LISTEN_LOCAL', get_option('listen_local'))
 
-if cc.has_header_symbol('sys/socket.h', 'SCM_RIGHTS')
-  conf_data.set('XTRANS_SEND_FDS', '1')
-endif
-
 if conf_data.get('HAVE_GETPEEREID').to_int() == 0 and conf_data.get('HAVE_GETPEERUCRED').to_int() == 0
     if not cc.has_header_symbol('sys/socket.h', 'SO_PEERCRED')
         conf_data.set('NO_LOCAL_CLIENT_CRED', 1)

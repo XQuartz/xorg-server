@@ -73,6 +73,12 @@
 #include <limits.h>
 #endif
 
+#ifdef __APPLE__
+#include <dispatch/dispatch.h>
+#include <errno.h>
+#include <sys/sysctl.h>
+#endif
+
 /**
  * Try to determine a PID for a client from its connection
  * information. This should be called only once when new client has
@@ -130,9 +136,11 @@ DetermineClientPid(struct _Client * client)
 void
 DetermineClientCmd(pid_t pid, const char **cmdname, const char **cmdargs)
 {
+#if !defined(__APPLE__)
     char path[PATH_MAX + 1];
     int totsize = 0;
     int fd = 0;
+#endif
 
     if (cmdname)
         *cmdname = NULL;
@@ -142,7 +150,107 @@ DetermineClientCmd(pid_t pid, const char **cmdname, const char **cmdargs)
     if (pid == -1)
         return;
 
-#if defined(__OpenBSD__)
+#if defined (__APPLE__)
+    {
+        static dispatch_once_t once;
+        static int argmax;
+        dispatch_once(&once, ^{
+            int mib[2];
+            size_t len;
+
+            mib[0] = CTL_KERN;
+            mib[1] = KERN_ARGMAX;
+
+            len = sizeof(argmax);
+            if (sysctl(mib, 2, &argmax, &len, NULL, 0) == -1) {
+                ErrorF("Unable to dynamically determine kern.argmax, using ARG_MAX (%d)\n", ARG_MAX);
+                argmax = ARG_MAX;
+            }
+        });
+
+        int mib[3];
+        size_t len = argmax;
+        int32_t argc = -1;
+
+        char * const procargs = malloc(len);
+        if (!procargs) {
+            ErrorF("Failed to allocate memory (%lu bytes) for KERN_PROCARGS2 result for pid %d: %s\n", len, pid, strerror(errno));
+            return;
+        }
+
+        mib[0] = CTL_KERN;
+        mib[1] = KERN_PROCARGS2;
+        mib[2] = pid;
+
+        if (sysctl(mib, 3, procargs, &len, NULL, 0) == -1) {
+            ErrorF("Failed to determine KERN_PROCARGS2 for pid %d: %s\n", pid, strerror(errno));
+            free(procargs);
+            return;
+        }
+
+        if (len < sizeof(argc) || len > argmax) {
+            ErrorF("Erroneous length returned when querying KERN_PROCARGS2 for pid %d: %zu\n", pid, len);
+            free(procargs);
+            return;
+        }
+
+        /* Ensure we have a failsafe NUL termination just in case the last entry
+         * was not actually NUL terminated.
+         */
+        procargs[len-1] = '\0';
+
+        /* Setup our iterator */
+        char *is = procargs;
+
+        /* The first element in the buffer is argc as a 32bit int. When using
+         * the older KERN_PROCARGS, this is omitted, and one needs to guess
+         * (usually by checking for an `=` character) when we start seeing
+         * envvars instead of arguments.
+         */
+        argc = *(int32_t *)is;
+        is += sizeof(argc);
+
+        /* The very next string is the executable path.  Skip over it since
+         * this function wants to return argv[0] and argv[1...n].
+         */
+        is += strlen(is) + 1;
+
+        /* Skip over extra NUL characters to get to the start of argv[0] */
+        for (; (is < &procargs[len]) && !(*is); is++);
+
+        if (! (is < &procargs[len])) {
+            ErrorF("Arguments were not returned when querying KERN_PROCARGS2 for pid %d: %zu\n", pid, len);
+            free(procargs);
+            return;
+        }
+
+        if (cmdname) {
+            *cmdname = strdup(is);
+        }
+
+        /* Jump over argv[0] and point to argv[1] */
+        is += strlen(is) + 1;
+
+        if (cmdargs && is < &procargs[len]) {
+            char *args = is;
+
+            /* Remove the NUL terminators except the last one */
+            for (int i = 1; i < argc - 1; i++) {
+                /* Advance to the NUL terminator */
+                is += strlen(is);
+
+                /* Change the NUL to a space, ensuring we don't accidentally remove the terminal NUL */
+                if (is < &procargs[len-1]) {
+                    *is = ' ';
+                }
+            }
+
+            *cmdargs = strdup(args);
+        }
+
+        free(procargs);
+    }
+#elif defined(__OpenBSD__)
     /* on OpenBSD use kvm_getargv() */
     {
         kvm_t *kd;

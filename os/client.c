@@ -160,18 +160,24 @@ DetermineClientCmd(pid_t pid, const char **cmdname, const char **cmdargs)
         if (n != 1)
             return;
         argv = kvm_getargv(kd, kp, 0);
-        *cmdname = strdup(argv[0]);
-        i = 1;
-        while (argv[i] != NULL) {
-            len += strlen(argv[i]) + 1;
-            i++;
+
+        if (cmdname) {
+            *cmdname = strdup(argv[0]);
         }
-        *cmdargs = calloc(1, len);
-        i = 1;
-        while (argv[i] != NULL) {
-            strlcat(*cmdargs, argv[i], len);
-            strlcat(*cmdargs, " ", len);
-            i++;
+
+        if (cmdargs) {
+            i = 1;
+            while (argv[i] != NULL) {
+                len += strlen(argv[i]) + 1;
+                i++;
+            }
+            *cmdargs = calloc(1, len);
+            i = 1;
+            while (argv[i] != NULL) {
+                strlcat(*cmdargs, argv[i], len);
+                strlcat(*cmdargs, " ", len);
+                i++;
+            }
         }
         kvm_close(kd);
     }

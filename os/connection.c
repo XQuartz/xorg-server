@@ -637,8 +637,8 @@ AllocNewConnection(XtransConnInfo trans_conn, int fd, CARD32 conn_time)
     set_poll_client(client);
 
 #ifdef DEBUG
-    ErrorF("AllocNewConnection: client index = %d, socket fd = %d\n",
-           client->index, fd);
+    ErrorF("AllocNewConnection: client index = %d, socket fd = %d, local = %d\n",
+           client->index, fd, client->local);
 #endif
 #ifdef XSERVER_DTRACE
     XSERVER_CLIENT_CONNECT(client->index, fd);

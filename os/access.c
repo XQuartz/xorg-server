@@ -116,6 +116,10 @@ SOFTWARE.
 #endif
 #endif
 
+#ifdef HAVE_SYS_UN_H
+#include <sys/un.h>
+#endif
+
 #if defined(SVR4) ||  (defined(SYSV) && defined(__i386__)) || defined(__GNU__)
 #include <sys/utsname.h>
 #endif
@@ -1176,6 +1180,10 @@ GetLocalClientCreds(ClientPtr client, LocalClientCredRec ** lccp)
 #elif defined(HAVE_GETPEEREID)
     uid_t uid;
     gid_t gid;
+#if defined(LOCAL_PEERPID)
+    pid_t pid;
+    socklen_t so_len = sizeof(pid);
+#endif
 #endif
 
     if (client == NULL)
@@ -1253,6 +1261,16 @@ GetLocalClientCreds(ClientPtr client, LocalClientCredRec ** lccp)
     lcc->euid = uid;
     lcc->egid = gid;
     lcc->fieldsSet = LCC_UID_SET | LCC_GID_SET;
+
+#if defined(LOCAL_PEERPID)
+    if (getsockopt(fd, SOL_LOCAL, LOCAL_PEERPID, &pid, &so_len) != 0) {
+        ErrorF("getsockopt failed to determine pid of socket %d: %s\n", fd, strerror(errno));
+    } else {
+        lcc->pid = pid;
+        lcc->fieldsSet |= LCC_PID_SET;
+    }
+#endif
+
     return 0;
 #endif
 #else

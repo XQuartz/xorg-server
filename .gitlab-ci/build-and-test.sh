@@ -22,7 +22,7 @@ check_piglit_results ()
 
 meson -Dc_args="-fno-common" -Dprefix=/usr -Dxephyr=true -Dwerror=true $MESON_EXTRA_OPTIONS build/
 
-export PIGLIT_DIR=/root/piglit XTEST_DIR=/root/xts
+export PIGLIT_DIR=/root/piglit XTEST_DIR=/root/xts LP_NUM_THREADS=0
 ninja -j${FDO_CI_CONCURRENT:-4} -C build/
 meson test --num-processes ${FDO_CI_CONCURRENT:-4} --print-errorlogs -C build/
 

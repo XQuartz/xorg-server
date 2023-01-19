@@ -25,7 +25,8 @@ meson -Dc_args="-fno-common" -Dprefix=/usr -Dxephyr=true -Dwerror=true $MESON_EX
 ninja -j${FDO_CI_CONCURRENT:-4} -C build/ dist
 
 export PIGLIT_DIR=/root/piglit XTEST_DIR=/root/xts
-ninja -j${FDO_CI_CONCURRENT:-4} -C build/ test
+ninja -j${FDO_CI_CONCURRENT:-4} -C build/
+meson test --num-processes ${FDO_CI_CONCURRENT:-4} --print-errorlogs -C build/
 
 check_piglit_results xephyr-glamor hw/kdrive/ephyr/Xephyr.p/ephyr_glamor.c.o
 check_piglit_results xvfb hw/vfb/Xvfb

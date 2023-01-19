@@ -97,6 +97,16 @@ mingw-cross-build:
         - meson --cross-file=.gitlab-ci/cross-i686-w64-mingw32.txt -Dglx=false -Dsecure-rpc=false -Dlisten_tcp=true build/
         - ninja -j${FDO_CI_CONCURRENT:-4} -C build/ install
 
+meson-dist:
+    extends: .common-build-and-test
+    artifacts:
+        when: always
+        paths:
+            - build/meson-logs/
+            - build/xserver-*/build/meson-logs/
+    script:
+        - .gitlab-ci/dist.sh
+
 #
 # Verify that commit messages are as expected
 #

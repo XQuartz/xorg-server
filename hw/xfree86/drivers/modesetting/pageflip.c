@@ -321,9 +321,6 @@ ms_do_pageflip(ScreenPtr screen,
                ms_pageflip_abort_proc pageflip_abort,
                const char *log_prefix)
 {
-#ifndef GLAMOR_HAS_GBM
-    return FALSE;
-#else
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     modesettingPtr ms = modesettingPTR(scrn);
     xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(scrn);
@@ -478,7 +475,6 @@ error_out:
         flipdata->flip_count--;
 
     return FALSE;
-#endif /* GLAMOR_HAS_GBM */
 }
 
 static void

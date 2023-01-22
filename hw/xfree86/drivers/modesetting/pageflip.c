@@ -204,11 +204,10 @@ enum queue_flip_status {
 static int
 queue_flip_on_crtc(ScreenPtr screen, xf86CrtcPtr crtc,
                    struct ms_flipdata *flipdata,
-                   int ref_crtc_vblank_pipe, uint32_t flags)
+                   xf86CrtcPtr ref_crtc, uint32_t flags)
 {
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     modesettingPtr ms = modesettingPTR(scrn);
-    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
     struct ms_crtc_pageflip *flip;
     uint32_t seq;
 
@@ -220,7 +219,7 @@ queue_flip_on_crtc(ScreenPtr screen, xf86CrtcPtr crtc,
     /* Only the reference crtc will finally deliver its page flip
      * completion event. All other crtc's events will be discarded.
      */
-    flip->on_reference_crtc = (drmmode_crtc->vblank_pipe == ref_crtc_vblank_pipe);
+    flip->on_reference_crtc = crtc == ref_crtc;
     flip->flipdata = flipdata;
 
     seq = ms_drm_queue_alloc(crtc, flip, ms_pageflip_handler, ms_pageflip_abort);
@@ -315,7 +314,7 @@ Bool
 ms_do_pageflip(ScreenPtr screen,
                PixmapPtr new_front,
                void *event,
-               int ref_crtc_vblank_pipe,
+               xf86CrtcPtr ref_crtc,
                Bool async,
                ms_pageflip_handler_proc pageflip_handler,
                ms_pageflip_abort_proc pageflip_abort,
@@ -393,7 +392,6 @@ ms_do_pageflip(ScreenPtr screen,
     for (i = 0; i < config->num_crtc; i++) {
         enum queue_flip_status flip_status;
         xf86CrtcPtr crtc = config->crtc[i];
-        drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
 
         if (!xf86_crtc_on(crtc))
             continue;
@@ -414,13 +412,11 @@ ms_do_pageflip(ScreenPtr screen,
          * outputs in a "clone-mode" or "mirror-mode" configuration.
          */
         if (ms->drmmode.can_async_flip && ms->drmmode.async_flip_secondaries &&
-            (drmmode_crtc->vblank_pipe != ref_crtc_vblank_pipe) &&
-            (ref_crtc_vblank_pipe >= 0))
+            ref_crtc && crtc != ref_crtc)
             flags |= DRM_MODE_PAGE_FLIP_ASYNC;
 
         flip_status = queue_flip_on_crtc(screen, crtc, flipdata,
-                                         ref_crtc_vblank_pipe,
-                                         flags);
+                                         ref_crtc, flags);
 
         switch (flip_status) {
             case QUEUE_FLIP_ALLOC_FAILED:

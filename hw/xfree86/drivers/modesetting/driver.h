@@ -236,7 +236,7 @@ typedef void (*ms_pageflip_abort_proc)(modesettingPtr ms, void *data);
 Bool ms_do_pageflip(ScreenPtr screen,
                     PixmapPtr new_front,
                     void *event,
-                    int ref_crtc_vblank_pipe,
+                    xf86CrtcPtr ref_crtc,
                     Bool async,
                     ms_pageflip_handler_proc pageflip_handler,
                     ms_pageflip_abort_proc pageflip_abort,

@@ -361,7 +361,6 @@ ms_present_flip(RRCrtcPtr crtc,
     ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
     modesettingPtr ms = modesettingPTR(scrn);
     xf86CrtcPtr xf86_crtc = crtc->devPrivate;
-    drmmode_crtc_private_ptr drmmode_crtc = xf86_crtc->driver_private;
     Bool ret;
     struct ms_present_vblank_event *event;
 
@@ -389,7 +388,7 @@ ms_present_flip(RRCrtcPtr crtc,
         ms_present_set_screen_vrr(scrn, TRUE);
     }
 
-    ret = ms_do_pageflip(screen, pixmap, event, drmmode_crtc->vblank_pipe, !sync_flip,
+    ret = ms_do_pageflip(screen, pixmap, event, xf86_crtc, !sync_flip,
                          ms_present_flip_handler, ms_present_flip_abort,
                          "Present-flip");
     if (ret)
@@ -421,7 +420,7 @@ ms_present_unflip(ScreenPtr screen, uint64_t event_id)
     event->unflip = TRUE;
 
     if (ms_present_check_unflip(NULL, screen->root, pixmap, TRUE, NULL) &&
-        ms_do_pageflip(screen, pixmap, event, -1, FALSE,
+        ms_do_pageflip(screen, pixmap, event, NULL, FALSE,
                        ms_present_flip_handler, ms_present_flip_abort,
                        "Present-unflip")) {
         return;

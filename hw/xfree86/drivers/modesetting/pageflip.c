@@ -476,7 +476,9 @@ error_out:
 static void
 ms_tearfree_flip_abort(void *data)
 {
-    drmmode_tearfree_ptr trf = data;
+    xf86CrtcPtr crtc = data;
+    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
 
     trf->flip_seq = 0;
 }
@@ -484,7 +486,9 @@ ms_tearfree_flip_abort(void *data)
 static void
 ms_tearfree_flip_handler(uint64_t msc, uint64_t usec, void *data)
 {
-    drmmode_tearfree_ptr trf = data;
+    xf86CrtcPtr crtc = data;
+    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
 
     /* Swap the buffers and complete the flip */
     trf->back_idx ^= 1;
@@ -498,7 +502,7 @@ ms_do_tearfree_flip(ScreenPtr screen, xf86CrtcPtr crtc)
     drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
     uint32_t idx = trf->back_idx, seq;
 
-    seq = ms_drm_queue_alloc(crtc, trf, ms_tearfree_flip_handler,
+    seq = ms_drm_queue_alloc(crtc, crtc, ms_tearfree_flip_handler,
                              ms_tearfree_flip_abort);
     if (!seq)
         goto no_flip;

@@ -554,7 +554,6 @@ present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
     WindowPtr                   window = vblank->window;
     ScreenPtr                   screen = window->drawable.pScreen;
     present_screen_priv_ptr     screen_priv = present_screen_priv(screen);
-    uint64_t                    completion_msc;
     if (vblank && vblank->crtc) {
         screen_priv=present_screen_priv(vblank->crtc->pScreen);
     }
@@ -652,23 +651,26 @@ present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
          * If TearFree is already flipping then the presentation will be visible
          * at the *next* next vblank.
          */
-        completion_msc = crtc_msc + 1;
-        switch (vblank->reason) {
-        case PRESENT_FLIP_REASON_DRIVER_TEARFREE_FLIPPING:
-            if (vblank->exec_msc < crtc_msc)
-                completion_msc++;
-        case PRESENT_FLIP_REASON_DRIVER_TEARFREE:
-            if (Success == screen_priv->queue_vblank(screen,
-                                                     window,
-                                                     vblank->crtc,
-                                                     vblank->event_id,
-                                                     completion_msc)) {
-                /* Ensure present_execute_post() runs at the next MSC */
-                vblank->exec_msc = vblank->target_msc;
-                vblank->queued = TRUE;
+        if (!vblank->queued) {
+            uint64_t completion_msc = crtc_msc + 1;
+
+            switch (vblank->reason) {
+            case PRESENT_FLIP_REASON_DRIVER_TEARFREE_FLIPPING:
+                if (vblank->exec_msc < crtc_msc)
+                    completion_msc++;
+            case PRESENT_FLIP_REASON_DRIVER_TEARFREE:
+                if (Success == screen_priv->queue_vblank(screen,
+                                                         window,
+                                                         vblank->crtc,
+                                                         vblank->event_id,
+                                                         completion_msc)) {
+                    /* Ensure present_execute_post() runs at the next MSC */
+                    vblank->exec_msc = vblank->target_msc;
+                    vblank->queued = TRUE;
+                }
+            default:
+                break;
             }
-        default:
-            break;
         }
 
         if (vblank->queued) {

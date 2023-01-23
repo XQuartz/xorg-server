@@ -646,30 +646,48 @@ present_execute(present_vblank_ptr vblank, uint64_t ust, uint64_t crtc_msc)
 
         present_execute_copy(vblank, crtc_msc);
 
-        /* The presentation will be visible at the next vblank with TearFree, so
-         * the PresentComplete notification needs to be sent at the next vblank.
-         * If TearFree is already flipping then the presentation will be visible
-         * at the *next* next vblank.
+        /* With TearFree, there's no way to tell exactly when the presentation
+         * will be visible except by waiting for a notification from the kernel
+         * driver indicating that the page flip is complete. This is because the
+         * CRTC's MSC can change while the target MSC is calculated and even
+         * while the page flip IOCTL is sent to the kernel due to scheduling
+         * delays and/or unfortunate timing. Even worse, a page flip isn't
+         * actually guaranteed to be finished after one vblank; it may be
+         * several MSCs until a flip actually finishes depending on delays and
+         * load in hardware.
+         *
+         * So, to get a notification from the driver with TearFree active, the
+         * driver expects a present_flip() call with a NULL pixmap to indicate
+         * that this is a fake flip for a pixmap that's already been copied to
+         * the primary scanout, which will then be flipped by TearFree. TearFree
+         * will then send a notification once the flip containing this pixmap is
+         * complete.
+         *
+         * If the fake flip attempt fails, then fall back to just enqueuing a
+         * vblank event targeting the next MSC.
          */
-        if (!vblank->queued) {
+        if (!vblank->queued &&
+            vblank->reason >= PRESENT_FLIP_REASON_DRIVER_TEARFREE) {
             uint64_t completion_msc = crtc_msc + 1;
 
-            switch (vblank->reason) {
-            case PRESENT_FLIP_REASON_DRIVER_TEARFREE_FLIPPING:
-                if (vblank->exec_msc < crtc_msc)
+            /* If TearFree is already flipping then the presentation will be
+             * visible at the *next* next vblank. This calculation only matters
+             * for the vblank event fallback.
+             */
+            if (vblank->reason == PRESENT_FLIP_REASON_DRIVER_TEARFREE_FLIPPING &&
+                vblank->exec_msc < crtc_msc)
                     completion_msc++;
-            case PRESENT_FLIP_REASON_DRIVER_TEARFREE:
-                if (Success == screen_priv->queue_vblank(screen,
-                                                         window,
-                                                         vblank->crtc,
-                                                         vblank->event_id,
-                                                         completion_msc)) {
-                    /* Ensure present_execute_post() runs at the next MSC */
-                    vblank->exec_msc = vblank->target_msc;
-                    vblank->queued = TRUE;
-                }
-            default:
-                break;
+
+            /* Try the fake flip first and then fall back to a vblank event */
+            if (present_flip(vblank->crtc, vblank->event_id, 0, NULL, TRUE) ||
+                Success == screen_priv->queue_vblank(screen,
+                                                     window,
+                                                     vblank->crtc,
+                                                     vblank->event_id,
+                                                     completion_msc)) {
+                /* Ensure present_execute_post() runs at the next execution */
+                vblank->exec_msc = vblank->target_msc;
+                vblank->queued = TRUE;
             }
         }
 

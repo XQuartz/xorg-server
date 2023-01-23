@@ -336,7 +336,7 @@ ms_do_pageflip(ScreenPtr screen,
         xf86DrvMsg(scrn->scrnIndex, X_ERROR,
                    "%s: Failed to get GBM BO for flip to new front.\n",
                    log_prefix);
-        return FALSE;
+        goto error_free_event;
     }
 
     flipdata = calloc(1, sizeof(struct ms_flipdata));
@@ -344,7 +344,7 @@ ms_do_pageflip(ScreenPtr screen,
         drmmode_bo_destroy(&ms->drmmode, &new_front_bo);
         xf86DrvMsg(scrn->scrnIndex, X_ERROR,
                    "%s: Failed to allocate flipdata.\n", log_prefix);
-        return FALSE;
+        goto error_free_event;
     }
 
     flipdata->event = event;
@@ -465,11 +465,16 @@ error_out:
     drmmode_bo_destroy(&ms->drmmode, &new_front_bo);
     /* if only the local reference - free the structure,
      * else drop the local reference and return */
-    if (flipdata->flip_count == 1)
+    if (flipdata->flip_count == 1) {
         free(flipdata);
-    else
+    } else {
         flipdata->flip_count--;
+        return FALSE;
+    }
 
+error_free_event:
+    /* Free the event since the caller has no way to know it's safe to free */
+    free(event);
     return FALSE;
 }
 

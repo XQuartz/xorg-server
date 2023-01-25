@@ -1215,7 +1215,7 @@ EnqueueEvent(InternalEvent *ev, DeviceIntPtr device)
     qe->pScreen = pSprite->hotPhys.pScreen;
     qe->months = currentTime.months;
     qe->event = (InternalEvent *) (qe + 1);
-    memcpy(qe->event, event, eventlen);
+    CopyPartialInternalEvent(qe->event, (InternalEvent *)event);
     xorg_list_append(&qe->next, &syncEvents.pending);
 }
 

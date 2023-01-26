@@ -573,10 +573,15 @@ ms_drm_sequence_handler(int fd, uint64_t frame, uint64_t ns, Bool is64bit, uint6
         if (q->seq == seq) {
             crtc = q->crtc;
             msc = ms_kernel_msc_to_crtc_msc(crtc, frame, is64bit);
-            xorg_list_del(&q->list);
-            if (!q->aborted)
-                q->handler(msc, ns / 1000, q->data);
-            free(q);
+
+            /* Write the current MSC to this event to ensure its handler runs in
+             * the loop below. This is done because we don't want to run the
+             * handler right now, since we need to ensure all events are handled
+             * in FIFO order with respect to one another. Otherwise, if this
+             * event were handled first just because it was queued to the
+             * kernel, it could run before older events expiring at this MSC.
+             */
+            q->msc = msc;
             break;
         }
     }

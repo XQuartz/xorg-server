@@ -302,7 +302,7 @@ xwl_log_handler(const char *format, va_list args)
 #ifdef XWL_HAS_XWAYLAND_EXTENSION
 #include <X11/extensions/xwaylandproto.h>
 
-Bool noXWaylandExtension = FALSE;
+Bool noXwaylandExtension = FALSE;
 
 static int
 ProcXwlQueryVersion(ClientPtr client)
@@ -356,7 +356,7 @@ SProcXwlQueryVersion(ClientPtr client)
 }
 
 static int
-ProcXWaylandDispatch(ClientPtr client)
+ProcXwaylandDispatch(ClientPtr client)
 {
     REQUEST(xReq);
 
@@ -368,7 +368,7 @@ ProcXWaylandDispatch(ClientPtr client)
 }
 
 static int
-SProcXWaylandDispatch(ClientPtr client)
+SProcXwaylandDispatch(ClientPtr client)
 {
     REQUEST(xReq);
 
@@ -384,7 +384,7 @@ xwlExtensionInit(void)
 {
     AddExtension(XWAYLAND_EXTENSION_NAME,
                  XwlNumberEvents, XwlNumberErrors,
-                 ProcXWaylandDispatch, SProcXWaylandDispatch,
+                 ProcXwaylandDispatch, SProcXwaylandDispatch,
                  NULL, StandardMinorOpcode);
 }
 
@@ -395,7 +395,7 @@ static const ExtensionModule xwayland_extensions[] = {
     { xwlVidModeExtensionInit, XF86VIDMODENAME, &noXFree86VidModeExtension },
 #endif
 #ifdef XWL_HAS_XWAYLAND_EXTENSION
-    { xwlExtensionInit, XWAYLAND_EXTENSION_NAME, &noXWaylandExtension },
+    { xwlExtensionInit, XWAYLAND_EXTENSION_NAME, &noXwaylandExtension },
 #endif
 };
 

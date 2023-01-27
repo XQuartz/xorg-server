@@ -159,21 +159,29 @@ xwayland_server = executable(
     install_dir: xwayland_path
 )
 
-xwayland_data = configuration_data()
-xwayland_data.set('prefix', get_option('prefix'))
-xwayland_data.set('exec_prefix', '${prefix}')
-xwayland_data.set('PACKAGE_VERSION', meson.project_version())
-xwayland_data.set('xwayland_path', xwayland_path)
-xwayland_data.set('have_glamor', build_glamor ? 'true' : 'false')
-xwayland_data.set('have_eglstream', build_eglstream ? 'true' : 'false')
-xwayland_data.set('have_libdecor', have_libdecor ? 'true' : 'false')
-configure_file(
-    input: 'xwayland.pc.in',
-    output: 'xwayland.pc',
-    configuration: xwayland_data,
-    install_dir: join_paths(get_option('prefix'),
-                            get_option('libdir'),
-                            'pkgconfig'),
+pkgconfig = import('pkgconfig')
+
+pkgconfig.generate(
+    filebase: 'xwayland',
+    name: 'Xwayland',
+    description: 'X Server for Wayland',
+    variables: [
+        'exec_prefix=${prefix}',
+        'xwayland=' + xwayland_path + '/Xwayland',
+        'have_glamor=' + build_glamor.to_string(),
+        'have_eglstream=' + build_eglstream.to_string(),
+        'have_initfd=true',
+        'have_listenfd=true',
+        'have_verbose=true',
+        'have_terminate_delay=true',
+        'have_no_touch_pointer_emulation=true',
+        'have_force_xrandr_emulation=true',
+        'have_geometry=true',
+        'have_fullscreen=true',
+        'have_host_grab=true',
+        'have_decorate=' + have_libdecor.to_string(),
+        'have_byteswappedclients=true',
+    ],
 )
 
 xwayland_manpage = configure_file(

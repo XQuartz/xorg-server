@@ -821,12 +821,12 @@ xwl_glamor_init_backends(struct xwl_screen *xwl_screen, Bool use_eglstream)
 #ifdef GLAMOR_HAS_GBM
     xwl_glamor_init_gbm(xwl_screen);
     if (!xwl_screen->gbm_backend.is_available && !use_eglstream)
-        ErrorF("xwayland glamor: GBM backend (default) is not available\n");
+        ErrorF("Xwayland glamor: GBM backend (default) is not available\n");
 #endif
 #ifdef XWL_HAS_EGLSTREAM
     xwl_glamor_init_eglstream(xwl_screen);
     if (!xwl_screen->eglstream_backend.is_available && use_eglstream)
-        ErrorF("xwayland glamor: EGLStream backend requested but not available\n");
+        ErrorF("Xwayland glamor: EGLStream backend requested but not available\n");
 #endif
 }
 

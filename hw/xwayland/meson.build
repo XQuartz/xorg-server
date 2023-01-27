@@ -159,6 +159,22 @@ xwayland_server = executable(
     install_dir: xwayland_path
 )
 
+xwayland_vars = [
+    'have_glamor=' + build_glamor.to_string(),
+    'have_eglstream=' + build_eglstream.to_string(),
+    'have_initfd=true',
+    'have_listenfd=true',
+    'have_verbose=true',
+    'have_terminate_delay=true',
+    'have_no_touch_pointer_emulation=true',
+    'have_force_xrandr_emulation=true',
+    'have_geometry=true',
+    'have_fullscreen=true',
+    'have_host_grab=true',
+    'have_decorate=' + have_libdecor.to_string(),
+    'have_byteswappedclients=true',
+]
+
 pkgconfig = import('pkgconfig')
 
 pkgconfig.generate(
@@ -168,20 +184,7 @@ pkgconfig.generate(
     variables: [
         'exec_prefix=${prefix}',
         'xwayland=' + xwayland_path + '/Xwayland',
-        'have_glamor=' + build_glamor.to_string(),
-        'have_eglstream=' + build_eglstream.to_string(),
-        'have_initfd=true',
-        'have_listenfd=true',
-        'have_verbose=true',
-        'have_terminate_delay=true',
-        'have_no_touch_pointer_emulation=true',
-        'have_force_xrandr_emulation=true',
-        'have_geometry=true',
-        'have_fullscreen=true',
-        'have_host_grab=true',
-        'have_decorate=' + have_libdecor.to_string(),
-        'have_byteswappedclients=true',
-    ],
+    ] + xwayland_vars,
 )
 
 xwayland_manpage = configure_file(
@@ -194,3 +197,13 @@ install_man(xwayland_manpage)
 datadir = join_paths(get_option('prefix'), get_option('datadir'))
 desktopdir = join_paths(datadir, 'applications')
 install_data('desktop/org.freedesktop.Xwayland.desktop', install_dir : desktopdir)
+
+if meson.version().version_compare('>= 0.56.0')
+    meson.override_find_program('Xwayland', xwayland_server)
+
+    meson.override_dependency('xwayland', declare_dependency(
+        variables: [
+            'xwayland=' + xwayland_server.full_path(),
+        ] + xwayland_vars,
+    ))
+endif

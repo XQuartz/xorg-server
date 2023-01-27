@@ -61,7 +61,7 @@ xwl_window_set_allow_commits(struct xwl_window *xwl_window, Bool allow,
                              const char *debug_msg)
 {
     xwl_window->allow_commits = allow;
-    DebugF("xwayland: win %d allow_commits = %d (%s)\n",
+    DebugF("XWAYLAND: win %d allow_commits = %d (%s)\n",
            xwl_window->window->drawable.id, allow, debug_msg);
 }
 

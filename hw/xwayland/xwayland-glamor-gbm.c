@@ -278,7 +278,7 @@ xwl_glamor_gbm_create_pixmap(ScreenPtr screen,
 {
     struct xwl_screen *xwl_screen = xwl_screen_get(screen);
     struct xwl_gbm_private *xwl_gbm = xwl_gbm_get(xwl_screen);
-    struct gbm_bo *bo;
+    struct gbm_bo *bo = NULL;
     PixmapPtr pixmap = NULL;
 
     if (width > 0 && height > 0 && depth >= 15 &&
@@ -297,9 +297,8 @@ xwl_glamor_gbm_create_pixmap(ScreenPtr screen,
                                               format, modifiers, num_modifiers);
             free(modifiers);
         }
-        else
 #endif
-        {
+        if (bo == NULL) {
             bo = gbm_bo_create(xwl_gbm->gbm, width, height, format,
                                GBM_BO_USE_RENDERING);
         }

@@ -617,6 +617,13 @@ handle_libdecor_configure(struct libdecor_frame *frame,
         libdecor_frame_unset_capabilities(frame, LIBDECOR_ACTION_RESIZE);
     if (libdecor_frame_has_capability(frame, LIBDECOR_ACTION_FULLSCREEN))
         libdecor_frame_unset_capabilities(frame, LIBDECOR_ACTION_FULLSCREEN);
+
+    /* FIXME:
+     * We're not xdg-shell compliant here, we are supposed to adjust to
+     * the given configure size.
+     */
+
+    wl_surface_commit(xwl_window->surface);
 }
 
 static void

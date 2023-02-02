@@ -35,6 +35,8 @@
 
 #include "xdg-output-unstable-v1-client-protocol.h"
 
+#define MAX_OUTPUT_NAME 256
+
 static void xwl_output_get_xdg_output(struct xwl_output *xwl_output);
 
 static Rotation
@@ -659,6 +661,21 @@ apply_output_change(struct xwl_output *xwl_output)
 }
 
 static void
+xwl_output_set_name(struct xwl_output *xwl_output, const char *name)
+{
+    if (xwl_output->randr_output == NULL)
+        return; /* rootful */
+
+    /* Check whether the compositor is sending us something useful */
+    if (!name || !strlen(name)) {
+        ErrorF("Not using the provided output name, invalid");
+        return;
+    }
+
+    snprintf(xwl_output->randr_output->name, MAX_OUTPUT_NAME, "%s", name);
+}
+
+static void
 output_handle_done(void *data, struct wl_output *wl_output)
 {
     struct xwl_output *xwl_output = data;
@@ -719,6 +736,9 @@ static void
 xdg_output_handle_name(void *data, struct zxdg_output_v1 *xdg_output,
                        const char *name)
 {
+    struct xwl_output *xwl_output = data;
+
+    xwl_output_set_name(xwl_output, name);
 }
 
 static void
@@ -774,7 +794,7 @@ struct xwl_output *
 xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id, Bool with_xrandr)
 {
     struct xwl_output *xwl_output;
-    char name[256];
+    char name[MAX_OUTPUT_NAME];
 
     xwl_output = calloc(1, sizeof *xwl_output);
     if (xwl_output == NULL) {
@@ -795,7 +815,7 @@ xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id, Bool with_xrandr)
     xwl_output->xwl_screen = xwl_screen;
 
     if (with_xrandr) {
-        snprintf(name, sizeof name, "XWAYLAND%d",
+        snprintf(name, MAX_OUTPUT_NAME, "XWAYLAND%d",
                  xwl_screen_get_next_output_serial(xwl_screen));
 
         xwl_output->randr_crtc = RRCrtcCreate(xwl_screen->screen, xwl_output);
@@ -806,7 +826,7 @@ xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id, Bool with_xrandr)
         RRCrtcSetRotations (xwl_output->randr_crtc, ALL_ROTATIONS);
 
         xwl_output->randr_output = RROutputCreate(xwl_screen->screen, name,
-                                                  strlen(name), xwl_output);
+                                                  MAX_OUTPUT_NAME, xwl_output);
         if (!xwl_output->randr_output) {
             ErrorF("Failed creating RandR Output\n");
             goto err;

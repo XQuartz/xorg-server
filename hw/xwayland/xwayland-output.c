@@ -694,11 +694,28 @@ output_handle_scale(void *data, struct wl_output *wl_output, int32_t factor)
 {
 }
 
+static void
+output_handle_name(void *data, struct wl_output *wl_output,
+                   const char *name)
+{
+    struct xwl_output *xwl_output = data;
+
+    xwl_output_set_name(xwl_output, name);
+}
+
+static void
+output_handle_description(void *data, struct wl_output *wl_output,
+                          const char *description)
+{
+}
+
 static const struct wl_output_listener output_listener = {
     output_handle_geometry,
     output_handle_mode,
     output_handle_done,
-    output_handle_scale
+    output_handle_scale,
+    output_handle_name,
+    output_handle_description,
 };
 
 static void
@@ -737,6 +754,9 @@ xdg_output_handle_name(void *data, struct zxdg_output_v1 *xdg_output,
                        const char *name)
 {
     struct xwl_output *xwl_output = data;
+
+    if (wl_output_get_version(xwl_output->output) >= 4)
+        return; /* wl_output.name is preferred */
 
     xwl_output_set_name(xwl_output, name);
 }
@@ -804,7 +824,7 @@ xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id,
     }
 
     xwl_output->output = wl_registry_bind(xwl_screen->registry, id,
-                                          &wl_output_interface, min(version, 2));
+                                          &wl_output_interface, min(version, 4));
     if (!xwl_output->output) {
         ErrorF("Failed binding wl_output\n");
         goto err;

@@ -654,6 +654,8 @@ apply_output_change(struct xwl_output *xwl_output)
 
     if (xwl_screen->fixed_output == NULL)
         update_screen_size(xwl_screen, width, height);
+    else
+        RRTellChanged(xwl_screen->screen);
 }
 
 static void
@@ -814,7 +816,6 @@ xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id, Bool with_xrandr)
         RRCrtcGammaSetSize(xwl_output->randr_crtc, 256);
         RROutputSetCrtcs(xwl_output->randr_output, &xwl_output->randr_crtc, 1);
         RROutputSetConnection(xwl_output->randr_output, RR_Connected);
-        RRTellChanged(xwl_screen->screen);
     }
     /* We want the output to be in the list as soon as created so we can
      * use it when binding to the xdg-output protocol...

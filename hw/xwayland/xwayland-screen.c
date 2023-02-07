@@ -432,7 +432,7 @@ registry_global(void *data, struct wl_registry *registry, uint32_t id,
                                  NULL);
     }
     else if (strcmp(interface, "wl_output") == 0 && version >= 2) {
-        if (xwl_output_create(xwl_screen, id, (xwl_screen->fixed_output == NULL)))
+        if (xwl_output_create(xwl_screen, id, (xwl_screen->fixed_output == NULL), version))
             xwl_screen->expecting_event++;
     }
     else if (strcmp(interface, "zxdg_output_manager_v1") == 0) {

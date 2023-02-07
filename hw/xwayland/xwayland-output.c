@@ -791,7 +791,8 @@ xwl_output_from_wl_output(struct xwl_screen *xwl_screen,
 }
 
 struct xwl_output *
-xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id, Bool with_xrandr)
+xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id,
+                  Bool with_xrandr, uint32_t version)
 {
     struct xwl_output *xwl_output;
     char name[MAX_OUTPUT_NAME];
@@ -803,7 +804,7 @@ xwl_output_create(struct xwl_screen *xwl_screen, uint32_t id, Bool with_xrandr)
     }
 
     xwl_output->output = wl_registry_bind(xwl_screen->registry, id,
-                                          &wl_output_interface, 2);
+                                          &wl_output_interface, min(version, 2));
     if (!xwl_output->output) {
         ErrorF("Failed binding wl_output\n");
         goto err;

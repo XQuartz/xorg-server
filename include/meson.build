@@ -419,7 +419,6 @@ xwayland_data.set('XWL_HAS_GLAMOR', build_glamor and (gbm_dep.found() or build_e
 xwayland_data.set('XWL_HAS_EGLSTREAM', build_eglstream ? '1' : false)
 xwayland_data.set('XWL_HAS_LIBDECOR', have_libdecor ? '1' : false)
 xwayland_data.set('XWL_HAS_XWAYLAND_EXTENSION', xwaylandproto_dep.found() ? '1' : false)
-xwayland_data.set('XWL_HAS_WL_POINTER_AXIS_V120', wayland_client_dep.found() and wayland_client_dep.version().version_compare('>= 1.21.0'))
 
 configure_file(output : 'xwayland-config.h',
                input : 'xwayland-config.h.meson.in',

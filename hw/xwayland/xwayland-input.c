@@ -845,7 +845,6 @@ pointer_handle_axis_discrete(void *data, struct wl_pointer *wl_pointer,
     }
 }
 
-#ifdef XWL_HAS_WL_POINTER_AXIS_V120
 static void
 pointer_handle_axis_v120(void *data, struct wl_pointer *pointer,
                          uint32_t axis, int32_t v120)
@@ -863,7 +862,6 @@ pointer_handle_axis_v120(void *data, struct wl_pointer *pointer,
         break;
     }
 }
-#endif
 
 static const struct wl_pointer_listener pointer_listener = {
     pointer_handle_enter,
@@ -875,9 +873,7 @@ static const struct wl_pointer_listener pointer_listener = {
     pointer_handle_axis_source,
     pointer_handle_axis_stop,
     pointer_handle_axis_discrete,
-#ifdef XWL_HAS_WL_POINTER_AXIS_V120
     pointer_handle_axis_v120,
-#endif
 };
 
 static void
@@ -1854,11 +1850,7 @@ static void
 create_input_device(struct xwl_screen *xwl_screen, uint32_t id, uint32_t version)
 {
     struct xwl_seat *xwl_seat;
-    int seat_version = 5;
-
-#ifdef XWL_HAS_WL_POINTER_AXIS_V120
-    seat_version = 8;
-#endif
+    int seat_version = 8;
 
     xwl_seat = calloc(1, sizeof *xwl_seat);
     if (xwl_seat == NULL) {

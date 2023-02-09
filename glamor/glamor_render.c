@@ -61,7 +61,7 @@ static struct blendinfo composite_op_info[] = {
 
 #define RepeatFix			10
 static GLuint
-glamor_create_composite_fs(struct shader_key *key)
+glamor_create_composite_fs(glamor_screen_private *glamor_priv, struct shader_key *key)
 {
     const char *repeat_define =
         "#define RepeatNone               	      0\n"
@@ -223,6 +223,8 @@ glamor_create_composite_fs(struct shader_key *key)
         "}\n";
     const char *header_ca_dual_blend =
         "#version 130\n";
+    const char *header_ca_dual_blend_gpu_shader4 =
+        "#version 120\n#extension GL_EXT_gpu_shader4 : require\n";
     const char *in_ca_dual_blend_gles2 =
         "void main()\n"
         "{\n"
@@ -301,7 +303,10 @@ glamor_create_composite_fs(struct shader_key *key)
         break;
     case glamor_program_alpha_dual_blend:
         in = in_ca_dual_blend;
-        header = header_ca_dual_blend;
+        if (glamor_priv->glsl_version >= 130)
+           header = header_ca_dual_blend;
+        else
+           header = header_ca_dual_blend_gpu_shader4;
         break;
     case glamor_program_alpha_dual_blend_gles2:
         in = in_ca_dual_blend_gles2;
@@ -379,7 +384,7 @@ glamor_create_composite_shader(ScreenPtr screen, struct shader_key *key,
     vs = glamor_create_composite_vs(key);
     if (vs == 0)
         return;
-    fs = glamor_create_composite_fs(key);
+    fs = glamor_create_composite_fs(glamor_priv, key);
     if (fs == 0)
         return;
 

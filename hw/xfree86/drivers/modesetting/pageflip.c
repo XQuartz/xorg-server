@@ -529,3 +529,13 @@ no_flip:
     return TRUE;
 }
 #endif
+
+Bool
+ms_tearfree_is_active_on_crtc(xf86CrtcPtr crtc)
+{
+    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
+
+    /* If TearFree is enabled, XServer owns the VT, and the CRTC is active */
+    return trf->buf[0].px && crtc->scrn->vtSema && xf86_crtc_on(crtc);
+}

@@ -249,3 +249,4 @@ Bool ms_do_tearfree_flip(ScreenPtr screen, xf86CrtcPtr crtc);
 int ms_flush_drm_events(ScreenPtr screen);
 Bool ms_window_has_variable_refresh(modesettingPtr ms, WindowPtr win);
 void ms_present_set_screen_vrr(ScrnInfoPtr scrn, Bool vrr_enabled);
+Bool ms_tearfree_is_active_on_crtc(xf86CrtcPtr crtc);

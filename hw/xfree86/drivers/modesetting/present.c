@@ -334,8 +334,7 @@ no_flip:
         drmmode_crtc_private_ptr drmmode_crtc = xf86_crtc->driver_private;
         drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
 
-        /* Check if TearFree is active on this CRTC and tell Present about it */
-        if (trf->buf[0].px && scrn->vtSema && xf86_crtc_on(xf86_crtc)) {
+        if (ms_tearfree_is_active_on_crtc(xf86_crtc)) {
             if (trf->flip_seq)
                 /* The driver has a TearFree flip pending */
                 *reason = PRESENT_FLIP_REASON_DRIVER_TEARFREE_FLIPPING;

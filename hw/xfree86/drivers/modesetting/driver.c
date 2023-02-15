@@ -655,8 +655,7 @@ ms_tearfree_do_flips(ScreenPtr pScreen)
         drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
         drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
 
-        /* Skip disabled CRTCs and those which aren't using TearFree */
-        if (!trf->buf[0].px || !crtc->scrn->vtSema || !xf86_crtc_on(crtc))
+        if (!ms_tearfree_is_active_on_crtc(crtc))
             continue;
 
         /* Skip if the last flip is still pending, a DRI client is flipping, or

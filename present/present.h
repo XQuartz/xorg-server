@@ -30,6 +30,12 @@
 typedef enum {
     PRESENT_FLIP_REASON_UNKNOWN,
     PRESENT_FLIP_REASON_BUFFER_FORMAT,
+
+    /* Don't add new flip reasons after the TearFree ones, since it's expected
+     * that the TearFree reasons are the highest ones in order to allow doing
+     * `reason >= PRESENT_FLIP_REASON_DRIVER_TEARFREE` to check if a reason is
+     * PRESENT_FLIP_REASON_DRIVER_TEARFREE{_FLIPPING}.
+     */
     PRESENT_FLIP_REASON_DRIVER_TEARFREE,
     PRESENT_FLIP_REASON_DRIVER_TEARFREE_FLIPPING
 } PresentFlipReason;

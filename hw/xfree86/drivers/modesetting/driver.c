@@ -655,8 +655,11 @@ ms_tearfree_do_flips(ScreenPtr pScreen)
         drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
         drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
 
-        if (!ms_tearfree_is_active_on_crtc(crtc))
+        if (!ms_tearfree_is_active_on_crtc(crtc)) {
+            /* Notify any lingering DRI clients waiting for a flip to finish */
+            ms_tearfree_dri_abort_all(crtc);
             continue;
+        }
 
         /* Skip if the last flip is still pending, a DRI client is flipping, or
          * there isn't any damage on the front buffer.

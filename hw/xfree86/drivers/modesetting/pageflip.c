@@ -99,6 +99,8 @@ struct ms_crtc_pageflip {
     Bool on_reference_crtc;
     /* reference to the ms_flipdata */
     struct ms_flipdata *flipdata;
+    struct xorg_list node;
+    uint32_t tearfree_seq;
 };
 
 /**
@@ -142,7 +144,8 @@ ms_pageflip_handler(uint64_t msc, uint64_t ust, void *data)
                                 flipdata->fe_usec,
                                 flipdata->event);
 
-        drmModeRmFB(ms->fd, flipdata->old_fb_id);
+        if (flipdata->old_fb_id)
+            drmModeRmFB(ms->fd, flipdata->old_fb_id);
     }
     ms_pageflip_free(flip);
 }
@@ -309,6 +312,64 @@ ms_print_pageflip_error(int screen_index, const char *log_prefix,
     }
 }
 
+static Bool
+ms_tearfree_dri_flip(modesettingPtr ms, xf86CrtcPtr crtc, void *event,
+                     ms_pageflip_handler_proc pageflip_handler,
+                     ms_pageflip_abort_proc pageflip_abort)
+{
+    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
+    struct ms_crtc_pageflip *flip;
+    struct ms_flipdata *flipdata;
+    RegionRec region;
+    RegionPtr dirty;
+
+    if (!ms_tearfree_is_active_on_crtc(crtc))
+        return FALSE;
+
+    /* Check for damage on the primary scanout to know if TearFree will flip */
+    dirty = DamageRegion(ms->damage);
+    if (RegionNil(dirty))
+        return FALSE;
+
+    /* Compute how much of the current damage intersects with this CRTC */
+    RegionInit(&region, &crtc->bounds, 0);
+    RegionIntersect(&region, &region, dirty);
+
+    /* No damage on this CRTC means no TearFree flip. This means the DRI client
+     * didn't change this CRTC's contents at all with its presentation, possibly
+     * because its window is fully occluded by another window on this CRTC.
+     */
+    if (RegionNil(&region))
+        return FALSE;
+
+    flip = calloc(1, sizeof(*flip));
+    if (!flip)
+        return FALSE;
+
+    flipdata = calloc(1, sizeof(*flipdata));
+    if (!flipdata) {
+        free(flip);
+        return FALSE;
+    }
+
+    /* Only track the DRI client's fake flip on the reference CRTC, which aligns
+     * with the behavior of Present when a client copies its pixmap rather than
+     * directly flipping it onto the display.
+     */
+    flip->on_reference_crtc = TRUE;
+    flip->flipdata = flipdata;
+    flip->tearfree_seq = trf->flip_seq;
+    flipdata->screen = xf86ScrnToScreen(crtc->scrn);
+    flipdata->event = event;
+    flipdata->flip_count = 1;
+    flipdata->event_handler = pageflip_handler;
+    flipdata->abort_handler = pageflip_abort;
+
+    /* Keep the list in FIFO order so that clients are notified in order */
+    xorg_list_append(&flip->node, &trf->dri_flip_list);
+    return TRUE;
+}
 
 Bool
 ms_do_pageflip(ScreenPtr screen,
@@ -327,6 +388,22 @@ ms_do_pageflip(ScreenPtr screen,
     uint32_t flags;
     int i;
     struct ms_flipdata *flipdata;
+
+    /* A NULL pixmap indicates this DRI client's pixmap is to be flipped through
+     * TearFree instead. The pixmap is already copied to the primary scanout at
+     * this point, so all that's left is to wire up this fake flip to TearFree
+     * so that TearFree can send a notification to the DRI client when the
+     * pixmap actually appears on the display. This is the only way to let DRI
+     * clients accurately know when their pixmaps appear on the display when
+     * TearFree is enabled.
+     */
+    if (!new_front) {
+        if (!ms_tearfree_dri_flip(ms, ref_crtc, event, pageflip_handler,
+                                  pageflip_abort))
+            goto error_free_event;
+        return TRUE;
+    }
+
     ms->glamor.block_handler(screen);
 
     new_front_bo.gbm = ms->glamor.gbm_bo_from_pixmap(screen, new_front);
@@ -478,6 +555,69 @@ error_free_event:
     return FALSE;
 }
 
+Bool
+ms_tearfree_dri_abort(xf86CrtcPtr crtc,
+                      Bool (*match)(void *data, void *match_data),
+                      void *match_data)
+{
+    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
+    struct ms_crtc_pageflip *flip;
+
+    /* The window is getting destroyed; abort without notifying the client */
+    xorg_list_for_each_entry(flip, &trf->dri_flip_list, node) {
+        if (match(flip->flipdata->event, match_data)) {
+            xorg_list_del(&flip->node);
+            ms_pageflip_abort(flip);
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+void
+ms_tearfree_dri_abort_all(xf86CrtcPtr crtc)
+{
+    drmmode_crtc_private_ptr drmmode_crtc = crtc->driver_private;
+    drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
+    struct ms_crtc_pageflip *flip, *tmp;
+    uint64_t usec = 0, msc = 0;
+
+    /* Nothing to abort if there aren't any DRI clients waiting for a flip */
+    if (xorg_list_is_empty(&trf->dri_flip_list))
+        return;
+
+    /* Even though we're aborting, these clients' pixmaps were actually blitted,
+     * so technically the presentation isn't aborted. That's why the normal
+     * handler is called instead of the abort handler, along with the current
+     * time and MSC for this CRTC.
+     */
+    ms_get_crtc_ust_msc(crtc, &usec, &msc);
+    xorg_list_for_each_entry_safe(flip, tmp, &trf->dri_flip_list, node)
+        ms_pageflip_handler(msc, usec, flip);
+    xorg_list_init(&trf->dri_flip_list);
+}
+
+static void
+ms_tearfree_dri_notify(drmmode_tearfree_ptr trf, uint64_t msc, uint64_t usec)
+{
+    struct ms_crtc_pageflip *flip, *tmp;
+
+    xorg_list_for_each_entry_safe(flip, tmp, &trf->dri_flip_list, node) {
+        /* If a TearFree flip was already pending at the time this DRI client's
+         * pixmap was copied, then the pixmap isn't contained in this TearFree
+         * flip, but will be part of the next TearFree flip instead.
+         */
+        if (flip->tearfree_seq) {
+            flip->tearfree_seq = 0;
+        } else {
+            xorg_list_del(&flip->node);
+            ms_pageflip_handler(msc, usec, flip);
+        }
+    }
+}
+
 static void
 ms_tearfree_flip_abort(void *data)
 {
@@ -486,6 +626,7 @@ ms_tearfree_flip_abort(void *data)
     drmmode_tearfree_ptr trf = &drmmode_crtc->tearfree;
 
     trf->flip_seq = 0;
+    ms_tearfree_dri_abort_all(crtc);
 }
 
 static void
@@ -498,6 +639,9 @@ ms_tearfree_flip_handler(uint64_t msc, uint64_t usec, void *data)
     /* Swap the buffers and complete the flip */
     trf->back_idx ^= 1;
     trf->flip_seq = 0;
+
+    /* Notify DRI clients that their pixmaps are now visible on the display */
+    ms_tearfree_dri_notify(trf, msc, usec);
 }
 
 Bool
@@ -509,8 +653,14 @@ ms_do_tearfree_flip(ScreenPtr screen, xf86CrtcPtr crtc)
 
     seq = ms_drm_queue_alloc(crtc, crtc, ms_tearfree_flip_handler,
                              ms_tearfree_flip_abort);
-    if (!seq)
+    if (!seq) {
+        /* Need to notify the DRI clients if a sequence wasn't allocated. Once a
+         * sequence is allocated, explicitly performing this cleanup isn't
+         * necessary since it's already done as part of aborting the sequence.
+         */
+        ms_tearfree_dri_abort_all(crtc);
         goto no_flip;
+    }
 
     /* Copy the damage to the back buffer and then flip it at the vblank */
     drmmode_copy_damage(crtc, trf->buf[idx].px, &trf->buf[idx].dmg, TRUE);

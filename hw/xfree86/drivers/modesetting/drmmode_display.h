@@ -176,6 +176,7 @@ typedef struct {
 
 typedef struct {
     drmmode_shadow_fb_rec buf[2];
+    struct xorg_list dri_flip_list;
     uint32_t back_idx;
     uint32_t flip_seq;
 } drmmode_tearfree_rec, *drmmode_tearfree_ptr;

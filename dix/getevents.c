@@ -1247,19 +1247,18 @@ transformAbsolute(DeviceIntPtr dev, ValuatorMask *mask)
 }
 
 static void
-storeLastValuators(DeviceIntPtr dev, ValuatorMask *mask,
-                   int xaxis, int yaxis, double devx, double devy)
+storeLastValuators(DeviceIntPtr dev, ValuatorMask *mask, double devx, double devy)
 {
     int i;
 
     /* store desktop-wide in last.valuators */
-    if (valuator_mask_isset(mask, xaxis))
+    if (valuator_mask_isset(mask, 0))
         dev->last.valuators[0] = devx;
-    if (valuator_mask_isset(mask, yaxis))
+    if (valuator_mask_isset(mask, 1))
         dev->last.valuators[1] = devy;
 
     for (i = 0; i < valuator_mask_size(mask); i++) {
-        if (i == xaxis || i == yaxis)
+        if (i == 0 || i == 1)
             continue;
 
         if (valuator_mask_isset(mask, i))
@@ -1448,7 +1447,7 @@ fill_pointer_events(InternalEvent *events, DeviceIntPtr pDev, int type,
 
     clipValuators(pDev, &mask);
 
-    storeLastValuators(pDev, &mask, 0, 1, devx, devy);
+    storeLastValuators(pDev, &mask, devx, devy);
 
     /* Update the MD's coordinates, which are always in desktop space. */
     if (!IsMaster(pDev) && !IsFloating(pDev)) {
@@ -2008,7 +2007,7 @@ GetTouchEvents(InternalEvent *events, DeviceIntPtr dev, uint32_t ddx_touchid,
     clipValuators(dev, &mask);
 
     if (emulate_pointer)
-        storeLastValuators(dev, &mask, 0, 1, devx, devy);
+        storeLastValuators(dev, &mask, devx, devy);
 
     /* Update the MD's coordinates, which are always in desktop space. */
     if (emulate_pointer && !IsMaster(dev) && !IsFloating(dev)) {

@@ -1607,9 +1607,9 @@ emulate_scroll_button_events(InternalEvent *events,
         /* The next value we want to send out a button event for */
         double next_val = last_scroll_val + direction * incr;
 
-        if ((direction > 0 && next_val > current_val) ||
-            (direction < 0 && next_val < current_val))
-                break;
+        if ((((direction > 0 && incr > 0) || (direction < 0 && incr < 0)) && (next_val > current_val)) ||
+            (((direction > 0 && incr < 0) || (direction < 0 && incr > 0)) && (next_val < current_val)))
+            break;
 
         /* fill_pointer_events() generates four events: one normal and one raw
          * event for button press and button release.

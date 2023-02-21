@@ -422,6 +422,10 @@ EnableDevice(DeviceIntPtr dev, BOOL sendevent)
 
     if (!IsMaster(dev) && !IsFloating(dev))
         XkbPushLockedStateToSlaves(GetMaster(dev, MASTER_KEYBOARD), 0, 0);
+
+    /* Now make sure our LEDs are in sync with the locked state */
+    XkbForceUpdateDeviceLEDs(dev);
+
     RecalculateMasterButtons(dev);
 
     /* initialise an idle timer for this device*/

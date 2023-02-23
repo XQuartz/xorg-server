@@ -28,6 +28,8 @@
 
 #include <xwayland-config.h>
 
+#include <sys/types.h>
+
 #include <wayland-client.h>
 
 #include "xwayland-types.h"

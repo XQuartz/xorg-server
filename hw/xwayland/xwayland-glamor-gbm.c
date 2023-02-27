@@ -433,7 +433,7 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
            zwp_linux_buffer_params_v1_create_immed(params, width, height,
                                                    format, 0);
         zwp_linux_buffer_params_v1_destroy(params);
-    } else if (num_planes == 1) {
+    } else if (num_planes == 1 && modifier == DRM_FORMAT_MOD_INVALID) {
         xwl_pixmap->buffer =
             wl_drm_create_prime_buffer(xwl_gbm->drm, prime_fds[0], width, height,
                                        format,

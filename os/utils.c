@@ -143,6 +143,7 @@ Bool noMITShmExtension = FALSE;
 Bool noRRExtension = FALSE;
 #endif
 Bool noRenderExtension = FALSE;
+Bool noShapeExtension = FALSE;
 
 #ifdef XCSECURITY
 Bool noSecurityExtension = FALSE;

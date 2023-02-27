@@ -446,8 +446,9 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
         close(prime_fds[i]);
 
     /* Add our listener now */
-    wl_buffer_add_listener(xwl_pixmap->buffer,
-                           &xwl_glamor_gbm_buffer_listener, pixmap);
+    if (xwl_pixmap->buffer)
+        wl_buffer_add_listener(xwl_pixmap->buffer,
+                               &xwl_glamor_gbm_buffer_listener, pixmap);
 
     return xwl_pixmap->buffer;
 }

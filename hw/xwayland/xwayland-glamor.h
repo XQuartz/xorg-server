@@ -31,6 +31,7 @@
 #include <sys/types.h>
 
 #include <wayland-client.h>
+#include <xf86drm.h>
 
 #include "xwayland-types.h"
 
@@ -99,10 +100,10 @@ struct xwl_egl_backend {
      */
     Bool (*check_flip)(PixmapPtr pixmap);
 
-    /* Called to get the dev_t of the primary GPU that this backend
+    /* Called to get the DRM device of the primary GPU that this backend
      * is set up on.
      */
-    dev_t (*get_main_device)(struct xwl_screen *xwl_screen);
+    drmDevice *(*get_main_device)(struct xwl_screen *xwl_screen);
 };
 
 #ifdef XWL_HAS_GLAMOR

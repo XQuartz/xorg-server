@@ -187,7 +187,7 @@ wl_drm_format_for_depth(int depth)
     }
 }
 
-static dev_t
+static drmDevice *
 xwl_screen_get_main_dev(struct xwl_screen *xwl_screen)
 {
     /*
@@ -222,7 +222,7 @@ xwl_get_formats(struct xwl_format *format_array, int format_array_len,
 }
 
 static Bool
-xwl_get_formats_for_device(struct xwl_dmabuf_feedback *xwl_feedback, dev_t device,
+xwl_get_formats_for_device(struct xwl_dmabuf_feedback *xwl_feedback, drmDevice *device,
                            uint32_t *num_formats, uint32_t **formats)
 {
     uint32_t *ret = NULL;
@@ -230,7 +230,7 @@ xwl_get_formats_for_device(struct xwl_dmabuf_feedback *xwl_feedback, dev_t devic
 
     /* go through all matching sets of tranches for the window's device */
     for (int i = 0; i < xwl_feedback->dev_formats_len; i++) {
-        if (xwl_feedback->dev_formats[i].drm_dev == device) {
+        if (drmDevicesEqual(xwl_feedback->dev_formats[i].drm_dev, device)) {
             struct xwl_device_formats *dev_formats = &xwl_feedback->dev_formats[i];
 
             /* Append the formats from this tranche to the list */
@@ -273,7 +273,7 @@ xwl_glamor_get_formats(ScreenPtr screen,
         return FALSE;
 
     if (xwl_screen->dmabuf_protocol_version >= 4) {
-        dev_t main_dev = xwl_screen_get_main_dev(xwl_screen);
+        drmDevice *main_dev = xwl_screen_get_main_dev(xwl_screen);
 
         return xwl_get_formats_for_device(&xwl_screen->default_feedback, main_dev,
                                           num_formats, formats);
@@ -320,7 +320,7 @@ xwl_get_modifiers_for_format(struct xwl_format *format_array, int num_formats,
 }
 
 static Bool
-xwl_get_modifiers_for_device(struct xwl_dmabuf_feedback *feedback, dev_t device,
+xwl_get_modifiers_for_device(struct xwl_dmabuf_feedback *feedback, drmDevice *device,
                              uint32_t format, uint32_t *num_modifiers,
                              uint64_t **modifiers)
 {
@@ -328,7 +328,7 @@ xwl_get_modifiers_for_device(struct xwl_dmabuf_feedback *feedback, dev_t device,
     for (int i = 0; i < feedback->dev_formats_len; i++) {
         struct xwl_device_formats *dev_formats = &feedback->dev_formats[i];
 
-        if (dev_formats->drm_dev == device &&
+        if (drmDevicesEqual(dev_formats->drm_dev, device) &&
             xwl_get_modifiers_for_format(dev_formats->formats, dev_formats->num_formats,
                                          format, num_modifiers, modifiers))
             return TRUE;
@@ -342,7 +342,7 @@ xwl_glamor_get_modifiers(ScreenPtr screen, uint32_t format,
                          uint32_t *num_modifiers, uint64_t **modifiers)
 {
     struct xwl_screen *xwl_screen = xwl_screen_get(screen);
-    dev_t main_dev;
+    drmDevice *main_dev;
 
     /* Explicitly zero the count as the caller may ignore the return value */
     *num_modifiers = 0;
@@ -368,7 +368,7 @@ xwl_glamor_get_drawable_modifiers(DrawablePtr drawable, uint32_t format,
 {
     struct xwl_screen *xwl_screen = xwl_screen_get(drawable->pScreen);
     struct xwl_window *xwl_window;
-    dev_t main_dev;
+    drmDevice *main_dev;
 
     *num_modifiers = 0;
     *modifiers = NULL;
@@ -475,11 +475,15 @@ xwl_dmabuf_feedback_main_device(void *data,
                                 struct wl_array *dev)
 {
     struct xwl_dmabuf_feedback *xwl_feedback = data;
+    dev_t devid;
 
     xwl_check_reset_tranche_info(xwl_feedback);
 
     assert(dev->size == sizeof(dev_t));
-    memcpy(&xwl_feedback->main_dev, dev->data, sizeof(dev_t));
+    memcpy(&devid, dev->data, sizeof(dev_t));
+
+    if (drmGetDeviceFromDevId(devid, 0, &xwl_feedback->main_dev) != 0)
+        ErrorF("linux_dmabuf_feedback.main_device: Failed to fetch DRM device\n");
 }
 
 static void
@@ -488,11 +492,15 @@ xwl_dmabuf_feedback_tranche_target_device(void *data,
                                           struct wl_array *dev)
 {
     struct xwl_dmabuf_feedback *xwl_feedback = data;
+    dev_t devid;
 
     xwl_check_reset_tranche_info(xwl_feedback);
 
     assert(dev->size == sizeof(dev_t));
-    memcpy(&xwl_feedback->tmp_tranche.drm_dev, dev->data, sizeof(dev_t));
+    memcpy(&devid, dev->data, sizeof(dev_t));
+
+    if (drmGetDeviceFromDevId(devid, 0, &xwl_feedback->tmp_tranche.drm_dev) != 0)
+        ErrorF("linux_dmabuf_feedback.tranche_target_device: Failed to fetch DRM device\n");
 }
 
 static void
@@ -564,6 +572,11 @@ xwl_dmabuf_feedback_tranche_done(void *data,
      * triggered first
      */
 
+    if (xwl_feedback->tmp_tranche.drm_dev == NULL) {
+        xwl_device_formats_destroy(&xwl_feedback->tmp_tranche);
+        goto out;
+    }
+
     /*
      * First check if there is an existing tranche for this device+flags combo. We
      * will combine it with this tranche, since we can only send one modifier list
@@ -598,6 +611,7 @@ xwl_dmabuf_feedback_tranche_done(void *data,
                sizeof(struct xwl_device_formats));
     }
 
+out:
     /* reset the tranche */
     memset(&xwl_feedback->tmp_tranche, 0, sizeof(struct xwl_device_formats));
 }

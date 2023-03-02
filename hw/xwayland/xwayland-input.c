@@ -1110,7 +1110,7 @@ keyboard_handle_keymap(void *data, struct wl_keyboard *keyboard,
         munmap(xwl_seat->keymap, xwl_seat->keymap_size);
 
     xwl_seat->keymap_size = size;
-    xwl_seat->keymap = mmap(NULL, size, PROT_READ, MAP_SHARED, fd, 0);
+    xwl_seat->keymap = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (xwl_seat->keymap == MAP_FAILED) {
         xwl_seat->keymap_size = 0;
         xwl_seat->keymap = NULL;

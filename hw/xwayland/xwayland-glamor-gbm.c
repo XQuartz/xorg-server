@@ -69,6 +69,7 @@ struct xwl_pixmap {
     EGLImage image;
     unsigned int texture;
     struct gbm_bo *bo;
+    Bool implicit_modifier;
 };
 
 static DevPrivateKeyRec xwl_gbm_private_key;
@@ -116,7 +117,8 @@ is_device_path_render_node (const char *device_path)
 
 static PixmapPtr
 xwl_glamor_gbm_create_pixmap_for_bo(ScreenPtr screen, struct gbm_bo *bo,
-                                    int depth)
+                                    int depth,
+                                    Bool implicit_modifier)
 {
     PixmapPtr pixmap;
     struct xwl_pixmap *xwl_pixmap;
@@ -188,6 +190,7 @@ xwl_glamor_gbm_create_pixmap_for_bo(ScreenPtr screen, struct gbm_bo *bo,
     xwl_glamor_egl_make_current(xwl_screen);
     xwl_pixmap->bo = bo;
     xwl_pixmap->buffer = NULL;
+    xwl_pixmap->implicit_modifier = implicit_modifier;
 
 #ifdef GBM_BO_FD_FOR_PLANE
     if (xwl_gbm->dmabuf_capable) {
@@ -286,6 +289,7 @@ xwl_glamor_gbm_create_pixmap(ScreenPtr screen,
          hint == CREATE_PIXMAP_USAGE_SHARED ||
          (xwl_screen->rootless && hint == 0))) {
         uint32_t format = gbm_format_for_depth(depth);
+        Bool implicit = FALSE;
 
 #ifdef GBM_BO_WITH_MODIFIERS
         if (xwl_gbm->dmabuf_capable) {
@@ -301,12 +305,13 @@ xwl_glamor_gbm_create_pixmap(ScreenPtr screen,
         }
 #endif
         if (bo == NULL) {
+            implicit = TRUE;
             bo = gbm_bo_create(xwl_gbm->gbm, width, height, format,
                                GBM_BO_USE_RENDERING);
         }
 
         if (bo) {
-            pixmap = xwl_glamor_gbm_create_pixmap_for_bo(screen, bo, depth);
+            pixmap = xwl_glamor_gbm_create_pixmap_for_bo(screen, bo, depth, implicit);
 
             if (!pixmap) {
                 gbm_bo_destroy(bo);
@@ -395,7 +400,8 @@ init_buffer_params_with_modifiers(struct xwl_pixmap *xwl_pixmap,
 
     return TRUE;
 }
-#else
+#endif
+
 static Bool
 init_buffer_params_fallback(struct xwl_pixmap *xwl_pixmap,
                             uint64_t          *modifier,
@@ -415,7 +421,6 @@ init_buffer_params_fallback(struct xwl_pixmap *xwl_pixmap,
 
     return TRUE;
 }
-#endif
 
 static struct wl_buffer *
 xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
@@ -447,22 +452,25 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
     format = wl_drm_format_for_depth(pixmap->drawable.depth);
 
 #ifdef GBM_BO_WITH_MODIFIERS
-    if (!init_buffer_params_with_modifiers(xwl_pixmap,
-                                           &modifier,
-                                           &num_planes,
-                                           prime_fds,
-                                           strides,
-                                           offsets))
-        return NULL;
-#else
-    if (!init_buffer_params_fallback(xwl_pixmap,
-                                     &modifier,
-                                     &num_planes,
-                                     prime_fds,
-                                     strides,
-                                     offsets))
-        return NULL;
+    if (!xwl_pixmap->implicit_modifier) {
+        if (!init_buffer_params_with_modifiers(xwl_pixmap,
+                                               &modifier,
+                                               &num_planes,
+                                               prime_fds,
+                                               strides,
+                                               offsets))
+            return NULL;
+    } else
 #endif
+    {
+        if (!init_buffer_params_fallback(xwl_pixmap,
+                                         &modifier,
+                                         &num_planes,
+                                         prime_fds,
+                                         strides,
+                                         offsets))
+            return NULL;
+    }
 
     if (xwl_screen->dmabuf &&
         xwl_glamor_is_modifier_supported(xwl_screen, format, modifier)) {
@@ -626,6 +634,7 @@ glamor_pixmap_from_fds(ScreenPtr screen, CARD8 num_fds, const int *fds,
     struct gbm_bo *bo = NULL;
     PixmapPtr pixmap;
     int i;
+    Bool implicit = FALSE;
 
     if (width == 0 || height == 0 || num_fds == 0 ||
         depth < 15 || bpp != BitsPerPixel(depth) ||
@@ -659,6 +668,7 @@ glamor_pixmap_from_fds(ScreenPtr screen, CARD8 num_fds, const int *fds,
        data.format = gbm_format_for_depth(depth);
        bo = gbm_bo_import(xwl_gbm->gbm, GBM_BO_IMPORT_FD, &data,
                           GBM_BO_USE_RENDERING);
+       implicit = TRUE;
     } else {
        goto error;
     }
@@ -666,7 +676,7 @@ glamor_pixmap_from_fds(ScreenPtr screen, CARD8 num_fds, const int *fds,
     if (bo == NULL)
        goto error;
 
-    pixmap = xwl_glamor_gbm_create_pixmap_for_bo(screen, bo, depth);
+    pixmap = xwl_glamor_gbm_create_pixmap_for_bo(screen, bo, depth, implicit);
     if (pixmap == NULL) {
        gbm_bo_destroy(bo);
        goto error;

@@ -347,42 +347,24 @@ static const struct wl_buffer_listener xwl_glamor_gbm_buffer_listener = {
     xwl_pixmap_buffer_release_cb,
 };
 
-static struct wl_buffer *
-xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
+#ifdef GBM_BO_WITH_MODIFIERS
+static Bool
+init_buffer_params_with_modifiers(struct xwl_pixmap *xwl_pixmap,
+                                  uint64_t          *modifier,
+                                  int               *num_planes,
+                                  int               *prime_fds,
+                                  uint32_t          *strides,
+                                  uint32_t          *offsets)
 {
-    struct xwl_screen *xwl_screen = xwl_screen_get(pixmap->drawable.pScreen);
-    struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
-    struct xwl_gbm_private *xwl_gbm = xwl_gbm_get(xwl_screen);
-    unsigned short width = pixmap->drawable.width;
-    unsigned short height = pixmap->drawable.height;
-    uint32_t format;
-    int num_planes;
-    int prime_fds[4];
-    uint32_t strides[4];
-    uint32_t offsets[4];
-    uint64_t modifier;
-    int i;
 #ifndef GBM_BO_FD_FOR_PLANE
     int32_t first_handle;
 #endif
+    int i;
 
-    if (xwl_pixmap == NULL)
-       return NULL;
+    *num_planes = gbm_bo_get_plane_count(xwl_pixmap->bo);
+    *modifier = gbm_bo_get_modifier(xwl_pixmap->bo);
 
-    if (xwl_pixmap->buffer) {
-        /* Buffer already exists. */
-        return xwl_pixmap->buffer;
-    }
-
-    if (!xwl_pixmap->bo)
-       return NULL;
-
-    format = wl_drm_format_for_depth(pixmap->drawable.depth);
-
-#ifdef GBM_BO_WITH_MODIFIERS
-    num_planes = gbm_bo_get_plane_count(xwl_pixmap->bo);
-    modifier = gbm_bo_get_modifier(xwl_pixmap->bo);
-    for (i = 0; i < num_planes; i++) {
+    for (i = 0; i < *num_planes; i++) {
 #ifdef GBM_BO_FD_FOR_PLANE
         prime_fds[i] = gbm_bo_get_fd_for_plane(xwl_pixmap->bo, i);
 #else
@@ -405,11 +387,53 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
         if (prime_fds[i] == -1) {
             while (--i >= 0)
                 close(prime_fds[i]);
-            return NULL;
+            return FALSE;
         }
         strides[i] = gbm_bo_get_stride_for_plane(xwl_pixmap->bo, i);
         offsets[i] = gbm_bo_get_offset(xwl_pixmap->bo, i);
     }
+
+    return TRUE;
+}
+#endif
+
+static struct wl_buffer *
+xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
+{
+    struct xwl_screen *xwl_screen = xwl_screen_get(pixmap->drawable.pScreen);
+    struct xwl_pixmap *xwl_pixmap = xwl_pixmap_get(pixmap);
+    struct xwl_gbm_private *xwl_gbm = xwl_gbm_get(xwl_screen);
+    unsigned short width = pixmap->drawable.width;
+    unsigned short height = pixmap->drawable.height;
+    uint32_t format;
+    int num_planes;
+    int prime_fds[4];
+    uint32_t strides[4];
+    uint32_t offsets[4];
+    uint64_t modifier;
+    int i;
+
+    if (xwl_pixmap == NULL)
+       return NULL;
+
+    if (xwl_pixmap->buffer) {
+        /* Buffer already exists. */
+        return xwl_pixmap->buffer;
+    }
+
+    if (!xwl_pixmap->bo)
+       return NULL;
+
+    format = wl_drm_format_for_depth(pixmap->drawable.depth);
+
+#ifdef GBM_BO_WITH_MODIFIERS
+    if (!init_buffer_params_with_modifiers(xwl_pixmap,
+                                           &modifier,
+                                           &num_planes,
+                                           prime_fds,
+                                           strides,
+                                           offsets))
+        return NULL;
 #else
     num_planes = 1;
     modifier = DRM_FORMAT_MOD_INVALID;

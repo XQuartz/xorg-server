@@ -395,6 +395,26 @@ init_buffer_params_with_modifiers(struct xwl_pixmap *xwl_pixmap,
 
     return TRUE;
 }
+#else
+static Bool
+init_buffer_params_fallback(struct xwl_pixmap *xwl_pixmap,
+                            uint64_t          *modifier,
+                            int               *num_planes,
+                            int               *prime_fds,
+                            uint32_t          *strides,
+                            uint32_t          *offsets)
+{
+    *num_planes = 1;
+    *modifier = DRM_FORMAT_MOD_INVALID;
+    prime_fds[0] = gbm_bo_get_fd(xwl_pixmap->bo);
+    if (prime_fds[0] == -1)
+        return FALSE;
+
+    strides[0] = gbm_bo_get_stride(xwl_pixmap->bo);
+    offsets[0] = 0;
+
+    return TRUE;
+}
 #endif
 
 static struct wl_buffer *
@@ -435,13 +455,13 @@ xwl_glamor_gbm_get_wl_buffer_for_pixmap(PixmapPtr pixmap)
                                            offsets))
         return NULL;
 #else
-    num_planes = 1;
-    modifier = DRM_FORMAT_MOD_INVALID;
-    prime_fds[0] = gbm_bo_get_fd(xwl_pixmap->bo);
-    if (prime_fds[0] == -1)
+    if (!init_buffer_params_fallback(xwl_pixmap,
+                                     &modifier,
+                                     &num_planes,
+                                     prime_fds,
+                                     strides,
+                                     offsets))
         return NULL;
-    strides[0] = gbm_bo_get_stride(xwl_pixmap->bo);
-    offsets[0] = 0;
 #endif
 
     if (xwl_screen->dmabuf &&

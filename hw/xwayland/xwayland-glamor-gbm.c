@@ -293,8 +293,10 @@ xwl_glamor_gbm_create_pixmap(ScreenPtr screen,
             uint64_t *modifiers = NULL;
 
             xwl_glamor_get_modifiers(screen, format, &num_modifiers, &modifiers);
-            bo = gbm_bo_create_with_modifiers(xwl_gbm->gbm, width, height,
-                                              format, modifiers, num_modifiers);
+
+            if (num_modifiers > 0)
+                bo = gbm_bo_create_with_modifiers(xwl_gbm->gbm, width, height,
+                                                  format, modifiers, num_modifiers);
             free(modifiers);
         }
 #endif

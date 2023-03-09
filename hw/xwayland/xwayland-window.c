@@ -1090,15 +1090,8 @@ xwl_unrealize_window(WindowPtr window)
     xwl_dmabuf_feedback_destroy(&xwl_window->feedback);
 
 #ifdef GLAMOR_HAS_GBM
-    if (xwl_screen->present) {
-        struct xwl_present_window *xwl_present_window, *tmp;
-
-        xorg_list_for_each_entry_safe(xwl_present_window, tmp,
-                                      &xwl_window->frame_callback_list,
-                                      frame_callback_list) {
-            xwl_present_unrealize_window(xwl_present_window);
-        }
-    }
+    if (xwl_window->xwl_screen->present)
+        xwl_present_for_each_frame_callback(xwl_window, xwl_present_unrealize_window);
 #endif
 
     release_wl_surface_for_window(xwl_window);
@@ -1233,15 +1226,8 @@ frame_callback(void *data,
     xwl_window->frame_callback = NULL;
 
 #ifdef GLAMOR_HAS_GBM
-    if (xwl_window->xwl_screen->present) {
-        struct xwl_present_window *xwl_present_window, *tmp;
-
-        xorg_list_for_each_entry_safe(xwl_present_window, tmp,
-                                      &xwl_window->frame_callback_list,
-                                      frame_callback_list) {
-            xwl_present_frame_callback(xwl_present_window);
-        }
-    }
+    if (xwl_window->xwl_screen->present)
+        xwl_present_for_each_frame_callback(xwl_window, xwl_present_frame_callback);
 #endif
 }
 
@@ -1257,15 +1243,8 @@ xwl_window_create_frame_callback(struct xwl_window *xwl_window)
                              xwl_window);
 
 #ifdef GLAMOR_HAS_GBM
-    if (xwl_window->xwl_screen->present) {
-        struct xwl_present_window *xwl_present_window, *tmp;
-
-        xorg_list_for_each_entry_safe(xwl_present_window, tmp,
-                                      &xwl_window->frame_callback_list,
-                                      frame_callback_list) {
-            xwl_present_reset_timer(xwl_present_window);
-        }
-    }
+    if (xwl_window->xwl_screen->present)
+        xwl_present_for_each_frame_callback(xwl_window, xwl_present_reset_timer);
 #endif
 }
 

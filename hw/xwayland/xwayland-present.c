@@ -89,16 +89,31 @@ xwl_present_event_from_id(uint64_t event_id)
     return (struct xwl_present_event*)(uintptr_t)event_id;
 }
 
+static Bool entered_for_each_frame_callback;
+
+Bool
+xwl_present_entered_for_each_frame_callback(void)
+{
+    return entered_for_each_frame_callback;
+}
+
 void
 xwl_present_for_each_frame_callback(struct xwl_window *xwl_window,
                                     void iter_func(struct xwl_present_window *))
 {
     struct xwl_present_window *xwl_present_window, *tmp;
 
+    if (entered_for_each_frame_callback)
+        FatalError("Nested xwl_present_for_each_frame_callback call");
+
+    entered_for_each_frame_callback = TRUE;
+
     xorg_list_for_each_entry_safe(xwl_present_window, tmp,
                                   &xwl_window->frame_callback_list,
                                   frame_callback_list)
         iter_func(xwl_present_window);
+
+    entered_for_each_frame_callback = FALSE;
 }
 
 static void

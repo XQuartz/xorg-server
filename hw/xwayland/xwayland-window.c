@@ -1226,8 +1226,16 @@ frame_callback(void *data,
     xwl_window->frame_callback = NULL;
 
 #ifdef GLAMOR_HAS_GBM
-    if (xwl_window->xwl_screen->present)
+    if (xwl_window->xwl_screen->present) {
         xwl_present_for_each_frame_callback(xwl_window, xwl_present_frame_callback);
+
+        /* If xwl_window_create_frame_callback was called from
+         * xwl_present_frame_callback, need to make sure all fallback timers
+         * are adjusted correspondingly.
+         */
+        if (xwl_window->frame_callback)
+            xwl_present_for_each_frame_callback(xwl_window, xwl_present_reset_timer);
+    }
 #endif
 }
 
@@ -1243,7 +1251,11 @@ xwl_window_create_frame_callback(struct xwl_window *xwl_window)
                              xwl_window);
 
 #ifdef GLAMOR_HAS_GBM
-    if (xwl_window->xwl_screen->present)
+    /* If we get called from frame_callback, it will take care of calling
+     * xwl_present_reset_timer.
+     */
+    if (xwl_window->xwl_screen->present &&
+        !xwl_present_entered_for_each_frame_callback())
         xwl_present_for_each_frame_callback(xwl_window, xwl_present_reset_timer);
 #endif
 }

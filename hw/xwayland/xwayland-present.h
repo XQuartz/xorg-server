@@ -61,6 +61,7 @@ struct xwl_present_event {
     PixmapPtr pixmap;
 };
 
+Bool xwl_present_entered_for_each_frame_callback(void);
 void xwl_present_for_each_frame_callback(struct xwl_window *xwl_window,
                                          void iter_func(struct xwl_present_window *));
 void xwl_present_reset_timer(struct xwl_present_window *xwl_present_window);

@@ -139,3 +139,12 @@ check-merge-request:
     reports:
       junit: results.xml
   allow_failure: true
+
+#
+# Workflow rules needed due to:
+# https://gitlab.freedesktop.org/freedesktop/freedesktop/-/issues/438
+#
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_PIPELINE_SOURCE == 'push'

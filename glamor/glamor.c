@@ -271,9 +271,7 @@ void
 glamor_block_handler(ScreenPtr screen)
 {
     glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
-
-    glamor_make_current(glamor_priv);
-    glFlush();
+    glamor_flush(glamor_priv);
 }
 
 static void
@@ -281,8 +279,7 @@ _glamor_block_handler(ScreenPtr screen, void *timeout)
 {
     glamor_screen_private *glamor_priv = glamor_get_screen_private(screen);
 
-    glamor_make_current(glamor_priv);
-    glFlush();
+    glamor_flush(glamor_priv);
 
     screen->BlockHandler = glamor_priv->saved_procs.block_handler;
     screen->BlockHandler(screen, timeout);

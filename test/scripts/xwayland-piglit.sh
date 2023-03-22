@@ -17,8 +17,13 @@ weston --no-config --backend=headless-backend.so --socket=wayland-$$ &
 WESTON_PID=$!
 export WAYLAND_DISPLAY=wayland-$$
 
+# We can use either wayland-info or weston-info (deprecated), depending
+# on what's actually available.
+WAYLAND_INFO=wayland-info
+command -V $WAYLAND_INFO >/dev/null 2>&1 || WAYLAND_INFO=weston-info
+
 # Wait for weston to initialize before starting Xwayland
-timeout --preserve-status 60s bash -c 'while ! weston-info &>/dev/null; do sleep 1; done'
+timeout --preserve-status 60s bash -c "while ! $WAYLAND_INFO &>/dev/null; do sleep 1; done"
 
 # Start an Xwayland server
 export PIGLIT_RESULTS_DIR=$XSERVER_BUILDDIR/test/piglit-results/xwayland

@@ -902,9 +902,9 @@ XkbConvertCase(register KeySym sym, KeySym * lower, KeySym * upper)
         break;
     case 6:                    /* Cyrillic */
         /* Assume the KeySym is a legal value (ignore discontinuities) */
-        if (sym >= XK_Serbian_DJE && sym <= XK_Serbian_DZE)
+        if (sym >= XK_Serbian_DJE && sym <= XK_Cyrillic_DZHE)
             *lower -= (XK_Serbian_DJE - XK_Serbian_dje);
-        else if (sym >= XK_Serbian_dje && sym <= XK_Serbian_dze)
+        else if (sym >= XK_Serbian_dje && sym <= XK_Cyrillic_dzhe)
             *upper += (XK_Serbian_DJE - XK_Serbian_dje);
         else if (sym >= XK_Cyrillic_YU && sym <= XK_Cyrillic_HARDSIGN)
             *lower -= (XK_Cyrillic_YU - XK_Cyrillic_yu);

@@ -3423,6 +3423,9 @@ input_handler(void *data, struct wl_registry *registry, uint32_t id,
         init_keyboard_shortcuts_inhibit(xwl_screen, id, version);
     } else if (strcmp(interface, xdg_system_bell_v1_interface.name) == 0) {
         init_system_bell(xwl_screen, id, version);
+    } else if (strcmp(interface, wl_fixes_interface.name) == 0) {
+        xwl_screen->input_fixes =
+            wl_registry_bind(registry, id, &wl_fixes_interface, 1);
     }
 }
 

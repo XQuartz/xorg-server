@@ -280,6 +280,18 @@ xwl_close_screen(ScreenPtr screen)
 
     RemoveNotifyFd(xwl_screen->wayland_fd);
 
+    if (xwl_screen->fixes) {
+        wl_fixes_destroy_registry(xwl_screen->fixes, xwl_screen->registry);
+        wl_fixes_destroy(xwl_screen->fixes);
+    }
+    if (xwl_screen->input_fixes) {
+        wl_fixes_destroy_registry(xwl_screen->input_fixes, xwl_screen->input_registry);
+        wl_fixes_destroy(xwl_screen->input_fixes);
+    }
+
+    wl_registry_destroy(xwl_screen->registry);
+    wl_registry_destroy(xwl_screen->input_registry);
+
     wl_display_disconnect(xwl_screen->display);
 
     screen->CloseScreen = xwl_screen->CloseScreen;
@@ -578,6 +590,10 @@ registry_global(void *data, struct wl_registry *registry, uint32_t id,
                                     version);
     }
 #endif
+    else if (strcmp(interface, wl_fixes_interface.name) == 0) {
+        xwl_screen->fixes =
+            wl_registry_bind(registry, id, &wl_fixes_interface, 1);
+    }
 }
 
 static void

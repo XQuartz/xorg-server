@@ -101,7 +101,9 @@ struct xwl_screen {
     int wayland_fd;
     struct wl_display *display;
     struct wl_registry *registry;
+    struct wl_fixes *fixes;
     struct wl_registry *input_registry;
+    struct wl_fixes *input_fixes;
     struct wl_compositor *compositor;
     struct zwp_tablet_manager_v2 *tablet_manager;
     struct wl_shm *shm;

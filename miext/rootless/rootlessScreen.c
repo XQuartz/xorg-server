@@ -341,6 +341,11 @@ RootlessGlyphs(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
                     y += glyph->info.yOff;
                 }
 
+                /* RootlessDamageBox expects global (screen) coordinates */
+                box.x1 += dstWin->drawable.x;
+                box.y1 += dstWin->drawable.y;
+                box.x2 += dstWin->drawable.x;
+                box.y2 += dstWin->drawable.y;
                 RootlessDamageBox(dstWin, &box);
             }
             list++;

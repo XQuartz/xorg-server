@@ -297,8 +297,8 @@ RootlessGlyphs(CARD8 op, PicturePtr pSrc, PicturePtr pDst,
     //SCREEN_WRAP(ps, Glyphs);
 
     if (dstWin && IsFramedWindow(dstWin)) {
-        x = xSrc;
-        y = ySrc;
+        x = 0;
+        y = 0;
 
         while (nlist--) {
             x += list->xOff;

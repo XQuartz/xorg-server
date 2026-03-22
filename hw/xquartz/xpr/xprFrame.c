@@ -402,11 +402,58 @@ xprUpdateRegion(RootlessFrameID wid, RegionPtr pDamage)
 
 /*
  * Mark damaged rectangles as requiring redisplay to screen.
+ *
+ * TODO: Remove this workaround when macOS no longer interprets
+ * the padding byte of depth-24 windows as alpha.
+ *
+ * On Apple Silicon, the Metal compositor interprets the high byte
+ * in 32bpp backing stores as alpha.  X11's depth-24 visual treats
+ * this byte as padding, and Render extension operations write
+ * alpha=0x00 for PictOpSrc/PictOpClear, causing pixels to appear
+ * transparent.  Force the alpha channel to 0xFF for all damaged
+ * pixels before notifying the compositor.
  */
 static void
 xprDamageRects(RootlessFrameID wid, int nrects, const BoxRec *rects,
                int shift_x, int shift_y)
 {
+#if defined(__arm64__)
+    __block RootlessWindowRec *winRec;
+
+    dispatch_sync(window_hash_serial_q, ^{
+        winRec = x_hash_table_lookup(window_hash, wid, NULL);
+    });
+
+    if (winRec && winRec->is_drawing && winRec->pixelData &&
+        winRec->win->drawable.bitsPerPixel == 32) {
+        int i;
+
+        for (i = 0; i < nrects; i++) {
+            int x1 = rects[i].x1 + shift_x;
+            int y1 = rects[i].y1 + shift_y;
+            int x2 = rects[i].x2 + shift_x;
+            int y2 = rects[i].y2 + shift_y;
+            int y;
+
+            /* Clip to pixmap bounds */
+            if (x1 < 0) x1 = 0;
+            if (y1 < 0) y1 = 0;
+            if (x2 > (int)winRec->width) x2 = winRec->width;
+            if (y2 > (int)winRec->height) y2 = winRec->height;
+
+            for (y = y1; y < y2; y++) {
+                uint32_t *row = (uint32_t *)(winRec->pixelData +
+                                             y * winRec->bytesPerRow);
+                int x;
+
+                for (x = x1; x < x2; x++) {
+                    row[x] |= 0xFF000000;
+                }
+            }
+        }
+    }
+#endif
+
     xp_mark_window(x_cvt_vptr_to_uint(wid), nrects, rects, shift_x, shift_y);
 }
 

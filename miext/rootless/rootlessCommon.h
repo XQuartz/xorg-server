@@ -108,6 +108,9 @@ typedef struct _RootlessScreenRec {
 
     CompositeProcPtr Composite;
     GlyphsProcPtr Glyphs;
+    TrapezoidsProcPtr Trapezoids;
+    TrianglesProcPtr Triangles;
+    CompositeRectsProcPtr CompositeRects;
 
     InstallColormapProcPtr InstallColormap;
     UninstallColormapProcPtr UninstallColormap;

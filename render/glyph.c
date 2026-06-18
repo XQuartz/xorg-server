@@ -268,7 +268,7 @@ FreeGlyph(GlyphPtr glyph, int format)
         gr = FindGlyphRef(&globalGlyphs[format], signature, TRUE, glyph->sha1);
         if (gr - globalGlyphs[format].table != first)
             DuplicateRef(glyph, "Found wrong one");
-        if (gr->glyph && gr->glyph != DeletedGlyph) {
+        if (gr->glyph == glyph) {
             gr->glyph = DeletedGlyph;
             gr->signature = 0;
             globalGlyphs[format].tableEntries--;

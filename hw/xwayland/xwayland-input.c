@@ -2009,6 +2009,9 @@ xwl_seat_destroy(struct xwl_seat *xwl_seat)
     struct xwl_touch *xwl_touch, *next_xwl_touch;
     struct sync_pending *p, *npd;
 
+    if (!xwl_seat->caps_initialized)
+        xwl_screen->expecting_event--;
+
     xorg_list_del(&xwl_seat->link);
 
     xorg_list_for_each_entry_safe(xwl_touch, next_xwl_touch,

@@ -1941,7 +1941,10 @@ static void
 seat_handle_name(void *data, struct wl_seat *seat,
                  const char *name)
 {
+    struct xwl_seat *xwl_seat = data;
 
+    free(xwl_seat->seat_name);
+    xwl_seat->seat_name = XNFstrdup(name);
 }
 
 static const struct wl_seat_listener seat_listener = {
@@ -2033,6 +2036,7 @@ xwl_seat_destroy(struct xwl_seat *xwl_seat)
     wl_seat_destroy(xwl_seat->seat);
     xwl_cursor_release(&xwl_seat->cursor);
     wl_array_release(&xwl_seat->keys);
+    free(xwl_seat->seat_name);
     free(xwl_seat);
 }
 

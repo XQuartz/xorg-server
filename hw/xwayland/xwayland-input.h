@@ -127,6 +127,8 @@ struct xwl_seat {
     struct xorg_list tablet_tools;
     struct xorg_list tablet_pads;
     struct zwp_xwayland_keyboard_grab_v1 *keyboard_grab;
+
+    char *seat_name;
 };
 
 struct xwl_tablet {

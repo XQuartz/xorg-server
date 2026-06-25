@@ -191,5 +191,6 @@ void xwl_screen_lost_focus(struct xwl_screen *xwl_screen);
 Bool xwl_screen_update_global_surface_scale(struct xwl_screen *xwl_screen);
 Bool xwl_screen_should_use_fractional_scale(struct xwl_screen *xwl_screen);
 Bool xwl_screen_validate_options(int argc, char **argv);
+struct xwl_seat *xwl_screen_get_default_seat(struct xwl_screen *xwl_screen);
 
 #endif /* XWAYLAND_SCREEN_H */

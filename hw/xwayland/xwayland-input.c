@@ -2846,7 +2846,7 @@ tablet_pad_done(void *data,
                               xwl_tablet_pad_proc);
     dixSetPrivate(&pad->xdevice->devPrivates, &xwl_tablet_private_key, pad);
     ActivateDevice(pad->xdevice, TRUE);
-    EnableDevice(pad->xdevice, TRUE);
+    enable_device(pad->seat, pad->xdevice);
 }
 
 static void

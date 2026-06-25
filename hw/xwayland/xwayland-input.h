@@ -129,6 +129,8 @@ struct xwl_seat {
     struct zwp_xwayland_keyboard_grab_v1 *keyboard_grab;
 
     char *seat_name;
+    DeviceIntPtr master_pointer;
+    DeviceIntPtr master_keyboard;
 };
 
 struct xwl_tablet {

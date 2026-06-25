@@ -90,7 +90,7 @@ static void
 init_tablet_manager_seat(struct xwl_screen *xwl_screen,
                          struct xwl_seat *xwl_seat);
 static void
-release_tablet_manager_seat(struct xwl_seat *xwl_seat);
+release_tablet_manager_seat(struct xwl_seat *xwl_seat, Bool remove_devices);
 
 static void
 xwl_pointer_control(DeviceIntPtr device, PtrCtrl *ctrl)
@@ -1708,10 +1708,194 @@ disable_device(DeviceIntPtr dev)
 }
 
 static void
+remove_device(DeviceIntPtr *dev)
+{
+    if (!*dev)
+        return;
+
+    RemoveDevice(*dev, TRUE);
+    *dev = NULL;
+}
+
+static void
+xwl_seat_remove_slave_devices(struct xwl_seat *xwl_seat)
+{
+    remove_device(&xwl_seat->pointer);
+    remove_device(&xwl_seat->relative_pointer);
+    remove_device(&xwl_seat->pointer_gestures);
+
+    if (xwl_seat->keyboard) {
+        remove_sync_pending(xwl_seat->keyboard);
+        remove_device(&xwl_seat->keyboard);
+    }
+
+    remove_device(&xwl_seat->touch);
+    remove_device(&xwl_seat->stylus);
+    remove_device(&xwl_seat->eraser);
+    remove_device(&xwl_seat->puck);
+}
+
+static Bool
+xwl_seat_uses_core_devices(struct xwl_seat *xwl_seat)
+{
+    struct xwl_seat *default_seat = xwl_screen_get_default_seat(xwl_seat->xwl_screen);
+
+    return default_seat == xwl_seat;
+}
+
+static void
+xwl_seat_cleanup_master_devices(struct xwl_seat *xwl_seat, Bool remove_devices)
+{
+    DeviceIntPtr xtest_ptr, xtest_kbd;
+
+    if (!xwl_seat->master_pointer)
+        return;
+
+    if (remove_devices) {
+        xtest_ptr = GetXTestDevice(xwl_seat->master_pointer);
+        xtest_kbd = GetXTestDevice(xwl_seat->master_keyboard);
+
+        if (xtest_ptr)
+            RemoveDevice(xtest_ptr, TRUE);
+
+        if (xtest_kbd)
+            RemoveDevice(xtest_kbd, TRUE);
+
+        RemoveDevice(xwl_seat->master_pointer, TRUE);
+        RemoveDevice(xwl_seat->master_keyboard, TRUE);
+    }
+
+    xwl_seat->master_pointer = NULL;
+    xwl_seat->master_keyboard = NULL;
+}
+
+static int
+xwl_seat_create_xtest_slave_devices(struct xwl_seat *xwl_seat)
+{
+    DeviceIntPtr xtest_ptr, xtest_kbd;
+    int rc;
+
+    rc = AllocXTestDevice(serverClient, xwl_seat->seat_name,
+                          &xtest_ptr, &xtest_kbd,
+                          xwl_seat->master_pointer,
+                          xwl_seat->master_keyboard);
+    if (rc != Success) {
+        ErrorF("XWAYLAND: failed to allocate XTest devices for seat \"%s\"\n",
+               xwl_seat->seat_name);
+        return rc;
+    }
+
+    ActivateDevice(xtest_ptr, TRUE);
+    ActivateDevice(xtest_kbd, TRUE);
+
+    EnableDevice(xtest_ptr, TRUE);
+    EnableDevice(xtest_kbd, TRUE);
+
+    AttachDevice(NULL, xtest_ptr, xwl_seat->master_pointer);
+    AttachDevice(NULL, xtest_kbd, xwl_seat->master_keyboard);
+
+    return Success;
+}
+
+static void
+xwl_seat_create_master_devices(struct xwl_seat *xwl_seat)
+{
+    int rc;
+
+    if (xwl_seat->master_pointer || xwl_seat_uses_core_devices(xwl_seat))
+        return;
+
+    if (!xwl_seat->seat_name)
+        return;
+
+    rc = AllocDevicePair(serverClient, xwl_seat->seat_name,
+                         &xwl_seat->master_pointer,
+                         &xwl_seat->master_keyboard,
+                         CorePointerProc, CoreKeyboardProc, TRUE);
+
+    if (rc != Success) {
+        ErrorF("XWAYLAND: failed to allocate master devices for seat \"%s\"\n",
+               xwl_seat->seat_name);
+        return;
+    }
+
+    ActivateDevice(xwl_seat->master_pointer, TRUE);
+    ActivateDevice(xwl_seat->master_keyboard, TRUE);
+
+    EnableDevice(xwl_seat->master_pointer, TRUE);
+    EnableDevice(xwl_seat->master_keyboard, TRUE);
+
+    rc = xwl_seat_create_xtest_slave_devices(xwl_seat);
+    if (rc != Success)
+        goto fail;
+
+    return;
+
+ fail:
+    RemoveDevice(xwl_seat->master_pointer, FALSE);
+    xwl_seat->master_pointer = NULL;
+
+    RemoveDevice(xwl_seat->master_keyboard, FALSE);
+    xwl_seat->master_keyboard = NULL;
+}
+
+static DeviceIntPtr
+xwl_seat_get_master_device(struct xwl_seat *xwl_seat, DeviceIntPtr dev)
+{
+    if (dev->deviceProc == xwl_keyboard_proc) {
+        if (xwl_seat->master_keyboard)
+            return xwl_seat->master_keyboard;
+
+        return inputInfo.keyboard;
+    }
+
+    if (xwl_seat->master_pointer)
+        return xwl_seat->master_pointer;
+
+    return inputInfo.pointer;
+}
+
+static void
+xwl_seat_attach_slave_device(struct xwl_seat *xwl_seat, DeviceIntPtr dev)
+{
+    DeviceIntPtr master;
+
+    if (!dev || !dev->enabled)
+        return;
+
+    master = xwl_seat_get_master_device(xwl_seat, dev);
+    if (master != GetMaster(dev, MASTER_ATTACHED))
+        AttachDevice(NULL, dev, master);
+}
+
+static void
+xwl_seat_maybe_attach_slave_device(struct xwl_seat *xwl_seat)
+{
+    struct xwl_tablet_pad *pad;
+
+    xwl_seat_attach_slave_device(xwl_seat, xwl_seat->pointer);
+    xwl_seat_attach_slave_device(xwl_seat, xwl_seat->relative_pointer);
+    xwl_seat_attach_slave_device(xwl_seat, xwl_seat->pointer_gestures);
+
+    xwl_seat_attach_slave_device(xwl_seat, xwl_seat->keyboard);
+
+    xwl_seat_attach_slave_device(xwl_seat, xwl_seat->touch);
+    xwl_seat_attach_slave_device(xwl_seat, xwl_seat->stylus);
+    xwl_seat_attach_slave_device(xwl_seat, xwl_seat->eraser);
+    xwl_seat_attach_slave_device(xwl_seat, xwl_seat->puck);
+
+    xorg_list_for_each_entry(pad, &xwl_seat->tablet_pads, link) {
+        xwl_seat_attach_slave_device(xwl_seat, pad->xdevice);
+    }
+}
+
+static void
 enable_device(struct xwl_seat *xwl_seat, DeviceIntPtr dev)
 {
     dev->public.devicePrivate = xwl_seat;
+    xwl_seat_create_master_devices(xwl_seat);
     EnableDevice(dev, TRUE);
+    xwl_seat_attach_slave_device(xwl_seat, dev);
 }
 
 static void
@@ -1736,8 +1920,8 @@ release_pointer(struct xwl_seat *xwl_seat, Bool should_disable_device)
     wl_pointer_release(xwl_seat->wl_pointer);
     xwl_seat->wl_pointer = NULL;
 
-    if (should_disable_device && xwl_seat->pointer)
-        disable_device(xwl_seat->pointer);
+    if (should_disable_device)
+        remove_device(&xwl_seat->pointer);
 }
 
 static void
@@ -1776,8 +1960,8 @@ release_relative_pointer(struct xwl_seat *xwl_seat, Bool should_disable_device)
         xwl_seat->wp_relative_pointer = NULL;
     }
 
-    if (should_disable_device && xwl_seat->relative_pointer)
-        disable_device(xwl_seat->relative_pointer);
+    if (should_disable_device)
+        remove_device(&xwl_seat->relative_pointer);
 }
 
 static void
@@ -1834,8 +2018,8 @@ release_pointer_gestures_device(struct xwl_seat *xwl_seat, Bool should_disable_d
         xwl_seat->wp_pointer_gesture_pinch = NULL;
     }
 
-    if (should_disable_device && xwl_seat->pointer_gestures)
-        disable_device(xwl_seat->pointer_gestures);
+    if (should_disable_device)
+        remove_device(&xwl_seat->pointer_gestures);
 }
 
 static void
@@ -1872,7 +2056,7 @@ release_keyboard(struct xwl_seat *xwl_seat, Bool should_disable_device)
 
     if (should_disable_device && xwl_seat->keyboard) {
         remove_sync_pending(xwl_seat->keyboard);
-        disable_device(xwl_seat->keyboard);
+        remove_device(&xwl_seat->keyboard);
     }
 }
 
@@ -1897,8 +2081,8 @@ release_touch(struct xwl_seat *xwl_seat, Bool should_disable_device)
     wl_touch_release(xwl_seat->wl_touch);
     xwl_seat->wl_touch = NULL;
 
-    if (should_disable_device && xwl_seat->touch)
-        disable_device(xwl_seat->touch);
+    if (should_disable_device)
+        remove_device(&xwl_seat->touch);
 }
 
 static void
@@ -1945,6 +2129,11 @@ seat_handle_name(void *data, struct wl_seat *seat,
 
     free(xwl_seat->seat_name);
     xwl_seat->seat_name = XNFstrdup(name);
+
+    if (!xwl_seat_uses_core_devices(xwl_seat)) {
+        xwl_seat_create_master_devices(xwl_seat);
+        xwl_seat_maybe_attach_slave_device(xwl_seat);
+    }
 }
 
 static const struct wl_seat_listener seat_listener = {
@@ -1969,11 +2158,27 @@ xwl_seat_update_cursor(struct xwl_cursor *xwl_cursor)
     xwl_seat_set_cursor(xwl_seat);
 }
 
+static struct xwl_seat *
+xwl_screen_get_seat_by_id(struct xwl_screen *xwl_screen, uint32_t id)
+{
+    struct xwl_seat *xwl_seat;
+
+    xorg_list_for_each_entry(xwl_seat, &xwl_screen->seat_list, link) {
+        if (xwl_seat->id == id)
+            return xwl_seat;
+    }
+
+    return NULL;
+}
+
 static void
 create_input_device(struct xwl_screen *xwl_screen, uint32_t id, uint32_t version)
 {
     struct xwl_seat *xwl_seat;
     int seat_version = 8;
+
+    if (xwl_screen_get_seat_by_id(xwl_screen, id))
+        return;
 
     xwl_seat = calloc(1, sizeof *xwl_seat);
     if (xwl_seat == NULL) {
@@ -2011,9 +2216,7 @@ xwl_seat_destroy(struct xwl_seat *xwl_seat)
     struct xwl_screen *xwl_screen = xwl_seat->xwl_screen;
     struct xwl_touch *xwl_touch, *next_xwl_touch;
     struct sync_pending *p, *npd;
-
-    if (!xwl_seat->caps_initialized)
-        xwl_screen->expecting_event--;
+    Bool disable_x_devices = inputInfo.devices != NULL;
 
     xorg_list_del(&xwl_seat->link);
 
@@ -2028,7 +2231,27 @@ xwl_seat_destroy(struct xwl_seat *xwl_seat)
         free (p);
     }
 
-    release_tablet_manager_seat(xwl_seat);
+    if (!xwl_seat->caps_initialized)
+        xwl_screen->expecting_event--;
+
+    if (xwl_seat->wl_pointer) {
+        release_pointer(xwl_seat, disable_x_devices);
+        release_relative_pointer(xwl_seat, disable_x_devices);
+        release_pointer_gestures_device(xwl_seat, disable_x_devices);
+    }
+
+    if (xwl_seat->wl_keyboard)
+        release_keyboard(xwl_seat, disable_x_devices);
+
+    if (xwl_seat->wl_touch)
+        release_touch(xwl_seat, disable_x_devices);
+
+    if (disable_x_devices)
+        xwl_seat_remove_slave_devices(xwl_seat);
+
+    release_tablet_manager_seat(xwl_seat, disable_x_devices);
+
+    xwl_seat_cleanup_master_devices(xwl_seat, disable_x_devices);
 
     release_grab(xwl_seat);
     if (xwl_screen->clipboard)
@@ -3018,7 +3241,7 @@ init_tablet_manager_seat(struct xwl_screen *xwl_screen,
 }
 
 static void
-release_tablet_manager_seat(struct xwl_seat *xwl_seat)
+release_tablet_manager_seat(struct xwl_seat *xwl_seat, Bool remove_devices)
 {
     struct xwl_tablet *xwl_tablet, *next_xwl_tablet;
     struct xwl_tablet_tool *xwl_tablet_tool, *next_xwl_tablet_tool;
@@ -3027,6 +3250,8 @@ release_tablet_manager_seat(struct xwl_seat *xwl_seat)
     xorg_list_for_each_entry_safe(xwl_tablet_pad, next_xwl_tablet_pad,
                                   &xwl_seat->tablet_pads, link) {
         xorg_list_del(&xwl_tablet_pad->link);
+        if (remove_devices)
+            RemoveDevice(xwl_tablet_pad->xdevice, TRUE);
         zwp_tablet_pad_v2_destroy(xwl_tablet_pad->pad);
         free(xwl_tablet_pad);
     }
@@ -3204,6 +3429,12 @@ input_handler(void *data, struct wl_registry *registry, uint32_t id,
 static void
 global_remove(void *data, struct wl_registry *registry, uint32_t name)
 {
+    struct xwl_screen *xwl_screen = data;
+    struct xwl_seat *xwl_seat;
+
+    xwl_seat = xwl_screen_get_seat_by_id(xwl_screen, name);
+    if (xwl_seat)
+        xwl_seat_destroy(xwl_seat);
 }
 
 static const struct wl_registry_listener input_listener = {

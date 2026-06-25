@@ -1731,12 +1731,12 @@ init_pointer(struct xwl_seat *xwl_seat)
 }
 
 static void
-release_pointer(struct xwl_seat *xwl_seat)
+release_pointer(struct xwl_seat *xwl_seat, Bool should_disable_device)
 {
     wl_pointer_release(xwl_seat->wl_pointer);
     xwl_seat->wl_pointer = NULL;
 
-    if (xwl_seat->pointer)
+    if (should_disable_device && xwl_seat->pointer)
         disable_device(xwl_seat->pointer);
 }
 
@@ -1769,14 +1769,14 @@ init_relative_pointer_listener(struct xwl_seat *xwl_seat)
 }
 
 static void
-release_relative_pointer(struct xwl_seat *xwl_seat)
+release_relative_pointer(struct xwl_seat *xwl_seat, Bool should_disable_device)
 {
     if (xwl_seat->wp_relative_pointer) {
         zwp_relative_pointer_v1_destroy(xwl_seat->wp_relative_pointer);
         xwl_seat->wp_relative_pointer = NULL;
     }
 
-    if (xwl_seat->relative_pointer)
+    if (should_disable_device && xwl_seat->relative_pointer)
         disable_device(xwl_seat->relative_pointer);
 }
 
@@ -1822,7 +1822,7 @@ init_pointer_gestures_listener(struct xwl_seat *xwl_seat)
 }
 
 static void
-release_pointer_gestures_device(struct xwl_seat *xwl_seat)
+release_pointer_gestures_device(struct xwl_seat *xwl_seat, Bool should_disable_device)
 {
     if (xwl_seat->wp_pointer_gesture_swipe) {
         zwp_pointer_gesture_swipe_v1_destroy(xwl_seat->wp_pointer_gesture_swipe);
@@ -1834,7 +1834,7 @@ release_pointer_gestures_device(struct xwl_seat *xwl_seat)
         xwl_seat->wp_pointer_gesture_pinch = NULL;
     }
 
-    if (xwl_seat->pointer_gestures)
+    if (should_disable_device && xwl_seat->pointer_gestures)
         disable_device(xwl_seat->pointer_gestures);
 }
 
@@ -1864,13 +1864,13 @@ init_keyboard(struct xwl_seat *xwl_seat)
 }
 
 static void
-release_keyboard(struct xwl_seat *xwl_seat)
+release_keyboard(struct xwl_seat *xwl_seat, Bool should_disable_device)
 {
     release_grab(xwl_seat);
     wl_keyboard_release(xwl_seat->wl_keyboard);
     xwl_seat->wl_keyboard = NULL;
 
-    if (xwl_seat->keyboard) {
+    if (should_disable_device && xwl_seat->keyboard) {
         remove_sync_pending(xwl_seat->keyboard);
         disable_device(xwl_seat->keyboard);
     }
@@ -1892,12 +1892,12 @@ init_touch(struct xwl_seat *xwl_seat)
 }
 
 static void
-release_touch(struct xwl_seat *xwl_seat)
+release_touch(struct xwl_seat *xwl_seat, Bool should_disable_device)
 {
     wl_touch_release(xwl_seat->wl_touch);
     xwl_seat->wl_touch = NULL;
 
-    if (xwl_seat->touch)
+    if (should_disable_device && xwl_seat->touch)
         disable_device(xwl_seat->touch);
 }
 
@@ -1914,21 +1914,21 @@ seat_handle_capabilities(void *data, struct wl_seat *seat,
         init_pointer_gestures_device(xwl_seat);
         init_pointer_gestures_listener(xwl_seat);
     } else if (!(caps & WL_SEAT_CAPABILITY_POINTER) && xwl_seat->wl_pointer) {
-        release_pointer(xwl_seat);
-        release_relative_pointer(xwl_seat);
-        release_pointer_gestures_device(xwl_seat);
+        release_pointer(xwl_seat, TRUE);
+        release_relative_pointer(xwl_seat, TRUE);
+        release_pointer_gestures_device(xwl_seat, TRUE);
     }
 
     if (caps & WL_SEAT_CAPABILITY_KEYBOARD && xwl_seat->wl_keyboard == NULL) {
         init_keyboard(xwl_seat);
     } else if (!(caps & WL_SEAT_CAPABILITY_KEYBOARD) && xwl_seat->wl_keyboard) {
-        release_keyboard(xwl_seat);
+        release_keyboard(xwl_seat, TRUE);
     }
 
     if (caps & WL_SEAT_CAPABILITY_TOUCH && xwl_seat->wl_touch == NULL) {
         init_touch(xwl_seat);
     } else if (!(caps & WL_SEAT_CAPABILITY_TOUCH) && xwl_seat->wl_touch) {
-        release_touch(xwl_seat);
+        release_touch(xwl_seat, TRUE);
     }
 
     if (xwl_seat->caps_initialized == FALSE) {

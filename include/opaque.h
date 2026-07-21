@@ -53,6 +53,7 @@ extern _X_EXPORT Bool explicit_display;
 extern _X_EXPORT Bool disableBackingStore;
 extern _X_EXPORT Bool enableBackingStore;
 extern _X_EXPORT Bool enableIndirectGLX;
+extern _X_EXPORT Bool enableFontServerConnections;
 extern _X_EXPORT Bool PartialNetwork;
 
 #ifdef RLIMIT_DATA

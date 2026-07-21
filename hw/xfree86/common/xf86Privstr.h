@@ -80,6 +80,7 @@ typedef struct {
     Bool miscModInDevAllowNonLocal;
     Bool pmFlag;
     MessageType iglxFrom;
+    MessageType fontserverFrom;
     XF86_GlxVisuals glxVisuals;
     MessageType glxVisualsFrom;
 

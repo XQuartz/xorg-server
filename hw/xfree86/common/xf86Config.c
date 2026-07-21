@@ -226,6 +226,17 @@ xf86ValidateFontPath(char *path)
          * Either an OK directory, or a font server name.  So add it to
          * the path.
          */
+        if (*path_elem != '/' &&
+            strcmp(path_elem, "built-ins") != 0 &&
+            strncmp(path_elem, "catalogue:", strlen("catalogue:")) != 0 &&
+            !enableFontServerConnections) {
+            xf86Msg(X_WARNING,
+                    "Ignoring font server entry \"%s\" in font path.\n",
+                    path_elem);
+            xf86ErrorF("\tFont server connections are disabled.\n");
+            xf86ErrorF("\tUse +fontserverconnections to allow them.\n");
+            continue;
+        }
         if (out_pnt != tmp_path)
             *out_pnt++ = ',';
         strcat(out_pnt, path_elem);
@@ -652,6 +663,7 @@ typedef enum {
     FLAG_IGLX,
     FLAG_DEBUG,
     FLAG_ALLOW_BYTE_SWAPPED_CLIENTS,
+    FLAG_FONTSERVER,
 } FlagValues;
 
 /**
@@ -714,6 +726,8 @@ static OptionInfoRec FlagOptions[] = {
     {FLAG_DEBUG, "Debug", OPTV_STRING,
      {0}, FALSE},
     {FLAG_ALLOW_BYTE_SWAPPED_CLIENTS, "AllowByteSwappedClients", OPTV_BOOLEAN,
+     {0}, FALSE},
+    {FLAG_FONTSERVER, "FontServerConnections", OPTV_BOOLEAN,
      {0}, FALSE},
     {-1, NULL, OPTV_NONE,
      {0}, FALSE},
@@ -889,6 +903,13 @@ configServerFlags(XF86ConfFlagsPtr flagsconf, XF86OptionPtr layoutopts)
         }
     }
 #endif
+
+    if (xf86Info.fontserverFrom != X_CMDLINE) {
+        if (xf86GetOptValBool(FlagOptions, FLAG_FONTSERVER, &value)) {
+            enableFontServerConnections = value;
+            xf86Info.fontserverFrom = X_CONFIG;
+        }
+    }
 
     xf86Info.debug = xf86GetOptValString(FlagOptions, FLAG_DEBUG);
 

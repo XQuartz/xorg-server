@@ -163,7 +163,7 @@ def pytest_generate_tests(metafunc):
         metafunc.parametrize("xserver", server_types, indirect=True)
 
 
-def _start_server(request, server_type, log_file=None):
+def _start_server(request, server_type, log_file=None, extra_args=None):
     """Start an X server of the given type for a test.
 
     Shared implementation for the xvfb, xwayland, xorg, and generic
@@ -192,6 +192,7 @@ def _start_server(request, server_type, log_file=None):
         valgrind_suppressions=suppressions,
         asan=use_asan,
         server_path=server_path,
+        extra_args=extra_args,
         log_file=log_file,
     )
 
@@ -237,7 +238,30 @@ def _start_server(request, server_type, log_file=None):
 
 
 @pytest.fixture
-def xserver(request, tmp_path):
+def xserver_args():
+    """Extra command-line arguments for the X server fixtures.
+
+    Override this fixture in test files (or test classes) to pass
+    extra arguments to the X server.  The default is an empty list.
+    The ``xserver``, ``xvfb``, ``xwayland``, and ``xorg`` fixtures
+    all pass these arguments through to the server process.
+
+    Example::
+
+        @pytest.fixture(params=["enabled", "disabled"])
+        def xserver_args(request):
+            if request.param == "enabled":
+                return ["+byteswappedclients"]
+            return ["-byteswappedclients"]
+
+        def test_something(xserver, xclient):
+            ...
+    """
+    return []
+
+
+@pytest.fixture
+def xserver(request, tmp_path, xserver_args):
     """
     Start an X server for this test.
 
@@ -245,6 +269,9 @@ def xserver(request, tmp_path):
     test that uses this fixture runs once per configured --server-type.
     A fresh server per test, killed afterward.  With --valgrind,
     valgrind memory errors cause test failure during teardown.
+
+    Extra command-line arguments can be passed by overriding the
+    :func:`xserver_args` fixture.
 
     When ``--display`` is given, no server is started; an
     :class:`ExternalXServer` proxy is yielded instead.
@@ -271,11 +298,11 @@ def xserver(request, tmp_path):
     if server_type == "xorg":
         kwargs["log_file"] = tmp_path / f"{server_type}.log"
 
-    yield from _start_server(request, server_type, **kwargs)
+    yield from _start_server(request, server_type, extra_args=xserver_args, **kwargs)
 
 
 @pytest.fixture
-def xvfb(request, tmp_path):
+def xvfb(request, tmp_path, xserver_args):
     """Start an Xvfb server for this test."""
     display = request.config.getoption("--display")
     if display is not None:
@@ -283,11 +310,11 @@ def xvfb(request, tmp_path):
         return
     if "xvfb" not in get_server_types(request.config):
         pytest.skip("Xvfb not in --server-type list")
-    yield from _start_server(request, "xvfb")
+    yield from _start_server(request, "xvfb", extra_args=xserver_args)
 
 
 @pytest.fixture
-def xwayland(request, tmp_path):
+def xwayland(request, tmp_path, xserver_args):
     """Start an Xwayland server for this test."""
     display = request.config.getoption("--display")
     if display is not None:
@@ -295,11 +322,11 @@ def xwayland(request, tmp_path):
         return
     if "xwayland" not in get_server_types(request.config):
         pytest.skip("Xwayland not in --server-type list")
-    yield from _start_server(request, "xwayland")
+    yield from _start_server(request, "xwayland", extra_args=xserver_args)
 
 
 @pytest.fixture
-def xorg(request, tmp_path):
+def xorg(request, tmp_path, xserver_args):
     """Start an Xorg server for this test."""
     display = request.config.getoption("--display")
     if display is not None:
@@ -307,7 +334,9 @@ def xorg(request, tmp_path):
         return
     if "xorg" not in get_server_types(request.config):
         pytest.skip("Xorg not in --server-type list")
-    yield from _start_server(request, "xorg", log_file=tmp_path / "xorg.log")
+    yield from _start_server(
+        request, "xorg", log_file=tmp_path / "xorg.log", extra_args=xserver_args
+    )
 
 
 @pytest.fixture

@@ -40,7 +40,6 @@
 #include "os/xserver_poll.h"
 
 #include <micmap.h>
-#include <misyncshm.h>
 #include <os.h>
 #include <fb.h>
 #include <dixstruct.h>
@@ -1154,11 +1153,6 @@ xwl_screen_init(ScreenPtr pScreen, int argc, char **argv)
 
 #ifdef MITSHM
     ShmRegisterFbFuncs(pScreen);
-#endif
-
-#ifdef HAVE_XSHMFENCE
-    if (!miSyncShmScreenInit(pScreen))
-        return FALSE;
 #endif
 
 #ifdef XWL_HAS_LIBDECOR

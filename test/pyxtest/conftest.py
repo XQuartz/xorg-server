@@ -4,11 +4,11 @@
 
 import os
 import shutil
-import pytest
 from pathlib import Path
 
-from xserver import ExternalXServer, XServerProcess
+import pytest
 from xclient import RawX11Connection, X11ConnectionError, XlibConnection
+from xserver import ExternalXServer, XServerProcess
 
 
 def pytest_addoption(parser):

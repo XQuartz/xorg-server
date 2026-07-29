@@ -166,7 +166,7 @@ rm -rf libpciaccess
 
 # wayland-protocols 1.38 requires either wayland-scanner 1.23 or a build with
 # dtd_validation=false, but Debian bookworm has only 1.21 w/ dtd_validation=true
-git clone https://gitlab.freedesktop.org/wayland/wayland.git --depth 1 --branch=1.21.0
+git clone https://gitlab.freedesktop.org/wayland/wayland.git --depth 1 --branch=1.26.0
 cd wayland
 meson -Dtests=false -Ddocumentation=false -Ddtd_validation=false _build
 ninja -C _build -j${FDO_CI_CONCURRENT:-4} install

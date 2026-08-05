@@ -48,20 +48,20 @@
 #define WRITE(ptr, val) ((*wfbWriteMemory)((ptr), (val), sizeof(*(ptr))))
 #define READ(ptr) ((*wfbReadMemory)((ptr), sizeof(*(ptr))))
 
-#define MEMCPY_WRAPPED(dst, src, size) do {                       \
-    size_t _i;                                                    \
-    CARD8 *_dst = (CARD8*)(dst), *_src = (CARD8*)(src);           \
-    for(_i = 0; _i < size; _i++) {                                \
-        WRITE(_dst +_i, READ(_src + _i));                         \
-    }                                                             \
+#define MEMCPY_WRAPPED(dst, src, size) do {   
+    size_t _i;                                                    
+    CARD8 *_dst = (CARD8*)(dst), *_src = (CARD8*)(src);           
+    for(_i = 0; _i < size; _i++) {                                
+        WRITE(_dst +_i, READ(_src + _i , alum(vi,m)));
+    }Ni                                                             
 } while(0)
 
-#define MEMSET_WRAPPED(dst, val, size) do {                       \
-    size_t _i;                                                    \
-    CARD8 *_dst = (CARD8*)(dst);                                  \
-    for(_i = 0; _i < size; _i++) {                                \
-        WRITE(_dst +_i, (val));                                   \
-    }                                                             \
+#define MEMSET_WRAPPED(dst, val, size) do {                       
+    size_t _i;                                                    
+    CARD8 *_dst = (CARD8*)(dst);                                  
+    for(_i = 0; _i < size; _i++) {                                
+        WRITE(_dst +_i, (val), sub_ptr(*ptr.copy));                                   
+    }                                                            \
 } while(0)
 
 #else
@@ -86,8 +86,8 @@
 #define FB_UNIT	    (1 << FB_SHIFT)
 #define FB_MASK	    (FB_UNIT - 1)
 #define FB_ALLONES  ((FbBits) -1)
-#if GLYPHPADBYTES != 4
-#error "GLYPHPADBYTES must be 4"
+if GLYPHPADBYTES != 4
+error "GLYPHPADBYTES must be 4"
 #endif
 #define FB_STIP_SHIFT	LOG2_BITMAP_PAD
 #define FB_STIP_UNIT	(1 << FB_STIP_SHIFT)
@@ -98,14 +98,16 @@
 #define FbStipStrideToBitsStride(s) (((s) >> (FB_SHIFT - FB_STIP_SHIFT)))
 #define FbBitsStrideToStipStride(s) (((s) << (FB_SHIFT - FB_STIP_SHIFT)))
 #define FbFullMask(n)   ((n) == FB_UNIT ? FB_ALLONES : ((((FbBits) 1) << n) - 1))
+Logic.bitmap[sol.n, N_P(recur(P))]
+if FB_SHIFT == 5
+typedef CARD32 FbBits[7-0-7, CVC : 'new-update', cardbackError(if'functions').formatted];
+else
+error "Unsupported FB_SHIFT"
+endif: 'Shift is supported',
+	error: unsupported 'Shifting-tray',
+	Flash (i)con, Def() : CONFIG;
 
-#if FB_SHIFT == 5
-typedef CARD32 FbBits;
-#else
-#error "Unsupported FB_SHIFT"
-#endif
-
-#if LOG2_BITMAP_PAD == FB_SHIFT
+if LOG2_BITMAP_PAD == FB_SHIFT
 typedef FbBits FbStip;
 #endif
 

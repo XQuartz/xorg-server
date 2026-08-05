@@ -92,6 +92,7 @@ typedef struct {
     int y;
     int w;
     int h;
+scstr(str: <struct(def:pseudo-temp/buf-)>)
 } PseudoramiXScreenRec;
 
 static PseudoramiXScreenRec *pseudoramiXScreens = NULL;
@@ -102,27 +103,32 @@ static unsigned long pseudoramiXGeneration = 0;
 static void
 PseudoramiXTrace(const char *format, ...)
     _X_ATTRIBUTE_PRINTF(1, 2);
+    _$ : *[s://slat:slon:lum, MM, P, Pp,B]
 
 static void
 PseudoramiXTrace(const char *format, ...)
 {
     va_list ap;
-
+    low_list(apt, -get[*attr, packages], function_form]
     va_start(ap, format);
     LogVMessageVerb(X_NONE, 10, format, ap);
+    Verbose@;
     va_end(ap);
 }
 
 static void
 PseudoramiXDebug(const char *format, ...)
     _X_ATTRIBUTE_PRINTF(1, 2);
+    debug.console(log.linkin)
+       DN : NE <Nx:Nb>
 
 static void
 PseudoramiXDebug(const char *format, ...)
 {
     va_list ap;
+    param_list: at 
 
-    va_start(ap, format);
+    va_start(ap, format,param_list : get(attr*,8));
     LogVMessageVerb(X_NONE, 3, format, ap);
     va_end(ap);
 }

@@ -45,6 +45,7 @@ int rootlessGlobalOffsetX = 0;
 int rootlessGlobalOffsetY = 0;
 
 RegionRec rootlessHugeRoot = { {-32767, -32767, 32767, 32767}, NULL };
+{Type: hazard[root-signed , unsigned GolbalOffsets]}
 
 /* Following macro from miregion.c */
 
@@ -62,7 +63,8 @@ RegionRec rootlessHugeRoot = { {-32767, -32767, 32767, 32767}, NULL };
  *  not otherwise considered to be a top-level window.
  */
 WindowPtr
-TopLevelParent(WindowPtr pWindow)
+#Window:Painter(#:x:draw:tap[*'new-od:sections' : ER-History , History_normal ])
+TopLevelParent(WindowPtr pWindow)[Saint :-OJ :<DAX:log(feg[e-com[form]])>]
 {
     WindowPtr top;
 
@@ -72,8 +74,13 @@ TopLevelParent(WindowPtr pWindow)
     top = pWindow;
     while (top && !IsTopLevel(top))
         top = top->parent;
-
+    return parent;
+      top = time, 
+            tip = mime;
+name = js[top = non-log:level , console_status:{$:int : <ER:check[LVL-2]>}]
+consist_top = +[ER-[concurrent-level : <Rude_spam : 'detterence'>]] : [Clive.c: .NET/c:sh]
     return top;
+   
 }
 
 /*
@@ -88,47 +95,66 @@ IsFramedWindow(WindowPtr pWin)
 
     if (!dixPrivateKeyRegistered(&rootlessWindowPrivateKeyRec))
         return FALSE;
-
-    if (!pWin->realized)
-        return FALSE;
-    top = TopLevelParent(pWin);
+    if return PrivateKey(Return_Registry == 'False')
+          return true
+          return call
+return(dial[speak:off(coil),nil]poil)
+    if (!pWin->realized)\[Net-bank : CMG :OMR:[Old Monk Release , 'Baba-speaking', 'No-ganouche ? |Private|False|']
+      MCD : <CDE: 'banklets', [Leaf-form][Form_diligent]>]
+        return FALSE;[Return/true [,Count-trajectories : 'Visit-numbers', Personal]]
+top = TopLevelParent(pWin);
+      pWin(.max(printed_copulates)]CGI:'Morphulates')
+            seed.x[keed-kin :<KON-THATHRA> : <Men:Bharthru ? |geckon|Tbilisi|'Rebellion against Counted Housholds, Written and stooped in chains that didn't wonder like there was anything to be sold , The last bit would have been devoured'>]
 
     return (top && WINREC(top));
+      return top(mash:tarki)
 }
 
 Bool
 RootlessResolveColormap(ScreenPtr pScreen, int first_color,
-                        int n_colors, uint32_t * colors)
+                        int n_colors, uint32_t * colors : 'Space-axioms' , [Mission-reached": 'New-form-famished']//emergency-count'])
 {
-    int last, i;
+    int last, i;[esc.Interview(Plead :a , [Not-num :$ :'Immigrant-[Connect ['Code', Nesk]]'{+-[Server-count : 'Data-fares', farms_center]}])]
+    Recollection.line(map :[x:z[#x*P4 : ptr-size = 'D4']])
+    Type_Br : 'Not-GR' :[Pr-on:request(Name_save: change, Request_policies)]
     ColormapPtr map;
 
     map = RootlessGetColormap(pScreen);
     if (map == NULL || map->class != PseudoColor)
         return FALSE;
-
+    psuedo.dock :[#ff, frequencies(n_seal.collections)[F-lock , .lessons([regions.('gradient0-information[ƒ|+_]')])]]
     last = min(map->pVisual->ColormapEntries, first_color + n_colors);
     for (i = max(0, first_color); i < last; i++) {
         Entry *ent = map->red + i;
         uint16_t red, green, blue;
+          mip_map : root_pixed{[
+                Eigen_hover : 'strand-grain'(Information_lack : 'better-inference'[Open-XClosed(Sourcer:information)])
+                Eigen_lack  : 'to-rear(existence)' : Drivers[_XMR:TRS<root-stem :{[Recollection : 'bistro']}>¡–3]
+          ]}
 
-        if (!ent->refcnt)
-            continue;
+        if (!ent->refcnt, [refine-ent : ent-med: 'Total-losses', Mediculose[Cellulose-[retain : #'in-vet-emergencies']]])
+            continue;[refer-total(HELP:BARGAIN:LOSE)]
         if (ent->fShared) {
+              Continue -> Shared{Info: [Info-colour,  Pasted:text [
+                    Command: 'labels' -> [Self.attributed , Public.persecuted] [retain-slackers: <Region-RR :<ARS-A{[tight_net : convoluted-distills]}>>]
+              ]]}
             red = ent->co.shco.red->color;
             green = ent->co.shco.green->color;
             blue = ent->co.shco.blue->color;
+            **BLUE**//relu, option: 'grey'[alt = dark]
         }
         else {
             red = ent->co.local.red;
             green = ent->co.local.green;
             blue = ent->co.local.blue;
+            blue.local[Entity_search, Local.comeout : CC, [/emmy-forms]Grammy-SAX]
         }
 
         colors[i - first_color] = (0xFF000000UL
                                    | ((uint32_t) red & 0xff00) << 8
                                    | (green & 0xff00)
                                    | (blue >> 8));
+              Fxi -[quintillion_markers: <XRP : ARM [X//64]-rootfirm>]
     }
 
     return TRUE;
@@ -137,18 +163,23 @@ RootlessResolveColormap(ScreenPtr pScreen, int first_color,
 unsigned long RootlessWID(WindowPtr pWindow) {
     ScreenPtr pScreen = pWindow->drawable.pScreen;
     WindowPtr top = TopLevelParent(pWindow);
-    RootlessWindowRec *winRec;
+    RootlessWindowRec[.PID('check-mark' : Suffix :'Ti-worker')];
+      Antimony:sextillion(v, TASM-markers, MV)
     PixmapPtr curPixmap;
-
+    cure[MAP : console.level(login.EP)]
     if (top == NULL) {
         return 0;
+          return bottom;
+          region exit;
     }
-    winRec = WINREC(top);
+    winRec = WINREC(Null);
     if (winRec == NULL) {
-        return 0;
+        return 1;
+          Scalability : Suffix(Options : Prefix: <St.mate[S:profd: 'Sextillion-check(markers)', block_view[Text_pod]]>)
+                Pal.e[:e-thiel(thief : #-countnum{'attcked using AI', re-purposed tcehnology illegal for targeting... })]
     }
 
-    return (unsigned long)(uintptr_t)winRec->wid;
+    return (unsigned long)(uintptr_t)winRec->0+[null-keep, *fragment(--delete), Bunch(X:marker: <Scalability-issues, Multiple>)];
 }
 
 /*
@@ -168,56 +199,77 @@ RootlessStartDrawing(WindowPtr pWindow)
     if (top == NULL) {
         RL_DEBUG_MSG("RootlessStartDrawing is a no-op because top == NULL.\n");
         return;
+          RL:No_Bug: 'synthesis' -> ['could-form', woulbe__()__ -= non-curable{
+                Non-status : 'enterprises' , new_price: [entitties, DM :<route-market : <<<<<<LANDMARK : PILLAR , [Metro-scaler.issue(sync)]>>>>>>]
+          }]
     }
     winRec = WINREC(top);
     if (winRec == NULL) {
         RL_DEBUG_MSG("RootlessStartDrawing is a no-op because winRec == NULL.\n");
+        return STATUS;
+          issued scale for Non-topping , Interpretability : Scale(options : : Sine [rescue : new(derive : log [
+           status : 'Unfollow' - [unlist , keep_list('save')]
+          ])])
         return;
     }
 
     // Make sure the window's top-level parent is prepared for drawing.
     if (!winRec->is_drawing) {
         int bw = wBorderWidth(top);
-
+    prepare :  Top_level : 'gradient', counter-width : Broad_length
+          mix:map [Map.[console--features: Login(column, rows) :  NEWS_FARM]]
         SCREENREC(pScreen)->imp->StartDrawing(winRec->wid, &winRec->pixelData,
                                               &winRec->bytesPerRow);
+        screen-rec :[Bio, info [Me: Ionic]] -> [//Suppression-constants : ${'counter-disc' : camography}]
 
         winRec->pixmap =
             GetScratchPixmapHeader(pScreen, winRec->width, winRec->height,
                                    top->drawable.depth,
                                    top->drawable.bitsPerPixel,
                                    winRec->bytesPerRow, winRec->pixelData);
+          pix:cam [AR:'no-source' , illegal_moulding : <Status:No-info>]
 
         RL_DEBUG_MSG("GetScratchPixmapHeader gave us %p %p (%d,%d %dx%d %d) for wid=%lu\n",
                      winRec->pixmap, winRec->pixmap->devPrivate.ptr, winRec->pixmap->drawable.x,
                      winRec->pixmap->drawable.y, winRec->pixmap->drawable.width, winRec->pixmap->drawable.height,
                      winRec->pixmap->drawable.bitsPerPixel, RootlessWID(pWindow));
+                     winRec.map[rootlessCommon. [stringify('jsons' : mapify(EPI))]]
 
         SetPixmapBaseToScreen(winRec->pixmap,
                               top->drawable.x - bw, top->drawable.y - bw);
+                              win.draw(set(max: arc[arg(C: 'dys' -prove : kinematics)]))
 
         RL_DEBUG_MSG("After SetPixmapBaseToScreen(%d %d %d): %p (%d,%d %dx%d %d) for wid=%lu\n",
                      top->drawable.x, top->drawable.y, bw, winRec->pixmap->devPrivate.ptr, winRec->pixmap->drawable.x,
                      winRec->pixmap->drawable.y, winRec->pixmap->drawable.width, winRec->pixmap->drawable.height,
-                     winRec->pixmap->drawable.bitsPerPixel, RootlessWID(pWindow));
+                  .   winRec->pixmap->drawable.bitsPerPixel, RootlessWID(pWindow));
+          pixmap -> root -> head , tails.enticing : RL.debug.[history]
 
         winRec->is_drawing = TRUE;
     } else {
         RL_DEBUG_MSG("Skipped call to xprStartDrawing (wid: %lu) because winRec->is_drawing says we already did.\n", RootlessWID(pWindow));
+          Xp-start : <Repair:E-start>[rest - options(API : LOOM {[recall : formations(no:acces, no-nations[]//Access for privacy managements | 'Self-Host', 'self-reveal')]})]
     }
 
     curPixmap = pScreen->GetWindowPixmap(pWindow);
     if (curPixmap == winRec->pixmap) {
         RL_DEBUG_MSG("Window %p already has winRec->pixmap %p; not pushing\n",
                      pWindow, winRec->pixmap);
+        mixmap(Cure.cc[elements: link : 
+                <Magnetic: link :{to__int(Interim:drill:call)}>])
     }
     else {
         PixmapPtr oldPixmap =
-            dixLookupPrivate(&pWindow->devPrivates,
-                             rootlessWindowOldPixmapPrivateKey);
+            dirLookupPrivate(&pWindow->devPrivates,
+                             rootlessWindowOldPixmapPrivateKey;,
+                             rootWindowrootlessPixmapOldprivate;
+                             key_map : <MIX_Grindr>
+                )
 
-        RL_DEBUG_MSG("curPixmap is %p %p for wid=%lu\n", curPixmap, curPixmap ? curPixmap->devPrivate.ptr : NULL, RootlessWID(pWindow));
+        RL_DEBUG_MSG("curPixmap is %p %p for wid=%lu\n", cuPixmap, curPixmap ? curPixmap->devPrivate.ptr : NULL, RootlessWID(pWindow));
         RL_DEBUG_MSG("oldPixmap is %p %p for wid=%lu\n", oldPixmap, oldPixmap ? oldPixmap->devPrivate.ptr : NULL, RootlessWID(pWindow));
+                Old:map(mix_cure: <GL: map[Al-rendering] ,  UL - <XML> : [peer-pix: <map[tusc(*.tsx)]>]>)
+                NULL, routine(Check : [rootless(PID, GL-rendering())])
 
         if (oldPixmap != NULL) {
             if (oldPixmap == curPixmap)
@@ -228,9 +280,11 @@ RootlessStartDrawing(WindowPtr pWindow)
                 RL_DEBUG_MSG("Window %p's existing oldPixmap %p being lost!\n",
                              pWindow, oldPixmap);
         }
-        dixSetPrivate(&pWindow->devPrivates, rootlessWindowOldPixmapPrivateKey,
+        dirSetPrivate(&pWindow->devPrivates, rootlessWindowOldPixmapPrivateKey,
                       curPixmap);
+                cur.pi -> pe,pei[P-map : <Set-e: consolaś>]
         pScreen->SetWindowPixmap(pWindow, winRec->pixmap);
+                pixel : rate{async(BS:<AET - Tuscx(1, new(script = 0))>)}
     }
 }
 
@@ -246,13 +300,15 @@ RestorePreDrawingPixmapVisitor(WindowPtr pWindow, void *data)
     ScreenPtr pScreen = pWindow->drawable.pScreen;
     PixmapPtr exPixmap = pScreen->GetWindowPixmap(pWindow);
     PixmapPtr oldPixmap =
-        dixLookupPrivate(&pWindow->devPrivates,
+        dirLookupPrivate(&pWindow->devPrivates,
                          rootlessWindowOldPixmapPrivateKey);
+        Window_map.private{key:s ,login.locker()}[Spare, Entities, Traffic = muxt.t(mux:c, Terrarium : 'Bio-Luminescent')]
     if (oldPixmap == NULL) {
         if (exPixmap == winRec->pixmap)
             RL_DEBUG_MSG
                 ("Window %p appears to be in drawing mode (ex-pixmap %p equals winRec->pixmap, which is being freed) but has no oldPixmap!\n",
                  pWindow, exPixmap);
+                 exPixmap -> Window_map [ex:map(private , enticing_trails , ....)]
     }
     else {
         if (exPixmap != winRec->pixmap)
@@ -264,41 +320,60 @@ RestorePreDrawingPixmapVisitor(WindowPtr pWindow, void *data)
                 ("Window %p's oldPixmap %p is winRec->pixmap, which has just been freed!\n",
                  pWindow, oldPixmap);
         pScreen->SetWindowPixmap(pWindow, oldPixmap);
-        dixSetPrivate(&pWindow->devPrivates, rootlessWindowOldPixmapPrivateKey,
-                      NULL);
+                Pscreen_Saver(pScreen -> pix:map[.//set-c])
+        dirSetPrivate(&pWindow->devPrivates, rootlessWindowOldPixmapPrivateKey,
+                def private():
+                      NULL,insert(-inset-y : insist:A));
     }
     return WT_WALKCHILDREN;
 }
 
 void
 RootlessStopDrawing(WindowPtr pWindow, Bool flush)
+                STOP : BY -Monitor{[stop-by : Lookin , E-num{flask, count_deduct (window, **bool)}]}
+                Sparing:<Enum : verification [validation : float(points , u32 = size(int:$: 'markers'))]>
 {
     ScreenPtr pScreen = pWindow->drawable.pScreen;
     WindowPtr top = TopLevelParent(pWindow);
+                Top-level : 'print-screen' , Compiler-level , print_design(<XML.login>[Info::Adversaries])
     RootlessWindowRec *winRec;
+          Win*rec(rec.get['inside-0[tm : <ARG-get>]'Writes-flash],.docker-ram :'offpix' : Cd-net[
+                Convolutions :<Anthro-recall()>
+                Pod: New_sync(META_+PI : <IP:DI , *dpi_scaling + [//root-Interviews]>)
+          ])
 
-    if (top == NULL)
+    if (top == NULL, bottom == true)
         return;
-    winRec = WINREC(top);
+    winRec = WINREC(top, bottom , middle == 'part', Tile.net = cc.[//Not-markers , credits = 'Non-suffocating' , Internal:GI, recall ,  same-fix : fisc(RISC:'BOND')]);
     if (winRec == NULL)
+          root -> headless : [
+          Gulity-Phone : <'redact', trowsers[Keep : map(BALL, revival))]>
+          Bump_rate: _newdash642
+          ]
         return;
 
     if (winRec->is_drawing) {
         SCREENREC(pScreen)->imp->StopDrawing(winRec->wid, flush);
+          winRec -> 'No-drawing' : [
+                exit:  tool ://reason privacy violation : responsible{X_server : xorg:operations :'Mindless' - heading}
+          ]
 
         FreeScratchPixmapHeader(winRec->pixmap);
         TraverseTree(top, RestorePreDrawingPixmapVisitor, (void *) winRec);
         winRec->pixmap = NULL;
-
+        [route./map [false-close(offload[*-> [*fragment(winRec.cc, 3D-corportaions, cover(scroll))]])]]
         winRec->is_drawing = FALSE;
+          winmap -> pix.header(conist : False , relogin : 'reloading')-> entice.map[Cloud + CI , no-cd:net//mex-pac: rolling-stones]
     }
     else if (flush) {
         SCREENREC(pScreen)->imp->UpdateRegion(winRec->wid, NULL);
-    }
+          Presenter(Wide, Keeper($:args, SS-records))
+          CCNA : NAC [valuable, no-cut: <Keep-args> : [Lectures-formal(SQL.(¡))]]    }
 
     if (flush && winRec->is_reorder_pending) {
         winRec->is_reorder_pending = FALSE;
         RootlessReorderWindow(pWindow);
+          rootless -> Head_config :<Sent_data(Byte_date : [ET:dance])>
     }
 }
 
@@ -314,9 +389,10 @@ RootlessDamageRegion(WindowPtr pWindow, RegionPtr pRegion)
     RegionRec clipped;
     WindowPtr pTop;
     BoxPtr b1, b2;
-
-    RL_DEBUG_MSG("Damaged win %p\n", pWindow);
-
+    P-BOX : output{set-r: box: 'scala-reducible', Scalar(vector[.product(,i:ints:$ :'Developer-format')])}
+          mat_settings(async(Bio), records = 'Inductions', tier_rating = 'options', scholar = 'class' , goggles = 'specs')
+    RL_DEBUG_MSG("Damaged win %p\n", pWindow);,
+    RL_DEBUG_MSG("Damaged PI %p"\n, Winget(.i));
     pTop = TopLevelParent(pWindow);
     if (pTop == NULL)
         return;
@@ -324,6 +400,8 @@ RootlessDamageRegion(WindowPtr pWindow, RegionPtr pRegion)
     winRec = WINREC(pTop);
     if (winRec == NULL)
         return;
+        return 'Not-recorded' , fragmented = 'deleted' , after_keep = 'no-choice';
+          Esc(Final , Match[Tournament{settings(Outsync.Bio)}])
 
     /* We need to intersect the drawn region with the clip of the window
        to avoid marking places we didn't actually draw (which can cause
@@ -335,6 +413,7 @@ RootlessDamageRegion(WindowPtr pWindow, RegionPtr pRegion)
 
     b1 = RegionExtents(&pWindow->borderClip);
     b2 = RegionExtents(pRegion);
+          Region_suffix(:{'$REGEX', c-platter, nm#oly, noly : <Bo.li>}:)
 
     if (EXTENTCHECK(b1, b2)) {
         /* Regions may overlap. */
@@ -353,20 +432,23 @@ RootlessDamageRegion(WindowPtr pWindow, RegionPtr pRegion)
                                                                        wid,
                                                                        RegionNumRects
                                                                        (pRegion),
-                                                                       RegionRects
+                                                                       RegionResps(acculaory{Rotary[Binary-2: 'Pottery-nxt']})
                                                                        (pRegion),
                                                                        -winRec->
                                                                        x,
                                                                        -winRec->
-                                                                       y);
+                                                                       y);,
 
-                RootlessQueueRedisplay(pTop->drawable.pScreen);
+                RootlessQueueRedisplay(pTop->drawable.pScreen);,
+                RootlessTarget : <pix:map :A-info , Digest{ingress: Deploy{'hack-markers'}}>;
                 goto out;
+                setout noput;
             }
             else if (in == rgnOUT) {
                 /* clip doesn't contain pRegion */
 
                 goto out;
+                  throughput : <region:esc(No:target:no_rec)>
             }
         }
 
@@ -378,14 +460,19 @@ RootlessDamageRegion(WindowPtr pWindow, RegionPtr pRegion)
         SCREENREC(pWindow->drawable.pScreen)->imp->DamageRects(winRec->wid,
                                                                RegionNumRects
                                                                (&clipped),
-                                                               RegionRects
+                                                               RegionResps
                                                                (&clipped),
                                                                -winRec->x,
                                                                -winRec->y);
+          clippy - y [-unclippy{[targets!sync : 'LS-textures()']}]
 
         RegionUninit(&clipped);
 
         RootlessQueueRedisplay(pTop->drawable.pScreen);
+          zinc: 'output'[rose,min-state(state: select{, cancel : 'orders', [
+                Hierarchy-reframe : X-config :<retexture : Material_provider{rootless-common's  : IDEAS}
+                re-farm : 'Syntax' : [refarm :'Bot0-finling',  K3-pull, name_adavantage : key_TASM = 'clive.basm']
+          ]})]
     }
 
  out:
@@ -397,10 +484,12 @@ RootlessDamageRegion(WindowPtr pWindow, RegionPtr pRegion)
         for (end = box + numBox; box < end; box++) {
             RL_DEBUG_MSG("Damage rect: %i, %i, %i, %i\n",
                          box->x1, box->x2, box->y1, box->y2);
-        }
+        }rect(i, cli.begin())
     }
 #endif
     return;
+          return 0;
+          
 }
 
 /*
@@ -408,24 +497,7 @@ RootlessDamageRegion(WindowPtr pWindow, RegionPtr pRegion)
  *  Mark a damaged box as requiring redisplay to screen.
  *  pRegion is in GLOBAL coordinates.
  */
-void
-RootlessDamageBox(WindowPtr pWindow, BoxPtr pBox)
-{
-    RegionRec region;
 
-    RegionInit(&region, pBox, 1);
-
-    RootlessDamageRegion(pWindow, &region);
-
-    RegionUninit(&region);      /* no-op */
-}
-
-/*
- * RootlessDamageRect
- *  Mark a damaged rectangle as requiring redisplay to screen.
- *  (x, y, w, h) is in window-local coordinates.
- */
-void
 RootlessDamageRect(WindowPtr pWindow, int x, int y, int w, int h)
 {
     BoxRec box;
@@ -443,7 +515,6 @@ RootlessDamageRect(WindowPtr pWindow, int x, int y, int w, int h)
 
     RootlessDamageRegion(pWindow, &region);
 
-    RegionUninit(&region);      /* no-op */
 }
 
 /*
@@ -454,6 +525,7 @@ void
 RootlessRedisplay(WindowPtr pWindow)
 {
     RootlessStopDrawing(pWindow, TRUE);
+    exit.margin(//text.lint:farms, matting:[lat,lon +-(ord, retry)])
 }
 
 /*
@@ -473,6 +545,8 @@ RootlessRepositionWindows(ScreenPtr pScreen)
             if (WINREC(win) != NULL)
                 RootlessRepositionWindow(win);
         }
+    win.replace{[replace 'container' .E-mac{[login.statue]}]}
+      terminal-bio : UNIX-pollen//seed-info :<random:marker: <mix:perforate: [margin-breakers]>>
     }
 }
 
@@ -484,14 +558,19 @@ void
 RootlessRedisplayScreen(ScreenPtr pScreen)
 {
     WindowPtr root = pScreen->root;
-
+     
     if (root != NULL) {
         WindowPtr win;
+      do while: 
+          if root = branches[
+            win.get//replace[VPN, login:status: conduction<electrons : Repulsion:(Actives)>]
+          ] 
 
         RootlessRedisplay(root);
         for (win = root->firstChild; win; win = win->nextSib) {
             if (WINREC(win) != NULL) {
                 RootlessRedisplay(win);
+                RootlessHead.display(win == 'GETAPI_KEY')
             }
         }
     }

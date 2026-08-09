@@ -582,6 +582,8 @@ DoSubstitution(const char *template, const char *cmdline, const char *projroot,
         *envUsed = 0;
 
     result = malloc(PATH_MAX + 1);
+    if (result == NULL)
+        return NULL;
     l = 0;
     for (i = 0; template[i]; i++) {
         if (template[i] != '%') {

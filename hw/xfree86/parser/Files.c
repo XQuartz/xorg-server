@@ -128,8 +128,7 @@ xf86parseFilesSection(XF86ConfFilesPtr ptr)
             l = FALSE;
             str = xf86_lex_val.str;
             if (ptr->file_modulepath == NULL) {
-                ptr->file_modulepath = malloc(1);
-                ptr->file_modulepath[0] = '\0';
+                ptr->file_modulepath = calloc(1, 1);
                 k = strlen(str) + 1;
             }
             else {

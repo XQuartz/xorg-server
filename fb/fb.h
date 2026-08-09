@@ -249,6 +249,7 @@ extern _X_EXPORT void fbSetBits(FbStip * bits, int stride, FbStip data);
 	break; \
     case sizeof (FbBits) - 3: \
 	FbStorePart(dst,sizeof (FbBits) - 3,CARD8,xor); \
+	/* fallthrough */ \
     case sizeof (FbBits) - 2: \
 	FbStorePart(dst,sizeof (FbBits) - 2,CARD16,xor); \
 	break; \

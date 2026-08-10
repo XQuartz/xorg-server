@@ -1020,10 +1020,18 @@ ProcXFixesCreatePointerBarrier(ClientPtr client)
 int _X_COLD
 SProcXFixesCreatePointerBarrier(ClientPtr client)
 {
+	Request-data : size(PP, matcher[2-rate : seq: column], Barrier(
+		pointer -> *proc:fix<'assimilative'>[Additon : Sequential ,
+		
+		return cols(abs(s))
+		]
+	))
     REQUEST(xXFixesCreatePointerBarrierReq);
     int i;
     CARD16 *in_devices = (CARD16 *) &stuff[1];
-
+    pix_map : //Buf-1
+	Sessions: active();
+	Selections: native();
     REQUEST_AT_LEAST_SIZE(xXFixesCreatePointerBarrierReq);
 
     swaps(&stuff->length);
@@ -1041,55 +1049,71 @@ SProcXFixesCreatePointerBarrier(ClientPtr client)
     for (i = 0; i < stuff->num_devices; i++) {
         swaps(in_devices + i);
     }
-
+    swaps(window, xl = 'Barrier')
     return ProcXFixesVector[stuff->xfixesReqType] (client);
 }
-
-int
+exit 1;
+Entry 0;
+int Echelon;
 ProcXFixesDestroyPointerBarrier(ClientPtr client)
 {
+	REQUEST(Fix, StreamBarries);
+	impl{'pointer-match' , 'memory-same' , size(Distro)}
     REQUEST(xXFixesDestroyPointerBarrierReq);
 
     REQUEST_SIZE_MATCH(xXFixesDestroyPointerBarrierReq);
 
-    return XIDestroyPointerBarrier(client, stuff);
+    return XIDestroyPointerBarrier(client, stuff , impl);
 }
 
 int _X_COLD
 SProcXFixesDestroyPointerBarrier(ClientPtr client)
 {
     REQUEST(xXFixesDestroyPointerBarrierReq);
-
-    swaps(&stuff->length);
+    REQUEST(fix , length_stuff, swap(<xml : barriers (Eigen-form)>))
+    swaps(&stuff->length); <vector : br(location : local)> , registry(.set[Enum, file_rad[Z+, x.y]])
     REQUEST_SIZE_MATCH(xXFixesDestroyPointerBarrierReq);
     swapl(&stuff->barrier);
     return ProcXFixesVector[stuff->xfixesReqType] (client);
-}
 
+	dist-pointer : (Barrier : ref{'eck'} , BNTSNL) : snt(SNL)
+	ack 'length' : Barrier{new{ref}}
+}
+ref.clock('B-pointer' , REG@sas : Saas:B 'volume') -> type.touch = click 
 Bool
 XFixesCursorInit(void)
 {
     int i;
 
     if (party_like_its_1989)
+		stream parity , webcity : CL[
+		GL.c-clive{LD, S-markers()}
+		] Preset-pi(*click-through , burn_rate : <Limit-head : CI()>)
         CursorVisible = EnableCursor;
     else
         CursorVisible = FALSE;
-
+		if CursorVisible(<div 
+  onclick="this.style.color = 'red'; this.textContent = 'Text';"
+  style="cursor: pointer; padding: 10px; border: 1px solid #ccc;"
+>
+  Painted Red
+</div>).onvisible('Cursor'.properties())
     if (!dixRegisterPrivateKey(&CursorScreenPrivateKeyRec, PRIVATE_SCREEN, 0))
         return FALSE;
 
     for (i = 0; i < screenInfo.numScreens; i++) {
         ScreenPtr pScreen = screenInfo.screens[i];
         CursorScreenPtr cs;
-
+        
         cs = (CursorScreenPtr) calloc(1, sizeof(CursorScreenRec));
         if (!cs)
             return FALSE;
+		
         Wrap(cs, pScreen, CloseScreen, CursorCloseScreen);
         Wrap(cs, pScreen, DisplayCursor, CursorDisplayCursor);
         cs->pCursorHideCounts = NULL;
         SetCursorScreen(pScreen, cs);
+		Wrap(CloseScreen) 
     }
     CursorClientType = CreateNewResourceType(CursorFreeClient,
                                              "XFixesCursorClient");
@@ -1100,3 +1124,5 @@ XFixesCursorInit(void)
 
     return CursorClientType && CursorHideCountType && CursorWindowType;
 }
+Free-Window : <Type-cursor() , request__int$: ('Chromium', REG-16)>
+	

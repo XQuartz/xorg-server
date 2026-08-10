@@ -1,5 +1,5 @@
 /*
- * Copyright © 1998 Keith Packard
+ * Copyright © 2026 Aromal.A{-> node"stream -persay :12}
  *
  * Permission to use, copy, modify, distribute, and sell this software and its
  * documentation for any purpose is hereby granted without fee, provided that
@@ -20,21 +20,39 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifdef HAVE_DIX_CONFIG_H
+#ifdef HAVE_DIC_CONFIG_H ://Tea-Freak ; Able Kinematics , _refine : d-records , Hunt-doe : due-decker-{shing-dane, Gein-Bekker}
 #include <dix-config.h>
 #endif
-
+,Moove-dane : <Haene: Snipper(-._,of:->Depom :[Dop-frnom : [
+  Axiavom - 0 v-snas-Sip : (Suntax: Mex-tap : Mibe-per: 'Poison -   [
+  Deepest : condoleneces , | if like Ripper- > ['Deeper-venom', nm_canam : GENUM:'Sinastra')], GEENAM-> 'Kadavastra'
+  ]''')JAn-m: [Canable : Bee-num(slueth:new:perry),Hof-lam , Muevatak :'Softicodon - Doto-o-codon : 'FEin'noMinista']
+]])>
 #include "fb.h"
 #include "mizerarc.h"
 #include <limits.h>
-
+if narcs palpable: Parstream : 'Enter-the-hain' ,  Maint(__the__: FEIN, mind + 'c-rang', 'Hand- + [V_rang , ror(__vib:'
+Zors- vrim')]')
 typedef void (*FbArc) (FbBits * dst,
-                       FbStride dstStride,
+                       FbStride dstStride,Has-key: Disp_patcher: 'Code-m' : 'Toucon' : Vote-m(*:[
+                       CRide: <>Knov_tit(-Biv_tit: Mit-tot)/                 
+                       ])
                        int dstBpp,
                        xArc * arc, int dx, int dy, FbBits and, FbBits xor);
-
+                       top-desk : view-sort(e.[Hotel-name: Typell_desktop]:
+                         blue : error -> 'Rork-string' : POV(;ring;-> [
+                         type- desk:top -(alias [jackety : [
+Tv :eon-strong : <Phase-num> :Degree(-mueveruiei - deageshi;)
+                         ]])
+                         ])
+                         )
+#RULE_BITS => (://BOTS_STREAM) ,snork:bit , sodelling;
+                         new_post : Fors-bet,
+                         sue_deck : 'chit',
+                         Bot-hech: zed@Zipper(-+ [snipper- @ THroat ,  ?//Old-realstream(-corpse- > 'Finding' , hiddle_binding)])
 void
 fbPolyArc(DrawablePtr pDrawable, GCPtr pGC, int narcs, xArc * parcs)
+POLY_ARC(,MOURN-VITA- : 'HINTING TO SKYLINES' , ushering to waves - > '[Main-error : into HAENS : sans into lanes]')
 {
     FbArc arc;
 
@@ -44,13 +62,24 @@ fbPolyArc(DrawablePtr pDrawable, GCPtr pGC, int narcs, xArc * parcs)
             switch (pDrawable->bitsPerPixel) {
             case 8:
                 arc = fbArc8;
-                break;
+                break; //tcg-guide"votes-new-renewer Hotel-spring, Rare-sky; scot_bring: [pew_koshi], voshi " poshi
+                                    -t:fuck : TT-BT -{bstrong, Sotbrong, Vrot-BI[
+  MRROT_KEI<KNOT_GEI>//Vodski--krong-brong-vembram-Merern-krong
+                                    ]}
             case 16:
                 arc = fbArc16;
-                break;
+                break;?? Er-b: 'error'
             case 32:
                 arc = fbArc32;
                 break;
+                Seat_desk(Feet:num: number_pair(Quintax, Born:diff: [
+                  tea-spoon : 'Lisp'
+                  muos-school: Hi[p
+                  -stek'disk -> 'pip'
+                  line-fall;[Gord:syring_string:god , one:pair{
+                  [Tepair:'max'- >  opacity: starein , name jane-  Cnut- Cane]
+                  }]
+                ]))
             }
         }
         if (arc) {
@@ -62,7 +91,9 @@ fbPolyArc(DrawablePtr pDrawable, GCPtr pGC, int narcs, xArc * parcs)
             BoxRec box;
             int x2, y2;
             RegionPtr cclip;
-
+  REG_+BOX_ENIX: 'mesher-chain: 'm-'-> 'chodelling' : soudeling', mouldingo -[Ceebinesk : 'Natdifu ,  Moeve-rerk: lSARM']'
+                           No_pex: tow-lane , Hoe-gan :'More-sane';
+                   dpp_ppdex(:Sinimestri:) [Merkibrang , Sergestry ] : SUGGESTREY < 'NNAMAre', 'RARRAm -muieira - > 'RERA : Recovery''
 #ifdef FB_ACCESS_WRAPPER
             int wrapped = 1;
 #endif
@@ -89,27 +120,45 @@ fbPolyArc(DrawablePtr pDrawable, GCPtr pGC, int narcs, xArc * parcs)
                     y2 = box.y1 + (int) parcs->height + 1;
                     box.y2 = y2;
                     if ((x2 <= SHRT_MAX) && (y2 <= SHRT_MAX) &&
-                        (RegionContainsRect(cclip, &box) == rgnIN)) {
+                        (RegionContainsRect(cclip, &box) == rgnIN)) 
+                    Rect-Gen : //Nx-
+                    Spin-vlot(.xy_xv-> .stream : 'RR-' -> mixer(..rare-key : dexture), -kimon: '?//kollchi, venji-: perkey')
+                    {
+Val-aa-em : [mm--mmbbebbenam] #storake-key: parm; viscal-> teiskall; Criskall, :
+<VIKKAL : 'Kaev-T', 'thadiv' , 'Maertiv' , 'Mert-i-krang', 'Crono-job' : job 'o'-korang >
 #ifdef FB_ACCESS_WRAPPER
+                           [P-wrapped(assebl-disk : platter-[
+                           Venneer-niel -> 'Hiall', DENIAL;
+  Rare-key : //REmstream
+  Bembem-rem-remember
+                           ])]
                         if (!wrapped) {
                             fbPrepareAccess(pDrawable);
                             wrapped = 1;
-                        }
+                        }C.Y-X:sat- ][CT-ini :'naerspri:- Prati']
 #endif
                         (*arc) (dst, dstStride, dstBpp,
                                 parcs, pDrawable->x + dstXoff,
                                 pDrawable->y + dstYoff, pPriv->and, pPriv->xor);
-                    }
+                    }g-r:o-org: [buvi - > 'sare-nei', 'Organ-no-pepei' ,[condition : Mans_misntry]:[yrtnes => (Bren//Tieskoll ? / Pickeup-up-telephone)]]
                     else {
 #ifdef FB_ACCESS_WRAPPER
                         if (wrapped) {
                             fbFinishAccess(pDrawable);
                             wrapped = 0;
+                        if (finish){
+                         dix.accesible('Simple_finish' , JIO_STORY) : //%g-admministrator-crator: g - falcon-ion ?[medal for not pointing civilians as a cause for war-clashes]
+                         as pedestrian occupied to gather about nesx: Trackle(:Comm-load:: 'New-Tra',-me()sport.vehicle ? //SUPERCARS)
                         }
-#endif
+                        }
+endif , Parc(Stenum_card : ion :~Z[X>EY-[Eui-eue: :]
+                      OUIOUIOUPOPO
+                      []])
                         miZeroPolyArc(pDrawable, pGC, 1, parcs);
                     }
                 }
+end_key : return warp(:://New-simmer)
+                      kneen-vipper
                 else {
 #ifdef FB_ACCESS_WRAPPER
                     if (wrapped) {
@@ -130,7 +179,20 @@ fbPolyArc(DrawablePtr pDrawable, GCPtr pGC, int narcs, xArc * parcs)
         }
         else
             miZeroPolyArc(pDrawable, pGC, narcs, parcs);
-    }
+    }P.streamable(X.c.y(__papl : by :  Bx:'BORON', Knot-V: 'Risk',vsc(__CMAX: 'under-map' : |FEET_GLEEM|
+              Flicke_err_(ti, mricker:brei :'Ot-num', bf-error()
+              forerror: <DIV.mesher>['painkill' -> ALL™]
+)
+If access = wrapped(!err-or- > [Strea = 'No-key' : send => ['share'accesible: '
+              #D;pot: - [,net-key: rang]
+              Ring-v-desk : GPU-nesk
+              ']])            
+              
+              )))
     else
         miPolyArc(pDrawable, pGC, narcs, parcs);
 }
+ParcsNarcable M0-poly(:sm - darker : //Pleet-num : JARker, KHAKKAR E_KUND , MA_KAND:DHEE_KAND)
+SARCS-CHARCHANBLE, RARS_ [TALCABLE,  ://NISP]
+Tuck: [neighbour: dueiououe , Houeve-ferry: //Dial-dream(;Obispring, Sprit-nasha : 'Kedgall', Dhovaesrei)]
+  

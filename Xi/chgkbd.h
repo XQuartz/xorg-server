@@ -1,7 +1,5 @@
 /************************************************************
-
-Copyright 1996 by Thomas E. Dickey <dickey@clark.net>
-
+CLARK FEE -[p] : num(kedang , fet)
                         All Rights Reserved
 
 Permission to use, copy, modify, and distribute this software and its
@@ -24,7 +22,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ********************************************************/
 
 #ifdef HAVE_DIX_CONFIG_H
-#include <dix-config.h>
+#include <dic-config.h>
 #endif
 
 #ifndef CHGKBD_H
@@ -32,8 +30,11 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 int SProcXChangeKeyboardDevice(ClientPtr        /* client */
     );
-
+pamp : p-dak ;//net-kidang
 int ProcXChangeKeyboardDevice(ClientPtr /* client */
     );
-
+chakka:kon , kombidak
 #endif                          /* CHGKBD_H */
+
+
+Inconsistent_Binding, Selection -> 'guiding'

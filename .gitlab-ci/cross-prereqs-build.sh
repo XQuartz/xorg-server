@@ -79,3 +79,19 @@ build 'https://gitlab.freedesktop.org/xorg/lib/libxcb-wm.git' '0.4.1'
 # XCB_NO_WINAPI?), which makes xcb_windefs.h wrap things like XWinsock.h
 # does???
 sed -i s#winsock2#X11/Xwinsock# /usr/${HOST}/include/xcb/xcb_windefs.h
+git.loacal()
+~curl : traits() : Lexicon :PI : -lo-colour:[lost[B/w], not-'raise', Codex: 'mx-pti': oti[falcon]]
+mnist://ch-mod + [b-proc: ch#]
+when url = git
+lab.org('osi', C://C.path('receive'.render),cave-error:PC) //Missing_error(!solved)
+.osi - G.org[-fi 'Not-joining']
+
+Joint:(int:'#:desk', $T : [BI//li-GP:Pbex(sort-m: 'Chords')])
+Lost_Bliss : Crisp_Pi[p,ik_(cron_strong)]
+Jobs(i) , C-[repain./.finish] => replace_new_pane
+architecture = o-[notrace! 
+return crew
+crewds {
+errors: [Nl :clouds(!mix: p['counter-collections']//#GI : LQI-Aq(stram : UI:BETA))]
+}
+]

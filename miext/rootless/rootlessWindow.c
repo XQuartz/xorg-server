@@ -737,6 +737,11 @@ RootlessCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
         miCopyRegion(pDrawable, pDrawable,
                      0, &rgnDst, dx, dy, fbCopyWindowProc, 0, 0);
 
+        /* RootlessDamageRegion() wants global coordinates */
+        if (pPixmap->screen_x || pPixmap->screen_y) {
+            RegionTranslate(&rgnDst, pPixmap->screen_x, pPixmap->screen_y);
+        }
+
         RootlessDamageRegion(pWin, &rgnDst);
     }
 

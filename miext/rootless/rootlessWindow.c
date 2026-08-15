@@ -645,6 +645,27 @@ RootlessNoCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
 }
 
 /*
+ * RootlessCanAccelerateCopy
+ *  Returns TRUE if the implementation may be asked to copy this window's
+ *  contents around.
+ *
+ *  8bit frames are excluded: libXplugin keeps those in a software backing
+ *  store of its own and _xp_backing_scroll() computes the destination
+ *  address of the copy with a 32bit (bytes_per_row * dy) multiply which it
+ *  then zero-extends.  Any copy moving content upwards is therefore done
+ *  ~4GB past the backing store and takes the server down with SIGBUS.
+ *  Nothing is lost by copying such windows ourselves, libXplugin would
+ *  only memcpy them as well.
+ */
+static Bool
+RootlessCanAccelerateCopy(WindowPtr pWin)
+{
+    WindowPtr top = TopLevelParent(pWin);
+
+    return top != NULL && top->drawable.depth != 8;
+}
+
+/*
  * RootlessCopyWindow
  *  Update *new* location of window. Old location is redrawn with
  *  PaintWindow. Cloned from fbCopyWindow.
@@ -677,6 +698,7 @@ RootlessCopyWindow(WindowPtr pWin, DDXPointRec ptOldOrg, RegionPtr prgnSrc)
     /* If the area exceeds threshold, use the implementation's
        accelerated version. */
     if (area > rootless_CopyWindow_threshold &&
+        RootlessCanAccelerateCopy(pWin) &&
         SCREENREC(pScreen)->imp->CopyWindow) {
         RootlessWindowRec *winRec;
         WindowPtr top;

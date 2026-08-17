@@ -219,10 +219,10 @@ xprDestroyFrame(RootlessFrameID wid)
                   });
 
     err = xp_destroy_window(x_cvt_vptr_to_uint(wid));
+    /* Not a FatalError: leaking the window costs us far less than terminating every client connected to the server.
+     */
     if (err != Success)
-        FatalError("Could not destroy window %d (%d).",
-                   (int)x_cvt_vptr_to_uint(
-                       wid), (int)err);
+        ErrorF("Could not destroy window %d (%d).\n", (int)x_cvt_vptr_to_uint(wid), (int)err);
 }
 
 /*
@@ -358,6 +358,10 @@ xprStartDrawing(RootlessFrameID wid, char **pixelData, int *bytesPerRow)
 
     err = xp_lock_window(x_cvt_vptr_to_uint(
                              wid), NULL, NULL, data, rowbytes, NULL);
+    /* Deliberately still fatal, unlike the failures either side of this: the implementation leaves data[] untouched on
+     * failure and RootlessStartDrawing() cannot refuse, so carrying on would hand fb an uninitialized pointer to draw
+     * through.  Demoting this needs a way to report the failure upwards first.
+     */
     if (err != Success)
         FatalError("Could not lock window %d for drawing (%d).",
                    (int)x_cvt_vptr_to_uint(
@@ -389,7 +393,7 @@ xprStopDrawing(RootlessFrameID wid, Bool flush)
      * FatalError after http://xquartz.macosforge.org/trac/ticket/482 is fixed.
      */
     if (err != Success)
-        ErrorF("Could not unlock window %d after drawing (%d).",
+        ErrorF("Could not unlock window %d after drawing (%d).\n",
                (int)x_cvt_vptr_to_uint(
                    wid), (int)err);
 }

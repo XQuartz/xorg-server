@@ -106,11 +106,18 @@ xprCopyWindow(RootlessFrameID wid, int dstNrects, const BoxRec *dstRects,
               int dx,
               int dy);
 
-static inline xp_error
+static inline void
 xprConfigureWindow(xp_window_id id, unsigned int mask,
                    const xp_window_changes *values)
 {
-    return xp_configure_window(id, mask, values);
+    xp_error err = xp_configure_window(id, mask, values);
+
+    /* Log rather than drop a reconfigure silently: the implementation rejects every mask on a frame that is locked for
+     * drawing, which would otherwise leave a window on screen that the X server believes it has already moved, resized
+     * or unmapped.
+     */
+    if (err != Success)
+        ErrorF("Could not configure window %d, mask 0x%x (%d).\n", (int)id, mask, (int)err);
 }
 
 static void
@@ -584,14 +591,16 @@ xprHideWindows(Bool hide)
 
 Bool no_configure_window;
 
-static inline int
+/* As xprConfigureWindow(), but honoring no_configure_window so that responding to a native window change does not echo
+ * straight back to the implementation.  Only the colormap and hide paths below go through this; the move, resize,
+ * restack, reshape and unmap hooks call xprConfigureWindow() directly and so are not suppressed.
+ */
+static inline void
 configure_window(xp_window_id id, unsigned int mask,
                  const xp_window_changes *values)
 {
     if (!no_configure_window)
-        return xp_configure_window(id, mask, values);
-    else
-        return XP_Success;
+        xprConfigureWindow(id, mask, values);
 }
 
 static

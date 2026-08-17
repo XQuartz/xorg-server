@@ -248,6 +248,10 @@ void RootlessRedisplay(WindowPtr pWindow);
 void RootlessRedisplayScreen(ScreenPtr pScreen);
 void RootlessFlushPendingResize(RootlessWindowRec *winRec);
 
+// As RootlessRedisplay/RootlessStopDrawing, but for a frame named directly
+// rather than one found by walking up from a window. winRec must not be NULL.
+void RootlessStopDrawingFrame(RootlessWindowPtr winRec, Bool flush);
+
 // Give pWin and its descendants back the pixmaps they had before winRec's frame started drawing.
 // For a subtree that left the frame's window tree while the frame was drawing.
 void RootlessRestoreSubtreePixmaps(WindowPtr pWin, RootlessWindowPtr winRec);

@@ -997,10 +997,23 @@ RootlessResizeWindow(WindowPtr pWin, int x, int y,
         /* Special case for resizing the root window */
         BoxRec box;
 
+        /* Release the frame before reconfiguring it, as everywhere else: the implementation rejects the resize below on
+         * a frame that is locked for drawing.  Flush first, because the pending damage is relative to the geometry the
+         * resize is about to replace.
+         */
+        if (winRec)
+            RootlessStopDrawingFrame(winRec, TRUE);
+
         pWin->drawable.x = x;
         pWin->drawable.y = y;
         pWin->drawable.width = w;
         pWin->drawable.height = h;
+
+        /* Keep the frame record in step with the window.  Nothing else updates it on this path, and callers such as
+         * RootlessRepositionWindow() and RootlessDamageRegion() position the frame from it.
+         */
+        if (winRec)
+            RootlessInitializeFrame(pWin, winRec);
 
         box.x1 = x;
         box.y1 = y;

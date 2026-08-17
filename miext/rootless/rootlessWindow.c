@@ -105,7 +105,12 @@ RootlessNativeWindowMoved(WindowPtr pWin)
     ClientPtr pClient;
     RootlessWindowRec *winRec;
 
+    if (pWin == NULL)
+        return;
+
     winRec = WINREC(pWin);
+    if (winRec == NULL)
+        return;
 
     // The bounds below are the frame position, which a pending resize has not applied.
     RootlessFlushPendingResize(winRec);

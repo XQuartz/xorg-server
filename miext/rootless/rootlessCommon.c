@@ -232,11 +232,6 @@ RootlessStartDrawing(WindowPtr pWindow)
     }
 }
 
-/*
- * RootlessStopDrawing
- *  Stop drawing to a window's backing buffer. If flush is true,
- *  damaged regions are flushed to the screen.
- */
 static int
 RestorePreDrawingPixmapVisitor(WindowPtr pWindow, void *data)
 {
@@ -268,10 +263,45 @@ RestorePreDrawingPixmapVisitor(WindowPtr pWindow, void *data)
     return WT_WALKCHILDREN;
 }
 
+/*
+ * RootlessStopDrawingFrame
+ *  Stop drawing to the given frame's backing buffer. If flush is true, damaged regions are flushed to the screen.
+ *  winRec must not be NULL.
+ *
+ *  Unlike RootlessStopDrawing(), the frame is named directly instead of being found by walking up from a window.
+ *  Callers need that once a framed window has been reparented below another framed window, because TopLevelParent()
+ *  then resolves either to a different frame or to no frame at all rather than to the one this record describes.
+ *
+ *  This deliberately does not process is_reorder_pending; see RootlessStopDrawing().
+ */
+void
+RootlessStopDrawingFrame(RootlessWindowPtr winRec, Bool flush)
+{
+    WindowPtr pWin = winRec->win;
+    ScreenPtr pScreen = pWin->drawable.pScreen;
+
+    if (winRec->is_drawing) {
+        SCREENREC(pScreen)->imp->StopDrawing(winRec->wid, flush);
+
+        FreeScratchPixmapHeader(winRec->pixmap);
+        TraverseTree(pWin, RestorePreDrawingPixmapVisitor, (void *) winRec);
+        winRec->pixmap = NULL;
+
+        winRec->is_drawing = FALSE;
+    }
+    else if (flush) {
+        SCREENREC(pScreen)->imp->UpdateRegion(winRec->wid, NULL);
+    }
+}
+
+/*
+ * RootlessStopDrawing
+ *  Stop drawing to a window's backing buffer. If flush is true,
+ *  damaged regions are flushed to the screen.
+ */
 void
 RootlessStopDrawing(WindowPtr pWindow, Bool flush)
 {
-    ScreenPtr pScreen = pWindow->drawable.pScreen;
     WindowPtr top = TopLevelParent(pWindow);
     RootlessWindowRec *winRec;
 
@@ -281,19 +311,12 @@ RootlessStopDrawing(WindowPtr pWindow, Bool flush)
     if (winRec == NULL)
         return;
 
-    if (winRec->is_drawing) {
-        SCREENREC(pScreen)->imp->StopDrawing(winRec->wid, flush);
+    RootlessStopDrawingFrame(winRec, flush);
 
-        FreeScratchPixmapHeader(winRec->pixmap);
-        TraverseTree(top, RestorePreDrawingPixmapVisitor, (void *) winRec);
-        winRec->pixmap = NULL;
-
-        winRec->is_drawing = FALSE;
-    }
-    else if (flush) {
-        SCREENREC(pScreen)->imp->UpdateRegion(winRec->wid, NULL);
-    }
-
+    /* Reorder the window the caller named rather than the frame's owner.  Clearing the flag consumes it either way,
+     * but RootlessReorderWindow() itself does nothing unless pWindow is the window that owns the frame.  This is
+     * long-standing behavior; every caller that passes flush reorders a frame-owning window.
+     */
     if (flush && winRec->is_reorder_pending) {
         winRec->is_reorder_pending = FALSE;
         RootlessReorderWindow(pWindow);

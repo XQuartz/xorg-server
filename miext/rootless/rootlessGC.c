@@ -315,6 +315,94 @@ RootlessCreateGC(GCPtr pGC)
         (pGC)->ops = &rootlessGCOps; \
 }
 
+/*
+ * Empty clip for the paths that must draw nothing and cannot allocate.  It is
+ * installed with freeCompClip FALSE, so mi replaces it rather than writing
+ * through it or freeing it.
+ */
+static RegionRec rootlessEmptyClip = { {0, 0, 0, 0}, &RegionEmptyData };
+
+/*
+ * RootlessInstallCompositeClip
+ *  Give pGC a composite clip that it owns.  The old one must never be modified
+ *  in place: with no client clip it is the window's own clipList.
+ */
+static void
+RootlessInstallCompositeClip(GCPtr pGC, RegionPtr pNewClip)
+{
+    if (pGC->freeCompClip)
+        RegionDestroy(pGC->pCompositeClip);
+
+    pGC->pCompositeClip = pNewClip;
+    pGC->freeCompClip = TRUE;
+}
+
+/*
+ * RootlessCloseCompositeClip
+ *  Reduce pGC's composite clip to nothing, without allocating.
+ */
+static void
+RootlessCloseCompositeClip(GCPtr pGC)
+{
+    if (pGC->freeCompClip)
+        RegionDestroy(pGC->pCompositeClip);
+
+    pGC->pCompositeClip = &rootlessEmptyClip;
+    pGC->freeCompClip = FALSE;
+}
+
+/*
+ * RootlessClampCompositeClip
+ *  Bound the composite clip of a window drawing into the screen pixmap.
+ *
+ *  RootlessMiValidateTree bounds these clips as it recomputes them, but a
+ *  screen resize republishes the pixmap without recomputing any clip but the
+ *  root's.  After a shrink, a window nothing else revalidated is left bounded
+ *  to the larger screen, so clamp here as well.
+ */
+static void
+RootlessClampCompositeClip(GCPtr pGC, WindowPtr pWin)
+{
+    RegionPtr pClip = pGC->pCompositeClip;
+    RegionPtr pNewClip;
+    BoxPtr pExtents;
+    BoxRec box;
+
+    if (pClip == NULL || !RootlessWindowIsScreenBacked(pWin))
+        return;
+
+    /* A nil region's extents say nothing about what it covers. */
+    if (RegionNil(pClip))
+        return;
+
+    if (!RootlessGetScreenPixmapBox(pWin->drawable.pScreen, &box)) {
+        /* Nothing to bound against, so draw nothing. */
+        RootlessCloseCompositeClip(pGC);
+        return;
+    }
+
+    pExtents = RegionExtents(pClip);
+    if (pExtents->x1 >= box.x1 && pExtents->y1 >= box.y1 &&
+        pExtents->x2 <= box.x2 && pExtents->y2 <= box.y2)
+        return;
+
+    RL_DEBUG_MSG("clip of window %p (%d,%d %d,%d) escapes the screen pixmap "
+                 "(%d,%d %d,%d); clamping\n", pWin,
+                 pExtents->x1, pExtents->y1, pExtents->x2, pExtents->y2,
+                 box.x1, box.y1, box.x2, box.y2);
+
+    /* RegionCreate returns a shared static on failure, not NULL. */
+    pNewClip = RegionCreate(&box, 1);
+    if (RegionNar(pNewClip)) {
+        RegionDestroy(pNewClip);
+        RootlessCloseCompositeClip(pGC);
+        return;
+    }
+
+    RegionIntersect(pNewClip, pNewClip, pClip);
+    RootlessInstallCompositeClip(pGC, pNewClip);
+}
+
 static void
 RootlessValidateGC(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
 {
@@ -335,6 +423,7 @@ RootlessValidateGC(GCPtr pGC, unsigned long changes, DrawablePtr pDrawable)
 #else
         VALIDATE_GC(pGC, changes, pDrawable);
 #endif
+        RootlessClampCompositeClip(pGC, (WindowPtr) pDrawable);
     }
     else {
         pGC->funcs->ValidateGC(pGC, changes, pDrawable);

@@ -104,6 +104,8 @@ Equipment Corporation.
 
 #include    "globals.h"
 
+#include    "rootlessCommon.h"
+
 int RootlessMiValidateTree(WindowPtr pRoot, WindowPtr pChild, VTKind kind);
 
 #define HasParentRelativeBorder(w) (!(w)->borderIsPixel && \
@@ -146,6 +148,10 @@ RootlessComputeClips(WindowPtr pParent, ScreenPtr pScreen,
      * will be completely inside the universe (the universe will cover it
      * completely). If the window is completely obscured, none of the
      * universe will cover the rectangle.
+     *
+     * A window bounded to the screen pixmap is the exception: it reports itself
+     * obscured where it extends past the screen.  That also stops the VTMove
+     * case below from translating an unbounded clip into the stored regions.
      */
     borderSize.x1 = pParent->drawable.x - wBorderWidth(pParent);
     borderSize.y1 = pParent->drawable.y - wBorderWidth(pParent);
@@ -501,6 +507,7 @@ RootlessMiValidateTree(WindowPtr pRoot, /* Parent to validate */
         if (pWin->viewable) {
             if (pWin->valdata) {
                 RegionCopy(&childClip, &pWin->borderSize);
+                RootlessBoundRegionToScreenPixmap(pWin, &childClip);
                 RootlessComputeClips(pWin, pScreen, &childClip, kind, &exposed);
             }
             else if (pWin->visibility == VisibilityNotViewable) {

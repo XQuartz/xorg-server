@@ -238,6 +238,15 @@ extern RegionRec rootlessHugeRoot;
 // (e.g. it is visible and has a top-level or root parent)
 Bool IsFramedWindow(WindowPtr pWin);
 
+// TRUE if this window draws into the screen pixmap rather than into a frame.
+Bool RootlessWindowIsScreenBacked(WindowPtr pWin);
+
+// Store the screen pixmap's extent.  FALSE if there is none, or it is empty.
+Bool RootlessGetScreenPixmapBox(ScreenPtr pScreen, BoxPtr pBox);
+
+// Restrict a region to what a screen-pixmap-backed window may reach.
+void RootlessBoundRegionToScreenPixmap(WindowPtr pWin, RegionPtr pRegion);
+
 // Routines that cause regions to get redrawn.
 // DamageRegion and DamageRect are in global coordinates.
 // DamageBox is in window-local coordinates.

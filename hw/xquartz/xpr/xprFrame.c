@@ -476,10 +476,14 @@ xprInit(ScreenPtr pScreen)
     rootless_CopyBytes_threshold = xp_copy_bytes_threshold;
     rootless_CopyWindow_threshold = xp_scroll_area_threshold;
 
-    assert((window_hash = x_hash_table_new(NULL, NULL, NULL, NULL)));
-    assert((window_hash_serial_q =
-                dispatch_queue_create(BUNDLE_ID_PREFIX ".X11.xpr_window_hash",
-                                      NULL)));
+    window_hash = x_hash_table_new(NULL, NULL, NULL, NULL);
+    if (window_hash == NULL)
+        FatalError("Could not allocate window hash.");
+
+    window_hash_serial_q =
+        dispatch_queue_create(BUNDLE_ID_PREFIX ".X11.xpr_window_hash", NULL);
+    if (window_hash_serial_q == NULL)
+        FatalError("Could not create window hash queue.");
 
     return TRUE;
 }

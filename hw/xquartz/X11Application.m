@@ -243,6 +243,23 @@ QuartzModeBundleInit(void);
     [self activateX:NO];
 }
 
+- (void) screen_params_changed:(NSNotification *)notification
+{
+    /* Xplugin's XP_EVENT_DISPLAY_CHANGED covers changes to the display
+     * configuration itself. Showing, hiding, moving or resizing the dock
+     * never reaches the server, and therefore never reaches the window
+     * manager -- which needs it to keep _NET_WORKAREA and window zooming
+     * honest.  AppKit does tell us, so forward it down the same path a
+     * display change takes.
+     *
+     * This has to happen here rather than in quartz-wm: xp_init() with
+     * XP_DOCK_SUPPORT, which quartz-wm needs for minimize and restore,
+     * leaves that process with no screen parameter notifications at all and
+     * a permanently stale [NSScreen visibleFrame].
+     */
+    DarwinSendDDXEvent(kXquartzDisplayChanged, 0);
+}
+
 - (void) sendEvent:(NSEvent *)e
 {
     /* Don't try sending to X if we haven't initialized.  This can happen if AppKit takes over
@@ -820,6 +837,10 @@ X11ApplicationMain(int argc, char **argv, char **envp)
         [NSNotificationCenter.defaultCenter addObserver:NSApp
                                                selector:@selector (became_key:)
                                                    name:NSWindowDidBecomeKeyNotification
+                                                 object:nil];
+        [NSNotificationCenter.defaultCenter addObserver:NSApp
+                                               selector:@selector (screen_params_changed:)
+                                                   name:NSApplicationDidChangeScreenParametersNotification
                                                  object:nil];
 
         /*

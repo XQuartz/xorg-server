@@ -173,6 +173,7 @@ typedef void (*RootlessReshapeFrameProc)
 
 /*
  * Unmap a frame.
+ *  Drawing is stopped before this is called.
  *
  *  wid         Frame id
  */

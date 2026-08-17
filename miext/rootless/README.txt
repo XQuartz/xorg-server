@@ -183,7 +183,7 @@ typedef void (*RootlessDestroyFrameProc)
 
 /*
  * Move a frame on screen.
- *  Drawing is stopped and all updates are flushed before this is called.
+ *  Drawing is stopped before this is called.
  *
  *  wid         Frame id
  *  pScreen     Screen to move the new frame to

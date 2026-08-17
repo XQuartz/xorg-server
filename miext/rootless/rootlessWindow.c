@@ -1083,11 +1083,21 @@ RootlessReparentWindow(WindowPtr pWin, WindowPtr pPriorParent)
         RootlessDestroyFrame(pWin, winRec);
     }
     else {
+        /* Flush while the frame's damage still matches winRec's geometry, because RootlessInitializeFrame() below is
+         * about to change it, and release the lock before UnmapFrame() and ResizeFrame(), which the implementation
+         * rejects on a locked frame.
+         */
+        RootlessStopDrawingFrame(winRec, TRUE);
+
         if (!pTopWin->realized && pWin->realized) {
             SCREENREC(pScreen)->imp->UnmapFrame(winRec->wid);
         }
 
-        /* Switch the frame record from one to the other. */
+        /* Switch the frame record from one to the other.  Nothing in here may resolve a frame through
+         * TopLevelParent(): until the second SETWINREC() the record is unreachable from any window, and from there
+         * until RootlessInitializeFrame() it is reachable from pTopWin while winRec->win still names pWin, so a lookup
+         * would find it and then walk the wrong subtree.
+         */
 
         SETWINREC(pWin, NULL);
         SETWINREC(pTopWin, winRec);

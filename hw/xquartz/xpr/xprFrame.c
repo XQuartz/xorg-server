@@ -197,9 +197,9 @@ xprCreateFrame(RootlessWindowPtr pFrame, ScreenPtr pScreen,
         return FALSE;
     }
 
-    dispatch_async(window_hash_serial_q, ^ {
-                       x_hash_table_insert(window_hash, pFrame->wid, pFrame);
-                   });
+    dispatch_sync(window_hash_serial_q, ^ {
+                      x_hash_table_insert(window_hash, pFrame->wid, pFrame);
+                  });
 
     xprSetNativeProperty(pFrame);
 
@@ -214,9 +214,9 @@ xprDestroyFrame(RootlessFrameID wid)
 {
     xp_error err;
 
-    dispatch_async(window_hash_serial_q, ^ {
-                       x_hash_table_remove(window_hash, wid);
-                   });
+    dispatch_sync(window_hash_serial_q, ^ {
+                      x_hash_table_remove(window_hash, wid);
+                  });
 
     err = xp_destroy_window(x_cvt_vptr_to_uint(wid));
     if (err != Success)
@@ -284,6 +284,9 @@ xprRestackFrame(RootlessFrameID wid, RootlessFrameID nextWid)
         wc.sibling = x_cvt_vptr_to_uint(nextWid);
     }
 
+    /* Unlike xprGetXWindow(), reading the record after the critical section is safe here because this only ever runs on
+     * the server thread, which is also the only thread that frees it.
+     */
     dispatch_sync(window_hash_serial_q, ^ {
                       winRec = x_hash_table_lookup(window_hash, wid, NULL);
                   });
@@ -495,14 +498,21 @@ xprInit(ScreenPtr pScreen)
 WindowPtr
 xprGetXWindow(xp_window_id wid)
 {
-    RootlessWindowRec *winRec __block;
+    WindowPtr pWin __block = NULL;
+
+    /* Load the window inside the critical section.  Letting the frame record escape it would defeat the point, since
+     * the server thread frees the record as soon as the frame is destroyed.
+     */
     dispatch_sync(window_hash_serial_q, ^ {
-                      winRec =
+                      RootlessWindowRec *winRec =
                           x_hash_table_lookup(window_hash,
                                               x_cvt_uint_to_vptr(wid), NULL);
+
+                      if (winRec != NULL)
+                          pWin = winRec->win;
                   });
 
-    return winRec != NULL ? winRec->win : NULL;
+    return pWin;
 }
 
 /*

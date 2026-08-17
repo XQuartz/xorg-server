@@ -461,8 +461,18 @@ RootlessRealizeWindow(WindowPtr pWin)
         RootlessWindowRec *winRec;
 
         winRec = RootlessEnsureFrame(pWin);
-        if (winRec == NULL)
+        if (winRec == NULL) {
+            /*
+             * RealizeTree marks the window viewable and ignores our return
+             * value, so it stays mapped with no buffer of its own.  That is
+             * safe: it draws into the screen pixmap, whose clips are bounded.
+             * Clearing viewable here would only leave viewable children under
+             * an unviewable parent, since RealizeTree marks those too.
+             */
+            ErrorF("rootless: no frame for window %p; it will not be drawn\n",
+                   pWin);
             return FALSE;
+        }
 
         winRec->is_reorder_pending = TRUE;
 

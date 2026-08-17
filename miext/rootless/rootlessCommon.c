@@ -96,6 +96,79 @@ IsFramedWindow(WindowPtr pWin)
     return (top && WINREC(top));
 }
 
+/*
+ * RootlessWindowIsScreenBacked
+ *  Returns TRUE if pWin draws into the screen pixmap.  Framed and redirected
+ *  windows have buffers of their own; anything else still points at the screen
+ *  pixmap fbCreateWindow installed.  Note that comparing pixmaps would not
+ *  answer this: framed windows hold the screen pixmap while not mid-draw.
+ */
+Bool
+RootlessWindowIsScreenBacked(WindowPtr pWin)
+{
+    WindowPtr top;
+
+#ifdef COMPOSITE
+    if (pWin->redirectDraw != RedirectDrawNone)
+        return FALSE;
+#endif
+
+    if (!dixPrivateKeyRegistered(&rootlessWindowPrivateKeyRec))
+        return FALSE;
+
+    /* Not IsFramedWindow(): an unrealized window still has its frame. */
+    top = TopLevelParent(pWin);
+
+    return (top == NULL || WINREC(top) == NULL);
+}
+
+/*
+ * RootlessGetScreenPixmapBox
+ *  Store the screen pixmap's extent in pBox, in the coordinates fb resolves
+ *  against.  Returns FALSE if there is no screen pixmap, or it is empty.
+ */
+Bool
+RootlessGetScreenPixmapBox(ScreenPtr pScreen, BoxPtr pBox)
+{
+    PixmapPtr pPix = (*pScreen->GetScreenPixmap) (pScreen);
+
+    if (pPix == NULL)
+        return FALSE;
+
+    pBox->x1 = pPix->screen_x;
+    pBox->y1 = pPix->screen_y;
+    pBox->x2 = pPix->screen_x + pPix->drawable.width;
+    pBox->y2 = pPix->screen_y + pPix->drawable.height;
+
+    return (pBox->x2 > pBox->x1 && pBox->y2 > pBox->y1);
+}
+
+/*
+ * RootlessBoundRegionToScreenPixmap
+ *  Restrict pRegion to what a window drawing into the screen pixmap may reach.
+ *  That pixmap is one scanline, and fb bounds its addresses by the clip alone,
+ *  so an unbounded clip indexes outside the allocation in either direction.
+ */
+void
+RootlessBoundRegionToScreenPixmap(WindowPtr pWin, RegionPtr pRegion)
+{
+    RegionRec bound;
+    BoxRec box;
+
+    if (!RootlessWindowIsScreenBacked(pWin))
+        return;
+
+    /* Nothing to bound against, so draw nothing. */
+    if (!RootlessGetScreenPixmapBox(pWin->drawable.pScreen, &box)) {
+        RegionEmpty(pRegion);
+        return;
+    }
+
+    RegionInit(&bound, &box, 1);
+    RegionIntersect(pRegion, pRegion, &bound);
+    RegionUninit(&bound);
+}
+
 Bool
 RootlessResolveColormap(ScreenPtr pScreen, int first_color,
                         int n_colors, uint32_t * colors)

@@ -23,7 +23,7 @@ endif
 bundle_id_def = '-DBUNDLE_ID_PREFIX="@0@"'.format(bundle_id_prefix)
 
 bundle_root = apple_applications_dir / apple_application_name + '.app'
-xquartz_data_dir = get_option('prefix') / get_option('datadir','X11', 'XQuartz')
+xquartz_data_dir = get_option('prefix') / get_option('datadir') / 'X11' / 'XQuartz'
 
 # using sparkle update framework?
 build_sparkle = xquartz_sparkle_feed_url != '' and xquartz_sparkle_public_edkey != ''

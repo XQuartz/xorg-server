@@ -182,6 +182,13 @@ RootlessCreateWindow(WindowPtr pWin)
 static void
 RootlessDestroyFrame(WindowPtr pWin, RootlessWindowPtr winRec)
 {
+    /* The implementation cannot destroy a frame that is still locked for drawing, and the rootless layer
+     * intentionally holds that lock across requests (see RootlessSourceValidate() and StartFrameResize()) and drops it
+     * lazily from the block handler.  A frame reconfigured after its window was unrealized queues no damage to wake
+     * that handler, so it can still be locked here.
+     */
+    RootlessStopDrawingFrame(winRec, FALSE);
+
     SCREENREC(pWin->drawable.pScreen)->imp->DestroyFrame(winRec->wid);
     free(winRec);
     SETWINREC(pWin, NULL);

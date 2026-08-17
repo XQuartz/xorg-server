@@ -173,7 +173,8 @@ typedef Bool (*RootlessCreateFrameProc)
 
 /*
  * Destroy a frame.
- *  Drawing is stopped and all updates are flushed before this is called.
+ *  Drawing is stopped before this is called.
+ *  The frame record stays valid for the duration of the call and is freed immediately afterwards.
  *
  *  wid         Frame id
  */

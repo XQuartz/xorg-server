@@ -247,6 +247,10 @@ void RootlessDamageBox(WindowPtr pWindow, BoxPtr pBox);
 void RootlessRedisplay(WindowPtr pWindow);
 void RootlessRedisplayScreen(ScreenPtr pScreen);
 
+// As RootlessRedisplay/RootlessStopDrawing, but for a frame named directly
+// rather than one found by walking up from a window. winRec must not be NULL.
+void RootlessStopDrawingFrame(RootlessWindowPtr winRec, Bool flush);
+
 void RootlessQueueRedisplay(ScreenPtr pScreen);
 
 /* Return the colormap currently installed on the given screen. */

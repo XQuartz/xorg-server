@@ -105,7 +105,12 @@ RootlessNativeWindowMoved(WindowPtr pWin)
     ClientPtr pClient;
     RootlessWindowRec *winRec;
 
+    if (pWin == NULL)
+        return;
+
     winRec = WINREC(pWin);
+    if (winRec == NULL)
+        return;
 
     if (xp_get_window_bounds(MAKE_WINDOW_ID(winRec->wid), &bounds) != Success)
         return;

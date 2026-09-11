@@ -262,9 +262,16 @@ DarwinBuildModifierMaps(darwinKeyboardInfo *info)
 
         case XK_Alt_L:
             info->modifierKeycodes[NX_MODIFIERKEY_ALTERNATE][0] = i;
-            info->modMap[MIN_KEYCODE + i] = Mod1Mask;
-            if (!XQuartzOptionSendsAlt)
-                *k = XK_Mode_switch;     // Yes, this is ugly.  This needs to be cleaned up when we integrate quartzKeyboard with this code and refactor.
+            if (!XQuartzOptionSendsAlt) {
+                /* Make Option the level-3 chooser so the Option layer is a real
+                 * XKB level, reachable by XKB-native clients. See
+                 * QuartzInstallFourLevel(). */
+                *k = XK_ISO_Level3_Shift;
+                info->modMap[MIN_KEYCODE + i] = Mod5Mask;
+            }
+            else {
+                info->modMap[MIN_KEYCODE + i] = Mod1Mask;
+            }
             break;
 
         case XK_Alt_R:
@@ -273,9 +280,13 @@ DarwinBuildModifierMaps(darwinKeyboardInfo *info)
 #else
             info->modifierKeycodes[NX_MODIFIERKEY_ALTERNATE][0] = i;
 #endif
-            if (!XQuartzOptionSendsAlt)
-                *k = XK_Mode_switch;     // Yes, this is ugly.  This needs to be cleaned up when we integrate quartzKeyboard with this code and refactor.
-            info->modMap[MIN_KEYCODE + i] = Mod1Mask;
+            if (!XQuartzOptionSendsAlt) {
+                *k = XK_ISO_Level3_Shift;
+                info->modMap[MIN_KEYCODE + i] = Mod5Mask;
+            }
+            else {
+                info->modMap[MIN_KEYCODE + i] = Mod1Mask;
+            }
             break;
 
         case XK_Mode_switch:
@@ -388,6 +399,114 @@ DarwinKeyboardSetRepeat(DeviceIntPtr pDev, int initialKeyRepeatValue,
     }
 }
 
+/*
+ * QuartzInstallFourLevel
+ *
+ * XkbApplyMappingChange builds the keymap from the flat 4-glyph core map
+ * (k[0]=base, k[1]=shift, k[2]=option, k[3]=option+shift). With Option rewritten
+ * to Mode_switch, the core protocol reaches k[2]/k[3] as group 2, but XKB-native
+ * clients (GTK/Qt) never do, so Option+<key> falls back to the base glyph.
+ *
+ * This rewrites every key that carries an Option-layer glyph into ONE group of
+ * four levels governed by a FOUR_LEVEL key type, with the Option keycodes bound to
+ * the LevelThree virtual modifier. XKB clients then reach the Option layer as
+ * level 3, and the core-protocol result is unchanged (same glyphs, same order).
+ *
+ * Runs only when Option is the layer chooser (!XQuartzOptionSendsAlt).
+ */
+static int
+QuartzFourLevelType(XkbDescPtr xkb, unsigned int lvl3mask)
+{
+    XkbClientMapPtr map = xkb->map;
+    int ndx = map->num_types;
+    XkbKeyTypePtr type;
+
+    /* Grow the types array, then ZERO the new slot before resizing it.
+     * XkbAllocClientMap does not clear a slot that fits in existing slack, which
+     * left level_names/map as garbage pointers and crashed XkbCopyKeymap in
+     * memmove during device-class copy on a key event. */
+    if (XkbAllocClientMap(xkb, XkbKeyTypesMask, ndx + 1) != Success)
+        return -1;
+    if (map->size_types <= ndx)
+        return -1;
+    map->num_types = ndx + 1;              /* required: ResizeKeyType checks < num_types */
+    memset(&map->types[ndx], 0, sizeof(XkbKeyTypeRec));
+    if (XkbResizeKeyType(xkb, ndx, 4 /*map entries*/, TRUE, 4 /*levels*/) != Success)
+        return -1;
+    type = &map->types[ndx];
+    type->num_levels = 4;
+    type->mods.mask = ShiftMask | lvl3mask;
+    type->mods.real_mods = ShiftMask | lvl3mask;
+    type->mods.vmods = 0;
+    /* None -> L1, Shift -> L2, LevelThree -> L3, Shift+LevelThree -> L4 */
+    type->map[0].active = TRUE; type->map[0].mods.mask = 0;                 type->map[0].level = 0;
+    type->map[1].active = TRUE; type->map[1].mods.mask = ShiftMask;         type->map[1].level = 1;
+    type->map[2].active = TRUE; type->map[2].mods.mask = lvl3mask;          type->map[2].level = 2;
+    type->map[3].active = TRUE; type->map[3].mods.mask = ShiftMask|lvl3mask; type->map[3].level = 3;
+    /* preserve[] and level_names[] were (re)allocated by XkbResizeKeyType; populate
+     * them so XkbCopyKeymap copies valid data instead of uninitialised memory. */
+    if (type->preserve)
+        memset(type->preserve, 0, 4 * sizeof(XkbModsRec));
+    if (type->level_names) {
+        type->level_names[0] = MakeAtom("Base", 4, TRUE);
+        type->level_names[1] = MakeAtom("Shift", 5, TRUE);
+        type->level_names[2] = MakeAtom("Level3", 6, TRUE);
+        type->level_names[3] = MakeAtom("Shift Level3", 12, TRUE);
+    }
+    type->name = MakeAtom("XQUARTZ_FOUR_LEVEL", 18, TRUE);
+    return ndx;
+}
+
+static void
+QuartzInstallFourLevel(DeviceIntPtr pDev, darwinKeyboardInfo *info)
+{
+    XkbDescPtr xkb;
+    int kc, fourlevel = -1;
+    /* LevelThree is conventionally Mod5; DarwinBuildModifierMaps puts the Option
+     * keys on Mod5 as ISO_Level3_Shift. */
+    const unsigned int lvl3mask = Mod5Mask;
+
+    if (XQuartzOptionSendsAlt)
+        return;
+    if (!pDev->key || !pDev->key->xkbInfo)
+        return;
+    xkb = pDev->key->xkbInfo->desc;
+    if (!xkb || !xkb->map)
+        return;
+
+    for (kc = xkb->min_key_code; kc <= xkb->max_key_code; kc++) {
+        int idx = (kc - MIN_KEYCODE);
+        KeySym *g, l1, l2, l3, l4, *syms;
+        int newType;
+
+        if (idx < 0 || idx >= NUM_KEYCODES)
+            continue;
+        g = info->keyMap + idx * GLYPHS_PER_KEY;
+        l1 = g[0]; l2 = g[1]; l3 = g[2]; l4 = g[3];
+
+        /* Only touch keys that actually carry an Option-layer glyph. */
+        if (l3 == NoSymbol && l4 == NoSymbol)
+            continue;
+
+        if (fourlevel < 0) {
+            fourlevel = QuartzFourLevelType(xkb, lvl3mask);
+            if (fourlevel < 0)
+                return;
+        }
+
+        /* Use the supported API to switch the key to one group of the FOUR_LEVEL
+         * type: it resizes the symbol map and keeps width/offset/group_info
+         * consistent, which hand-editing did not. */
+        newType = fourlevel;
+        if (XkbChangeTypesOfKey(xkb, kc, 1, XkbGroup1Mask, &newType, NULL) != Success)
+            continue;
+        syms = XkbKeySymsPtr(xkb, kc);
+        if (!syms)
+            continue;
+        syms[0] = l1; syms[1] = l2; syms[2] = l3; syms[3] = l4;
+    }
+}
+
 void
 DarwinKeyboardReloadHandler(void)
 {
@@ -434,6 +553,7 @@ DarwinKeyboardReloadHandler(void)
                               keyInfo.modMap, serverClient);
         DarwinKeyboardSetRepeat(darwinKeyboard, initialKeyRepeatValue,
                                 keyRepeatValue);
+        QuartzInstallFourLevel(darwinKeyboard, &keyInfo);
 
         /* Apply the mappings to the core keyboard */
         for (pDev = inputInfo.devices; pDev; pDev = pDev->next) {
@@ -446,6 +566,7 @@ DarwinKeyboardReloadHandler(void)
                     keyInfo.modMap, serverClient);
                 DarwinKeyboardSetRepeat(pDev, initialKeyRepeatValue,
                                         keyRepeatValue);
+                QuartzInstallFourLevel(pDev, &keyInfo);
             }
         }
     } pthread_mutex_unlock(&keyInfo_mutex);

@@ -654,14 +654,19 @@ miPointerSetPosition(DeviceIntPtr pDev, int mode, double *screenx,
         /* coordinates after clamped to a barrier */
         int constrained_x, constrained_y;
         int current_x, current_y; /* current position in per-screen coord */
+        int barrier_nevents;
 
         current_x = MIPOINTER(pDev)->x - pScreen->x;
         current_y = MIPOINTER(pDev)->y - pScreen->y;
 
-        input_constrain_cursor(pDev, pScreen,
-                               current_x, current_y, x, y,
-                               &constrained_x, &constrained_y,
-                               nevents, events);
+        barrier_nevents = input_constrain_cursor(pDev, pScreen,
+                                                 current_x, current_y,
+                                                 x, y,
+                                                 &constrained_x,
+                                                 &constrained_y,
+                                                 events);
+        if (nevents)
+            *nevents = barrier_nevents;
 
         x = constrained_x;
         y = constrained_y;

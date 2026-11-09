@@ -128,7 +128,8 @@ __glXDRIdrawableDestroy(__GLXdrawable * drawable)
 
     FreeResource(private->dri2_id, FALSE);
 
-    (*core->destroyDrawable) (private->driDrawable);
+    if (private->driDrawable)
+        (*core->destroyDrawable) (private->driDrawable);
 
     __glXDrawableRelease(drawable);
 
@@ -581,7 +582,7 @@ __glXDRIinvalidateBuffers(DrawablePtr pDraw, void *priv, XID id)
     __GLXDRIdrawable *private = priv;
     __GLXDRIscreen *screen = private->screen;
 
-    if (screen->flush)
+    if (screen->flush && private->driDrawable)
         (*screen->flush->invalidate) (private->driDrawable);
 }
 
@@ -631,6 +632,12 @@ __glXDRIscreenCreateDrawable(ClientPtr client,
     private->driDrawable =
         (*driScreen->dri2->createNewDrawable) (driScreen->driScreen,
                                                config->driConfig, private);
+    if (private->driDrawable == NULL) {
+        FreeResource(private->dri2_id, FALSE);
+        __glXDrawableRelease(&private->base);
+        free(private);
+        return NULL;
+    }
 
     return &private->base;
 }

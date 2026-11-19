@@ -180,6 +180,7 @@ if build_xorg
      'input.c',
      'list.c',
      'misc.c',
+     'checked-math.c',
      'sha1.c',
      'signal-logging.c',
      'string.c',

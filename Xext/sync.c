@@ -63,6 +63,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "os/osdep.h"
 
 #include "scrnintstr.h"
+#include "checked-math.h"
 #include "os.h"
 #include "extnsionst.h"
 #include "dixstruct.h"

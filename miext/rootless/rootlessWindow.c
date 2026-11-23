@@ -107,6 +107,9 @@ RootlessNativeWindowMoved(WindowPtr pWin)
 
     winRec = WINREC(pWin);
 
+    // The bounds below are the frame position, which a pending resize has not applied.
+    RootlessFlushPendingResize(winRec);
+
     if (xp_get_window_bounds(MAKE_WINDOW_ID(winRec->wid), &bounds) != Success)
         return;
 
@@ -243,6 +246,7 @@ RootlessReshapeFrame(WindowPtr pWin)
         return;
 
     RootlessStopDrawing(pWin, FALSE);
+    RootlessFlushPendingResize(winRec);
 
     pShape = RootlessGetShape(pWin, &newShape) ? &newShape : NULL;
 
@@ -398,6 +402,7 @@ RootlessEnsureFrame(WindowPtr pWin)
 
     winRec->is_drawing = FALSE;
     winRec->is_reorder_pending = FALSE;
+    winRec->is_resize_pending = FALSE;
     winRec->pixmap = NULL;
     winRec->wid = NULL;
     winRec->level = 0;
@@ -453,6 +458,7 @@ RootlessRealizeWindow(WindowPtr pWin)
             return FALSE;
 
         winRec->is_reorder_pending = TRUE;
+        RootlessFlushPendingResize(winRec);
 
         RL_DEBUG_MSG("Top level window ");
 
@@ -500,6 +506,9 @@ RootlessFrameForWindow(WindowPtr pWin, Bool create)
 
     if (winRec == NULL)
         return NULL;
+
+    // Callers pass the frame to Xplugin, so it needs its real size.
+    RootlessFlushPendingResize(winRec);
 
     return winRec->wid;
 }
@@ -781,6 +790,29 @@ ResizeWeighting(int oldX1, int oldY1, int oldX2, int oldY2, int oldBW,
         return RL_GRAVITY_NORTH_EAST;
     else
         return RL_GRAVITY_NORTH_WEST;
+}
+
+/*
+ * RootlessFlushPendingResize
+ *  Apply a frame size recorded with is_resize_pending. Call it before any use of winRec->wid that depends on the
+ *  frame size. Move, restack, unmap, and destroy do not depend on it. The frame is unrealized and has no contents
+ *  to keep, so no gravity is needed.
+ */
+void
+RootlessFlushPendingResize(RootlessWindowRec *winRec)
+{
+    ScreenPtr pScreen;
+
+    if (!winRec->is_resize_pending)
+        return;
+
+    pScreen = winRec->win->drawable.pScreen;
+    winRec->is_resize_pending = FALSE;
+    SCREENREC(pScreen)->imp->ResizeFrame(winRec->wid, pScreen,
+                                         winRec->x + SCREEN_TO_GLOBAL_X,
+                                         winRec->y + SCREEN_TO_GLOBAL_Y,
+                                         winRec->width, winRec->height,
+                                         RL_GRAVITY_NONE);
 }
 
 /*
@@ -1097,6 +1129,7 @@ RootlessReparentWindow(WindowPtr pWin, WindowPtr pPriorParent)
         SETWINREC(pTopWin, winRec);
 
         RootlessInitializeFrame(pTopWin, winRec);
+        winRec->is_resize_pending = FALSE;
         RootlessReshapeFrame(pTopWin);
 
         SCREENREC(pScreen)->imp->ResizeFrame(winRec->wid, pScreen,

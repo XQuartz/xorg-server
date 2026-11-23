@@ -246,6 +246,7 @@ void RootlessDamageRect(WindowPtr pWindow, int x, int y, int w, int h);
 void RootlessDamageBox(WindowPtr pWindow, BoxPtr pBox);
 void RootlessRedisplay(WindowPtr pWindow);
 void RootlessRedisplayScreen(ScreenPtr pScreen);
+void RootlessFlushPendingResize(RootlessWindowRec *winRec);
 
 // Give pWin and its descendants back the pixmaps they had before winRec's frame started drawing.
 // For a subtree that left the frame's window tree while the frame was drawing.

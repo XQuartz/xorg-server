@@ -115,191 +115,191 @@ ref_smul_ovf(int64_t a, int64_t b, int64_t min, int64_t max)
  * the type under test, then every operation is verified for every
  * combination of two of them.
  */
-#define TEST_UNSIGNED_CHECKED_OPS(prefix_, type_, max_)                     \
-    do {                                                                    \
-        static const uint64_t tmpls[] = {                                   \
-            0, 1, 2, 3, 5, 17, 255, 256, 65535, 65536,                      \
-            2147483647u, 2147483648u, 4294967295u, 4294967296u,             \
-            9223372036854775807u, 9223372036854775808u,                     \
-            18446744073709551614u, 18446744073709551615u,                   \
-        };                                                                  \
-        type_ vals[32];                                                      \
-        size_t n = 0, i, j;                                                 \
-                                                                            \
-        for (i = 0; i < sizeof(tmpls) / sizeof(tmpls[0]); i++)              \
-            if (tmpls[i] <= (uint64_t) (max_))                               \
-                vals[n++] = (type_) tmpls[i];                                \
+#define TEST_UNSIGNED_CHECKED_OPS(prefix_, type_, max_)                       \
+    do {                                                                      \
+        static const uint64_t tmpls[] = {                                     \
+            0, 1, 2, 3, 5, 17, 255, 256, 65535, 65536,                        \
+            2147483647u, 2147483648u, 4294967295u, 4294967296u,               \
+            9223372036854775807u, 9223372036854775808u,                       \
+            18446744073709551614u, 18446744073709551615u,                     \
+        };                                                                    \
+        type_ vals[32];                                                       \
+        size_t n = 0, i, j;                                                   \
+                                                                              \
+        for (i = 0; i < sizeof(tmpls) / sizeof(tmpls[0]); i++)                \
+            if (tmpls[i] <= (uint64_t) (max_))                                \
+                vals[n++] = (type_) tmpls[i];                                 \
         vals[n++] = (type_) ((uint64_t) (max_) / 2);                          \
         vals[n++] = (type_) ((uint64_t) (max_) - 1);                          \
         vals[n++] = (type_) (max_);                                           \
-                                                                            \
-        for (i = 0; i < n; i++) {                                           \
-            for (j = 0; j < n; j++) {                                       \
-                type_ a = vals[i], b = vals[j], out;                         \
-                Bool ovf;                                                   \
-                                                                            \
-                ovf = prefix_##_add(&out, a, b);                             \
-                assert(ovf == ref_uadd_ovf(a, b, (uint64_t) (max_)));        \
-                if (!ovf)                                                   \
-                    assert(out == (type_) ((uint64_t) a + b));               \
-                                                                            \
-                ovf = prefix_##_subtract(&out, a, b);                        \
-                assert(ovf == ref_usub_ovf(a, b, (uint64_t) (max_)));        \
-                if (!ovf)                                                   \
-                    assert(out == (type_) ((uint64_t) a - b));               \
-                                                                            \
-                ovf = prefix_##_multiply(&out, a, b);                        \
-                assert(ovf == ref_umul_ovf(a, b, (uint64_t) (max_)));        \
-                if (!ovf)                                                   \
-                    assert(out == (type_) ((uint64_t) a * b));               \
-            }                                                               \
-        }                                                                   \
+                                                                              \
+        for (i = 0; i < n; i++) {                                             \
+            for (j = 0; j < n; j++) {                                         \
+                type_ a = vals[i], b = vals[j], out;                          \
+                Bool ovf;                                                     \
+                                                                              \
+                ovf = prefix_##_add(&out, a, b);                              \
+                assert(ovf == ref_uadd_ovf(a, b, (uint64_t) (max_)));         \
+                if (!ovf)                                                     \
+                    assert(out == (type_) ((uint64_t) a + b));                \
+                                                                              \
+                ovf = prefix_##_subtract(&out, a, b);                         \
+                assert(ovf == ref_usub_ovf(a, b, (uint64_t) (max_)));         \
+                if (!ovf)                                                     \
+                    assert(out == (type_) ((uint64_t) a - b));                \
+                                                                              \
+                ovf = prefix_##_multiply(&out, a, b);                         \
+                assert(ovf == ref_umul_ovf(a, b, (uint64_t) (max_)));         \
+                if (!ovf)                                                     \
+                    assert(out == (type_) ((uint64_t) a * b));                \
+            }                                                                 \
+        }                                                                     \
     } while (0)
 
-#define TEST_SIGNED_CHECKED_OPS(prefix_, type_, min_, max_)                     \
-    do {                                                                    \
-        static const int64_t tmpls[] = {                                    \
-            0, 1, -1, 2, -2, 3, -3, 5, -5, 17, -17,                          \
-            255, -255, 256, -256, 32768, -32768, 65536, -65536,             \
-            INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN,                       \
-            INT32_MAX, INT32_MIN, INT64_MAX, INT64_MIN,                     \
-            2147483647LL, -2147483647LL, 2147483648LL, -2147483648LL,       \
-            4294967296LL, -4294967296LL,                                    \
-            9223372036854775807LL, -9223372036854775807LL,                  \
-        };                                                                  \
-        type_ vals[64];                                                      \
-        size_t n = 0, i, j;                                                 \
-                                                                            \
-        for (i = 0; i < sizeof(tmpls) / sizeof(tmpls[0]); i++)              \
+#define TEST_SIGNED_CHECKED_OPS(prefix_, type_, min_, max_)                   \
+    do {                                                                      \
+        static const int64_t tmpls[] = {                                      \
+            0, 1, -1, 2, -2, 3, -3, 5, -5, 17, -17,                           \
+            255, -255, 256, -256, 32768, -32768, 65536, -65536,               \
+            INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN,                         \
+            INT32_MAX, INT32_MIN, INT64_MAX, INT64_MIN,                       \
+            2147483647LL, -2147483647LL, 2147483648LL, -2147483648LL,         \
+            4294967296LL, -4294967296LL,                                      \
+            9223372036854775807LL, -9223372036854775807LL,                    \
+        };                                                                    \
+        type_ vals[64];                                                       \
+        size_t n = 0, i, j;                                                   \
+                                                                              \
+        for (i = 0; i < sizeof(tmpls) / sizeof(tmpls[0]); i++)                \
             if (tmpls[i] >= (int64_t) (min_) && tmpls[i] <= (int64_t) (max_)) \
-                vals[n++] = (type_) tmpls[i];                                \
+                vals[n++] = (type_) tmpls[i];                                 \
         vals[n++] = (type_) (min_);                                           \
         vals[n++] = (type_) ((int64_t) (min_) + 1);                           \
         vals[n++] = (type_) ((int64_t) (min_) / 2);                           \
         vals[n++] = (type_) ((int64_t) (max_) / 2);                           \
         vals[n++] = (type_) ((int64_t) (max_) - 1);                           \
         vals[n++] = (type_) (max_);                                           \
-                                                                            \
-        for (i = 0; i < n; i++) {                                           \
-            for (j = 0; j < n; j++) {                                       \
-                type_ a = vals[i], b = vals[j], out;                         \
-                Bool ovf;                                                   \
-                                                                            \
-                ovf = prefix_##_add(&out, a, b);                             \
-                assert(ovf == ref_sadd_ovf(a, b, (int64_t) (min_),           \
-                                           (int64_t) (max_)));               \
-                if (!ovf)                                                   \
-                    assert(out == (type_) ((int64_t) a + b));                \
-                                                                            \
-                ovf = prefix_##_subtract(&out, a, b);                        \
-                assert(ovf == ref_ssub_ovf(a, b, (int64_t) (min_),           \
-                                           (int64_t) (max_)));               \
-                if (!ovf)                                                   \
-                    assert(out == (type_) ((int64_t) a - b));                \
-                                                                            \
-                ovf = prefix_##_multiply(&out, a, b);                        \
-                assert(ovf == ref_smul_ovf(a, b, (int64_t) (min_),           \
-                                           (int64_t) (max_)));               \
-                if (!ovf)                                                   \
-                    assert(out == (type_) ((int64_t) a * b));                \
-            }                                                               \
-        }                                                                   \
+                                                                              \
+        for (i = 0; i < n; i++) {                                             \
+            for (j = 0; j < n; j++) {                                         \
+                type_ a = vals[i], b = vals[j], out;                          \
+                Bool ovf;                                                     \
+                                                                              \
+                ovf = prefix_##_add(&out, a, b);                              \
+                assert(ovf == ref_sadd_ovf(a, b, (int64_t) (min_),            \
+                                           (int64_t) (max_)));                \
+                if (!ovf)                                                     \
+                    assert(out == (type_) ((int64_t) a + b));                 \
+                                                                              \
+                ovf = prefix_##_subtract(&out, a, b);                         \
+                assert(ovf == ref_ssub_ovf(a, b, (int64_t) (min_),            \
+                                           (int64_t) (max_)));                \
+                if (!ovf)                                                     \
+                    assert(out == (type_) ((int64_t) a - b));                 \
+                                                                              \
+                ovf = prefix_##_multiply(&out, a, b);                         \
+                assert(ovf == ref_smul_ovf(a, b, (int64_t) (min_),            \
+                                           (int64_t) (max_)));                \
+                if (!ovf)                                                     \
+                    assert(out == (type_) ((int64_t) a * b));                 \
+            }                                                                 \
+        }                                                                     \
     } while (0)
 
-#define TEST_UNSIGNED_SATURATING_OPS(prefix_, type_, max_)                     \
-    do {                                                                    \
-        static const uint64_t tmpls[] = {                                   \
-            0, 1, 2, 3, 5, 17, 255, 256, 65535, 65536,                       \
-            2147483647u, 2147483648u, 4294967295u, 4294967296u,              \
-            9223372036854775807u, 9223372036854775808u,                     \
-            18446744073709551614u, 18446744073709551615u,                   \
-        };                                                                  \
-        type_ vals[32];                                                      \
-        size_t n = 0, i, j;                                                 \
-                                                                            \
-        for (i = 0; i < sizeof(tmpls) / sizeof(tmpls[0]); i++)              \
-            if (tmpls[i] <= (uint64_t) (max_))                               \
-                vals[n++] = (type_) tmpls[i];                                \
+#define TEST_UNSIGNED_SATURATING_OPS(prefix_, type_, max_)                    \
+    do {                                                                      \
+        static const uint64_t tmpls[] = {                                     \
+            0, 1, 2, 3, 5, 17, 255, 256, 65535, 65536,                        \
+            2147483647u, 2147483648u, 4294967295u, 4294967296u,               \
+            9223372036854775807u, 9223372036854775808u,                       \
+            18446744073709551614u, 18446744073709551615u,                     \
+        };                                                                    \
+        type_ vals[32];                                                       \
+        size_t n = 0, i, j;                                                   \
+                                                                              \
+        for (i = 0; i < sizeof(tmpls) / sizeof(tmpls[0]); i++)                \
+            if (tmpls[i] <= (uint64_t) (max_))                                \
+                vals[n++] = (type_) tmpls[i];                                 \
         vals[n++] = (type_) ((uint64_t) (max_) / 2);                          \
         vals[n++] = (type_) ((uint64_t) (max_) - 1);                          \
         vals[n++] = (type_) (max_);                                           \
-                                                                            \
-        for (i = 0; i < n; i++) {                                           \
-            for (j = 0; j < n; j++) {                                       \
-                type_ a = vals[i], b = vals[j];                              \
-                                                                            \
-                if (ref_uadd_ovf(a, b, (uint64_t) (max_)))                   \
-                    assert(prefix_##_add(a, b) == (type_) (max_));  \
-                else                                                        \
-                    assert(prefix_##_add(a, b) ==                 \
-                           (type_) ((uint64_t) a + b));                      \
-                                                                            \
-                if (ref_usub_ovf(a, b, (uint64_t) (max_)))                   \
-                    assert(prefix_##_subtract(a, b) == 0);        \
-                else                                                        \
-                    assert(prefix_##_subtract(a, b) ==            \
-                           (type_) ((uint64_t) a - b));                      \
-                                                                            \
-                if (ref_umul_ovf(a, b, (uint64_t) (max_)))                   \
-                    assert(prefix_##_multiply(a, b) ==            \
+                                                                              \
+        for (i = 0; i < n; i++) {                                             \
+            for (j = 0; j < n; j++) {                                         \
+                type_ a = vals[i], b = vals[j];                               \
+                                                                              \
+                if (ref_uadd_ovf(a, b, (uint64_t) (max_)))                    \
+                    assert(prefix_##_add(a, b) == (type_) (max_));            \
+                else                                                          \
+                    assert(prefix_##_add(a, b) ==                             \
+                           (type_) ((uint64_t) a + b));                       \
+                                                                              \
+                if (ref_usub_ovf(a, b, (uint64_t) (max_)))                    \
+                    assert(prefix_##_subtract(a, b) == 0);                    \
+                else                                                          \
+                    assert(prefix_##_subtract(a, b) ==                        \
+                           (type_) ((uint64_t) a - b));                       \
+                                                                              \
+                if (ref_umul_ovf(a, b, (uint64_t) (max_)))                    \
+                    assert(prefix_##_multiply(a, b) ==                        \
                            (type_) (max_));                                   \
-                else                                                        \
-                    assert(prefix_##_multiply(a, b) ==            \
-                           (type_) ((uint64_t) a * b));                      \
-            }                                                               \
-        }                                                                   \
+                else                                                          \
+                    assert(prefix_##_multiply(a, b) ==                        \
+                           (type_) ((uint64_t) a * b));                       \
+            }                                                                 \
+        }                                                                     \
     } while (0)
 
-#define TEST_SIGNED_SATURATING_OPS(prefix_, type_, min_, max_)                  \
-    do {                                                                    \
-        static const int64_t tmpls[] = {                                    \
-            0, 1, -1, 2, -2, 3, -3, 5, -5, 17, -17,                          \
-            255, -255, 256, -256, 32768, -32768, 65536, -65536,             \
-            INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN,                       \
-            INT32_MAX, INT32_MIN, INT64_MAX, INT64_MIN,                     \
-            2147483647LL, -2147483647LL, 2147483648LL, -2147483648LL,       \
-            4294967296LL, -4294967296LL,                                    \
-            9223372036854775807LL, -9223372036854775807LL,                  \
-        };                                                                  \
-        type_ vals[64];                                                      \
-        size_t n = 0, i, j;                                                 \
-                                                                            \
-        for (i = 0; i < sizeof(tmpls) / sizeof(tmpls[0]); i++)              \
+#define TEST_SIGNED_SATURATING_OPS(prefix_, type_, min_, max_)                \
+    do {                                                                      \
+        static const int64_t tmpls[] = {                                      \
+            0, 1, -1, 2, -2, 3, -3, 5, -5, 17, -17,                           \
+            255, -255, 256, -256, 32768, -32768, 65536, -65536,               \
+            INT8_MAX, INT8_MIN, INT16_MAX, INT16_MIN,                         \
+            INT32_MAX, INT32_MIN, INT64_MAX, INT64_MIN,                       \
+            2147483647LL, -2147483647LL, 2147483648LL, -2147483648LL,         \
+            4294967296LL, -4294967296LL,                                      \
+            9223372036854775807LL, -9223372036854775807LL,                    \
+        };                                                                    \
+        type_ vals[64];                                                       \
+        size_t n = 0, i, j;                                                   \
+                                                                              \
+        for (i = 0; i < sizeof(tmpls) / sizeof(tmpls[0]); i++)                \
             if (tmpls[i] >= (int64_t) (min_) && tmpls[i] <= (int64_t) (max_)) \
-                vals[n++] = (type_) tmpls[i];                                \
+                vals[n++] = (type_) tmpls[i];                                 \
         vals[n++] = (type_) (min_);                                           \
         vals[n++] = (type_) ((int64_t) (min_) + 1);                           \
         vals[n++] = (type_) ((int64_t) (min_) / 2);                           \
         vals[n++] = (type_) ((int64_t) (max_) / 2);                           \
         vals[n++] = (type_) ((int64_t) (max_) - 1);                           \
         vals[n++] = (type_) (max_);                                           \
-                                                                            \
-        for (i = 0; i < n; i++) {                                           \
-            for (j = 0; j < n; j++) {                                       \
-                type_ a = vals[i], b = vals[j];                              \
-                                                                            \
+                                                                              \
+        for (i = 0; i < n; i++) {                                             \
+            for (j = 0; j < n; j++) {                                         \
+                type_ a = vals[i], b = vals[j];                               \
+                                                                              \
                 if (ref_sadd_ovf(a, b, (int64_t) (min_), (int64_t) (max_)))   \
-                    assert(prefix_##_add(a, b) ==                 \
-                           (type_) ((a < 0) ? (min_) : (max_)));               \
-                else                                                        \
-                    assert(prefix_##_add(a, b) ==                 \
-                           (type_) ((int64_t) a + b));                       \
-                                                                            \
+                    assert(prefix_##_add(a, b) ==                             \
+                           (type_) ((a < 0) ? (min_) : (max_)));              \
+                else                                                          \
+                    assert(prefix_##_add(a, b) ==                             \
+                           (type_) ((int64_t) a + b));                        \
+                                                                              \
                 if (ref_ssub_ovf(a, b, (int64_t) (min_), (int64_t) (max_)))   \
-                    assert(prefix_##_subtract(a, b) ==            \
-                           (type_) ((b > 0) ? (min_) : (max_)));               \
-                else                                                        \
-                    assert(prefix_##_subtract(a, b) ==            \
-                           (type_) ((int64_t) a - b));                       \
-                                                                            \
+                    assert(prefix_##_subtract(a, b) ==                        \
+                           (type_) ((b > 0) ? (min_) : (max_)));              \
+                else                                                          \
+                    assert(prefix_##_subtract(a, b) ==                        \
+                           (type_) ((int64_t) a - b));                        \
+                                                                              \
                 if (ref_smul_ovf(a, b, (int64_t) (min_), (int64_t) (max_)))   \
-                    assert(prefix_##_multiply(a, b) ==            \
-                           (type_) (((a < 0) != (b < 0)) ? (min_) : (max_)));  \
-                else                                                        \
-                    assert(prefix_##_multiply(a, b) ==            \
-                           (type_) ((int64_t) a * b));                       \
-            }                                                               \
-        }                                                                   \
+                    assert(prefix_##_multiply(a, b) ==                        \
+                           (type_) (((a < 0) != (b < 0)) ? (min_) : (max_))); \
+                else                                                          \
+                    assert(prefix_##_multiply(a, b) ==                        \
+                           (type_) ((int64_t) a * b));                        \
+            }                                                                 \
+        }                                                                     \
     } while (0)
 
 static void

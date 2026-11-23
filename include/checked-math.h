@@ -52,7 +52,7 @@
 
 #ifdef _X_HAS_OVERFLOW_BUILTINS
 
-#define _X_DEFINE_SIGNED_CHECKED_OPS(prefix, type, min, max)             \
+#define _X_DEFINE_SIGNED_CHECKED_OPS(prefix, type, min, max)               \
 static inline Bool                                                         \
 prefix##_add(type *out, type a, type b)                                    \
 {                                                                          \
@@ -107,7 +107,7 @@ prefix##_add(type *out, type a, type b)                                    \
 {                                                                          \
     int64_t result = (int64_t) ((uint64_t) a + (uint64_t) b);              \
     Bool overflow = result < (min) || result > (max) ||                    \
-                    ((a < 0) == (b < 0) && (a < 0) != (result < 0));        \
+                    ((a < 0) == (b < 0) && (a < 0) != (result < 0));       \
     *out = (type) result;                                                  \
     return overflow;                                                       \
 }                                                                          \
@@ -117,7 +117,7 @@ prefix##_subtract(type *out, type a, type b)                               \
 {                                                                          \
     int64_t result = (int64_t) ((uint64_t) a - (uint64_t) b);              \
     Bool overflow = result < (min) || result > (max) ||                    \
-                    ((a < 0) != (b < 0) && (a < 0) != (result < 0));        \
+                    ((a < 0) != (b < 0) && (a < 0) != (result < 0));       \
     *out = (type) result;                                                  \
     return overflow;                                                       \
 }                                                                          \
@@ -231,9 +231,9 @@ _X_DEFINE_UNSIGNED_CHECKED_OPS(checked_size, size_t, SIZE_MAX)
 /* Saturating arithmetic for the same types: the result is clamped to the
  * smallest/largest value the type can hold.
  */
-#define _X_DEFINE_SIGNED_SATURATING_OPS(prefix, cprefix, type, min, max)     \
+#define _X_DEFINE_SIGNED_SATURATING_OPS(prefix, cprefix, type, min, max)    \
 static inline type                                                          \
-prefix##_add(type a, type b)                                               \
+prefix##_add(type a, type b)                                                \
 {                                                                           \
     type result;                                                            \
     if (cprefix##_add(&result, a, b))                                       \
@@ -242,7 +242,7 @@ prefix##_add(type a, type b)                                               \
 }                                                                           \
                                                                             \
 static inline type                                                          \
-prefix##_subtract(type a, type b)                                          \
+prefix##_subtract(type a, type b)                                           \
 {                                                                           \
     type result;                                                            \
     if (cprefix##_subtract(&result, a, b))                                  \
@@ -251,7 +251,7 @@ prefix##_subtract(type a, type b)                                          \
 }                                                                           \
                                                                             \
 static inline type                                                          \
-prefix##_multiply(type a, type b)                                          \
+prefix##_multiply(type a, type b)                                           \
 {                                                                           \
     type result;                                                            \
     if (cprefix##_multiply(&result, a, b))                                  \
@@ -259,9 +259,9 @@ prefix##_multiply(type a, type b)                                          \
     return result;                                                          \
 }
 
-#define _X_DEFINE_UNSIGNED_SATURATING_OPS(prefix, cprefix, type, max)        \
+#define _X_DEFINE_UNSIGNED_SATURATING_OPS(prefix, cprefix, type, max)       \
 static inline type                                                          \
-prefix##_add(type a, type b)                                               \
+prefix##_add(type a, type b)                                                \
 {                                                                           \
     type result;                                                            \
     if (cprefix##_add(&result, a, b))                                       \
@@ -270,7 +270,7 @@ prefix##_add(type a, type b)                                               \
 }                                                                           \
                                                                             \
 static inline type                                                          \
-prefix##_subtract(type a, type b)                                          \
+prefix##_subtract(type a, type b)                                           \
 {                                                                           \
     type result;                                                            \
     if (cprefix##_subtract(&result, a, b))                                  \
@@ -279,7 +279,7 @@ prefix##_subtract(type a, type b)                                          \
 }                                                                           \
                                                                             \
 static inline type                                                          \
-prefix##_multiply(type a, type b)                                          \
+prefix##_multiply(type a, type b)                                           \
 {                                                                           \
     type result;                                                            \
     if (cprefix##_multiply(&result, a, b))                                  \

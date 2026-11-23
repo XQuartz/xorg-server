@@ -320,4 +320,10 @@ _X_DEFINE_UNSIGNED_SATURATING_OPS(saturating_uint64, checked_uint64, uint64_t, U
 
 _X_DEFINE_SIGNED_SATURATING_OPS(saturating_ssize, checked_ssize, ssize_t, SSIZE_MIN, SSIZE_MAX)
 _X_DEFINE_UNSIGNED_SATURATING_OPS(saturating_size, checked_size, size_t, SIZE_MAX)
+
+#undef _X_DEFINE_SIGNED_CHECKED_OPS
+#undef _X_DEFINE_UNSIGNED_CHECKED_OPS
+#undef _X_DEFINE_SIGNED_SATURATING_OPS
+#undef _X_DEFINE_UNSIGNED_SATURATING_OPS
+
 #endif /* CHECKED_MATH_H */

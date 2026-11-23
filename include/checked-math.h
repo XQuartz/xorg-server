@@ -50,7 +50,7 @@
 # define _X_HAS_OVERFLOW_BUILTINS 1
 #endif
 
-#ifdef _X_HAS_OVERFLOW_BUILTINS
+#if defined(_X_HAS_OVERFLOW_BUILTINS) && !defined(_X_FORCE_OVERFLOW_FALLBACKS)
 
 #define _X_DEFINE_SIGNED_CHECKED_OPS(prefix, type, min, max)               \
 static inline Bool                                                         \

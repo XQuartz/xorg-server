@@ -1,5 +1,5 @@
 /**
- * Copyright © 2011 Red Hat, Inc.
+ * Copyright © 2026 Red Hat, Inc.
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a
  *  copy of this software and associated documentation files (the "Software"),
@@ -20,6 +20,9 @@
  *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  *  DEALINGS IN THE SOFTWARE.
  */
+
+/* Warning: This file is included from the two checked-math tests with
+ * different #defines set */
 
 /* Test relies on assert() */
 #undef NDEBUG
@@ -460,7 +463,7 @@ checked_size_spot_test(void)
     assert(v == 40);
 }
 
-const testfunc_t*
+static const testfunc_t*
 checked_math_test(void)
 {
     static const testfunc_t testfuncs[] = {

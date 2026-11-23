@@ -545,6 +545,8 @@ xprHideWindows(Bool hide)
                 else {
                     BoxRec box;
 
+                    // xprDamageRects below needs the real frame size.
+                    RootlessFlushPendingResize(winRec);
                     xprRestackFrame(winRec->wid, prevWid);
                     prevWid = winRec->wid;
 

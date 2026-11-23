@@ -173,6 +173,8 @@ RootlessStartDrawing(WindowPtr pWindow)
         return;
     }
 
+    RootlessFlushPendingResize(winRec);
+
     // Make sure the window's top-level parent is prepared for drawing.
     if (!winRec->is_drawing) {
         int bw = wBorderWidth(top);

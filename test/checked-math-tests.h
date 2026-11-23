@@ -329,6 +329,15 @@ checked_arithmetic_test(void)
     TEST_SIGNED_CHECKED_OPS(checked_longlong, long long, LLONG_MIN, LLONG_MAX);
     TEST_UNSIGNED_CHECKED_OPS(checked_ulonglong, unsigned long long, ULLONG_MAX);
 
+    TEST_SIGNED_CHECKED_OPS(checked_int8, int8_t, INT8_MIN, INT8_MAX);
+    TEST_SIGNED_CHECKED_OPS(checked_int16, int16_t, INT16_MIN, INT16_MAX);
+    TEST_SIGNED_CHECKED_OPS(checked_int32, int32_t, INT32_MIN, INT32_MAX);
+    TEST_SIGNED_CHECKED_OPS(checked_int64, int64_t, INT64_MIN, INT64_MAX);
+    TEST_UNSIGNED_CHECKED_OPS(checked_uint8, uint8_t, UINT8_MAX);
+    TEST_UNSIGNED_CHECKED_OPS(checked_uint16, uint16_t, UINT16_MAX);
+    TEST_UNSIGNED_CHECKED_OPS(checked_uint32, uint32_t, UINT32_MAX);
+    TEST_UNSIGNED_CHECKED_OPS(checked_uint64, uint64_t, UINT64_MAX);
+
     TEST_SIGNED_CHECKED_OPS(checked_ssize, ssize_t, SSIZE_MIN, SSIZE_MAX);
     TEST_UNSIGNED_CHECKED_OPS(checked_size, size_t, SIZE_MAX);
 }
@@ -356,6 +365,15 @@ saturating_arithmetic_test(void)
     TEST_UNSIGNED_SATURATING_OPS(saturating_ulong, unsigned long, ULONG_MAX);
     TEST_SIGNED_SATURATING_OPS(saturating_longlong, long long, LLONG_MIN, LLONG_MAX);
     TEST_UNSIGNED_SATURATING_OPS(saturating_ulonglong, unsigned long long, ULLONG_MAX);
+
+    TEST_SIGNED_SATURATING_OPS(saturating_int8, int8_t, INT8_MIN, INT8_MAX);
+    TEST_SIGNED_SATURATING_OPS(saturating_int16, int16_t, INT16_MIN, INT16_MAX);
+    TEST_SIGNED_SATURATING_OPS(saturating_int32, int32_t, INT32_MIN, INT32_MAX);
+    TEST_SIGNED_SATURATING_OPS(saturating_int64, int64_t, INT64_MIN, INT64_MAX);
+    TEST_UNSIGNED_SATURATING_OPS(saturating_uint8, uint8_t, UINT8_MAX);
+    TEST_UNSIGNED_SATURATING_OPS(saturating_uint16, uint16_t, UINT16_MAX);
+    TEST_UNSIGNED_SATURATING_OPS(saturating_uint32, uint32_t, UINT32_MAX);
+    TEST_UNSIGNED_SATURATING_OPS(saturating_uint64, uint64_t, UINT64_MAX);
 
     TEST_SIGNED_SATURATING_OPS(saturating_ssize, ssize_t, SSIZE_MIN, SSIZE_MAX);
     TEST_UNSIGNED_SATURATING_OPS(saturating_size, size_t, SIZE_MAX);

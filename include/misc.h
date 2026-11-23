@@ -176,6 +176,11 @@ typedef struct _xReq *xReqPtr;
 
 #endif
 
+/* POSIX guarantees SSIZE_MAX but not SSIZE_MIN */
+#ifndef SSIZE_MIN
+#define SSIZE_MIN (-SSIZE_MAX - 1)
+#endif
+
 /**
  * Calculate the number of bytes needed to hold bits.
  * @param bits The minimum number of bits needed.

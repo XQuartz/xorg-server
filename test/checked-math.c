@@ -325,6 +325,9 @@ checked_arithmetic_test(void)
     TEST_UNSIGNED_CHECKED_OPS(checked_ulong, unsigned long, ULONG_MAX);
     TEST_SIGNED_CHECKED_OPS(checked_longlong, long long, LLONG_MIN, LLONG_MAX);
     TEST_UNSIGNED_CHECKED_OPS(checked_ulonglong, unsigned long long, ULLONG_MAX);
+
+    TEST_SIGNED_CHECKED_OPS(checked_ssize, ssize_t, SSIZE_MIN, SSIZE_MAX);
+    TEST_UNSIGNED_CHECKED_OPS(checked_size, size_t, SIZE_MAX);
 }
 
 static void
@@ -350,6 +353,9 @@ saturating_arithmetic_test(void)
     TEST_UNSIGNED_SATURATING_OPS(saturating_ulong, unsigned long, ULONG_MAX);
     TEST_SIGNED_SATURATING_OPS(saturating_longlong, long long, LLONG_MIN, LLONG_MAX);
     TEST_UNSIGNED_SATURATING_OPS(saturating_ulonglong, unsigned long long, ULLONG_MAX);
+
+    TEST_SIGNED_SATURATING_OPS(saturating_ssize, ssize_t, SSIZE_MIN, SSIZE_MAX);
+    TEST_UNSIGNED_SATURATING_OPS(saturating_size, size_t, SIZE_MAX);
 }
 
 static void
@@ -422,6 +428,38 @@ saturating_arithmetic_spot_test(void)
     assert(saturating_CARD64_subtract(0, 1) == 0);
 }
 
+static void
+checked_size_spot_test(void)
+{
+    size_t v;
+
+    assert(checked_size_multiply(&v, 50, 4) == FALSE);
+    assert(v == 200);
+    assert(checked_size_multiply(&v, SIZE_MAX / 4, 4) == FALSE);
+    assert(v == (SIZE_MAX / 4) * 4);
+    assert(checked_size_multiply(&v, SIZE_MAX / 4 + 1, 4) == TRUE);
+    assert(checked_size_multiply(&v, SIZE_MAX, 4) == TRUE);
+    assert(checked_size_multiply(&v, 0, SIZE_MAX) == FALSE);
+    assert(v == 0);
+    assert(checked_size_add(&v, SIZE_MAX, 1) == TRUE);
+    assert(checked_size_subtract(&v, 0, 1) == TRUE);
+
+    /* the same for ssize_t, including the asymmetric corner cases */
+    ssize_t s;
+
+    assert(checked_ssize_multiply(&s, 200, 4) == FALSE);
+    assert(s == 800);
+    assert(checked_ssize_multiply(&s, SSIZE_MAX, 2) == TRUE);
+    assert(checked_ssize_multiply(&s, SSIZE_MIN, -1) == TRUE);
+    assert(checked_ssize_add(&s, SSIZE_MAX, 1) == TRUE);
+    assert(checked_ssize_subtract(&s, SSIZE_MIN, 1) == TRUE);
+
+    /* out may alias the operands */
+    v = 10;
+    assert(checked_size_multiply(&v, v, 4) == FALSE);
+    assert(v == 40);
+}
+
 const testfunc_t*
 checked_math_test(void)
 {
@@ -431,6 +469,7 @@ checked_math_test(void)
         checked_arithmetic_wrapped_test,
         checked_int64_test,
         saturating_arithmetic_spot_test,
+        checked_size_spot_test,
         NULL,
     };
     return testfuncs;

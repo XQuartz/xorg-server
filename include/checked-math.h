@@ -225,6 +225,9 @@ _X_DEFINE_UNSIGNED_CHECKED_OPS(checked_uint32, uint32_t, UINT32_MAX)
 _X_DEFINE_SIGNED_CHECKED_OPS(checked_int64, int64_t, INT64_MIN, INT64_MAX)
 _X_DEFINE_UNSIGNED_CHECKED_OPS(checked_uint64, uint64_t, UINT64_MAX)
 
+_X_DEFINE_SIGNED_CHECKED_OPS(checked_ssize, ssize_t, SSIZE_MIN, SSIZE_MAX)
+_X_DEFINE_UNSIGNED_CHECKED_OPS(checked_size, size_t, SIZE_MAX)
+
 /* Saturating arithmetic for the same types: the result is clamped to the
  * smallest/largest value the type can hold.
  */
@@ -315,4 +318,6 @@ _X_DEFINE_UNSIGNED_SATURATING_OPS(saturating_uint32, checked_uint32, uint32_t, U
 _X_DEFINE_SIGNED_SATURATING_OPS(saturating_int64, checked_int64, int64_t, INT64_MIN, INT64_MAX)
 _X_DEFINE_UNSIGNED_SATURATING_OPS(saturating_uint64, checked_uint64, uint64_t, UINT64_MAX)
 
+_X_DEFINE_SIGNED_SATURATING_OPS(saturating_ssize, checked_ssize, ssize_t, SSIZE_MIN, SSIZE_MAX)
+_X_DEFINE_UNSIGNED_SATURATING_OPS(saturating_size, checked_size, size_t, SIZE_MAX)
 #endif /* CHECKED_MATH_H */

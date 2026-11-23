@@ -247,6 +247,10 @@ void RootlessDamageBox(WindowPtr pWindow, BoxPtr pBox);
 void RootlessRedisplay(WindowPtr pWindow);
 void RootlessRedisplayScreen(ScreenPtr pScreen);
 
+// Give pWin and its descendants back the pixmaps they had before winRec's frame started drawing.
+// For a subtree that left the frame's window tree while the frame was drawing.
+void RootlessRestoreSubtreePixmaps(WindowPtr pWin, RootlessWindowPtr winRec);
+
 void RootlessQueueRedisplay(ScreenPtr pScreen);
 
 /* Return the colormap currently installed on the given screen. */

@@ -819,6 +819,7 @@ RootlessFlushPendingResize(RootlessWindowRec *winRec)
  * StartFrameResize
  *  Prepare to resize a top-level window. The old window's pixels are
  *  saved and the implementation is told to change the window size.
+ *  An unrealized window only records the size, and the implementation is told later.
  *  (x,y,w,h) is outer frame of window (outside border)
  */
 static void
@@ -831,6 +832,10 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
 
     unsigned int weight;
 
+    /* An unrealized window shows nothing. Defer ResizeFrame and the lock, which block on the main thread.
+       A drawing frame is locked, so it resizes now. */
+    Bool defer = !pWin->realized && !winRec->is_drawing;
+
     /* Decide which resize weighting to use */
     weight = ResizeWeighting(oldX, oldY, oldW, oldH, oldBW,
                              newX, newY, newW, newH, newBW);
@@ -839,7 +844,8 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
     RL_DEBUG_MSG("%d %d %d %d %d   %d %d %d %d %d\n",
                  oldX, oldY, oldW, oldH, oldBW, newX, newY, newW, newH, newBW);
 
-    RootlessRedisplay(pWin);
+    if (!defer)
+        RootlessRedisplay(pWin);
 
     winRec->x = newX;
     winRec->y = newY;
@@ -847,12 +853,18 @@ StartFrameResize(WindowPtr pWin, Bool gravity,
     winRec->height = newH;
     winRec->borderWidth = newBW;
 
-    SCREENREC(pScreen)->imp->ResizeFrame(winRec->wid, pScreen,
-                                         newX + SCREEN_TO_GLOBAL_X,
-                                         newY + SCREEN_TO_GLOBAL_Y,
-                                         newW, newH, weight);
+    if (defer) {
+        winRec->is_resize_pending = TRUE;
+    } else {
+        winRec->is_resize_pending = FALSE;
 
-    RootlessStartDrawing(pWin);
+        SCREENREC(pScreen)->imp->ResizeFrame(winRec->wid, pScreen,
+                                             newX + SCREEN_TO_GLOBAL_X,
+                                             newY + SCREEN_TO_GLOBAL_Y,
+                                             newW, newH, weight);
+
+        RootlessStartDrawing(pWin);
+    }
 
     /* Use custom CopyWindow when moving gravity bits around
        ResizeWindow assumes the old window contents are in the same

@@ -425,6 +425,10 @@ checked_int64_test(void)
     assert(checked_int64_subtract(&v, v, 1) == TRUE);
     v = INT64_MAX;
     assert(checked_int64_add(&v, v, 1) == TRUE);
+    v = 6;
+    assert(checked_int64_multiply(&v, v, 7) == FALSE);
+    assert(v == 42);
+    assert(checked_int64_multiply(&v, INT64_MAX, 2) == TRUE);
 }
 
 static void

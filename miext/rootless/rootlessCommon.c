@@ -268,6 +268,17 @@ RestorePreDrawingPixmapVisitor(WindowPtr pWindow, void *data)
     return WT_WALKCHILDREN;
 }
 
+/*
+ * RootlessRestoreSubtreePixmaps
+ *  StopDrawing restores only the windows below the frame's window.  A subtree that was reparented out of the
+ *  frame while it drew is not below that window any more, so the caller restores it before the frame frees its pixmap.
+ */
+void
+RootlessRestoreSubtreePixmaps(WindowPtr pWin, RootlessWindowPtr winRec)
+{
+    TraverseTree(pWin, RestorePreDrawingPixmapVisitor, (void *) winRec);
+}
+
 void
 RootlessStopDrawing(WindowPtr pWindow, Bool flush)
 {

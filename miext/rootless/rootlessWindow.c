@@ -1054,6 +1054,17 @@ RootlessReparentWindow(WindowPtr pWin, WindowPtr pPriorParent)
     RootlessWindowRec *winRec = WINREC(pWin);
     WindowPtr pTopWin;
 
+    /* A window that left a drawing frame still holds that frame's pixmap, and the frame's own restore walk no longer
+     * reaches it.
+     */
+    if (!IsRoot(pPriorParent)) {
+        WindowPtr pOldTop = TopLevelParent(pPriorParent);
+        RootlessWindowRec *oldRec = pOldTop ? WINREC(pOldTop) : NULL;
+
+        if (oldRec != NULL && oldRec->is_drawing && TopLevelParent(pWin) != pOldTop)
+            RootlessRestoreSubtreePixmaps(pWin, oldRec);
+    }
+
     /* Check that window is not top-level now, but used to be. */
     if (IsRoot(pWin) || IsRoot(pWin->parent)
         || IsTopLevel(pWin) || winRec == NULL) {

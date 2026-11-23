@@ -144,6 +144,9 @@ typedef void (*RootlessMoveFrameProc)
  *  newX, newY  New position of the frame
  *  newW, newH  New size of the frame
  *  gravity     Gravity for window contents (rl_gravity_enum).
+ *
+ *  Rootless does not call this for every size change. It calls this once for an unrealized window, before the frame
+ *  is used.
  */
 typedef void (*RootlessResizeFrameProc)
  (RootlessFrameID wid, ScreenPtr pScreen,

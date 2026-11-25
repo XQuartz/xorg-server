@@ -48,3 +48,14 @@ any actions described in the X11 protocol or extension specifications, such
 as changing monitor configurations or killing other clients, though we will
 accept non-security bug reports for clients doing so in a manner or via
 requests not documented in the protocol specs as doing those operations.
+
+## Client-controlled server crashes
+
+Some bugs enable an authenticated client to trigger a server crash via a
+protocol request. If the server crash does not lead to information leakage or
+possible privilege escalation the bug is not considered a security issue.  One
+example for such issues are client-triggered NULL-pointer dereferences in
+the server.
+
+For these issues a public issue and/or merge request should be filed in our
+GitLab: https://gitlab.freedesktop.org/xorg/xserver/

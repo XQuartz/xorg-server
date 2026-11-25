@@ -59,3 +59,14 @@ the server.
 
 For these issues a public issue and/or merge request should be filed in our
 GitLab: https://gitlab.freedesktop.org/xorg/xserver/
+
+## Client-controlled Denial of Service (DoS)
+
+Some bugs enable an authenticated client to trigger a server condition where
+the server is too busy processing the client's request and stops responding to
+other clients. This is considered a regular bug and is not considered a
+security issue, a client can achieve the same DoS using the `GrabServer` core
+protocol request.
+
+For these issues a public issue and/or merge request should be filed in our
+GitLab: https://gitlab.freedesktop.org/xorg/xserver/

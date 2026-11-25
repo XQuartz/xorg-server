@@ -782,8 +782,11 @@ vfbWriteXWDFileHeader(ScreenPtr pScreen)
         hostname[0] = 0;
     else
         hostname[XWD_WINDOW_NAME_LEN - 1] = 0;
-    snprintf((char *) (pXWDHeader + 1), XWD_WINDOW_NAME_LEN, "Xvfb %s:%s.%d", 
-            hostname, display, pScreen->myNum);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-truncation"
+    snprintf((char *) (pXWDHeader + 1), XWD_WINDOW_NAME_LEN, "Xvfb %s:%s.%d",
+             hostname, display, pScreen->myNum);
+#pragma GCC diagnostic pop
 
     /* write colormap pixel slot values */
 
